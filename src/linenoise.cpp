@@ -121,6 +121,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 using std::string;
 using std::vector;
