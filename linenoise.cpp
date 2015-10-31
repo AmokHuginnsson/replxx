@@ -1118,7 +1118,7 @@ static char32_t readUnicodeCharacter(void) {
             char32_t unicodeChar[2];
             size_t ucharCount;
             ConversionResult res = copyString8to32(unicodeChar, 2, ucharCount, utf8String);
-            if (ucharCount && res == conversionOK) {
+            if (res == conversionOK && ucharCount) {
                 utf8Count = 0;
                 return unicodeChar[0];
             }
