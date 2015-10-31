@@ -78,7 +78,7 @@ target_link_libraries(
 )
 
 # packaging
-include(CPACK)
+include(CPack)
 
 if (MSVC)
 else ()
