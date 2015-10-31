@@ -125,6 +125,7 @@
 using std::string;
 using std::vector;
 using std::unique_ptr;
+using namespace linenoise_ng;
 
 typedef unsigned char char8_t;
 
@@ -357,7 +358,9 @@ struct linenoiseCompletions {
  * @param widths        output buffer of character widths
  * @param charCount     number of characters in buffer
  */
-extern "C" int mk_wcwidth(wchar_t ucs);
+namespace linenoise_ng {
+  int mk_wcwidth(wchar_t ucs);
+}
 
 static void recomputeCharacterWidths(const char32_t* text, char* widths, int charCount) {
     for (int i = 0; i < charCount; ++i) {
@@ -399,10 +402,12 @@ static void calculateScreenPosition(
  * @param buf32  text to calculate
  * @param len    length of text to calculate
  */
-extern "C" int mk_wcswidth(const int* pwcs, size_t n);
+namespace linenoise_ng {
+  int  mk_wcswidth(const wchar_t *pwcs, size_t n);
+}
 
 static int calculateColumnPosition(char32_t* buf32, int len) {
-    int width = mk_wcswidth(reinterpret_cast<const int*>(buf32), len);
+    int width = mk_wcswidth(reinterpret_cast<const wchar_t*>(buf32), len);
     if (width == -1)
         return len;
     else

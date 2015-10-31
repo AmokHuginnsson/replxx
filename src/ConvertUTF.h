@@ -95,6 +95,8 @@ typedef unsigned char  UTF8;  /* typically 8 bits */
 
 #include <stdint.h>
 
+namespace linenoise_ng {
+
 typedef uint32_t         UTF32;
 typedef uint16_t         UTF16;
 typedef uint8_t          UTF8;
@@ -119,10 +121,10 @@ typedef enum {
         lenientConversion
 } ConversionFlags;
 
-/* This is for C++ and does no harm in C */
-#ifdef __cplusplus
-extern "C" {
-#endif
+// /* This is for C++ and does no harm in C */
+// #ifdef __cplusplus
+// extern "C" {
+// #endif
 
 ConversionResult ConvertUTF8toUTF16 (
                 const UTF8** sourceStart, const UTF8* sourceEnd, 
@@ -150,8 +152,10 @@ ConversionResult ConvertUTF32toUTF16 (
 
 Boolean isLegalUTF8Sequence(const UTF8 *source, const UTF8 *sourceEnd);
 
-#ifdef __cplusplus
+// #ifdef __cplusplus
+// }
+// #endif
+
 }
-#endif
 
 /* --------------------------------------------------------------------- */
