@@ -219,7 +219,7 @@ int strncmp32 (const char32_t* left, const char32_t* right, size_t len) {
 int write32 (int fd, char32_t* text32, int len32) {
   size_t len8 = 4 * len32 + 1;
   unique_ptr<char[]> text8(new char[len8]);
-  size_t count8;
+  size_t count8 = 0;
 
   copyString32to8(text8.get(), len8, &count8, text32, len32);
 
@@ -631,7 +631,7 @@ public:
         buf32[0] = 0;
     }
     void preloadBuffer(const char* preloadText) {
-        size_t ucharCount;
+        size_t ucharCount = 0;
         copyString8to32(buf32, buflen + 1, ucharCount, preloadText);
         recomputeCharacterWidths(buf32, charWidths, ucharCount);
         len = ucharCount;
@@ -1934,7 +1934,7 @@ void InputBuffer::clearScreen(PromptBase& pi) {
  */
 int InputBuffer::incrementalHistorySearch(PromptBase& pi, int startChar) {
     size_t bufferSize;
-    size_t ucharCount;
+    size_t ucharCount = 0;
 
     // if not already recalling, add the current line to the history list so we don't have to
     // special case it
@@ -2515,7 +2515,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
                         break;
                     }
                     historyRecallMostRecent = true;
-                    size_t ucharCount;
+                    size_t ucharCount = 0;
                     copyString8to32(buf32, buflen, ucharCount, history[historyIndex]);
                     len = pos = ucharCount;
                     refreshLine(pi);
@@ -2703,7 +2703,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
                     historyIndex = (c == META + '<' || c == PAGE_UP_KEY) ? 0 : historyLen - 1;
                     historyPreviousIndex = -2;
                     historyRecallMostRecent = true;
-                    size_t ucharCount;
+                    size_t ucharCount = 0;
                     copyString8to32(buf32, buflen, ucharCount, history[historyIndex]);
                     len = pos = ucharCount;
                     refreshLine(pi);
