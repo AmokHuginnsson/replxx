@@ -1,6 +1,7 @@
 # Linenoise Next Generation
 
-A linenoise implementation based on the work by Salvatore Sanfilippo,
+A linenoise implementation based on the work by 
+[Salvatore Sanfilippo](https://github.com/antirez/linenoise),
 10gen Inc and others.  They goal is to create a zero-config, BSD
 licensed, readline replacement usable in Apache2 or BSD licensed
 programs.
