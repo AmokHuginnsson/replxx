@@ -171,6 +171,23 @@ char8_t* strdup8 (const char* src) {
   return reinterpret_cast<char8_t*>(strdup(src));
 }
 
+void copyString32to16(char16_t* dst, size_t dstSize, size_t* dstCount, const char32_t* src, size_t srcSize) {
+  const UTF32* sourceStart = reinterpret_cast<const UTF32*>(src);
+  const UTF32* sourceEnd = sourceStart + srcSize;
+  char16_t* targetStart = reinterpret_cast<char16_t*>(dst);
+  char16_t* targetEnd = targetStart + dstSize;
+
+  ConversionResult res = ConvertUTF32toUTF16(&sourceStart, sourceEnd, &targetStart, targetEnd, lenientConversion);
+
+  if (res == conversionOK) {
+    *dstCount = targetStart - reinterpret_cast<char16_t*>(dst);
+
+    if (*dstCount < dstSize) {
+      *targetStart = 0;
+    }
+  }
+}
+
 void copyString32to8 (char* dst, size_t dstSize, size_t* dstCount, const char32_t* src, size_t srcSize) {
   const UTF32* sourceStart = reinterpret_cast<const UTF32*>(src);
   const UTF32* sourceEnd = sourceStart + srcSize;
@@ -217,6 +234,62 @@ int strncmp32 (const char32_t* left, const char32_t* right, size_t len) {
 }
 
 int write32 (int fd, char32_t* text32, int len32) {
+#ifdef _WIN32
+  if (_isatty(fd)) {
+    /*
+    size_t len8 = 4 * len32 + 1;
+    unique_ptr<char[]> text8(new char[len8]);
+    size_t count8 = 0;
+
+    copyString32to8(text8.get(), len8, &count8, text32, len32);
+
+    int bufferSize = MultiByteToWideChar(CP_UTF8,         // Code page
+      0,               // Flags
+      text8.get(),      // Input string
+      count8,  // Input string length
+      nullptr,            // No output buffer
+      0                // Zero means "compute required size"
+    );
+
+    std::unique_ptr<wchar_t[]> utf16String(new wchar_t[bufferSize]);
+    MultiByteToWideChar(CP_UTF8,            // Code page
+      0,                  // Flags
+      text8.get(),         // Input string
+      count8,     // Input string length
+      utf16String.get(),  // UTF-16 output buffer
+      bufferSize          // Buffer size in wide characters
+    );
+
+    WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), utf16String.get(), bufferSize, nullptr, nullptr);
+    return 1;
+    */
+    size_t len16 = 2 * len32 + 1;
+    unique_ptr<char16_t[]> text16(new char16_t[len16]);
+    size_t count16 = 0;
+
+    copyString32to16(text16.get(), len16, &count16, text32, len32);
+
+    //CONSOLE_SCREEN_BUFFER_INFO bufferInfo;
+    //GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &bufferInfo);
+    // save old cursor position
+    //COORD pos = bufferInfo.dwCursorPosition;
+
+    //DWORD n;
+    WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), text16.get(), count16, nullptr, nullptr);
+//    WriteConsoleOutputCharacterW(GetStdHandle(STD_OUTPUT_HANDLE), (LPWSTR) text16.get(), count16, pos, &n);
+    
+    return count16;
+  }
+  else {
+    size_t len8 = 4 * len32 + 1;
+    unique_ptr<char[]> text8(new char[len8]);
+    size_t count8 = 0;
+
+    copyString32to8(text8.get(), len8, &count8, text32, len32);
+
+    return write(fd, text8.get(), count8);
+  }
+#else
   size_t len8 = 4 * len32 + 1;
   unique_ptr<char[]> text8(new char[len8]);
   size_t count8 = 0;
@@ -224,6 +297,7 @@ int write32 (int fd, char32_t* text32, int len32) {
   copyString32to8(text8.get(), len8, &count8, text32, len32);
 
   return write(fd, text8.get(), count8);
+#endif
 }
 
 class Utf32String {
@@ -360,7 +434,7 @@ struct linenoiseCompletions {
  * @param charCount     number of characters in buffer
  */
 namespace linenoise_ng {
-  int mk_wcwidth(wchar_t ucs);
+  int mk_wcwidth(char32_t ucs);
 }
 
 static void recomputeCharacterWidths(const char32_t* text, char* widths, int charCount) {
@@ -404,11 +478,11 @@ static void calculateScreenPosition(
  * @param len    length of text to calculate
  */
 namespace linenoise_ng {
-  int  mk_wcswidth(const wchar_t *pwcs, size_t n);
+  int  mk_wcswidth(const char32_t* pwcs, size_t n);
 }
 
 static int calculateColumnPosition(char32_t* buf32, int len) {
-    int width = mk_wcswidth(reinterpret_cast<const wchar_t*>(buf32), len);
+    int width = mk_wcswidth(reinterpret_cast<const char32_t*>(buf32), len);
     if (width == -1)
         return len;
     else
