@@ -40,6 +40,7 @@ elseif(CMAKE_COMPILER_IS_CLANGCXX)
   
 elseif(MSVC) 
   message(STATUS "Compiler type MSVC: ${CMAKE_CXX_COMPILER}")
+  add_definitions("-D_CRT_SECURE_NO_WARNINGS=1")
   set(${CMAKE_CXX_FLAGS} "${CMAKE_CXX_FLAGS} /MT")
   set(${CMAKE_CXX_FLAGS_DEBUG} "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
   # hard-coded target platform to x64. does not link otherwise
