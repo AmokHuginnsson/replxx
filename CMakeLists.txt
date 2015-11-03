@@ -42,7 +42,8 @@ elseif(MSVC)
   message(STATUS "Compiler type MSVC: ${CMAKE_CXX_COMPILER}")
   set(${CMAKE_CXX_FLAGS} "${CMAKE_CXX_FLAGS} /MT")
   set(${CMAKE_CXX_FLAGS_DEBUG} "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
-  
+  # hard-coded target platform to x64. does not link otherwise
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MACHINE:x64 /SUBSYSTEM:CONSOLE /LTCG /SAFESEH:NO /ignore:4099")
 else()
   # unknown compiler
   message(STATUS "Compiler type UNKNOWN: ${CMAKE_CXX_COMPILER}")
