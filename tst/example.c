@@ -21,12 +21,13 @@ void completionHook (char const* prefix, linenoiseCompletions* lc) {
 int main () {
   const char* file = "./history";
 
+  linenoiseInstallWindowChangeHandler();
   linenoiseHistoryLoad(file);
   linenoiseSetCompletionCallback(completionHook);
 
   printf("starting...\n");
 
-  char const* prompt = "linenoise> ";
+  char const* prompt = "\x1b[1;32mlinenoise\x1b[0m> ";
 
   while (1) {
     char* result = linenoise(prompt);

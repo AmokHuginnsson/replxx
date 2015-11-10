@@ -3,6 +3,7 @@ CMakeFiles
 Makefile
 build
 cmake_install.cmake
+install_manifest.txt
 example
 linenoise_example
 liblinenoise.a
