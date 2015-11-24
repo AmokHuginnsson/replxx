@@ -1,9 +1,9 @@
 # Linenoise Next Generation
 
-A portable readline replacement for Linux, Windows and MacOS
-which is capable of handling UTF-8 characters. Unlike 
-GNU readline this library uses a BSD license and can be
-used in any program.
+A small, portable GNU readline replacement for Linux, Windows and
+MacOS which is capable of handling UTF-8 characters. Unlike GNU
+readline, which is GPL, this library uses a BSD license and can be
+used in any kind of program.
 
 ## Origin
 
@@ -94,6 +94,7 @@ Please test it everywhere you can and report back!
 ## Let's push this forward!
 
 Patches should be provided in the respect of linenoise sensibility for
-small easy to understand code that. They must be submitted under the
-Apache2 license using the supplied Apache2 contributor license
-agreement.
+small and easy to understand code that and the license
+restrictions. Extensions must be submitted under a BSD license-style.
+A contributor license is required for contributions.
+
