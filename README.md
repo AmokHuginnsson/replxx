@@ -87,6 +87,7 @@ use both in free software and commercial software.
  * FreeBSD xterm ($TERM = xterm)
  * ANSI.SYS
  * Emacs comint mode ($TERM = dumb)
+ * Windows
 
 Please test it everywhere you can and report back!
 
