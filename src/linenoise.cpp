@@ -1835,7 +1835,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
     do {
         c = linenoiseReadChar();
         c = cleanupCtrl(c);
-    } while (c == static_cast<char>(-1));
+    } while (c == static_cast<char32_t>(-1));
 
     // if any character other than tab, pass it to the main loop
     if (c != ctrlChar('I')) {
@@ -1859,7 +1859,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
             do {
                 c = linenoiseReadChar();
                 c = cleanupCtrl(c);
-            } while (c == static_cast<char>(-1));
+            } while (c == static_cast<char32_t>(-1));
         }
         switch (c) {
             case 'n':
@@ -1915,7 +1915,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
                     do {
                         c = linenoiseReadChar();
                         c = cleanupCtrl(c);
-                    } while (c == static_cast<char>(-1));
+                    } while (c == static_cast<char32_t>(-1));
                 }
                 switch (c) {
                     case ' ':
