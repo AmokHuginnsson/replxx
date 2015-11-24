@@ -1,8 +1,15 @@
 # Linenoise Next Generation
 
-A linenoise implementation based on the work by 
-[Salvatore Sanfilippo](https://github.com/antirez/linenoise),
-10gen Inc and others.  They goal is to create a zero-config, BSD
+A portable readline replacement for Linux, Windows and MacOS
+which is capable of handling UTF-8 characters. Unlike 
+GNU readline this library uses a BSD license and can be
+used in any program.
+
+## Origin
+
+This linenoise implementation based on the work by 
+[Salvatore Sanfilippo](https://github.com/antirez/linenoise) and
+10gen Inc.  They goal is to create a zero-config, BSD
 licensed, readline replacement usable in Apache2 or BSD licensed
 programs.
 
