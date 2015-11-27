@@ -80,6 +80,9 @@ After that, open the generated file `linenoise.sln` from the `build`
 subdirectory with Visual Studio.
 
 
+*note: the following sections of the README.md are from the original
+linenoise repository and are partly outdated*
+
 ## Can a line editing library be 20k lines of code?
 
 Line editing with some support for history is a really important
