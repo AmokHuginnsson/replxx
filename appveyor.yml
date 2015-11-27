@@ -9,6 +9,3 @@ build_script:
   - cd %APPVEYOR_BUILD_FOLDER%\build
   - cmake -G "Visual Studio 12 Win64" -DCMAKE_BUILD_TYPE=Release ..
   - cmake --build . --config Release
-test_script:
-  - cd %APPVEYOR_BUILD_FOLDER%\build\tests
-  - ctest -V 
