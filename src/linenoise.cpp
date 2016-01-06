@@ -3135,6 +3135,39 @@ int linenoiseHistoryLoad(const char* filename) {
     return 0;
 }
 
+/* Set if to use or not the multi line mode. */
+/* note that this is a stub only, as linenoise-ng always multi-line */
+void linenoiseSetMultiLine(int) {
+}
+
+/* This special mode is used by linenoise in order to print scan codes
+ * on screen for debugging / development purposes. It is implemented
+ * by the linenoise_example program using the --keycodes option. */
+void linenoisePrintKeyCodes(void) {
+    char quit[4];
+
+    printf("Linenoise key codes debugging mode.\n"
+            "Press keys to see scan codes. Type 'quit' at any time to exit.\n");
+    if (enableRawMode() == -1) return;
+    memset(quit,' ',4);
+    while(1) {
+        char c;
+        int nread;
+
+        nread = read(STDIN_FILENO, &c, 1);
+        if (nread <= 0) continue;
+        memmove(quit,quit + 1, sizeof(quit) - 1); /* shift string to left. */
+        quit[sizeof(quit) - 1] = c; /* Insert current char on the right. */
+        if (memcmp(quit, "quit", sizeof(quit)) == 0) break;
+
+        printf("'%c' %02x (%d) (type quit to exit)\n",
+            isprint(c) ? c : '?', (int)c, (int)c);
+        printf("\r"); /* Go left edge manually, we are in raw mode. */
+        fflush(stdout);
+    }
+    disableRawMode();
+}
+
 #ifndef _WIN32
 static void WindowSizeChanged(int) {
     // do nothing here but setting this flag
@@ -3155,3 +3188,4 @@ int linenoiseInstallWindowChangeHandler(void) {
 #endif
     return 0;
 }
+

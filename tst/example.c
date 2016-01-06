@@ -18,10 +18,20 @@ void completionHook (char const* prefix, linenoiseCompletions* lc) {
   }
 }
 
-int main () {
+int main (int argc, char** argv) {
+  linenoiseInstallWindowChangeHandler();
+
+  while(argc > 1) {
+    argc--;
+    argv++;
+    if (!strcmp(*argv, "--keycodes")) {
+      linenoisePrintKeyCodes();
+      exit(0);
+    }
+  }
+  
   const char* file = "./history";
 
-  linenoiseInstallWindowChangeHandler();
   linenoiseHistoryLoad(file);
   linenoiseSetCompletionCallback(completionHook);
 
