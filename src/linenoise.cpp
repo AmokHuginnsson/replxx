@@ -245,7 +245,7 @@ static int write32 (int fd, char32_t* text32, int len32) {
     copyString32to16(text16.get(), len16, &count16, text32, len32);
 
     WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), text16.get(), static_cast<DWORD>(count16), nullptr, nullptr);
-    
+
     return static_cast<int>(count16);
   }
   else {
@@ -522,7 +522,7 @@ struct PromptInfo : public PromptBase {
             }
             else if (c == '\x1b') {
                 if (strip) {
-                    // jump over control chars 
+                    // jump over control chars
                     ++pIn;
                     if (*pIn == '[') {
                          ++pIn;
@@ -535,7 +535,7 @@ struct PromptInfo : public PromptBase {
                     }
                 }
                 else {
-                    // copy control chars 
+                    // copy control chars
                     *pOut = *pIn;
                     ++pOut;
                     ++pIn;
@@ -1972,7 +1972,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
         if (write(1, "\n", 1) == -1)
             return 0;
     }
-    if (! pi.write()) 
+    if (! pi.write())
         return 0;
 #ifndef _WIN32
     // we have to generate our own newline on line wrap on Linux
@@ -2005,7 +2005,7 @@ void linenoiseClearScreen(void) {
 
 void InputBuffer::clearScreen(PromptBase& pi) {
     linenoiseClearScreen();
-    if (! pi.write()) 
+    if (! pi.write())
         return;
 #ifndef _WIN32
     // we have to generate our own newline on line wrap on Linux
@@ -2298,7 +2298,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
     historyRecallMostRecent = false;
 
     // display the prompt
-    if (! pi.write()) 
+    if (! pi.write())
         return -1;
 
 #ifndef _WIN32
@@ -2342,9 +2342,9 @@ int InputBuffer::getInputLine(PromptBase& pi) {
             c = terminatingKeystroke;   // use the terminating keystroke from search
             terminatingKeystroke = -1;  // clear it once we've used it
         }
-                
+
         c = cleanupCtrl(c);  // convert CTRL + <char> into normal ctrl
-        
+
         if (c == 0) {
             return len;
         }
@@ -2781,7 +2781,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
                 disableRawMode();  // Returning to Linux (whatever) shell, leave raw mode
                 raise(SIGSTOP);    // Break out in mid-line
                 enableRawMode();   // Back from Linux shell, re-enter raw mode
-                if (! pi.write()) 
+                if (! pi.write())
                     break;        // Redraw prompt
                 refreshLine(pi);  // Refresh the line
                 break;
@@ -2956,7 +2956,7 @@ char* linenoise(const char* prompt) {
         }
         PromptInfo pi(prompt, getScreenColumns());
         if (isUnsupportedTerm()) {
-            if (! pi.write()) 
+            if (! pi.write())
                 return 0;
             fflush(stdout);
             if (preloadedBufferContents.empty()) {
@@ -3035,7 +3035,7 @@ int linenoiseHistoryAdd(const char* line) {
     if (!linecopy) {
         return 0;
     }
-    
+
     // convert newlines in multi-line code to spaces before storing
     char8_t* p = linecopy;
     while (*p) {
@@ -3044,7 +3044,7 @@ int linenoiseHistoryAdd(const char* line) {
         }
         ++p;
     }
-    
+
     // prevent duplicate history entries
     if (historyLen > 0 && history[historyLen - 1] != nullptr &&
         strcmp(reinterpret_cast<char const*>(history[historyLen - 1]), reinterpret_cast<char const*>(linecopy)) == 0) {
@@ -3089,6 +3089,16 @@ int linenoiseHistorySetMaxLen(int len) {
     }
     return 1;
 }
+
+
+/* Fetch a line of the history by (zero-based) index.  If the requested
+ *  * line does not exist, NULL is returned.  The return value is a heap-allocated
+ *   * copy of the line, and the caller is responsible for de-allocating it. */
+char * linenoiseHistoryLine(const int index) {
+        if (index < 0 || index >= historyLen) return NULL;
+            return strdup(reinterpret_cast<char const*>(history[index]));
+}
+
 
 /* Save the history in the specified file. On success 0 is returned
  * otherwise -1 is returned. */
@@ -3172,7 +3182,7 @@ void linenoisePrintKeyCodes(void) {
 static void WindowSizeChanged(int) {
     // do nothing here but setting this flag
     gotResize = true;
-} 
+}
 #endif
 
 int linenoiseInstallWindowChangeHandler(void) {
