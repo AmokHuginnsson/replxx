@@ -44,10 +44,10 @@ int main (int argc, char** argv) {
 
     if (result == NULL) {
       break;
-    } else if (!strncmp(result,"/history",8)) {
-	  /* Display the current history. */
+    } else if (!strncmp(result, "/history", 8)) {
+      /* Display the current history. */
       for (int index = 0; ; ++index) {
-        char * hist = linenoiseHistoryLine(index);
+        char* hist = linenoiseHistoryLine(index);
         if (hist == NULL) break;
         printf("%4d: %s\n", index, hist);
         free(hist);

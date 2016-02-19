@@ -54,7 +54,7 @@ extern "C" {
   void linenoisePreloadBuffer(const char* preloadText);
   int linenoiseHistoryAdd(const char* line);
   int linenoiseHistorySetMaxLen(int len);
-  char *linenoiseHistoryLine(const int index);
+  char* linenoiseHistoryLine(int index);
   int linenoiseHistorySave(const char* filename);
   int linenoiseHistoryLoad(const char* filename);
   void linenoiseHistoryFree(void);

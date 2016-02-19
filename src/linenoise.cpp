@@ -1206,7 +1206,14 @@ static char32_t readUnicodeCharacter(void) {
     static size_t utf8Count = 0;
     while (true) {
         char8_t c;
-        if (read(0, &c, 1) <= 0)
+
+        /* Continue reading if interrupted by signal. */
+        ssize_t nread;
+        do {
+            nread = read(0, &c, 1);
+        } while ((nread == -1) && (errno == EINTR));
+
+        if (nread <= 0)
             return 0;
         if (c <= 0x7F) {  // short circuit ASCII
             utf8Count = 0;
@@ -2276,7 +2283,7 @@ static bool isCharacterAlphanumeric(char32_t testChar) {
 #ifdef _WIN32
     return (iswalnum((wint_t) testChar) != 0 ? true : false);
 #else
-	return (iswalnum(testChar) != 0 ? true : false);
+    return (iswalnum(testChar) != 0 ? true : false);
 #endif
 }
 
@@ -3092,11 +3099,13 @@ int linenoiseHistorySetMaxLen(int len) {
 
 
 /* Fetch a line of the history by (zero-based) index.  If the requested
- *  * line does not exist, NULL is returned.  The return value is a heap-allocated
- *   * copy of the line, and the caller is responsible for de-allocating it. */
-char * linenoiseHistoryLine(const int index) {
-        if (index < 0 || index >= historyLen) return NULL;
-            return strdup(reinterpret_cast<char const*>(history[index]));
+ * line does not exist, NULL is returned.  The return value is a heap-allocated
+ * copy of the line, and the caller is responsible for de-allocating it. */
+char * linenoiseHistoryLine(int index) {
+    if (index < 0 || index >= historyLen) 
+        return NULL;
+
+    return strdup(reinterpret_cast<char const*>(history[index]));
 }
 
 
