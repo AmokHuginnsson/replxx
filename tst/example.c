@@ -29,7 +29,7 @@ int main (int argc, char** argv) {
       exit(0);
     }
   }
-  
+
   const char* file = "./history";
 
   linenoiseHistoryLoad(file);
@@ -44,6 +44,14 @@ int main (int argc, char** argv) {
 
     if (result == NULL) {
       break;
+    } else if (!strncmp(result,"/history",8)) {
+	  /* Display the current history. */
+      for (int index = 0; ; ++index) {
+        char * hist = linenoiseHistoryLine(index);
+        if (hist == NULL) break;
+        printf("%4d: %s\n", index, hist);
+        free(hist);
+       }
     }
     if (*result == '\0') {
       free(result);
@@ -54,7 +62,7 @@ int main (int argc, char** argv) {
     linenoiseHistoryAdd(result);
     free(result);
   }
-    
+
   linenoiseHistorySave(file);
   linenoiseHistoryFree();
 }
