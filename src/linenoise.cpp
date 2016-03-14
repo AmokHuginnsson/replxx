@@ -235,6 +235,20 @@ static int strncmp32 (const char32_t* left, const char32_t* right, size_t len) {
   return 0;
 }
 
+#ifdef _WIN32
+#include <iostream>
+
+static void WinWrite32(char16_t* text16, size_t len16, char32_t* text32, size_t len32) {
+  for (size_t i = 0;  i < len32;  ++i) {
+    char32_t c = text32[i];
+
+    if (c == (char32_t) '\x1b') {
+      std::cout << "ESC" << std::endl;
+    }
+  }
+}
+#endif
+
 static int write32 (int fd, char32_t* text32, int len32) {
 #ifdef _WIN32
   if (_isatty(fd)) {
