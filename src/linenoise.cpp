@@ -172,6 +172,34 @@ static char8_t* strdup8 (const char* src) {
 }
 
 #ifdef _WIN32
+static const int FOREGROUND_WHITE = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+static const int BACKGROUND_WHITE = BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE;
+static const int INTENSITY = FOREGROUND_INTENSITY | BACKGROUND_INTENSITY;
+
+class WinAttributes {
+public:
+  WinAttributes() {
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info);
+    _defaultAttribute = info.wAttributes & INTENSITY;
+    _defaultColor = info.wAttributes & FOREGROUND_WHITE;
+    _defaultBackground = info.wAttributes & BACKGROUND_WHITE;
+
+    _consoleAttribute = _defaultAttribute;
+    _consoleColor = _defaultColor | _defaultBackground;
+  }
+
+public:
+  int _defaultAttribute;
+  int _defaultColor;
+  int _defaultBackground;
+
+  int _consoleAttribute;
+  int _consoleColor;
+};
+
+static WinAttributes WIN_ATTR;
+
 static void copyString32to16(char16_t* dst, size_t dstSize, size_t* dstCount, const char32_t* src, size_t srcSize) {
   const UTF32* sourceStart = reinterpret_cast<const UTF32*>(src);
   const UTF32* sourceEnd = sourceStart + srcSize;
@@ -238,27 +266,122 @@ static int strncmp32 (const char32_t* left, const char32_t* right, size_t len) {
 #ifdef _WIN32
 #include <iostream>
 
-static void WinWrite32(char16_t* text16, size_t len16, char32_t* text32, size_t len32) {
-  for (size_t i = 0;  i < len32;  ++i) {
-    char32_t c = text32[i];
+static size_t OutputWin(char16_t* text16, char32_t* text32, size_t len32) {
+  size_t count16 = 0;
 
-    if (c == (char32_t) '\x1b') {
-      std::cout << "ESC" << std::endl;
+  copyString32to16(text16, len32, &count16, text32, len32);
+  WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE),
+		text16, static_cast<DWORD>(count16), nullptr, nullptr);
+
+  return count16;
+}
+
+static char32_t* HandleEsc(char32_t* p, char32_t* end) {
+  if (*p == '[') {
+    int code = 0;
+
+    for (++p; p < end; ++p) {
+      char32_t c = *p;
+
+      if ('0' <= c && c <= '9') {
+	code = code * 10 + (c - '0');
+      } else if (c == 'm' || c == ';') {
+	switch (code) {
+	case 0:
+	  WIN_ATTR._consoleAttribute = WIN_ATTR._defaultAttribute;
+	  WIN_ATTR._consoleColor = WIN_ATTR._defaultColor | WIN_ATTR._defaultBackground;
+	  break;
+
+	case 1:  // BOLD
+	case 5:  // BLINK
+	  WIN_ATTR._consoleAttribute = (WIN_ATTR._defaultAttribute ^ FOREGROUND_INTENSITY) & INTENSITY;
+                  break;
+
+	case 30:
+	  WIN_ATTR._consoleColor = BACKGROUND_WHITE;
+	  break;
+
+	case 31:
+	  WIN_ATTR._consoleColor = FOREGROUND_RED | WIN_ATTR._defaultBackground;
+	  break;
+
+	case 32:
+	  WIN_ATTR._consoleColor = FOREGROUND_GREEN | WIN_ATTR._defaultBackground;
+	  break;
+
+	case 33:
+	  WIN_ATTR._consoleColor = FOREGROUND_RED | FOREGROUND_GREEN | WIN_ATTR._defaultBackground;
+	  break;
+
+	case 34:
+	  WIN_ATTR._consoleColor = FOREGROUND_BLUE | WIN_ATTR._defaultBackground;
+	  break;
+
+	case 35:
+	  WIN_ATTR._consoleColor = FOREGROUND_BLUE | FOREGROUND_RED | WIN_ATTR._defaultBackground;
+	  break;
+
+	case 36:
+	  WIN_ATTR._consoleColor = FOREGROUND_BLUE | FOREGROUND_GREEN | WIN_ATTR._defaultBackground;
+	  break;
+
+	case 37:
+	  WIN_ATTR._consoleColor = FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | WIN_ATTR._defaultBackground;
+	  break;
+	}
+
+	code = 0;
+      }
+
+      if (*p == 'm') {
+	++p;
+	break;
+      }
     }
   }
+  else {
+    ++p;
+  }
+
+  auto handle = GetStdHandle(STD_OUTPUT_HANDLE);
+  SetConsoleTextAttribute(handle, WIN_ATTR._consoleAttribute | WIN_ATTR._consoleColor);
+
+  return p;
+}
+
+static size_t WinWrite32(char16_t* text16, char32_t* text32, size_t len32) {
+  char32_t* p = text32;
+  char32_t* q = p;
+  char32_t* e = text32 + len32;
+  size_t count16 = 0;
+
+  while (p < e) {
+    if (*p == 27) {
+      if (q < p) {
+	count16 += OutputWin(text16, q, p - q);
+      }
+      
+      q = p = HandleEsc(p + 1, e);
+    }
+    else {
+      ++p;
+    }
+  }
+
+  if (q < p) {
+    count16 += OutputWin(text16, q, p - q);
+  }
+
+  return count16;
 }
 #endif
 
 static int write32 (int fd, char32_t* text32, int len32) {
 #ifdef _WIN32
-  if (_isatty(fd)) {
+  if (isatty(fd)) {
     size_t len16 = 2 * len32 + 1;
     unique_ptr<char16_t[]> text16(new char16_t[len16]);
-    size_t count16 = 0;
-
-    copyString32to16(text16.get(), len16, &count16, text32, len32);
-
-    WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), text16.get(), static_cast<DWORD>(count16), nullptr, nullptr);
+    size_t count16 = WinWrite32(text16.get(), text32, len32);
 
     return static_cast<int>(count16);
   }
@@ -515,11 +638,7 @@ struct PromptInfo : public PromptBase {
         int len = 0;
         int x = 0;
 
-#ifdef _WIN32
-        bool const strip = true;
-#else
-        bool const strip = (isatty(1) != 1);
-#endif
+        bool const strip = (isatty(1) == 0);
 
         while (*pIn) {
             char32_t c = *pIn;
@@ -3187,7 +3306,11 @@ void linenoisePrintKeyCodes(void) {
         char c;
         int nread;
 
+#if _WIN32
+        nread = _read(STDIN_FILENO, &c, 1);
+#else
         nread = read(STDIN_FILENO, &c, 1);
+#endif
         if (nread <= 0) continue;
         memmove(quit,quit + 1, sizeof(quit) - 1); /* shift string to left. */
         quit[sizeof(quit) - 1] = c; /* Insert current char on the right. */
