@@ -106,6 +106,7 @@
 
 #include <signal.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #endif /* _WIN32 */
 
@@ -434,10 +435,19 @@ char* replxx_history_line(int index) {
 /* Save the history in the specified file. On success 0 is returned
  * otherwise -1 is returned. */
 int replxx_history_save(const char* filename) {
+#ifndef _WIN32
+	mode_t old_umask = umask(S_IXUSR|S_IRWXG|S_IRWXO);
+#endif
 	FILE* fp = fopen(filename, "wt");
+
 	if (fp == NULL) {
 		return -1;
 	}
+
+#ifndef _WIN32
+	umask(old_umask);
+	chmod(filename,S_IRUSR|S_IWUSR);
+#endif
 
 	for (int j = 0; j < historyLen; ++j) {
 		if (history[j][0] != '\0') {
