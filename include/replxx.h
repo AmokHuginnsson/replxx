@@ -33,12 +33,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __LINENOISE_H
-#define __LINENOISE_H
+#ifndef __REPLXX_H
+#define __REPLXX_H
 
-#define LINENOISE_VERSION "1.0.0"
-#define LINENOISE_VERSION_MAJOR 1
-#define LINENOISE_VERSION_MINOR 1
+#define REPLXX_VERSION "0.0.1"
+#define REPLXX_VERSION_MAJOR 0
+#define REPLXX_VERSION_MINOR 0
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,4 +68,4 @@ int linenoiseInstallWindowChangeHandler(void);
 }
 #endif
 
-#endif /* __LINENOISE_H */
+#endif /* __REPLXX_H */

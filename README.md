@@ -1,4 +1,4 @@
-# Linenoise Next Generation
+# Read Evaluate Print Loop ++
 
 A small, portable GNU readline replacement for Linux, Windows and
 MacOS which is capable of handling UTF-8 characters. Unlike GNU
@@ -7,7 +7,8 @@ used in any kind of program.
 
 ## Origin
 
-This linenoise implementation is based on the work by 
+This replxx implementation is based on the work by
+[ArangoDB Team](https://github.com/arangodb/linenoise-ng) and
 [Salvatore Sanfilippo](https://github.com/antirez/linenoise) and
 10gen Inc.  The goal is to create a zero-config, BSD
 licensed, readline replacement usable in Apache2 or BSD licensed
@@ -76,7 +77,7 @@ target environment:
 * 32 bit: `cmake -G "Visual Studio 12 2013" -DCMAKE_BUILD_TYPE=Release ..`
 * 64 bit: `cmake -G "Visual Studio 12 2013 Win64" -DCMAKE_BUILD_TYPE=Release ..`
 
-After that, open the generated file `linenoise.sln` from the `build`
+After that, open the generated file `replxx.sln` from the `build`
 subdirectory with Visual Studio.
 
 

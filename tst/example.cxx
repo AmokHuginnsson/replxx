@@ -1,8 +1,8 @@
-#include "linenoise.h"
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "replxx.h"
 
 static const char* examples[] = {
   "db", "hello", "hallo", "hans", "hansekogge", "seamann", "quetzalcoatl", "quit", "power", NULL

@@ -116,7 +116,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "linenoise.h"
+#include "replxx.h"
 #include "ConvertUTF.h"
 
 #include <string>
@@ -517,8 +517,8 @@ struct linenoiseCompletions {
   vector<Utf32String> completionStrings;
 };
 
-#define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
-#define LINENOISE_MAX_LINE 4096
+#define REPLXX_DEFAULT_HISTORY_MAX_LEN 100
+#define REPLXX_MAX_LINE 4096
 
 // make control-characters more readable
 #define ctrlChar(upperCaseASCII) (upperCaseASCII - 0x40)
@@ -926,7 +926,7 @@ static KillRing killRing;
 
 static int rawmode = 0; /* for atexit() function to check if restore is needed*/
 static int atexit_registered = 0; /* register atexit just 1 time */
-static int historyMaxLen = LINENOISE_DEFAULT_HISTORY_MAX_LEN;
+static int historyMaxLen = REPLXX_DEFAULT_HISTORY_MAX_LEN;
 static int historyLen = 0;
 static int historyIndex = 0;
 static char8_t** history = NULL;
@@ -3072,9 +3072,9 @@ void linenoisePreloadBuffer(const char* preloadText) {
   *pOut = 0;
   int processedLength = static_cast<int>(pOut - tempBuffer.get());
   bool lineTruncated = false;
-  if (processedLength > (LINENOISE_MAX_LINE - 1)) {
+  if (processedLength > (REPLXX_MAX_LINE - 1)) {
     lineTruncated = true;
-    tempBuffer[LINENOISE_MAX_LINE - 1] = 0;
+    tempBuffer[REPLXX_MAX_LINE - 1] = 0;
   }
   preloadedBufferContents = tempBuffer.get();
   if (controlsStripped) {
@@ -3085,7 +3085,7 @@ void linenoisePreloadBuffer(const char* preloadText) {
     preloadErrorMessage += " [Edited line: the line length was reduced from ";
     char buf[128];
     snprintf(buf, sizeof(buf), "%d to %d]\n", processedLength,
-             (LINENOISE_MAX_LINE - 1));
+             (REPLXX_MAX_LINE - 1));
     preloadErrorMessage += buf;
   }
 }
@@ -3106,8 +3106,8 @@ char* linenoise(const char* prompt) {
   gotResize = false;
 #endif
   if (isatty(STDIN_FILENO)) {  // input is from a terminal
-    char32_t buf32[LINENOISE_MAX_LINE];
-    char charWidths[LINENOISE_MAX_LINE];
+    char32_t buf32[REPLXX_MAX_LINE];
+    char charWidths[REPLXX_MAX_LINE];
     if (!preloadErrorMessage.empty()) {
       printf("%s", preloadErrorMessage.c_str());
       fflush(stdout);
@@ -3118,8 +3118,8 @@ char* linenoise(const char* prompt) {
       if (!pi.write()) return 0;
       fflush(stdout);
       if (preloadedBufferContents.empty()) {
-        unique_ptr<char[]> buf8(new char[LINENOISE_MAX_LINE]);
-        if (fgets(buf8.get(), LINENOISE_MAX_LINE, stdin) == NULL) {
+        unique_ptr<char[]> buf8(new char[REPLXX_MAX_LINE]);
+        if (fgets(buf8.get(), REPLXX_MAX_LINE, stdin) == NULL) {
           return NULL;
         }
         size_t len = strlen(buf8.get());
@@ -3137,7 +3137,7 @@ char* linenoise(const char* prompt) {
       if (enableRawMode() == -1) {
         return NULL;
       }
-      InputBuffer ib(buf32, charWidths, LINENOISE_MAX_LINE);
+      InputBuffer ib(buf32, charWidths, REPLXX_MAX_LINE);
       if (!preloadedBufferContents.empty()) {
         ib.preloadBuffer(preloadedBufferContents.c_str());
         preloadedBufferContents.clear();
@@ -3155,8 +3155,8 @@ char* linenoise(const char* prompt) {
     }
   } else {  // input not from a terminal, we should work with piped input, i.e.
             // redirected stdin
-    unique_ptr<char[]> buf8(new char[LINENOISE_MAX_LINE]);
-    if (fgets(buf8.get(), LINENOISE_MAX_LINE, stdin) == NULL) {
+    unique_ptr<char[]> buf8(new char[REPLXX_MAX_LINE]);
+    if (fgets(buf8.get(), REPLXX_MAX_LINE, stdin) == NULL) {
       return NULL;
     }
 
@@ -3290,8 +3290,8 @@ int linenoiseHistoryLoad(const char* filename) {
     return -1;
   }
 
-  char buf[LINENOISE_MAX_LINE];
-  while (fgets(buf, LINENOISE_MAX_LINE, fp) != NULL) {
+  char buf[REPLXX_MAX_LINE];
+  while (fgets(buf, REPLXX_MAX_LINE, fp) != NULL) {
     char* p = strchr(buf, '\r');
     if (!p) {
       p = strchr(buf, '\n');
