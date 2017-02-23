@@ -63,7 +63,7 @@
 #include <string>
 #include <memory>
 
-namespace linenoise_ng {
+namespace replxx {
 
 struct interval {
   char32_t first;
