@@ -44,25 +44,24 @@
 extern "C" {
 #endif
 
-typedef struct linenoiseCompletions linenoiseCompletions;
+typedef struct replxx_completions replxx_completions;
 
-typedef void(linenoiseCompletionCallback)(const char*, linenoiseCompletions*);
-void linenoiseSetCompletionCallback(linenoiseCompletionCallback* fn);
-void linenoiseAddCompletion(linenoiseCompletions* lc, const char* str);
+typedef void(replxx_completion_callback_t)(const char*, replxx_completions*);
+void replxx_set_completion_callback(replxx_completion_callback_t* fn);
+void replxx_add_completion(replxx_completions* lc, const char* str);
 
-char* linenoise(const char* prompt);
-void linenoisePreloadBuffer(const char* preloadText);
-int linenoiseHistoryAdd(const char* line);
-int linenoiseHistorySetMaxLen(int len);
-char* linenoiseHistoryLine(int index);
-int linenoiseHistorySave(const char* filename);
-int linenoiseHistoryLoad(const char* filename);
-void linenoiseHistoryFree(void);
-void linenoiseClearScreen(void);
-void linenoiseSetMultiLine(int ml);
-void linenoisePrintKeyCodes(void);
+char* replxx_input(const char* prompt);
+void replxx_set_preload_buffer(const char* preloadText);
+int replxx_history_add(const char* line);
+int replxx_set_max_history_size(int len);
+char* replxx_history_line(int index);
+int replxx_history_save(const char* filename);
+int replxx_history_load(const char* filename);
+void replxx_history_free(void);
+void replxx_clear_screen(void);
+void replxx_debug_dump_print_codes(void);
 /* the following is extension to the original linenoise API */
-int linenoiseInstallWindowChangeHandler(void);
+int replxx_install_window_change_handler(void);
 
 #ifdef __cplusplus
 }

@@ -8,46 +8,46 @@ static const char* examples[] = {
   "db", "hello", "hallo", "hans", "hansekogge", "seamann", "quetzalcoatl", "quit", "power", NULL
 };
 
-void completionHook (char const* prefix, linenoiseCompletions* lc) {
+void completionHook (char const* prefix, replxx_completions* lc) {
   size_t i;
 
   for (i = 0;  examples[i] != NULL; ++i) {
     if (strncmp(prefix, examples[i], strlen(prefix)) == 0) {
-      linenoiseAddCompletion(lc, examples[i]);
+      replxx_add_completion(lc, examples[i]);
     }
   }
 }
 
 int main (int argc, char** argv) {
-  linenoiseInstallWindowChangeHandler();
+  replxx_install_window_change_handler();
 
   while(argc > 1) {
     argc--;
     argv++;
     if (!strcmp(*argv, "--keycodes")) {
-      linenoisePrintKeyCodes();
+      replxx_debug_dump_print_codes();
       exit(0);
     }
   }
 
   const char* file = "./history";
 
-  linenoiseHistoryLoad(file);
-  linenoiseSetCompletionCallback(completionHook);
+  replxx_history_load(file);
+  replxx_set_completion_callback(completionHook);
 
   printf("starting...\n");
 
-  char const* prompt = "\x1b[1;32mlinenoise\x1b[0m> ";
+  char const* prompt = "\x1b[1;32mreplxx\x1b[0m> ";
 
   while (1) {
-    char* result = linenoise(prompt);
+    char* result = replxx_input(prompt);
 
     if (result == NULL) {
       break;
     } else if (!strncmp(result, "/history", 8)) {
       /* Display the current history. */
       for (int index = 0; ; ++index) {
-        char* hist = linenoiseHistoryLine(index);
+        char* hist = replxx_history_line(index);
         if (hist == NULL) break;
         printf("%4d: %s\n", index, hist);
         free(hist);
@@ -59,10 +59,10 @@ int main (int argc, char** argv) {
     }
 
     printf("thanks for the input.\n");
-    linenoiseHistoryAdd(result);
+    replxx_history_add(result);
     free(result);
   }
 
-  linenoiseHistorySave(file);
-  linenoiseHistoryFree();
+  replxx_history_save(file);
+  replxx_history_free();
 }
