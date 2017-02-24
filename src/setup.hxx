@@ -10,6 +10,9 @@ struct Setup {
 	int historyMaxLen;
 	char const* breakChars;
 	int completionCountCutoff;
+	bool douleTabCompletion;
+	bool completeOnEmpty;
+	bool beepOnAmbiguousCompletion;
 	replxx_completion_callback_t* completionCallback;
 	Setup( void );
 };

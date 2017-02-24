@@ -233,7 +233,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
 			}
 		}
 	}
-	if (lc.completionStrings.size() != 1) {	// beep if ambiguous
+	if ( setup.beepOnAmbiguousCompletion && ( lc.completionStrings.size() != 1 ) ) {	// beep if ambiguous
 		beep();
 	}
 
@@ -259,16 +259,18 @@ int InputBuffer::completeLine(PromptBase& pi) {
 		return 0;
 	}
 
-	// we can't complete any further, wait for second tab
-	do {
-		c = read_char();
-		c = cleanupCtrl(c);
-	} while (c == static_cast<char32_t>(-1));
+	if ( setup.douleTabCompletion ) {
+		// we can't complete any further, wait for second tab
+		do {
+			c = read_char();
+			c = cleanupCtrl(c);
+		} while (c == static_cast<char32_t>(-1));
 
-	// if any character other than tab, pass it to the main loop
-	if (c != ctrlChar('I')) {
-		freeCompletions(&lc);
-		return c;
+		// if any character other than tab, pass it to the main loop
+		if (c != ctrlChar('I')) {
+			freeCompletions(&lc);
+			return c;
+		}
 	}
 
 	// we got a second tab, maybe show list of possible completions
@@ -490,10 +492,11 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 
 		// ctrl-I/tab, command completion, needs to be before switch statement
 		if (c == ctrlChar('I') && setup.completionCallback) {
-			if (pos == 0)	// SERVER-4967 -- in earlier versions, you could paste
-										 // previous output
-				continue;		//	back into the shell ... this output may have leading
-										 //	tabs.
+			if ( ( pos == 0 ) && ! setup.completeOnEmpty ) {
+				// SERVER-4967 -- in earlier versions, you could paste
+				// previous output
+				continue;	//	back into the shell ... this output may have leading tabs.
+			}
 			// This hack (i.e. what the old code did) prevents command completion
 			//	on an empty line but lets users paste text with leading tabs.
 

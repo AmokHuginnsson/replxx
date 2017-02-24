@@ -423,6 +423,18 @@ void replxx_set_max_line_size(int len) {
 	setup.maxLineLength = len;
 }
 
+void replxx_set_double_tab_completion(int val) {
+	setup.douleTabCompletion = val ? true : false;
+}
+
+void replxx_set_complete_on_empty(int val) {
+	setup.completeOnEmpty = val ? true : false;
+}
+
+void replxx_set_beep_on_ambiguous_completion(int val) {
+	setup.beepOnAmbiguousCompletion = val ? true : false;
+}
+
 /* Fetch a line of the history by (zero-based) index.	If the requested
  * line does not exist, NULL is returned.	The return value is a heap-allocated
  * copy of the line, and the caller is responsible for de-allocating it. */

@@ -15,6 +15,9 @@ Setup::Setup()
 	, historyMaxLen( REPLXX_DEFAULT_HISTORY_MAX_LEN )
 	, breakChars( defaultBreakChars )
 	, completionCountCutoff( 100 )
+	, douleTabCompletion( false )
+	, completeOnEmpty( true )
+	, beepOnAmbiguousCompletion( false )
 	, completionCallback( nullptr ) {
 }
 
