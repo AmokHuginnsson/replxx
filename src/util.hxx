@@ -7,6 +7,7 @@ inline bool isControlChar(char32_t testChar) {
 	return (testChar < ' ') ||											// C0 controls
 				 (testChar >= 0x7F && testChar <= 0x9F);	// DEL and C1 controls
 }
+int cleanupCtrl(int c);
 
 bool isCharacterAlphanumeric(char32_t testChar);
 

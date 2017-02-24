@@ -78,16 +78,18 @@ include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src)
 add_library(
   replxx
   STATIC
-  src/ConvertUTF.cpp
   src/conversion.cxx
-	src/io.cxx
-	src/util.cxx
-  src/windows.cxx
-  src/prompt.cxx
-  src/inputbuffer.cxx
+  src/ConvertUTF.cpp
   src/escape.cxx
+  src/history.cxx
+  src/inputbuffer.cxx
+  src/io.cxx
+  src/prompt.cxx
   src/replxx.cpp
+  src/setup.cxx
+  src/util.cxx
   src/wcwidth.cpp
+  src/windows.cxx
 )
 
 # install

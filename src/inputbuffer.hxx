@@ -1,7 +1,13 @@
 #ifndef REPLXX_INPUTBUFFER_HXX_INCLUDED
 #define REPLXX_INPUTBUFFER_HXX_INCLUDED 1
 
+#include <vector>
+
 #include "prompt.hxx"
+
+struct replxx_completions {
+	std::vector<replxx::Utf32String> completionStrings;
+};
 
 namespace replxx {
 

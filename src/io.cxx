@@ -18,16 +18,32 @@
 #else /* _WIN32 */
 
 #include <unistd.h>
+#include <termios.h>
 #include <sys/ioctl.h>
 
 #endif /* _WIN32 */
 
 #include "io.hxx"
 #include "conversion.hxx"
+#include "escape.hxx"
+#include "keycodes.hxx"
 
 using namespace std;
 
 namespace replxx {
+
+#ifdef _WIN32
+static HANDLE console_in, console_out;
+static DWORD oldMode;
+static WORD oldDisplayAttribute;
+#else
+static struct termios orig_termios; /* in order to restore at exit */
+#endif
+
+static int rawmode = 0; /* for atexit() function to check if restore is needed*/
+static int atexit_registered = 0; /* register atexit just 1 time */
+// At exit we'll try to fix the terminal to the initial conditions
+static void repl_at_exit(void) { disableRawMode(); }
 
 int write32( int fd, char32_t* text32, int len32 ) {
 #ifdef _WIN32
@@ -124,6 +140,67 @@ void setDisplayAttribute(bool enhancedDisplay) {
 
 #ifndef _WIN32
 
+int enableRawMode(void) {
+#ifdef _WIN32
+	if (!console_in) {
+		console_in = GetStdHandle(STD_INPUT_HANDLE);
+		console_out = GetStdHandle(STD_OUTPUT_HANDLE);
+
+		GetConsoleMode(console_in, &oldMode);
+		SetConsoleMode(console_in, oldMode &
+																	 ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT |
+																		 ENABLE_PROCESSED_INPUT));
+	}
+	return 0;
+#else
+	struct termios raw;
+
+	if (!isatty(STDIN_FILENO)) goto fatal;
+	if (!atexit_registered) {
+		atexit(repl_at_exit);
+		atexit_registered = 1;
+	}
+	if (tcgetattr(0, &orig_termios) == -1) goto fatal;
+
+	raw = orig_termios; /* modify the original mode */
+	/* input modes: no break, no CR to NL, no parity check, no strip char,
+	 * no start/stop output control. */
+	raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+	/* output modes - disable post processing */
+	// this is wrong, we don't want raw output, it turns newlines into straight
+	// linefeeds
+	// raw.c_oflag &= ~(OPOST);
+	/* control modes - set 8 bit chars */
+	raw.c_cflag |= (CS8);
+	/* local modes - echoing off, canonical off, no extended functions,
+	 * no signal chars (^Z,^C) */
+	raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+	/* control chars - set return condition: min number of bytes and timer.
+	 * We want read to return every single byte, without timeout. */
+	raw.c_cc[VMIN] = 1;
+	raw.c_cc[VTIME] = 0; /* 1 byte, no timer */
+
+	/* put terminal in raw mode after flushing */
+	if (tcsetattr(0, TCSADRAIN, &raw) < 0) goto fatal;
+	rawmode = 1;
+	return 0;
+
+fatal:
+	errno = ENOTTY;
+	return -1;
+#endif
+}
+
+void disableRawMode(void) {
+#ifdef _WIN32
+	SetConsoleMode(console_in, oldMode);
+	console_in = 0;
+	console_out = 0;
+#else
+	if (rawmode && tcsetattr(0, TCSADRAIN, &orig_termios) != -1) rawmode = 0;
+#endif
+}
+
 /**
  * Read a UTF-8 sequence from the non-Windows keyboard and return the Unicode
  * (char32_t) character it
@@ -170,6 +247,192 @@ char32_t readUnicodeCharacter(void) {
 void beep() {
 	fprintf(stderr, "\x7");	// ctrl-G == bell/beep
 	fflush(stderr);
+}
+
+// replxx_read_char -- read a keystroke or keychord from the keyboard, and
+// translate it
+// into an encoded "keystroke".	When convenient, extended keys are translated
+// into their
+// simpler Emacs keystrokes, so an unmodified "left arrow" becomes Ctrl-B.
+//
+// A return value of zero means "no input available", and a return value of -1
+// means "invalid key".
+//
+char32_t read_char(void) {
+#ifdef _WIN32
+
+	INPUT_RECORD rec;
+	DWORD count;
+	int modifierKeys = 0;
+	bool escSeen = false;
+	while (true) {
+		ReadConsoleInputW(console_in, &rec, 1, &count);
+#if 0	// helper for debugging keystrokes, display info in the debug "Output"
+			 // window in the debugger
+				{
+						if ( rec.EventType == KEY_EVENT ) {
+								//if ( rec.Event.KeyEvent.uChar.UnicodeChar ) {
+										char buf[1024];
+										sprintf(
+														buf,
+														"Unicode character 0x%04X, repeat count %d, virtual keycode 0x%04X, "
+														"virtual scancode 0x%04X, key %s%s%s%s%s\n",
+														rec.Event.KeyEvent.uChar.UnicodeChar,
+														rec.Event.KeyEvent.wRepeatCount,
+														rec.Event.KeyEvent.wVirtualKeyCode,
+														rec.Event.KeyEvent.wVirtualScanCode,
+														rec.Event.KeyEvent.bKeyDown ? "down" : "up",
+																(rec.Event.KeyEvent.dwControlKeyState & LEFT_CTRL_PRESSED)	?
+																		" L-Ctrl" : "",
+																(rec.Event.KeyEvent.dwControlKeyState & RIGHT_CTRL_PRESSED) ?
+																		" R-Ctrl" : "",
+																(rec.Event.KeyEvent.dwControlKeyState & LEFT_ALT_PRESSED)	 ?
+																		" L-Alt"	: "",
+																(rec.Event.KeyEvent.dwControlKeyState & RIGHT_ALT_PRESSED)	?
+																		" R-Alt"	: ""
+													 );
+										OutputDebugStringA( buf );
+								//}
+						}
+				}
+#endif
+		if (rec.EventType != KEY_EVENT) {
+			continue;
+		}
+		// Windows provides for entry of characters that are not on your keyboard by
+		// sending the
+		// Unicode characters as a "key up" with virtual keycode 0x12 (VK_MENU ==
+		// Alt key) ...
+		// accept these characters, otherwise only process characters on "key down"
+		if (!rec.Event.KeyEvent.bKeyDown &&
+				rec.Event.KeyEvent.wVirtualKeyCode != VK_MENU) {
+			continue;
+		}
+		modifierKeys = 0;
+		// AltGr is encoded as ( LEFT_CTRL_PRESSED | RIGHT_ALT_PRESSED ), so don't
+		// treat this
+		// combination as either CTRL or META we just turn off those two bits, so it
+		// is still
+		// possible to combine CTRL and/or META with an AltGr key by using
+		// right-Ctrl and/or
+		// left-Alt
+		if ((rec.Event.KeyEvent.dwControlKeyState &
+				 (LEFT_CTRL_PRESSED | RIGHT_ALT_PRESSED)) ==
+				(LEFT_CTRL_PRESSED | RIGHT_ALT_PRESSED)) {
+			rec.Event.KeyEvent.dwControlKeyState &=
+					~(LEFT_CTRL_PRESSED | RIGHT_ALT_PRESSED);
+		}
+		if (rec.Event.KeyEvent.dwControlKeyState &
+				(RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED)) {
+			modifierKeys |= CTRL;
+		}
+		if (rec.Event.KeyEvent.dwControlKeyState &
+				(RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) {
+			modifierKeys |= META;
+		}
+		if (escSeen) {
+			modifierKeys |= META;
+		}
+		if (rec.Event.KeyEvent.uChar.UnicodeChar == 0) {
+			switch (rec.Event.KeyEvent.wVirtualKeyCode) {
+				case VK_LEFT:
+					return modifierKeys | LEFT_ARROW_KEY;
+				case VK_RIGHT:
+					return modifierKeys | RIGHT_ARROW_KEY;
+				case VK_UP:
+					return modifierKeys | UP_ARROW_KEY;
+				case VK_DOWN:
+					return modifierKeys | DOWN_ARROW_KEY;
+				case VK_DELETE:
+					return modifierKeys | DELETE_KEY;
+				case VK_HOME:
+					return modifierKeys | HOME_KEY;
+				case VK_END:
+					return modifierKeys | END_KEY;
+				case VK_PRIOR:
+					return modifierKeys | PAGE_UP_KEY;
+				case VK_NEXT:
+					return modifierKeys | PAGE_DOWN_KEY;
+				default:
+					continue;	// in raw mode, ReadConsoleInput shows shift, ctrl ...
+			}							//	... ignore them
+		} else if (rec.Event.KeyEvent.uChar.UnicodeChar ==
+							 ctrlChar('[')) {	// ESC, set flag for later
+			escSeen = true;
+			continue;
+		} else {
+			// we got a real character, return it
+			return modifierKeys | rec.Event.KeyEvent.uChar.UnicodeChar;
+		}
+	}
+
+#else
+	char32_t c;
+	c = readUnicodeCharacter();
+	if (c == 0) return 0;
+
+// If _DEBUG_LINUX_KEYBOARD is set, then ctrl-^ puts us into a keyboard
+// debugging mode
+// where we print out decimal and decoded values for whatever the "terminal"
+// program
+// gives us on different keystrokes.	Hit ctrl-C to exit this mode.
+//
+#define _DEBUG_LINUX_KEYBOARD
+#if defined(_DEBUG_LINUX_KEYBOARD)
+	if (c == ctrlChar('^')) {	// ctrl-^, special debug mode, prints all keys hit,
+														 // ctrl-C to get out
+		printf(
+				"\nEntering keyboard debugging mode (on ctrl-^), press ctrl-C to exit "
+				"this mode\n");
+		while (true) {
+			unsigned char keys[10];
+			int ret = read(0, keys, 10);
+
+			if (ret <= 0) {
+				printf("\nret: %d\n", ret);
+			}
+			for (int i = 0; i < ret; ++i) {
+				char32_t key = static_cast<char32_t>(keys[i]);
+				char* friendlyTextPtr;
+				char friendlyTextBuf[10];
+				const char* prefixText = (key < 0x80) ? "" : "0x80+";
+				char32_t keyCopy = (key < 0x80) ? key : key - 0x80;
+				if (keyCopy >= '!' && keyCopy <= '~') {	// printable
+					friendlyTextBuf[0] = '\'';
+					friendlyTextBuf[1] = keyCopy;
+					friendlyTextBuf[2] = '\'';
+					friendlyTextBuf[3] = 0;
+					friendlyTextPtr = friendlyTextBuf;
+				} else if (keyCopy == ' ') {
+					friendlyTextPtr = const_cast<char*>("space");
+				} else if (keyCopy == 27) {
+					friendlyTextPtr = const_cast<char*>("ESC");
+				} else if (keyCopy == 0) {
+					friendlyTextPtr = const_cast<char*>("NUL");
+				} else if (keyCopy == 127) {
+					friendlyTextPtr = const_cast<char*>("DEL");
+				} else {
+					friendlyTextBuf[0] = '^';
+					friendlyTextBuf[1] = keyCopy + 0x40;
+					friendlyTextBuf[2] = 0;
+					friendlyTextPtr = friendlyTextBuf;
+				}
+				printf("%d x%02X (%s%s)	", key, key, prefixText, friendlyTextPtr);
+			}
+			printf("\x1b[1G\n");	// go to first column of new line
+
+			// drop out of this loop on ctrl-C
+			if (keys[0] == ctrlChar('C')) {
+				printf("Leaving keyboard debugging mode (on ctrl-C)\n");
+				fflush(stdout);
+				return -2;
+			}
+		}
+	}
+#endif	// _DEBUG_LINUX_KEYBOARD
+
+	return EscapeSequenceProcessing::doDispatch(c);
+#endif	// #_WIN32
 }
 
 }
