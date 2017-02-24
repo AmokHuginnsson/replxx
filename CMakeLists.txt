@@ -79,6 +79,8 @@ add_library(
   replxx
   STATIC
   src/ConvertUTF.cpp
+  src/conversion.cxx
+  src/windows.cxx
   src/replxx.cpp
   src/wcwidth.cpp
 )
