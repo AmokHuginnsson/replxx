@@ -132,8 +132,6 @@ using namespace replxx;
 
 namespace replxx {
 
-#define REPLXX_MAX_LINE 4096
-
 #ifndef _WIN32
 bool gotResize = false;
 #endif
@@ -258,18 +256,6 @@ void replxx_clear_screen(void) {
 #endif
 }
 
-void InputBuffer::clearScreen(PromptBase& pi) {
-	replxx_clear_screen();
-	if (!pi.write()) return;
-#ifndef _WIN32
-	// we have to generate our own newline on line wrap on Linux
-	if (pi.promptIndentation == 0 && pi.promptExtraLines > 0)
-		if (write(1, "\n", 1) == -1) return;
-#endif
-	pi.promptCursorRowOffset = pi.promptExtraLines;
-	refreshLine(pi);
-}
-
 static string preloadedBufferContents;	// used with replxx_set_preload_buffer
 static string preloadErrorMessage;
 
@@ -319,9 +305,9 @@ void replxx_set_preload_buffer(const char* preloadText) {
 	*pOut = 0;
 	int processedLength = static_cast<int>(pOut - tempBuffer.get());
 	bool lineTruncated = false;
-	if (processedLength > (REPLXX_MAX_LINE - 1)) {
+	if (processedLength > (setup.maxLineLength - 1)) {
 		lineTruncated = true;
-		tempBuffer[REPLXX_MAX_LINE - 1] = 0;
+		tempBuffer[setup.maxLineLength - 1] = 0;
 	}
 	preloadedBufferContents = tempBuffer.get();
 	if (controlsStripped) {
@@ -332,7 +318,7 @@ void replxx_set_preload_buffer(const char* preloadText) {
 		preloadErrorMessage += " [Edited line: the line length was reduced from ";
 		char buf[128];
 		snprintf(buf, sizeof(buf), "%d to %d]\n", processedLength,
-						 (REPLXX_MAX_LINE - 1));
+						 (setup.maxLineLength - 1));
 		preloadErrorMessage += buf;
 	}
 }
@@ -353,8 +339,6 @@ char* replxx_input(const char* prompt) {
 	gotResize = false;
 #endif
 	if (isatty(STDIN_FILENO)) {	// input is from a terminal
-		char32_t buf32[REPLXX_MAX_LINE];
-		char charWidths[REPLXX_MAX_LINE];
 		if (!preloadErrorMessage.empty()) {
 			printf("%s", preloadErrorMessage.c_str());
 			fflush(stdout);
@@ -365,8 +349,8 @@ char* replxx_input(const char* prompt) {
 			if (!pi.write()) return 0;
 			fflush(stdout);
 			if (preloadedBufferContents.empty()) {
-				unique_ptr<char[]> buf8(new char[REPLXX_MAX_LINE]);
-				if (fgets(buf8.get(), REPLXX_MAX_LINE, stdin) == NULL) {
+				unique_ptr<char[]> buf8(new char[setup.maxLineLength]);
+				if (fgets(buf8.get(), setup.maxLineLength, stdin) == NULL) {
 					return NULL;
 				}
 				size_t len = strlen(buf8.get());
@@ -384,7 +368,7 @@ char* replxx_input(const char* prompt) {
 			if (enableRawMode() == -1) {
 				return NULL;
 			}
-			InputBuffer ib(buf32, charWidths, REPLXX_MAX_LINE);
+			InputBuffer ib(setup.maxLineLength);
 			if (!preloadedBufferContents.empty()) {
 				ib.preloadBuffer(preloadedBufferContents.c_str());
 				preloadedBufferContents.clear();
@@ -397,13 +381,13 @@ char* replxx_input(const char* prompt) {
 			}
 			size_t bufferSize = sizeof(char32_t) * ib.length() + 1;
 			unique_ptr<char[]> buf8(new char[bufferSize]);
-			copyString32to8(buf8.get(), bufferSize, buf32);
+			copyString32to8(buf8.get(), bufferSize, ib.buf());
 			return strdup(buf8.get());	// caller must free buffer
 		}
 	} else {	// input not from a terminal, we should work with piped input, i.e.
 						// redirected stdin
-		unique_ptr<char[]> buf8(new char[REPLXX_MAX_LINE]);
-		if (fgets(buf8.get(), REPLXX_MAX_LINE, stdin) == NULL) {
+		unique_ptr<char[]> buf8(new char[setup.maxLineLength]);
+		if (fgets(buf8.get(), setup.maxLineLength, stdin) == NULL) {
 			return NULL;
 		}
 
@@ -432,6 +416,10 @@ int replxx_history_add(const char* line) {
 
 int replxx_set_max_history_size(int len) {
 	return replxx::set_max_history_size( len );
+}
+
+void replxx_set_max_line_size(int len) {
+	setup.maxLineLength = len;
 }
 
 /* Fetch a line of the history by (zero-based) index.	If the requested
@@ -471,17 +459,17 @@ int replxx_history_load(const char* filename) {
 		return -1;
 	}
 
-	char buf[REPLXX_MAX_LINE];
-	while (fgets(buf, REPLXX_MAX_LINE, fp) != NULL) {
-		char* p = strchr(buf, '\r');
+	unique_ptr<char[]> buf( new char[setup.maxLineLength] );
+	while (fgets(buf.get(), setup.maxLineLength, fp) != NULL) {
+		char* p = strchr(buf.get(), '\r');
 		if (!p) {
-			p = strchr(buf, '\n');
+			p = strchr(buf.get(), '\n');
 		}
 		if (p) {
 			*p = '\0';
 		}
-		if (p != buf) {
-			replxx::history_add(buf);
+		if (p != buf.get()) {
+			replxx::history_add(buf.get());
 		}
 	}
 	fclose(fp);
