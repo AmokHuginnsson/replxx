@@ -85,6 +85,7 @@ add_library(
   src/windows.cxx
   src/prompt.cxx
   src/inputbuffer.cxx
+  src/escape.cxx
   src/replxx.cpp
   src/wcwidth.cpp
 )

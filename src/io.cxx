@@ -122,5 +122,55 @@ void setDisplayAttribute(bool enhancedDisplay) {
 #endif
 }
 
+#ifndef _WIN32
+
+/**
+ * Read a UTF-8 sequence from the non-Windows keyboard and return the Unicode
+ * (char32_t) character it
+ * encodes
+ *
+ * @return	char32_t Unicode character
+ */
+char32_t readUnicodeCharacter(void) {
+	static char8_t utf8String[5];
+	static size_t utf8Count = 0;
+	while (true) {
+		char8_t c;
+
+		/* Continue reading if interrupted by signal. */
+		ssize_t nread;
+		do {
+			nread = read(0, &c, 1);
+		} while ((nread == -1) && (errno == EINTR));
+
+		if (nread <= 0) return 0;
+		if (c <= 0x7F) {	// short circuit ASCII
+			utf8Count = 0;
+			return c;
+		} else if (utf8Count < sizeof(utf8String) - 1) {
+			utf8String[utf8Count++] = c;
+			utf8String[utf8Count] = 0;
+			char32_t unicodeChar[2];
+			size_t ucharCount;
+			ConversionResult res =
+					copyString8to32(unicodeChar, 2, ucharCount, utf8String);
+			if (res == conversionOK && ucharCount) {
+				utf8Count = 0;
+				return unicodeChar[0];
+			}
+		} else {
+			utf8Count =
+					0;	// this shouldn't happen: got four bytes but no UTF-8 character
+		}
+	}
+}
+
+#endif	// #ifndef _WIN32
+
+void beep() {
+	fprintf(stderr, "\x7");	// ctrl-G == bell/beep
+	fflush(stderr);
+}
+
 }
 

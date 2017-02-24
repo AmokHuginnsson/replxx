@@ -7,6 +7,8 @@ int write32( int fd, char32_t* text32, int len32 );
 int getScreenColumns(void);
 int getScreenRows(void);
 void setDisplayAttribute(bool enhancedDisplay);
+char32_t readUnicodeCharacter(void);
+void beep();
 
 }
 
