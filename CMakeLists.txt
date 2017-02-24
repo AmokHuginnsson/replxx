@@ -81,7 +81,10 @@ add_library(
   src/ConvertUTF.cpp
   src/conversion.cxx
 	src/io.cxx
+	src/util.cxx
   src/windows.cxx
+  src/prompt.cxx
+  src/inputbuffer.cxx
   src/replxx.cpp
   src/wcwidth.cpp
 )

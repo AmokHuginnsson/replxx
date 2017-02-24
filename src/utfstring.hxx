@@ -1,6 +1,10 @@
 #ifndef REPLXX_UTFSTRING_HXX_INCLUDED
 #define REPLXX_UTFSTRING_HXX_INCLUDED
 
+#include <cstring>
+
+#include "conversion.hxx"
+
 namespace replxx {
 
 class Utf32String {
