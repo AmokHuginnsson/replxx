@@ -6,7 +6,7 @@ cmake_install.cmake
 install_manifest.txt
 example
 linenoise_example
-liblinenoise.a
+libreplxx.a
 *.dSYM
 history.txt
 *.o

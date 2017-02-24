@@ -31,6 +31,10 @@ class WinAttributes {
 	int _consoleColor;
 };
 
+size_t OutputWin( char16_t* text16, char32_t* text32, size_t len32 );
+char32_t* HandleEsc( char32_t* p, char32_t* end );
+size_t WinWrite32( char16_t* text16, char32_t* text32, size_t len32 );
+
 extern WinAttributes WIN_ATTR;
 
 }

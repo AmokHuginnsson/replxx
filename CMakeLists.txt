@@ -80,6 +80,7 @@ add_library(
   STATIC
   src/ConvertUTF.cpp
   src/conversion.cxx
+	src/io.cxx
   src/windows.cxx
   src/replxx.cpp
   src/wcwidth.cpp
