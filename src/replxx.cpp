@@ -107,18 +107,8 @@
 #include <signal.h>
 #include <termios.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <cctype>
-#include <wctype.h>
 
 #endif /* _WIN32 */
-
-#include <stdio.h>
-#include <errno.h>
-#include <fcntl.h>
 
 #include "replxx.h"
 #include "conversion.hxx"
