@@ -87,6 +87,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <cerrno>
 
 #ifdef _WIN32
 

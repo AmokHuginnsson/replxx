@@ -1,4 +1,5 @@
 #include <memory>
+#include <cerrno>
 #include <cstdlib>
 
 #ifdef _WIN32

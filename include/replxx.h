@@ -65,6 +65,7 @@ struct replxx_color {
 		NORMAL        = LIGHTGRAY,
 		DEFAULT       = -1
 	};
+	char dummy;
 };
 
 typedef void (replxx_highlighter_callback_t)(char const* input, replxx_color::color* colors, int size);
