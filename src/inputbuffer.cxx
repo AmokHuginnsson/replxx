@@ -57,8 +57,7 @@ void InputBuffer::preloadBuffer(const char* preloadText) {
 	_prefix = _pos = static_cast<int>(ucharCount);
 }
 
-namespace {
-void setColor( InputBuffer::display_t& display_, replxx_color::color color_ ) {
+void InputBuffer::setColor( replxx_color::color color_ ) {
 	char const reset[] = "\033[0m";
 	char const black[] = "\033[22;30m";
 	char const red[] = "\033[22;31m";
@@ -99,10 +98,29 @@ void setColor( InputBuffer::display_t& display_, replxx_color::color color_ ) {
 		case replxx_color::DEFAULT:       code = reset;         break;
 	}
 	while ( *code ) {
-		display_.push_back( *code );
+		_display.push_back( *code );
 		++ code;
 	}
 }
+
+void InputBuffer::highlight( int highlightIdx ) {
+	std::vector<replxx_color::color> colors( _len );
+	Utf32String unicodeCopy(_buf32.get(), _len);
+	Utf8String parseItem(unicodeCopy);
+	setup.highlighterCallback(parseItem.get(), colors.data(), _len);
+	if ( highlightIdx != -1 ) {
+		colors[highlightIdx] = replxx_color::BRIGHTRED;
+	}
+	_display.clear();
+	replxx_color::color c( replxx_color::DEFAULT );
+	for ( int i( 0 ); i < _len; ++ i ) {
+		if ( colors[i] != c ) {
+			c = colors[i];
+			setColor( c );
+		}
+		_display.push_back( _buf32[i] );
+	}
+	setColor( replxx_color::DEFAULT );
 }
 
 /**
@@ -113,7 +131,7 @@ void setColor( InputBuffer::display_t& display_, replxx_color::color color_ ) {
  */
 void InputBuffer::refreshLine(PromptBase& pi) {
 	// check for a matching brace/bracket/paren, remember its position if found
-	int highlight = -1;
+	int highlightIdx = -1;
 	if (_pos < _len) {
 		/* this scans for a brace matching _buf32[_pos] to highlight */
 		int scanDirection = 0;
@@ -132,7 +150,7 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 					++unmatched;
 
 				if (unmatched == 0) {
-					highlight = i;
+					highlightIdx = i;
 					break;
 				}
 			}
@@ -165,14 +183,17 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 	pi.promptPreviousInputLen = _len;
 
 	// display the input line
-	if (highlight == -1) {
-		if (write32(1, _buf32.get(), _len) == -1) return;
-	} else {
-		if (write32(1, _buf32.get(), highlight) == -1) return;
+	if ( setup.highlighterCallback ) {
+		highlight( highlightIdx );
+		if (write32(1, _display.data(), _display.size()) == -1) return;
+	} if (highlightIdx != -1) {
+		if (write32(1, _buf32.get(), highlightIdx) == -1) return;
 		setDisplayAttribute(true); /* bright blue (visible with both B&W bg) */
-		if (write32(1, &_buf32[highlight], 1) == -1) return;
+		if (write32(1, &_buf32[highlightIdx], 1) == -1) return;
 		setDisplayAttribute(false);
-		if (write32(1, _buf32.get() + highlight + 1, _len - highlight - 1) == -1) return;
+		if (write32(1, _buf32.get() + highlightIdx + 1, _len - highlightIdx - 1) == -1) return;
+	} else {
+		if (write32(1, _buf32.get(), _len) == -1) return;
 	}
 
 	// position the cursor
@@ -193,31 +214,15 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 	if (write(1, seq, strlen(seq)) == -1) return;
 
 	if ( setup.highlighterCallback ) {
-		std::vector<replxx_color::color> colors( _len );
-		Utf32String unicodeCopy(_buf32.get(), _len);
-		Utf8String parseItem(unicodeCopy);
-		setup.highlighterCallback(parseItem.get(), colors.data(), _len);
-		if ( highlight != -1 ) {
-			colors[highlight] = replxx_color::BRIGHTRED;
-		}
-		_display.clear();
-		replxx_color::color c( replxx_color::DEFAULT );
-		for ( int i( 0 ); i < _len; ++ i ) {
-			if ( colors[i] != c ) {
-				c = colors[i];
-				setColor( _display, c );
-			}
-			_display.push_back( _buf32[i] );
-		}
-		setColor(_display, replxx_color::DEFAULT );
+		highlight( highlightIdx );
 		if (write32(1, _display.data(), _display.size()) == -1) return;
-	} else if (highlight != -1) {	// write unhighlighted text
-		if (write32(1, _buf32.get(), highlight) == -1) return;
+	} else if (highlightIdx != -1) {	// write unhighlighted text
+		if (write32(1, _buf32.get(), highlightIdx) == -1) return;
 		setDisplayAttribute(true);
-		if (write32(1, &_buf32[highlight], 1) == -1) return;
+		if (write32(1, &_buf32[highlightIdx], 1) == -1) return;
 		setDisplayAttribute(false);
-		if (write32(1, _buf32.get() + highlight + 1, _len - highlight - 1) == -1) return;
-	} else {	// highlight the matching brace/bracket/parenthesis
+		if (write32(1, _buf32.get() + highlightIdx + 1, _len - highlightIdx - 1) == -1) return;
+	} else {	// highlightIdx the matching brace/bracket/parenthesis
 		if (write32(1, _buf32.get(), _len) == -1) return;
 	}
 

@@ -3,7 +3,7 @@
 namespace {
 
 #define REPLXX_MAX_LINE 4096
-#define REPLXX_DEFAULT_HISTORY_MAX_LEN 100
+#define REPLXX_DEFAULT_HISTORY_MAX_LEN 1000
 char const defaultBreakChars[] = " =+-/\\*?\"'`&<>;|@{([])}";
 
 }
