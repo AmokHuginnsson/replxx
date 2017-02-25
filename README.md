@@ -1,5 +1,7 @@
 # Read Evaluate Print Loop ++
 
+![demo](https://drive.google.com/uc?export=download&id=0B53g2Y3z7rWNT2dCRGVVNldaRnc)
+
 A small, portable GNU readline replacement for Linux, Windows and
 MacOS which is capable of handling UTF-8 characters. Unlike GNU
 readline, which is GPL, this library uses a BSD license and can be
@@ -19,6 +21,7 @@ programs.
 * single-line and multi-line editing mode with the usual key bindings implemented
 * history handling
 * completion
+* syntax highlighting
 * BSD license source code
 * Only uses a subset of VT100 escapes (ANSI.SYS compatible)
 * UTF8 aware
