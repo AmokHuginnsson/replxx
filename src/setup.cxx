@@ -18,7 +18,8 @@ Setup::Setup()
 	, doubleTabCompletion( false )
 	, completeOnEmpty( true )
 	, beepOnAmbiguousCompletion( false )
-	, completionCallback( nullptr ) {
+	, completionCallback( nullptr )
+	, highlighterCallback( nullptr ) {
 }
 
 Setup setup;

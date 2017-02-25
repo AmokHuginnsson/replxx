@@ -44,8 +44,33 @@
 extern "C" {
 #endif
 
-typedef struct replxx_completions replxx_completions;
+struct replxx_color {
+	enum color {
+		BLACK         = 0,
+		RED           = 1,
+		GREEN         = 2,
+		BROWN         = 3,
+		BLUE          = 4,
+		MAGENTA       = 5,
+		CYAN          = 6,
+		LIGHTGRAY     = 7,
+		GRAY          = 8,
+		BRIGHTRED     = 9,
+		BRIGHTGREEN   = 10,
+		YELLOW        = 11,
+		BRIGHTBLUE    = 12,
+		BRIGHTMAGENTA = 13,
+		BRIGHTCYAN    = 14,
+		WHITE         = 15,
+		NORMAL        = LIGHTGRAY,
+		DEFAULT       = -1
+	};
+};
 
+typedef void (replxx_highlighter_callback_t)(char const* input, replxx_color::color* colors, int size);
+void replxx_set_highlighter_callback(replxx_highlighter_callback_t* fn);
+
+typedef struct replxx_completions replxx_completions;
 typedef void(replxx_completion_callback_t)(const char*, replxx_completions*);
 void replxx_set_completion_callback(replxx_completion_callback_t* fn);
 void replxx_add_completion(replxx_completions* lc, const char* str);

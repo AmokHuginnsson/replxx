@@ -14,6 +14,7 @@ struct Setup {
 	bool completeOnEmpty;
 	bool beepOnAmbiguousCompletion;
 	replxx_completion_callback_t* completionCallback;
+	replxx_highlighter_callback_t* highlighterCallback;
 	Setup( void );
 };
 

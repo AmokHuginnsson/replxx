@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 
+#include "replxx.h"
 #include "prompt.hxx"
 
 struct replxx_completions {
@@ -15,10 +16,14 @@ namespace replxx {
 struct PromptBase;
 
 class InputBuffer {
+public:
 	typedef std::unique_ptr<char32_t[]> input_buffer_t;
 	typedef std::unique_ptr<char[]> char_widths_t;
+	typedef std::vector<char32_t> display_t;
+private:
 	input_buffer_t _buf32;      // input buffer
 	char_widths_t  _charWidths; // character widths from mk_wcwidth()
+	display_t       _display;
 	int _buflen; // buffer size in characters
 	int _len;    // length of text in input buffer
 	int _pos;    // character position in buffer ( 0 <= _pos <= _len )

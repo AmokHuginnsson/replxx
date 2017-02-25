@@ -407,6 +407,10 @@ void replxx_set_completion_callback(replxx_completion_callback_t* fn) {
 	setup.completionCallback = fn;
 }
 
+void replxx_set_highlighter_callback(replxx_highlighter_callback_t* fn) {
+	setup.highlighterCallback = fn;
+}
+
 void replxx_add_completion(replxx_completions* lc, const char* str) {
 	lc->completionStrings.push_back(Utf32String(str));
 }

@@ -57,6 +57,54 @@ void InputBuffer::preloadBuffer(const char* preloadText) {
 	_prefix = _pos = static_cast<int>(ucharCount);
 }
 
+namespace {
+void setColor( InputBuffer::display_t& display_, replxx_color::color color_ ) {
+	char const reset[] = "\033[0m";
+	char const black[] = "\033[22;30m";
+	char const red[] = "\033[22;31m";
+	char const green[] = "\033[22;32m";
+	char const brown[] = "\033[22;33m";
+	char const blue[] = "\033[22;34m";
+	char const magenta[] = "\033[22;35m";
+	char const cyan[] = "\033[22;36m";
+	char const lightgray[] = "\033[22;37m";
+
+	char const gray[] = "\033[1;30m";
+	char const brightred[] = "\033[1;31m";
+	char const brightgreen[] = "\033[1;32m";
+	char const yellow[] = "\033[1;33m";
+	char const brightblue[] = "\033[1;34m";
+	char const brightmagenta[] = "\033[1;35m";
+	char const brightcyan[] = "\033[1;36m";
+	char const white[] = "\033[1;37m";
+
+	char const* code( reset );
+	switch ( color_ ) {
+		case replxx_color::BLACK:         code = black;         break;
+		case replxx_color::RED:           code = red;           break;
+		case replxx_color::GREEN:         code = green;         break;
+		case replxx_color::BROWN:         code = brown;         break;
+		case replxx_color::BLUE:          code = blue;          break;
+		case replxx_color::MAGENTA:       code = magenta;       break;
+		case replxx_color::CYAN:          code = cyan;          break;
+		case replxx_color::LIGHTGRAY:     code = lightgray;     break;
+		case replxx_color::GRAY:          code = gray;          break;
+		case replxx_color::BRIGHTRED:     code = brightred;     break;
+		case replxx_color::BRIGHTGREEN:   code = brightgreen;   break;
+		case replxx_color::YELLOW:        code = yellow;        break;
+		case replxx_color::BRIGHTBLUE:    code = brightblue;    break;
+		case replxx_color::BRIGHTMAGENTA: code = brightmagenta; break;
+		case replxx_color::BRIGHTCYAN:    code = brightcyan;    break;
+		case replxx_color::WHITE:         code = white;         break;
+		case replxx_color::DEFAULT:       code = reset;         break;
+	}
+	while ( *code ) {
+		display_.push_back( *code );
+		++ code;
+	}
+}
+}
+
 /**
  * Refresh the user's input line: the prompt is already onscreen and is not
  * redrawn here
@@ -144,14 +192,33 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 					 pi.promptIndentation + 1);	// 1-based on VT100
 	if (write(1, seq, strlen(seq)) == -1) return;
 
-	if (highlight == -1) {	// write unhighlighted text
-		if (write32(1, _buf32.get(), _len) == -1) return;
-	} else {	// highlight the matching brace/bracket/parenthesis
+	if ( setup.highlighterCallback ) {
+		std::vector<replxx_color::color> colors( _len );
+		Utf32String unicodeCopy(_buf32.get(), _len);
+		Utf8String parseItem(unicodeCopy);
+		setup.highlighterCallback(parseItem.get(), colors.data(), _len);
+		if ( highlight != -1 ) {
+			colors[highlight] = replxx_color::BRIGHTRED;
+		}
+		_display.clear();
+		replxx_color::color c( replxx_color::DEFAULT );
+		for ( int i( 0 ); i < _len; ++ i ) {
+			if ( colors[i] != c ) {
+				c = colors[i];
+				setColor( _display, c );
+			}
+			_display.push_back( _buf32[i] );
+		}
+		setColor(_display, replxx_color::DEFAULT );
+		if (write32(1, _display.data(), _display.size()) == -1) return;
+	} else if (highlight != -1) {	// write unhighlighted text
 		if (write32(1, _buf32.get(), highlight) == -1) return;
 		setDisplayAttribute(true);
 		if (write32(1, &_buf32[highlight], 1) == -1) return;
 		setDisplayAttribute(false);
 		if (write32(1, _buf32.get() + highlight + 1, _len - highlight - 1) == -1) return;
+	} else {	// highlight the matching brace/bracket/parenthesis
+		if (write32(1, _buf32.get(), _len) == -1) return;
 	}
 
 	// we have to generate our own newline on line wrap
@@ -982,7 +1049,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 						++_len;
 						_buf32[_len] = '\0';
 						int inputLen = calculateColumnPosition(_buf32.get(), _len);
-						if (pi.promptIndentation + inputLen < pi.promptScreenColumns) {
+						if ( !setup.highlighterCallback && ( pi.promptIndentation + inputLen < pi.promptScreenColumns ) ) {
 							if (inputLen > pi.promptPreviousInputLen)
 								pi.promptPreviousInputLen = inputLen;
 							/* Avoid a full update of the line in the
