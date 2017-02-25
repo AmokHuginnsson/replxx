@@ -424,7 +424,7 @@ void replxx_set_max_line_size(int len) {
 }
 
 void replxx_set_double_tab_completion(int val) {
-	setup.douleTabCompletion = val ? true : false;
+	setup.doubleTabCompletion = val ? true : false;
 }
 
 void replxx_set_complete_on_empty(int val) {

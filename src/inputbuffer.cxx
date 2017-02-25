@@ -51,10 +51,10 @@ void freeCompletions(replxx_completions* lc) {
 
 void InputBuffer::preloadBuffer(const char* preloadText) {
 	size_t ucharCount = 0;
-	copyString8to32(buf32.get(), buflen + 1, ucharCount, preloadText);
-	recomputeCharacterWidths(buf32.get(), charWidths.get(), static_cast<int>(ucharCount));
-	len = static_cast<int>(ucharCount);
-	pos = static_cast<int>(ucharCount);
+	copyString8to32(_buf32.get(), _buflen + 1, ucharCount, preloadText);
+	recomputeCharacterWidths(_buf32.get(), _charWidths.get(), static_cast<int>(ucharCount));
+	_len = static_cast<int>(ucharCount);
+	_prefix = _pos = static_cast<int>(ucharCount);
 }
 
 /**
@@ -66,21 +66,21 @@ void InputBuffer::preloadBuffer(const char* preloadText) {
 void InputBuffer::refreshLine(PromptBase& pi) {
 	// check for a matching brace/bracket/paren, remember its position if found
 	int highlight = -1;
-	if (pos < len) {
-		/* this scans for a brace matching buf32[pos] to highlight */
+	if (_pos < _len) {
+		/* this scans for a brace matching _buf32[_pos] to highlight */
 		int scanDirection = 0;
-		if (strchr("}])", buf32[pos]))
+		if (strchr("}])", _buf32[_pos]))
 			scanDirection = -1; /* backwards */
-		else if (strchr("{[(", buf32[pos]))
+		else if (strchr("{[(", _buf32[_pos]))
 			scanDirection = 1; /* forwards */
 
 		if (scanDirection) {
 			int unmatched = scanDirection;
-			for (int i = pos + scanDirection; i >= 0 && i < len; i += scanDirection) {
+			for (int i = _pos + scanDirection; i >= 0 && i < _len; i += scanDirection) {
 				/* TODO: the right thing when inside a string */
-				if (strchr("}])", buf32[i]))
+				if (strchr("}])", _buf32[i]))
 					--unmatched;
-				else if (strchr("{[(", buf32[i]))
+				else if (strchr("{[(", _buf32[i]))
 					++unmatched;
 
 				if (unmatched == 0) {
@@ -94,13 +94,13 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 	// calculate the position of the end of the input line
 	int xEndOfInput, yEndOfInput;
 	calculateScreenPosition(pi.promptIndentation, 0, pi.promptScreenColumns,
-													calculateColumnPosition(buf32.get(), len), xEndOfInput,
+													calculateColumnPosition(_buf32.get(), _len), xEndOfInput,
 													yEndOfInput);
 
 	// calculate the desired position of the cursor
 	int xCursorPos, yCursorPos;
 	calculateScreenPosition(pi.promptIndentation, 0, pi.promptScreenColumns,
-													calculateColumnPosition(buf32.get(), pos), xCursorPos,
+													calculateColumnPosition(_buf32.get(), _pos), xCursorPos,
 													yCursorPos);
 
 #ifdef _WIN32
@@ -111,20 +111,20 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 	inf.dwCursorPosition.Y -= pi.promptCursorRowOffset - pi.promptExtraLines;
 	SetConsoleCursorPosition(console_out, inf.dwCursorPosition);
 	DWORD count;
-	if (len < pi.promptPreviousInputLen)
+	if (_len < pi.promptPreviousInputLen)
 		FillConsoleOutputCharacterA(console_out, ' ', pi.promptPreviousInputLen,
 																inf.dwCursorPosition, &count);
-	pi.promptPreviousInputLen = len;
+	pi.promptPreviousInputLen = _len;
 
 	// display the input line
 	if (highlight == -1) {
-		if (write32(1, buf32.get(), len) == -1) return;
+		if (write32(1, _buf32.get(), _len) == -1) return;
 	} else {
-		if (write32(1, buf32.get(), highlight) == -1) return;
+		if (write32(1, _buf32.get(), highlight) == -1) return;
 		setDisplayAttribute(true); /* bright blue (visible with both B&W bg) */
-		if (write32(1, &buf32[highlight], 1) == -1) return;
+		if (write32(1, &_buf32[highlight], 1) == -1) return;
 		setDisplayAttribute(false);
-		if (write32(1, buf32.get() + highlight + 1, len - highlight - 1) == -1) return;
+		if (write32(1, _buf32.get() + highlight + 1, _len - highlight - 1) == -1) return;
 	}
 
 	// position the cursor
@@ -145,13 +145,13 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 	if (write(1, seq, strlen(seq)) == -1) return;
 
 	if (highlight == -1) {	// write unhighlighted text
-		if (write32(1, buf32.get(), len) == -1) return;
+		if (write32(1, _buf32.get(), _len) == -1) return;
 	} else {	// highlight the matching brace/bracket/parenthesis
-		if (write32(1, buf32.get(), highlight) == -1) return;
+		if (write32(1, _buf32.get(), highlight) == -1) return;
 		setDisplayAttribute(true);
-		if (write32(1, &buf32[highlight], 1) == -1) return;
+		if (write32(1, &_buf32[highlight], 1) == -1) return;
 		setDisplayAttribute(false);
-		if (write32(1, buf32.get() + highlight + 1, len - highlight - 1) == -1) return;
+		if (write32(1, _buf32.get() + highlight + 1, _len - highlight - 1) == -1) return;
 	}
 
 	// we have to generate our own newline on line wrap
@@ -191,15 +191,15 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	// character and
 	// extract a copy to parse.	we also handle the case where tab is hit while
 	// not at end-of-line.
-	int startIndex = pos;
+	int startIndex = _pos;
 	while (--startIndex >= 0) {
-		if (strchr(setup.breakChars, buf32[startIndex])) {
+		if (strchr(setup.breakChars, _buf32[startIndex])) {
 			break;
 		}
 	}
 	++startIndex;
-	int itemLength = pos - startIndex;
-	Utf32String unicodeCopy(&buf32[startIndex], itemLength);
+	int itemLength = _pos - startIndex;
+	Utf32String unicodeCopy(&_buf32[startIndex], itemLength);
 	Utf8String parseItem(unicodeCopy);
 
 	// get a list of completions
@@ -239,27 +239,27 @@ int InputBuffer::completeLine(PromptBase& pi) {
 
 	// if we can extend the item, extend it and return to main loop
 	if (longestCommonPrefix > itemLength) {
-		displayLength = len + longestCommonPrefix - itemLength;
-		if (displayLength > buflen) {
-			longestCommonPrefix -= displayLength - buflen;	// don't overflow buffer
-			displayLength = buflen;												 // truncate the insertion
+		displayLength = _len + longestCommonPrefix - itemLength;
+		if (displayLength > _buflen) {
+			longestCommonPrefix -= displayLength - _buflen;	// don't overflow buffer
+			displayLength = _buflen;												 // truncate the insertion
 			beep();																				 // and make a noise
 		}
 		Utf32String displayText(displayLength + 1);
-		memcpy(displayText.get(), buf32.get(), sizeof(char32_t) * startIndex);
+		memcpy(displayText.get(), _buf32.get(), sizeof(char32_t) * startIndex);
 		memcpy(&displayText[startIndex], &lc.completionStrings[0][0],
 					 sizeof(char32_t) * longestCommonPrefix);
 		int tailIndex = startIndex + longestCommonPrefix;
-		memcpy(&displayText[tailIndex], &buf32[pos],
+		memcpy(&displayText[tailIndex], &_buf32[_pos],
 					 sizeof(char32_t) * (displayLength - tailIndex + 1));
-		copyString32(buf32.get(), displayText.get(), displayLength);
-		pos = startIndex + longestCommonPrefix;
-		len = displayLength;
+		copyString32(_buf32.get(), displayText.get(), displayLength);
+		_prefix = _pos = startIndex + longestCommonPrefix;
+		_len = displayLength;
 		refreshLine(pi);
 		return 0;
 	}
 
-	if ( setup.douleTabCompletion ) {
+	if ( setup.doubleTabCompletion ) {
 		// we can't complete any further, wait for second tab
 		do {
 			c = read_char();
@@ -278,10 +278,10 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	bool onNewLine = false;
 	if (static_cast<int>( lc.completionStrings.size() ) > setup.completionCountCutoff) {
 		int savePos =
-				pos;	// move cursor to EOL to avoid overwriting the command line
-		pos = len;
+				_pos;	// move cursor to EOL to avoid overwriting the command line
+		_pos = _len;
 		refreshLine(pi);
-		pos = savePos;
+		_pos = savePos;
 		printf("\nDisplay all %u possibilities? (y or n)",
 					 static_cast<unsigned int>(lc.completionStrings.size()));
 		fflush(stdout);
@@ -324,10 +324,10 @@ int InputBuffer::completeLine(PromptBase& pi) {
 		}
 		if (!onNewLine) {	// skip this if we showed "Display all %d possibilities?"
 			int savePos =
-					pos;	// move cursor to EOL to avoid overwriting the command line
-			pos = len;
+					_pos;	// move cursor to EOL to avoid overwriting the command line
+			_pos = _len;
 			refreshLine(pi);
-			pos = savePos;
+			_pos = savePos;
 		}
 		size_t pauseRow = getScreenRows() - 1;
 		size_t rowCount =
@@ -416,10 +416,10 @@ int InputBuffer::completeLine(PromptBase& pi) {
 
 int InputBuffer::getInputLine(PromptBase& pi) {
 	// The latest history entry is always our current buffer
-	if (len > 0) {
-		size_t bufferSize = sizeof(char32_t) * len + 1;
+	if (_len > 0) {
+		size_t bufferSize = sizeof(char32_t) * _len + 1;
 		unique_ptr<char[]> tempBuffer(new char[bufferSize]);
-		copyString32to8(tempBuffer.get(), bufferSize, buf32.get());
+		copyString32to8(tempBuffer.get(), bufferSize, _buf32.get());
 		replxx_history_add(tempBuffer.get());
 	} else {
 		replxx_history_add("");
@@ -447,7 +447,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 	int terminatingKeystroke = -1;
 
 	// if there is already text in the buffer, display it first
-	if (len > 0) {
+	if (_len > 0) {
 		refreshLine(pi);
 	}
 
@@ -463,8 +463,8 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				// now redraw the prompt and line
 				gotResize = false;
 				pi.promptScreenColumns = getScreenColumns();
-				dynamicRefresh(pi, buf32.get(), len,
-											 pos);	// redraw the original prompt with current input
+				dynamicRefresh(pi, _buf32.get(), _len,
+											 _pos);	// redraw the original prompt with current input
 				continue;
 			}
 #endif
@@ -476,7 +476,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 		c = cleanupCtrl(c);	// convert CTRL + <char> into normal ctrl
 
 		if (c == 0) {
-			return len;
+			return _len;
 		}
 
 		if (c == -1) {
@@ -492,7 +492,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 
 		// ctrl-I/tab, command completion, needs to be before switch statement
 		if (c == ctrlChar('I') && setup.completionCallback) {
-			if ( ( pos == 0 ) && ! setup.completeOnEmpty ) {
+			if ( ( _pos == 0 ) && ! setup.completeOnEmpty ) {
 				// SERVER-4967 -- in earlier versions, you could paste
 				// previous output
 				continue;	//	back into the shell ... this output may have leading tabs.
@@ -507,7 +507,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			c = completeLine(pi);
 
 			if (c < 0)	// return on error
-				return len;
+				return _len;
 
 			if (c == 0)	// read next character when 0
 				continue;
@@ -515,19 +515,20 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			// deliberate fall-through here, so we use the terminating character
 		}
 
+		bool updatePrefix( true );
 		switch (c) {
 			case ctrlChar('A'):	// ctrl-A, move cursor to start of line
 			case HOME_KEY:
 				killRing.lastAction = KillRing::actionOther;
-				pos = 0;
+				_pos = 0;
 				refreshLine(pi);
 				break;
 
 			case ctrlChar('B'):	// ctrl-B, move cursor left by one character
 			case LEFT_ARROW_KEY:
 				killRing.lastAction = KillRing::actionOther;
-				if (pos > 0) {
-					--pos;
+				if (_pos > 0) {
+					--_pos;
 					refreshLine(pi);
 				}
 				break;
@@ -537,12 +538,12 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			case CTRL + LEFT_ARROW_KEY:
 			case META + LEFT_ARROW_KEY:	// Emacs allows Meta, bash & readline don't
 				killRing.lastAction = KillRing::actionOther;
-				if (pos > 0) {
-					while (pos > 0 && !isCharacterAlphanumeric(buf32[pos - 1])) {
-						--pos;
+				if (_pos > 0) {
+					while (_pos > 0 && !isCharacterAlphanumeric(_buf32[_pos - 1])) {
+						--_pos;
 					}
-					while (pos > 0 && isCharacterAlphanumeric(buf32[pos - 1])) {
-						--pos;
+					while (_pos > 0 && isCharacterAlphanumeric(_buf32[_pos - 1])) {
+						--_pos;
 					}
 					refreshLine(pi);
 				}
@@ -556,7 +557,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				free(history[historyLen]);
 				// we need one last refresh with the cursor at the end of the line
 				// so we don't display the next prompt over the previous input line
-				pos = len;	// pass len as pos for EOL
+				_pos = _len;	// pass _len as _pos for EOL
 				refreshLine(pi);
 				if (write(1, "^C", 2) == -1) return -1;	// Display the ^C we got
 				return -1;
@@ -565,21 +566,21 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			case META + 'C':
 				killRing.lastAction = KillRing::actionOther;
 				historyRecallMostRecent = false;
-				if (pos < len) {
-					while (pos < len && !isCharacterAlphanumeric(buf32[pos])) {
-						++pos;
+				if (_pos < _len) {
+					while (_pos < _len && !isCharacterAlphanumeric(_buf32[_pos])) {
+						++_pos;
 					}
-					if (pos < len && isCharacterAlphanumeric(buf32[pos])) {
-						if (buf32[pos] >= 'a' && buf32[pos] <= 'z') {
-							buf32[pos] += 'A' - 'a';
+					if (_pos < _len && isCharacterAlphanumeric(_buf32[_pos])) {
+						if (_buf32[_pos] >= 'a' && _buf32[_pos] <= 'z') {
+							_buf32[_pos] += 'A' - 'a';
 						}
-						++pos;
+						++_pos;
 					}
-					while (pos < len && isCharacterAlphanumeric(buf32[pos])) {
-						if (buf32[pos] >= 'A' && buf32[pos] <= 'Z') {
-							buf32[pos] += 'a' - 'A';
+					while (_pos < _len && isCharacterAlphanumeric(_buf32[_pos])) {
+						if (_buf32[_pos] >= 'A' && _buf32[_pos] <= 'Z') {
+							_buf32[_pos] += 'a' - 'A';
 						}
-						++pos;
+						++_pos;
 					}
 					refreshLine(pi);
 				}
@@ -589,12 +590,12 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			// on an empty line, exit the shell
 			case ctrlChar('D'):
 				killRing.lastAction = KillRing::actionOther;
-				if (len > 0 && pos < len) {
+				if (_len > 0 && _pos < _len) {
 					historyRecallMostRecent = false;
-					memmove(buf32.get() + pos, buf32.get() + pos + 1, sizeof(char32_t) * (len - pos));
-					--len;
+					memmove(_buf32.get() + _pos, _buf32.get() + _pos + 1, sizeof(char32_t) * (_len - _pos));
+					--_len;
 					refreshLine(pi);
-				} else if (len == 0) {
+				} else if (_len == 0) {
 					--historyLen;
 					free(history[historyLen]);
 					return -1;
@@ -603,20 +604,20 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 
 			case META + 'd':	// meta-D, kill word to right of cursor
 			case META + 'D':
-				if (pos < len) {
+				if (_pos < _len) {
 					historyRecallMostRecent = false;
-					int endingPos = pos;
-					while (endingPos < len &&
-								 !isCharacterAlphanumeric(buf32[endingPos])) {
+					int endingPos = _pos;
+					while (endingPos < _len &&
+								 !isCharacterAlphanumeric(_buf32[endingPos])) {
 						++endingPos;
 					}
-					while (endingPos < len && isCharacterAlphanumeric(buf32[endingPos])) {
+					while (endingPos < _len && isCharacterAlphanumeric(_buf32[endingPos])) {
 						++endingPos;
 					}
-					killRing.kill(&buf32[pos], endingPos - pos, true);
-					memmove(buf32.get() + pos, buf32.get() + endingPos,
-									sizeof(char32_t) * (len - endingPos + 1));
-					len -= endingPos - pos;
+					killRing.kill(&_buf32[_pos], endingPos - _pos, true);
+					memmove(_buf32.get() + _pos, _buf32.get() + endingPos,
+									sizeof(char32_t) * (_len - endingPos + 1));
+					_len -= endingPos - _pos;
 					refreshLine(pi);
 				}
 				killRing.lastAction = KillRing::actionKill;
@@ -625,15 +626,15 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			case ctrlChar('E'):	// ctrl-E, move cursor to end of line
 			case END_KEY:
 				killRing.lastAction = KillRing::actionOther;
-				pos = len;
+				_pos = _len;
 				refreshLine(pi);
 				break;
 
 			case ctrlChar('F'):	// ctrl-F, move cursor right by one character
 			case RIGHT_ARROW_KEY:
 				killRing.lastAction = KillRing::actionOther;
-				if (pos < len) {
-					++pos;
+				if (_pos < _len) {
+					++_pos;
 					refreshLine(pi);
 				}
 				break;
@@ -643,12 +644,12 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			case CTRL + RIGHT_ARROW_KEY:
 			case META + RIGHT_ARROW_KEY:	// Emacs allows Meta, bash & readline don't
 				killRing.lastAction = KillRing::actionOther;
-				if (pos < len) {
-					while (pos < len && !isCharacterAlphanumeric(buf32[pos])) {
-						++pos;
+				if (_pos < _len) {
+					while (_pos < _len && !isCharacterAlphanumeric(_buf32[_pos])) {
+						++_pos;
 					}
-					while (pos < len && isCharacterAlphanumeric(buf32[pos])) {
-						++pos;
+					while (_pos < _len && isCharacterAlphanumeric(_buf32[_pos])) {
+						++_pos;
 					}
 					refreshLine(pi);
 				}
@@ -656,31 +657,31 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 
 			case ctrlChar('H'):	// backspace/ctrl-H, delete char to left of cursor
 				killRing.lastAction = KillRing::actionOther;
-				if (pos > 0) {
+				if (_pos > 0) {
 					historyRecallMostRecent = false;
-					memmove(buf32.get() + pos - 1, buf32.get() + pos,
-									sizeof(char32_t) * (1 + len - pos));
-					--pos;
-					--len;
+					memmove(_buf32.get() + _pos - 1, _buf32.get() + _pos,
+									sizeof(char32_t) * (1 + _len - _pos));
+					--_pos;
+					--_len;
 					refreshLine(pi);
 				}
 				break;
 
 			// meta-Backspace, kill word to left of cursor
 			case META + ctrlChar('H'):
-				if (pos > 0) {
+				if (_pos > 0) {
 					historyRecallMostRecent = false;
-					int startingPos = pos;
-					while (pos > 0 && !isCharacterAlphanumeric(buf32[pos - 1])) {
-						--pos;
+					int startingPos = _pos;
+					while (_pos > 0 && !isCharacterAlphanumeric(_buf32[_pos - 1])) {
+						--_pos;
 					}
-					while (pos > 0 && isCharacterAlphanumeric(buf32[pos - 1])) {
-						--pos;
+					while (_pos > 0 && isCharacterAlphanumeric(_buf32[_pos - 1])) {
+						--_pos;
 					}
-					killRing.kill(&buf32[pos], startingPos - pos, false);
-					memmove(buf32.get() + pos, buf32.get() + startingPos,
-									sizeof(char32_t) * (len - startingPos + 1));
-					len -= startingPos - pos;
+					killRing.kill(&_buf32[_pos], startingPos - _pos, false);
+					memmove(_buf32.get() + _pos, _buf32.get() + startingPos,
+									sizeof(char32_t) * (_len - startingPos + 1));
+					_len -= startingPos - _pos;
 					refreshLine(pi);
 				}
 				killRing.lastAction = KillRing::actionKill;
@@ -691,17 +692,17 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				killRing.lastAction = KillRing::actionOther;
 				// we need one last refresh with the cursor at the end of the line
 				// so we don't display the next prompt over the previous input line
-				pos = len;	// pass len as pos for EOL
+				_pos = _len;	// pass _len as _pos for EOL
 				refreshLine(pi);
 				historyPreviousIndex = historyRecallMostRecent ? historyIndex : -2;
 				--historyLen;
 				free(history[historyLen]);
-				return len;
+				return _len;
 
 			case ctrlChar('K'):	// ctrl-K, kill from cursor to end of line
-				killRing.kill(&buf32[pos], len - pos, true);
-				buf32[pos] = '\0';
-				len = pos;
+				killRing.kill(&_buf32[_pos], _len - _pos, true);
+				_buf32[_pos] = '\0';
+				_len = _pos;
 				refreshLine(pi);
 				killRing.lastAction = KillRing::actionKill;
 				historyRecallMostRecent = false;
@@ -714,16 +715,16 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			case META + 'l':	// meta-L, lowercase word
 			case META + 'L':
 				killRing.lastAction = KillRing::actionOther;
-				if (pos < len) {
+				if (_pos < _len) {
 					historyRecallMostRecent = false;
-					while (pos < len && !isCharacterAlphanumeric(buf32[pos])) {
-						++pos;
+					while (_pos < _len && !isCharacterAlphanumeric(_buf32[_pos])) {
+						++_pos;
 					}
-					while (pos < len && isCharacterAlphanumeric(buf32[pos])) {
-						if (buf32[pos] >= 'A' && buf32[pos] <= 'Z') {
-							buf32[pos] += 'a' - 'A';
+					while (_pos < _len && isCharacterAlphanumeric(_buf32[_pos])) {
+						if (_buf32[_pos] >= 'A' && _buf32[_pos] <= 'Z') {
+							_buf32[_pos] += 'a' - 'A';
 						}
-						++pos;
+						++_pos;
 					}
 					refreshLine(pi);
 				}
@@ -739,9 +740,9 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				// have to special case it
 				if (historyIndex == historyLen - 1) {
 					free(history[historyLen - 1]);
-					size_t tempBufferSize = sizeof(char32_t) * len + 1;
+					size_t tempBufferSize = sizeof(char32_t) * _len + 1;
 					unique_ptr<char[]> tempBuffer(new char[tempBufferSize]);
-					copyString32to8(tempBuffer.get(), tempBufferSize, buf32.get());
+					copyString32to8(tempBuffer.get(), tempBufferSize, _buf32.get());
 					history[historyLen - 1] = strdup8(tempBuffer.get());
 				}
 				if (historyLen > 1) {
@@ -764,12 +765,19 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 					}
 					historyRecallMostRecent = true;
 					size_t ucharCount = 0;
-					copyString8to32(buf32.get(), buflen, ucharCount, history[historyIndex]);
-					len = pos = static_cast<int>(ucharCount);
+					copyString8to32(_buf32.get(), _buflen, ucharCount, history[historyIndex]);
+					_len = _pos = static_cast<int>(ucharCount);
 					refreshLine(pi);
 				}
 				break;
 
+			case META + 'p':	// Alt-P, reverse history search for prefix
+			case META + 'P':	// Alt-P, reverse history search for prefix
+			case META + 'n':	// Alt-N, forward history search for prefix
+			case META + 'N':	// Alt-N, forward history search for prefix
+				commonPrefixSearch( pi, c );
+				updatePrefix = false;
+				break;
 			case ctrlChar('R'):	// ctrl-R, reverse history search
 			case ctrlChar('S'):	// ctrl-S, forward history search
 				terminatingKeystroke = incrementalHistorySearch(pi, c);
@@ -777,25 +785,25 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 
 			case ctrlChar('T'):	// ctrl-T, transpose characters
 				killRing.lastAction = KillRing::actionOther;
-				if (pos > 0 && len > 1) {
+				if (_pos > 0 && _len > 1) {
 					historyRecallMostRecent = false;
-					size_t leftCharPos = (pos == len) ? pos - 2 : pos - 1;
-					char32_t aux = buf32[leftCharPos];
-					buf32[leftCharPos] = buf32[leftCharPos + 1];
-					buf32[leftCharPos + 1] = aux;
-					if (pos != len) ++pos;
+					size_t leftCharPos = (_pos == _len) ? _pos - 2 : _pos - 1;
+					char32_t aux = _buf32[leftCharPos];
+					_buf32[leftCharPos] = _buf32[leftCharPos + 1];
+					_buf32[leftCharPos + 1] = aux;
+					if (_pos != _len) ++_pos;
 					refreshLine(pi);
 				}
 				break;
 
 			case ctrlChar(
 					'U'):	// ctrl-U, kill all characters to the left of the cursor
-				if (pos > 0) {
+				if (_pos > 0) {
 					historyRecallMostRecent = false;
-					killRing.kill(&buf32[0], pos, false);
-					len -= pos;
-					memmove(buf32.get(), buf32.get() + pos, sizeof(char32_t) * (len + 1));
-					pos = 0;
+					killRing.kill(&_buf32[0], _pos, false);
+					_len -= _pos;
+					memmove(_buf32.get(), _buf32.get() + _pos, sizeof(char32_t) * (_len + 1));
+					_pos = 0;
 					refreshLine(pi);
 				}
 				killRing.lastAction = KillRing::actionKill;
@@ -804,16 +812,16 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			case META + 'u':	// meta-U, uppercase word
 			case META + 'U':
 				killRing.lastAction = KillRing::actionOther;
-				if (pos < len) {
+				if (_pos < _len) {
 					historyRecallMostRecent = false;
-					while (pos < len && !isCharacterAlphanumeric(buf32[pos])) {
-						++pos;
+					while (_pos < _len && !isCharacterAlphanumeric(_buf32[_pos])) {
+						++_pos;
 					}
-					while (pos < len && isCharacterAlphanumeric(buf32[pos])) {
-						if (buf32[pos] >= 'a' && buf32[pos] <= 'z') {
-							buf32[pos] += 'A' - 'a';
+					while (_pos < _len && isCharacterAlphanumeric(_buf32[_pos])) {
+						if (_buf32[_pos] >= 'a' && _buf32[_pos] <= 'z') {
+							_buf32[_pos] += 'A' - 'a';
 						}
-						++pos;
+						++_pos;
 					}
 					refreshLine(pi);
 				}
@@ -821,19 +829,19 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 
 			// ctrl-W, kill to whitespace (not word) to left of cursor
 			case ctrlChar('W'):
-				if (pos > 0) {
+				if (_pos > 0) {
 					historyRecallMostRecent = false;
-					int startingPos = pos;
-					while (pos > 0 && buf32[pos - 1] == ' ') {
-						--pos;
+					int startingPos = _pos;
+					while (_pos > 0 && _buf32[_pos - 1] == ' ') {
+						--_pos;
 					}
-					while (pos > 0 && buf32[pos - 1] != ' ') {
-						--pos;
+					while (_pos > 0 && _buf32[_pos - 1] != ' ') {
+						--_pos;
 					}
-					killRing.kill(&buf32[pos], startingPos - pos, false);
-					memmove(buf32.get() + pos, buf32.get() + startingPos,
-									sizeof(char32_t) * (len - startingPos + 1));
-					len -= startingPos - pos;
+					killRing.kill(&_buf32[_pos], startingPos - _pos, false);
+					memmove(_buf32.get() + _pos, _buf32.get() + startingPos,
+									sizeof(char32_t) * (_len - startingPos + 1));
+					_len -= startingPos - _pos;
 					refreshLine(pi);
 				}
 				killRing.lastAction = KillRing::actionKill;
@@ -846,16 +854,16 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 					if (restoredText) {
 						bool truncated = false;
 						size_t ucharCount = restoredText->length();
-						if (ucharCount > static_cast<size_t>(buflen - len)) {
-							ucharCount = buflen - len;
+						if (ucharCount > static_cast<size_t>(_buflen - _len)) {
+							ucharCount = _buflen - _len;
 							truncated = true;
 						}
-						memmove(buf32.get() + pos + ucharCount, buf32.get() + pos,
-										sizeof(char32_t) * (len - pos + 1));
-						memmove(buf32.get() + pos, restoredText->get(),
+						memmove(_buf32.get() + _pos + ucharCount, _buf32.get() + _pos,
+										sizeof(char32_t) * (_len - _pos + 1));
+						memmove(_buf32.get() + _pos, restoredText->get(),
 										sizeof(char32_t) * ucharCount);
-						pos += static_cast<int>(ucharCount);
-						len += static_cast<int>(ucharCount);
+						_pos += static_cast<int>(ucharCount);
+						_len += static_cast<int>(ucharCount);
 						refreshLine(pi);
 						killRing.lastAction = KillRing::actionYank;
 						killRing.lastYankSize = ucharCount;
@@ -877,23 +885,23 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 						bool truncated = false;
 						size_t ucharCount = restoredText->length();
 						if (ucharCount >
-								static_cast<size_t>(killRing.lastYankSize + buflen - len)) {
-							ucharCount = killRing.lastYankSize + buflen - len;
+								static_cast<size_t>(killRing.lastYankSize + _buflen - _len)) {
+							ucharCount = killRing.lastYankSize + _buflen - _len;
 							truncated = true;
 						}
 						if (ucharCount > killRing.lastYankSize) {
-							memmove(buf32.get() + pos + ucharCount - killRing.lastYankSize,
-											buf32.get() + pos, sizeof(char32_t) * (len - pos + 1));
-							memmove(buf32.get() + pos - killRing.lastYankSize, restoredText->get(),
+							memmove(_buf32.get() + _pos + ucharCount - killRing.lastYankSize,
+											_buf32.get() + _pos, sizeof(char32_t) * (_len - _pos + 1));
+							memmove(_buf32.get() + _pos - killRing.lastYankSize, restoredText->get(),
 											sizeof(char32_t) * ucharCount);
 						} else {
-							memmove(buf32.get() + pos - killRing.lastYankSize, restoredText->get(),
+							memmove(_buf32.get() + _pos - killRing.lastYankSize, restoredText->get(),
 											sizeof(char32_t) * ucharCount);
-							memmove(buf32.get() + pos + ucharCount - killRing.lastYankSize,
-											buf32.get() + pos, sizeof(char32_t) * (len - pos + 1));
+							memmove(_buf32.get() + _pos + ucharCount - killRing.lastYankSize,
+											_buf32.get() + _pos, sizeof(char32_t) * (_len - _pos + 1));
 						}
-						pos += static_cast<int>(ucharCount - killRing.lastYankSize);
-						len += static_cast<int>(ucharCount - killRing.lastYankSize);
+						_pos += static_cast<int>(ucharCount - killRing.lastYankSize);
+						_len += static_cast<int>(ucharCount - killRing.lastYankSize);
 						killRing.lastYankSize = ucharCount;
 						refreshLine(pi);
 						if (truncated) {
@@ -920,10 +928,10 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			case 127:
 			case DELETE_KEY:
 				killRing.lastAction = KillRing::actionOther;
-				if (len > 0 && pos < len) {
+				if (_len > 0 && _pos < _len) {
 					historyRecallMostRecent = false;
-					memmove(buf32.get() + pos, buf32.get() + pos + 1, sizeof(char32_t) * (len - pos));
-					--len;
+					memmove(_buf32.get() + _pos, _buf32.get() + _pos + 1, sizeof(char32_t) * (_len - _pos));
+					--_len;
 					refreshLine(pi);
 				}
 				break;
@@ -938,9 +946,9 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				// have to special case it
 				if (historyIndex == historyLen - 1) {
 					free(history[historyLen - 1]);
-					size_t tempBufferSize = sizeof(char32_t) * len + 1;
+					size_t tempBufferSize = sizeof(char32_t) * _len + 1;
 					unique_ptr<char[]> tempBuffer(new char[tempBufferSize]);
-					copyString32to8(tempBuffer.get(), tempBufferSize, buf32.get());
+					copyString32to8(tempBuffer.get(), tempBufferSize, _buf32.get());
 					history[historyLen - 1] = strdup8(tempBuffer.get());
 				}
 				if (historyLen > 1) {
@@ -949,8 +957,8 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 					historyPreviousIndex = -2;
 					historyRecallMostRecent = true;
 					size_t ucharCount = 0;
-					copyString8to32(buf32.get(), buflen, ucharCount, history[historyIndex]);
-					len = pos = static_cast<int>(ucharCount);
+					copyString8to32(_buf32.get(), _buflen, ucharCount, history[historyIndex]);
+					_len = _pos = static_cast<int>(ucharCount);
 					refreshLine(pi);
 				}
 				break;
@@ -963,17 +971,17 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 					beep();
 					break;
 				}
-				if (len < buflen) {
+				if (_len < _buflen) {
 					if (isControlChar(c)) {	// don't insert control characters
 						beep();
 						break;
 					}
-					if (len == pos) {	// at end of buffer
-						buf32[pos] = c;
-						++pos;
-						++len;
-						buf32[len] = '\0';
-						int inputLen = calculateColumnPosition(buf32.get(), len);
+					if (_len == _pos) {	// at end of buffer
+						_buf32[_pos] = c;
+						++_pos;
+						++_len;
+						_buf32[_len] = '\0';
+						int inputLen = calculateColumnPosition(_buf32.get(), _len);
 						if (pi.promptIndentation + inputLen < pi.promptScreenColumns) {
 							if (inputLen > pi.promptPreviousInputLen)
 								pi.promptPreviousInputLen = inputLen;
@@ -986,12 +994,12 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 						}
 					} else {	// not at end of buffer, have to move characters to our
 										// right
-						memmove(buf32.get() + pos + 1, buf32.get() + pos,
-										sizeof(char32_t) * (len - pos));
-						buf32[pos] = c;
-						++len;
-						++pos;
-						buf32[len] = '\0';
+						memmove(_buf32.get() + _pos + 1, _buf32.get() + _pos,
+										sizeof(char32_t) * (_len - _pos));
+						_buf32[_pos] = c;
+						++_len;
+						++_pos;
+						_buf32[_len] = '\0';
 						refreshLine(pi);
 					}
 				} else {
@@ -999,8 +1007,36 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				}
 				break;
 		}
+		if ( updatePrefix ) {
+			_prefix = _pos;
+		}
 	}
-	return len;
+	return _len;
+}
+
+void InputBuffer::commonPrefixSearch(PromptBase& pi, int startChar) {
+	killRing.lastAction = KillRing::actionOther;
+	int direct( historyLen + ( ( startChar == ( META + 'p' ) ) || ( startChar == ( META + 'P' ) ) ? -1 : 1 ) );
+	size_t bufferSize = sizeof(char32_t) * length() + 1;
+	unique_ptr<char[]> buf8(new char[bufferSize]);
+	copyString32to8(buf8.get(), bufferSize, buf());
+	int i( ( historyIndex + direct ) % historyLen );
+	int prefixSize( calculateColumnPosition( _buf32.get(), _prefix ) );
+	while ( i != historyIndex ) {
+		if ( ( strncmp( buf8.get(), reinterpret_cast<char const*>( history[i] ), prefixSize ) == 0 )
+			&& ( strcmp( buf8.get(), reinterpret_cast<char const*>( history[i] ) ) != 0 ) ) {
+			historyIndex = i;
+			historyPreviousIndex = -2;
+			historyRecallMostRecent = true;
+			size_t ucharCount = 0;
+			copyString8to32( buf(), _buflen, ucharCount, history[historyIndex] );
+			_len = _pos = static_cast<int>(ucharCount);
+			refreshLine(pi);
+			break;
+		}
+		i += direct;
+		i %= historyLen;
+	}
 }
 
 /**
@@ -1024,20 +1060,20 @@ int InputBuffer::incrementalHistorySearch(PromptBase& pi, int startChar) {
 	// special case it
 	if (historyIndex == historyLen - 1) {
 		free(history[historyLen - 1]);
-		bufferSize = sizeof(char32_t) * len + 1;
+		bufferSize = sizeof(char32_t) * _len + 1;
 		unique_ptr<char[]> tempBuffer(new char[bufferSize]);
-		copyString32to8(tempBuffer.get(), bufferSize, buf32.get());
+		copyString32to8(tempBuffer.get(), bufferSize, _buf32.get());
 		history[historyLen - 1] = strdup8(tempBuffer.get());
 	}
-	int historyLineLength = len;
-	int historyLinePosition = pos;
+	int historyLineLength = _len;
+	int historyLinePosition = _pos;
 	InputBuffer empty(1);
 	empty.refreshLine(pi);	// erase the old input first
 	DynamicPrompt dp(pi, (startChar == ctrlChar('R')) ? -1 : 1);
 
 	dp.promptPreviousLen = pi.promptPreviousLen;
 	dp.promptPreviousInputLen = pi.promptPreviousInputLen;
-	dynamicRefresh(dp, buf32.get(), historyLineLength,
+	dynamicRefresh(dp, _buf32.get(), historyLineLength,
 								 historyLinePosition);	// draw user's text with our prompt
 
 	// loop until we get an exit character
@@ -1255,16 +1291,15 @@ int InputBuffer::incrementalHistorySearch(PromptBase& pi, int startChar) {
 	pb.promptPreviousLen = dp.promptChars;
 	if (useSearchedLine && activeHistoryLine) {
 		historyRecallMostRecent = true;
-		copyString32(buf32.get(), activeHistoryLine, buflen + 1);
-		len = historyLineLength;
-		pos = historyLinePosition;
+		copyString32(_buf32.get(), activeHistoryLine, _buflen + 1);
+		_len = historyLineLength;
+		_prefix = _pos = historyLinePosition;
 	}
 	if (activeHistoryLine) {
 		delete[] activeHistoryLine;
 	}
-	dynamicRefresh(pb, buf32.get(), len,
-								 pos);	// redraw the original prompt with current input
-	pi.promptPreviousInputLen = len;
+	dynamicRefresh(pb, _buf32.get(), _len, _pos);	// redraw the original prompt with current input
+	pi.promptPreviousInputLen = _len;
 	pi.promptCursorRowOffset = pi.promptExtraLines + pb.promptCursorRowOffset;
 	previousSearchText =
 			dp.searchText;	// save search text for possible reuse on ctrl-R ctrl-R
