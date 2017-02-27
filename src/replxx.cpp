@@ -99,7 +99,6 @@
 #endif
 #define strcasecmp _stricmp
 #define strdup _strdup
-#define isatty _isatty
 #define write _write
 #define STDIN_FILENO 0
 
@@ -340,7 +339,7 @@ char* replxx_input(const char* prompt) {
 #ifndef _WIN32
 	gotResize = false;
 #endif
-	if (isatty(STDIN_FILENO)) {	// input is from a terminal
+	if ( tty::in ) {	// input is from a terminal
 		if (!preloadErrorMessage.empty()) {
 			printf("%s", preloadErrorMessage.c_str());
 			fflush(stdout);

@@ -12,7 +12,6 @@
 #endif
 #define strcasecmp _stricmp
 #define strdup _strdup
-#define isatty _isatty
 #define write _write
 #define STDIN_FILENO 0
 
@@ -49,9 +48,32 @@ static int atexit_registered = 0; /* register atexit just 1 time */
 // At exit we'll try to fix the terminal to the initial conditions
 static void repl_at_exit(void) { disableRawMode(); }
 
+namespace tty {
+bool is_a_tty( int fd_ ) {
+	bool aTTY( false );
+#ifdef _WIN32
+	if ( _isatty( fd_ ) != 0 ) {
+		HANDLE h( (HANDLE)_get_osfhandle( fd_ ) );
+		if ( h != INVALID_HANDLE_VALUE ) {
+			DWORD st( 0 );
+			aTTY = GetConsoleMode( h, &st ) != 0;
+		}
+	}
+#else
+	aTTY = isatty( fd_ ) != 0;
+#endif
+	return ( aTTY );
+}
+
+bool in( is_a_tty( 0 ) );
+bool out( is_a_tty( 1 ) );
+bool err( is_a_tty( 2 ) );
+
+}
+
 int write32( int fd, char32_t* text32, int len32 ) {
 #ifdef _WIN32
-	if (isatty(fd)) {
+	if ( ( fd == 1 ) ? tty::out : tty::err ) {
 		size_t len16 = 2 * len32 + 1;
 		unique_ptr<char16_t[]> text16(new char16_t[len16]);
 		size_t count16 = WinWrite32(text16.get(), text32, len32);
@@ -157,7 +179,9 @@ int enableRawMode(void) {
 #else
 	struct termios raw;
 
-	if (!isatty(STDIN_FILENO)) goto fatal;
+	if ( ! tty::in ) {
+		goto fatal;
+	}
 	if (!atexit_registered) {
 		atexit(repl_at_exit);
 		atexit_registered = 1;

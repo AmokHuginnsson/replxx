@@ -11,7 +11,6 @@
 #endif
 #define strcasecmp _stricmp
 #define strdup _strdup
-#define isatty _isatty
 #define write _write
 #define STDIN_FILENO 0
 

@@ -68,7 +68,7 @@ int main (int argc, char** argv) {
 			break;
 		}
 
-		printf("thanks for the input.\n");
+		printf( "thanks for the input: %s\n", result );
 		replxx_history_add(result);
 		free(result);
 	}

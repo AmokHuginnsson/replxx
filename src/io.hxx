@@ -17,6 +17,14 @@ char32_t readUnicodeCharacter(void);
 void beep();
 char32_t read_char(void);
 
+namespace tty {
+
+extern bool in;
+extern bool out;
+extern bool err;
+
+}
+
 #ifdef _WIN32
 extern HANDLE console_out;
 #endif

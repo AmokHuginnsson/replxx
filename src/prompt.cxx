@@ -8,7 +8,6 @@
 #endif
 #define strcasecmp _stricmp
 #define strdup _strdup
-#define isatty _isatty
 #define write _write
 #define STDIN_FILENO 0
 
@@ -44,7 +43,7 @@ PromptInfo::PromptInfo(const char* textPtr, int columns) {
 	int len = 0;
 	int x = 0;
 
-	bool const strip = (isatty(1) == 0);
+	bool const strip = !tty::out;
 
 	while (*pIn) {
 		char32_t c = *pIn;
