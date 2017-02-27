@@ -105,7 +105,7 @@ void InputBuffer::setColor( replxx_color::color color_ ) {
 }
 
 void InputBuffer::highlight( int highlightIdx ) {
-	std::vector<replxx_color::color> colors( _len );
+	std::vector<replxx_color::color> colors( _len, replxx_color::DEFAULT );
 	Utf32String unicodeCopy(_buf32.get(), _len);
 	Utf8String parseItem(unicodeCopy);
 	setup.highlighterCallback(parseItem.get(), colors.data(), _len);

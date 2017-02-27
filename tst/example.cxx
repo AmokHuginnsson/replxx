@@ -1,3 +1,4 @@
+#include <cctype>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -18,6 +19,14 @@ void completionHook (char const* prefix, replxx_completions* lc) {
   }
 }
 
+void colorHook( char const* str_, replxx_color::color* colors_, int size_ ) {
+	for ( int i( 0 ); i < size_; ++ i ) {
+		if ( isdigit( str_[i] ) ) {
+			colors_[i] = replxx_color::BRIGHTMAGENTA;
+		}
+	}
+}
+
 int main (int argc, char** argv) {
   replxx_install_window_change_handler();
 
@@ -34,6 +43,7 @@ int main (int argc, char** argv) {
 
   replxx_history_load(file);
   replxx_set_completion_callback(completionHook);
+	replxx_set_highlighter_callback(colorHook);
 
   printf("starting...\n");
 
