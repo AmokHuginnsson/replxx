@@ -16,6 +16,8 @@
 #define write _write
 #define STDIN_FILENO 0
 
+#include "windows.hxx"
+
 #else /* _WIN32 */
 
 #include <unistd.h>
@@ -34,7 +36,8 @@ using namespace std;
 namespace replxx {
 
 #ifdef _WIN32
-static HANDLE console_in, console_out;
+HANDLE console_out;
+static HANDLE console_in;
 static DWORD oldMode;
 static WORD oldDisplayAttribute;
 #else
@@ -139,8 +142,6 @@ void setDisplayAttribute(bool enhancedDisplay) {
 #endif
 }
 
-#ifndef _WIN32
-
 int enableRawMode(void) {
 #ifdef _WIN32
 	if (!console_in) {
@@ -201,6 +202,8 @@ void disableRawMode(void) {
 	if (rawmode && tcsetattr(0, TCSADRAIN, &orig_termios) != -1) rawmode = 0;
 #endif
 }
+
+#ifndef _WIN32
 
 /**
  * Read a UTF-8 sequence from the non-Windows keyboard and return the Unicode

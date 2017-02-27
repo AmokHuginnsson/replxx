@@ -2,6 +2,10 @@
 
 #include "conversion.hxx"
 
+#ifdef _WIN32
+#define strdup _strdup
+#endif
+
 namespace replxx {
 
 ConversionResult copyString8to32(char32_t* dst, size_t dstSize,

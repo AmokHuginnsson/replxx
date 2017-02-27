@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "windows.hxx"
+#include "conversion.hxx"
 
 namespace replxx {
 

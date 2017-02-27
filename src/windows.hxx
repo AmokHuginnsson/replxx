@@ -1,6 +1,10 @@
 #ifndef REPLXX_WINDOWS_HXX_INCLUDED
 #define REPLXX_WINDOWS_HXX_INCLUDED 1
 
+#include <conio.h>
+#include <windows.h>
+#include <io.h>
+
 namespace replxx {
 
 static const int FOREGROUND_WHITE =
