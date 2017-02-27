@@ -187,7 +187,7 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 	if ( setup.highlighterCallback ) {
 		highlight( highlightIdx );
 		if (write32(1, _display.data(), _display.size()) == -1) return;
-	} if (highlightIdx != -1) {
+	} else if (highlightIdx != -1) {
 		if (write32(1, _buf32.get(), highlightIdx) == -1) return;
 		setDisplayAttribute(true); /* bright blue (visible with both B&W bg) */
 		if (write32(1, &_buf32[highlightIdx], 1) == -1) return;
