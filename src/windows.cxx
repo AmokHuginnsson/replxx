@@ -42,6 +42,10 @@ char32_t* HandleEsc(char32_t* p, char32_t* end) {
 								(WIN_ATTR._defaultAttribute ^ FOREGROUND_INTENSITY) & INTENSITY;
 						break;
 
+					case 22:
+						WIN_ATTR._consoleAttribute = WIN_ATTR._defaultAttribute;
+						break;
+
 					case 30:
 						WIN_ATTR._consoleColor = BACKGROUND_WHITE;
 						break;
