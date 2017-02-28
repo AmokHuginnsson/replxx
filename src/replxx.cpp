@@ -376,10 +376,10 @@ char* replxx_input(const char* prompt) {
 			}
 			int count = ib.getInputLine(pi);
 			disableRawMode();
-			printf("\n");
 			if (count == -1) {
 				return NULL;
 			}
+			printf("\n");
 			size_t bufferSize = sizeof(char32_t) * ib.length() + 1;
 			unique_ptr<char[]> buf8(new char[bufferSize]);
 			copyString32to8(buf8.get(), bufferSize, ib.buf());

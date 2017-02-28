@@ -53,6 +53,7 @@ int main (int argc, char** argv) {
 		char* result = replxx_input(prompt);
 
 		if (result == NULL) {
+			printf("\n");
 			break;
 		} else if (!strncmp(result, "/history", 8)) {
 			/* Display the current history. */
@@ -72,7 +73,6 @@ int main (int argc, char** argv) {
 		replxx_history_add(result);
 		free(result);
 	}
-
 	replxx_history_save(file);
 	replxx_history_free();
 }
