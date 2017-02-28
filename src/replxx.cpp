@@ -88,6 +88,7 @@
 #include <vector>
 #include <memory>
 #include <cerrno>
+#include <cstdarg>
 
 #ifdef _WIN32
 
@@ -400,6 +401,23 @@ char* replxx_input(const char* prompt) {
 		}
 		return strdup(buf8.get());	// caller must free buffer
 	}
+}
+
+int replxx_print( char const* format_, ... ) {
+	::std::va_list ap;
+	va_start( ap, format_ );
+	int long size = vsnprintf( nullptr, 0, format_, ap );
+	va_end( ap );
+	va_start( ap, format_ );
+	unique_ptr<char[]> buf( new char[size + 1] );
+	vsnprintf( buf.get(), static_cast<size_t>( size + 1 ), format_, ap );
+	va_end( ap );
+#ifdef _WIN32
+	int count( win_print( buf.get(), size ) );
+#else
+	int count( write( 1, buf.get(), size ) );
+#endif
+	return ( count );
 }
 
 /* Register a callback function to be called for tab-completion. */

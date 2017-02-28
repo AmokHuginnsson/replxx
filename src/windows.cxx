@@ -19,7 +19,8 @@ size_t OutputWin(char16_t* text16, char32_t* text32, size_t len32) {
 	return count16;
 }
 
-char32_t* HandleEsc(char32_t* p, char32_t* end) {
+template<typename T>
+T* HandleEsc(T* p, T* end) {
 	if (*p == '[') {
 		int code = 0;
 
@@ -129,6 +130,30 @@ size_t WinWrite32(char16_t* text16, char32_t* text32, size_t len32) {
 	}
 
 	return count16;
+}
+
+int win_print( char const* str_, int size_ ) {
+	int count( 0 );
+	char const* s( str_ );
+	char const* e( str_ + size_ );
+	while ( str_ < e ) {
+		if ( *str_ == 27 ) {
+			if ( s < str_ ) {
+				WriteConsole( GetStdHandle( STD_OUTPUT_HANDLE ), s, static_cast<DWORD>( str_ - s ), nullptr, nullptr );
+				count += ( str_ - s );
+			}
+
+			str_ = s = HandleEsc( str_ + 1, e );
+		} else {
+			++ str_;
+		}
+	}
+
+	if ( s < str_ ) {
+		WriteConsole( GetStdHandle( STD_OUTPUT_HANDLE ), s, static_cast<DWORD>( str_ - s ), nullptr, nullptr );
+		count += ( str_ - s );
+	}
+	return ( count );
 }
 
 }

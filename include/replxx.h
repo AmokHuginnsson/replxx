@@ -77,6 +77,7 @@ void replxx_set_completion_callback(replxx_completion_callback_t* fn);
 void replxx_add_completion(replxx_completions* lc, const char* str);
 
 char* replxx_input(const char* prompt);
+int replxx_print( char const*, ... );
 void replxx_set_preload_buffer(const char* preloadText);
 int replxx_history_add(const char* line);
 void replxx_set_max_line_size(int len);
