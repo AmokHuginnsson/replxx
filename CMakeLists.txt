@@ -100,6 +100,7 @@ target_link_libraries(
 include(CPack)
 
 if (MSVC)
+	set_target_properties( replxx PROPERTIES RELEASE_OUTPUT_NAME replxx DEBUG_OUTPUT_NAME replxx-d )
 else ()
   set(CPACK_SET_DESTDIR ON)
 endif ()
