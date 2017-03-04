@@ -17,6 +17,10 @@ char8_t* strdup8( char const* src );
 void copyString32( char32_t* dst, char32_t const* src, size_t len );
 int strncmp32( char32_t const* left, char32_t const* right, size_t len );
 
+namespace locale {
+extern bool is8BitEncoding;
+}
+
 }
 
 #endif

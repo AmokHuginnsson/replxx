@@ -49,6 +49,7 @@ static int atexit_registered = 0; /* register atexit just 1 time */
 static void repl_at_exit(void) { disableRawMode(); }
 
 namespace tty {
+
 bool is_a_tty( int fd_ ) {
 	bool aTTY( false );
 #ifdef _WIN32
@@ -249,7 +250,7 @@ char32_t readUnicodeCharacter(void) {
 		} while ((nread == -1) && (errno == EINTR));
 
 		if (nread <= 0) return 0;
-		if (c <= 0x7F) {	// short circuit ASCII
+		if (c <= 0x7F || locale::is8BitEncoding) {	// short circuit ASCII
 			utf8Count = 0;
 			return c;
 		} else if (utf8Count < sizeof(utf8String) - 1) {
