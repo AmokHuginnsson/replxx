@@ -60,7 +60,7 @@ ConversionResult copyString8to32(char32_t* dst, size_t dstSize,
 			}
 		}
 	} else {
-		for ( dstCount = 0; ( dstCount < dstSize ) && *src; ++ dstCount ) {
+		for ( dstCount = 0; ( dstCount < dstSize ) && src[dstCount]; ++ dstCount ) {
 			dst[dstCount] = src[dstCount];
 		}
 		if ( dstCount < dstSize ) {
