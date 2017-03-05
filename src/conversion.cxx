@@ -2,6 +2,7 @@
 #include <string>
 #include <cstring>
 #include <cctype>
+#include <locale.h>
 
 #include "conversion.hxx"
 
