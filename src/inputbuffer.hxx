@@ -34,7 +34,7 @@ private:
 	void commonPrefixSearch(PromptBase& pi, int startChar);
 	int completeLine(PromptBase& pi);
 	void refreshLine(PromptBase& pi);
-	void highlight( int );
+	void highlight( int, bool );
 	void setColor( replxx_color::color );
 
  public:

@@ -63,7 +63,9 @@ struct replxx_color {
 		BRIGHTCYAN    = 14,
 		WHITE         = 15,
 		NORMAL        = LIGHTGRAY,
-		DEFAULT       = -1
+		DEFAULT       = -1,
+#undef ERROR
+		ERROR         = -2
 	};
 	char dummy;
 };

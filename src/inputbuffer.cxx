@@ -59,23 +59,24 @@ void InputBuffer::preloadBuffer(const char* preloadText) {
 
 void InputBuffer::setColor( replxx_color::color color_ ) {
 	char const reset[] = "\033[0m";
-	char const black[] = "\033[22;30m";
-	char const red[] = "\033[22;31m";
-	char const green[] = "\033[22;32m";
-	char const brown[] = "\033[22;33m";
-	char const blue[] = "\033[22;34m";
-	char const magenta[] = "\033[22;35m";
-	char const cyan[] = "\033[22;36m";
-	char const lightgray[] = "\033[22;37m";
+	char const black[] = "\033[0;22;30m";
+	char const red[] = "\033[0;22;31m";
+	char const green[] = "\033[0;22;32m";
+	char const brown[] = "\033[0;22;33m";
+	char const blue[] = "\033[0;22;34m";
+	char const magenta[] = "\033[0;22;35m";
+	char const cyan[] = "\033[0;22;36m";
+	char const lightgray[] = "\033[0;22;37m";
 
-	char const gray[] = "\033[1;30m";
-	char const brightred[] = "\033[1;31m";
-	char const brightgreen[] = "\033[1;32m";
-	char const yellow[] = "\033[1;33m";
-	char const brightblue[] = "\033[1;34m";
-	char const brightmagenta[] = "\033[1;35m";
-	char const brightcyan[] = "\033[1;36m";
-	char const white[] = "\033[1;37m";
+	char const gray[] = "\033[0;1;30m";
+	char const brightred[] = "\033[0;1;31m";
+	char const brightgreen[] = "\033[0;1;32m";
+	char const yellow[] = "\033[0;1;33m";
+	char const brightblue[] = "\033[0;1;34m";
+	char const brightmagenta[] = "\033[0;1;35m";
+	char const brightcyan[] = "\033[0;1;36m";
+	char const white[] = "\033[0;1;37m";
+	char const error[] = "\033[101;1;33m";
 
 	char const* code( reset );
 	switch ( color_ ) {
@@ -95,6 +96,7 @@ void InputBuffer::setColor( replxx_color::color color_ ) {
 		case replxx_color::BRIGHTMAGENTA: code = brightmagenta; break;
 		case replxx_color::BRIGHTCYAN:    code = brightcyan;    break;
 		case replxx_color::WHITE:         code = white;         break;
+		case replxx_color::ERROR:         code = error;         break;
 		case replxx_color::DEFAULT:       code = reset;         break;
 	}
 	while ( *code ) {
@@ -103,13 +105,13 @@ void InputBuffer::setColor( replxx_color::color color_ ) {
 	}
 }
 
-void InputBuffer::highlight( int highlightIdx ) {
+void InputBuffer::highlight( int highlightIdx, bool error_ ) {
 	std::vector<replxx_color::color> colors( _len, replxx_color::DEFAULT );
 	Utf32String unicodeCopy(_buf32.get(), _len);
 	Utf8String parseItem(unicodeCopy);
 	setup.highlighterCallback(parseItem.get(), colors.data(), _len);
 	if ( highlightIdx != -1 ) {
-		colors[highlightIdx] = replxx_color::BRIGHTRED;
+		colors[highlightIdx] = error_ ? replxx_color::ERROR : replxx_color::BRIGHTRED;
 	}
 	_display.clear();
 	replxx_color::color c( replxx_color::DEFAULT );
@@ -132,25 +134,56 @@ void InputBuffer::highlight( int highlightIdx ) {
 void InputBuffer::refreshLine(PromptBase& pi) {
 	// check for a matching brace/bracket/paren, remember its position if found
 	int highlightIdx = -1;
+	bool indicateError = false;
 	if (_pos < _len) {
 		/* this scans for a brace matching _buf32[_pos] to highlight */
+		unsigned char part1, part2;
 		int scanDirection = 0;
-		if (strchr("}])", _buf32[_pos]))
+		if (strchr("}])", _buf32[_pos])) {
 			scanDirection = -1; /* backwards */
-		else if (strchr("{[(", _buf32[_pos]))
+			if (_buf32[_pos] == '}') {
+				part1 = '}'; part2 = '{';
+			} else if (_buf32[_pos] == ']') {
+				part1 = ']'; part2 = '[';
+			} else {
+				part1 = ')'; part2 = '(';
+			}
+		} else if (strchr("{[(", _buf32[_pos])) {
 			scanDirection = 1; /* forwards */
+			if (_buf32[_pos] == '{') {
+				//part1 = '{'; part2 = '}';
+				part1 = '}'; part2 = '{';
+			} else if (_buf32[_pos] == '[') {
+				//part1 = '['; part2 = ']';
+				part1 = ']'; part2 = '[';
+			} else {
+				//part1 = '('; part2 = ')';
+				part1 = ')'; part2 = '(';
+			}
+		}
 
 		if (scanDirection) {
 			int unmatched = scanDirection;
+			int unmatchedOther = 0;
 			for (int i = _pos + scanDirection; i >= 0 && i < _len; i += scanDirection) {
 				/* TODO: the right thing when inside a string */
-				if (strchr("}])", _buf32[i]))
-					--unmatched;
-				else if (strchr("{[(", _buf32[i]))
-					++unmatched;
+				if (strchr("}])", _buf32[i])) {
+					if (_buf32[i] == part1) {
+						--unmatched;
+					} else {
+						--unmatchedOther;
+					}
+				} else if (strchr("{[(", _buf32[i])) {
+					if (_buf32[i] == part2) {
+						++unmatched;
+					} else {
+						++unmatchedOther;
+					}
+				}
 
 				if (unmatched == 0) {
 					highlightIdx = i;
+					indicateError = (unmatchedOther != 0);
 					break;
 				}
 			}
@@ -184,13 +217,13 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 
 	// display the input line
 	if ( setup.highlighterCallback ) {
-		highlight( highlightIdx );
+		highlight( highlightIdx, indicateError );
 		if (write32(1, _display.data(), _display.size()) == -1) return;
 	} else if (highlightIdx != -1) {
 		if (write32(1, _buf32.get(), highlightIdx) == -1) return;
-		setDisplayAttribute(true); /* bright blue (visible with both B&W bg) */
+		setDisplayAttribute(true, indicateError); /* bright blue (visible with both B&W bg) */
 		if (write32(1, &_buf32[highlightIdx], 1) == -1) return;
-		setDisplayAttribute(false);
+		setDisplayAttribute(false, indicateError);
 		if (write32(1, _buf32.get() + highlightIdx + 1, _len - highlightIdx - 1) == -1) return;
 	} else {
 		if (write32(1, _buf32.get(), _len) == -1) return;
@@ -214,13 +247,13 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 	if (write(1, seq, strlen(seq)) == -1) return;
 
 	if ( setup.highlighterCallback ) {
-		highlight( highlightIdx );
+		highlight( highlightIdx, indicateError );
 		if (write32(1, _display.data(), _display.size()) == -1) return;
 	} else if (highlightIdx != -1) {	// write unhighlighted text
 		if (write32(1, _buf32.get(), highlightIdx) == -1) return;
-		setDisplayAttribute(true);
+		setDisplayAttribute(true, indicateError);
 		if (write32(1, &_buf32[highlightIdx], 1) == -1) return;
-		setDisplayAttribute(false);
+		setDisplayAttribute(false, indicateError);
 		if (write32(1, _buf32.get() + highlightIdx + 1, _len - highlightIdx - 1) == -1) return;
 	} else {	// highlightIdx the matching brace/bracket/parenthesis
 		if (write32(1, _buf32.get(), _len) == -1) return;

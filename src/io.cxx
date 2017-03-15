@@ -128,7 +128,7 @@ int getScreenRows(void) {
 	return (rows > 0) ? rows : 24;
 }
 
-void setDisplayAttribute(bool enhancedDisplay) {
+void setDisplayAttribute(bool enhancedDisplay, bool error) {
 #ifdef _WIN32
 	if (enhancedDisplay) {
 		CONSOLE_SCREEN_BUFFER_INFO inf;
@@ -157,8 +157,10 @@ void setDisplayAttribute(bool enhancedDisplay) {
 	}
 #else
 	if (enhancedDisplay) {
-		if (write(1, "\x1b[1;34m", 7) == -1)
+		char const* p = (error ? "\x1b[1;31m" : "\x1b[1;34m");
+		if (write(1, p, 7) == -1) {
 			return; /* bright blue (visible with both B&W bg) */
+		}
 	} else {
 		if (write(1, "\x1b[0m", 4) == -1) return; /* reset */
 	}

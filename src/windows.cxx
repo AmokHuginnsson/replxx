@@ -24,6 +24,7 @@ T* HandleEsc(T* p, T* end) {
 	if (*p == '[') {
 		int code = 0;
 
+		int thisBackground( WIN_ATTR._defaultBackground );
 		for (++p; p < end; ++p) {
 			char32_t c = *p;
 
@@ -33,58 +34,41 @@ T* HandleEsc(T* p, T* end) {
 				switch (code) {
 					case 0:
 						WIN_ATTR._consoleAttribute = WIN_ATTR._defaultAttribute;
-						WIN_ATTR._consoleColor =
-								WIN_ATTR._defaultColor | WIN_ATTR._defaultBackground;
+						WIN_ATTR._consoleColor = WIN_ATTR._defaultColor | thisBackground;
 						break;
-
 					case 1:	// BOLD
 					case 5:	// BLINK
-						WIN_ATTR._consoleAttribute =
-								(WIN_ATTR._defaultAttribute ^ FOREGROUND_INTENSITY) & INTENSITY;
+						WIN_ATTR._consoleAttribute = (WIN_ATTR._defaultAttribute ^ FOREGROUND_INTENSITY) & INTENSITY;
 						break;
-
 					case 22:
 						WIN_ATTR._consoleAttribute = WIN_ATTR._defaultAttribute;
 						break;
-
 					case 30:
 						WIN_ATTR._consoleColor = BACKGROUND_WHITE;
 						break;
-
 					case 31:
-						WIN_ATTR._consoleColor =
-								FOREGROUND_RED | WIN_ATTR._defaultBackground;
+						WIN_ATTR._consoleColor = FOREGROUND_RED | thisBackground;
 						break;
-
 					case 32:
-						WIN_ATTR._consoleColor =
-								FOREGROUND_GREEN | WIN_ATTR._defaultBackground;
+						WIN_ATTR._consoleColor = FOREGROUND_GREEN | thisBackground;
 						break;
-
 					case 33:
-						WIN_ATTR._consoleColor =
-								FOREGROUND_RED | FOREGROUND_GREEN | WIN_ATTR._defaultBackground;
+						WIN_ATTR._consoleColor = FOREGROUND_RED | FOREGROUND_GREEN | thisBackground;
 						break;
-
 					case 34:
-						WIN_ATTR._consoleColor =
-								FOREGROUND_BLUE | WIN_ATTR._defaultBackground;
+						WIN_ATTR._consoleColor = FOREGROUND_BLUE | thisBackground;
 						break;
-
 					case 35:
-						WIN_ATTR._consoleColor =
-								FOREGROUND_BLUE | FOREGROUND_RED | WIN_ATTR._defaultBackground;
+						WIN_ATTR._consoleColor = FOREGROUND_BLUE | FOREGROUND_RED | thisBackground;
 						break;
-
 					case 36:
-						WIN_ATTR._consoleColor = FOREGROUND_BLUE | FOREGROUND_GREEN |
-																		 WIN_ATTR._defaultBackground;
+						WIN_ATTR._consoleColor = FOREGROUND_BLUE | FOREGROUND_GREEN | thisBackground;
 						break;
-
 					case 37:
-						WIN_ATTR._consoleColor = FOREGROUND_GREEN | FOREGROUND_RED |
-																		 FOREGROUND_BLUE |
-																		 WIN_ATTR._defaultBackground;
+						WIN_ATTR._consoleColor = FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | thisBackground;
+						break;
+					case 101:
+						thisBackground = BACKGROUND_RED;
 						break;
 				}
 
