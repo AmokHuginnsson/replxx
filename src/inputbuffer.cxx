@@ -1149,7 +1149,7 @@ int InputBuffer::incrementalHistorySearch(PromptBase& pi, int startChar) {
 								 historyLinePosition);	// draw user's text with our prompt
 
 	// loop until we get an exit character
-	int c;
+	int c = 0;
 	bool keepLooping = true;
 	bool useSearchedLine = true;
 	bool searchAgain = false;
@@ -1286,6 +1286,10 @@ int InputBuffer::incrementalHistorySearch(PromptBase& pi, int startChar) {
 		// if we are staying in search mode, search now
 		if (keepLooping) {
 			bufferSize = historyLineLength + 1;
+			if (activeHistoryLine) {
+				delete[] activeHistoryLine;
+				activeHistoryLine = nullptr;
+			}
 			activeHistoryLine = new char32_t[bufferSize];
 			copyString8to32(activeHistoryLine, bufferSize, ucharCount,
 											history[historyIndex]);
@@ -1319,6 +1323,7 @@ int InputBuffer::incrementalHistorySearch(PromptBase& pi, int startChar) {
 						historySearchIndex += dp.direction;
 						bufferSize = strlen8(history[historySearchIndex]) + 1;
 						delete[] activeHistoryLine;
+						activeHistoryLine = nullptr;
 						activeHistoryLine = new char32_t[bufferSize];
 						copyString8to32(activeHistoryLine, bufferSize, ucharCount,
 														history[historySearchIndex]);
@@ -1333,6 +1338,7 @@ int InputBuffer::incrementalHistorySearch(PromptBase& pi, int startChar) {
 			}
 			if (activeHistoryLine) {
 				delete[] activeHistoryLine;
+				activeHistoryLine = nullptr;
 			}
 			bufferSize = historyLineLength + 1;
 			activeHistoryLine = new char32_t[bufferSize];
@@ -1369,6 +1375,7 @@ int InputBuffer::incrementalHistorySearch(PromptBase& pi, int startChar) {
 	}
 	if (activeHistoryLine) {
 		delete[] activeHistoryLine;
+		activeHistoryLine = nullptr;
 	}
 	dynamicRefresh(pb, _buf32.get(), _len, _pos);	// redraw the original prompt with current input
 	pi.promptPreviousInputLen = _len;
