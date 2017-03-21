@@ -57,26 +57,26 @@ void InputBuffer::preloadBuffer(const char* preloadText) {
 	_prefix = _pos = static_cast<int>(ucharCount);
 }
 
-void InputBuffer::setColor( replxx_color::color color_ ) {
-	char const reset[] = "\033[0m";
-	char const black[] = "\033[0;22;30m";
-	char const red[] = "\033[0;22;31m";
-	char const green[] = "\033[0;22;32m";
-	char const brown[] = "\033[0;22;33m";
-	char const blue[] = "\033[0;22;34m";
-	char const magenta[] = "\033[0;22;35m";
-	char const cyan[] = "\033[0;22;36m";
-	char const lightgray[] = "\033[0;22;37m";
+char const* ansi_color( replxx_color::color color_ ) {
+	static char const reset[] = "\033[0m";
+	static char const black[] = "\033[0;22;30m";
+	static char const red[] = "\033[0;22;31m";
+	static char const green[] = "\033[0;22;32m";
+	static char const brown[] = "\033[0;22;33m";
+	static char const blue[] = "\033[0;22;34m";
+	static char const magenta[] = "\033[0;22;35m";
+	static char const cyan[] = "\033[0;22;36m";
+	static char const lightgray[] = "\033[0;22;37m";
 
-	char const gray[] = "\033[0;1;30m";
-	char const brightred[] = "\033[0;1;31m";
-	char const brightgreen[] = "\033[0;1;32m";
-	char const yellow[] = "\033[0;1;33m";
-	char const brightblue[] = "\033[0;1;34m";
-	char const brightmagenta[] = "\033[0;1;35m";
-	char const brightcyan[] = "\033[0;1;36m";
-	char const white[] = "\033[0;1;37m";
-	char const error[] = "\033[101;1;33m";
+	static char const gray[] = "\033[0;1;30m";
+	static char const brightred[] = "\033[0;1;31m";
+	static char const brightgreen[] = "\033[0;1;32m";
+	static char const yellow[] = "\033[0;1;33m";
+	static char const brightblue[] = "\033[0;1;34m";
+	static char const brightmagenta[] = "\033[0;1;35m";
+	static char const brightcyan[] = "\033[0;1;36m";
+	static char const white[] = "\033[0;1;37m";
+	static char const error[] = "\033[101;1;33m";
 
 	char const* code( reset );
 	switch ( color_ ) {
@@ -99,6 +99,11 @@ void InputBuffer::setColor( replxx_color::color color_ ) {
 		case replxx_color::ERROR:         code = error;         break;
 		case replxx_color::DEFAULT:       code = reset;         break;
 	}
+	return ( code );
+}
+
+void InputBuffer::setColor( replxx_color::color color_ ) {
+	char const* code( ansi_color( color_ ) );
 	while ( *code ) {
 		_display.push_back( *code );
 		++ code;
@@ -490,8 +495,19 @@ int InputBuffer::completeLine(PromptBase& pi) {
 				if (index < lc.completionStrings.size()) {
 					itemLength = static_cast<int>(lc.completionStrings[index].length());
 					fflush(stdout);
-					if (write32(1, lc.completionStrings[index].get(), itemLength) == -1)
+
+					char const* col( ansi_color( replxx_color::BRIGHTMAGENTA ) );
+					if ( write( 1, col, strlen( col ) ) == -1)
 						return -1;
+					if (write32(1, lc.completionStrings[index].get(), longestCommonPrefix) == -1)
+						return -1;
+					col = ansi_color( replxx_color::DEFAULT );
+					if ( write( 1, col, strlen( col ) ) == -1)
+						return -1;
+
+					if (write32(1, lc.completionStrings[index].get() + longestCommonPrefix, itemLength - longestCommonPrefix) == -1)
+						return -1;
+
 					if (((column + 1) * rowCount) + row < lc.completionStrings.size()) {
 						for (int k = itemLength; k < longestCompletion; ++k) {
 							printf(" ");
