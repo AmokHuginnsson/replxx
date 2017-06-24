@@ -445,6 +445,10 @@ void replxx_set_max_line_size(int len) {
 	setup.maxLineLength = len;
 }
 
+void replxx_set_word_break_characters( char const* breakChars_ ) {
+	setup.breakChars = breakChars_;
+}
+
 void replxx_set_double_tab_completion(int val) {
 	setup.doubleTabCompletion = val ? true : false;
 }

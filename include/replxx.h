@@ -82,6 +82,7 @@ char* replxx_input(const char* prompt);
 int replxx_print( char const*, ... );
 void replxx_set_preload_buffer(const char* preloadText);
 int replxx_history_add(const char* line);
+void replxx_set_word_break_characters( char const* );
 void replxx_set_max_line_size(int len);
 void replxx_set_double_tab_completion(int val);
 void replxx_set_complete_on_empty(int val);

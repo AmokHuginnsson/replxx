@@ -325,12 +325,13 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	// at least one completion
 	int longestCommonPrefix = 0;
 	int displayLength = 0;
-	if (lc.completionStrings.size() == 1) {
+	int completionsCount( lc.completionStrings.size() );
+	if ( completionsCount == 1) {
 		longestCommonPrefix = static_cast<int>(lc.completionStrings[0].length());
 	} else {
 		bool keepGoing = true;
 		while (keepGoing) {
-			for (size_t j = 0; j < lc.completionStrings.size() - 1; ++j) {
+			for (int j = 0; j < completionsCount - 1; ++j) {
 				char32_t c1 = lc.completionStrings[j][longestCommonPrefix];
 				char32_t c2 = lc.completionStrings[j + 1][longestCommonPrefix];
 				if ((0 == c1) || (0 == c2) || (c1 != c2)) {
@@ -343,12 +344,12 @@ int InputBuffer::completeLine(PromptBase& pi) {
 			}
 		}
 	}
-	if ( setup.beepOnAmbiguousCompletion && ( lc.completionStrings.size() != 1 ) ) {	// beep if ambiguous
+	if ( setup.beepOnAmbiguousCompletion && ( completionsCount != 1 ) ) {	// beep if ambiguous
 		beep();
 	}
 
 	// if we can extend the item, extend it and return to main loop
-	if (longestCommonPrefix > itemLength) {
+	if ( ( longestCommonPrefix > itemLength ) || ( completionsCount == 1 ) ) {
 		displayLength = _len + longestCommonPrefix - itemLength;
 		if (displayLength > _buflen) {
 			longestCommonPrefix -= displayLength - _buflen;	// don't overflow buffer
