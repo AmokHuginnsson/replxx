@@ -449,6 +449,10 @@ void replxx_set_word_break_characters( char const* breakChars_ ) {
 	setup.breakChars = breakChars_;
 }
 
+void replxx_set_special_prefixes( char const* specialPrefixes_ ) {
+	setup.specialPrefixes = specialPrefixes_;
+}
+
 void replxx_set_double_tab_completion(int val) {
 	setup.doubleTabCompletion = val ? true : false;
 }

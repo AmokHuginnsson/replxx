@@ -9,6 +9,7 @@ struct Setup {
 	int maxLineLength;
 	int historyMaxLen;
 	char const* breakChars;
+	char const* specialPrefixes;
 	int completionCountCutoff;
 	bool doubleTabCompletion;
 	bool completeOnEmpty;
