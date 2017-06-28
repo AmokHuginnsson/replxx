@@ -254,7 +254,8 @@ void replxx_clear_screen(void) {
 	FillConsoleOutputCharacterA(screenHandle, ' ', inf.dwSize.X * inf.dwSize.Y,
 															coord, &count);
 #else
-	if (write(1, "\x1b[H\x1b[2J", 7) <= 0) return;
+	char const clearCode[] = "\033c\033[H\033[2J\033[0m";
+	if (write(1, clearCode, sizeof ( clearCode ) - 1) <= 0) return;
 #endif
 }
 
