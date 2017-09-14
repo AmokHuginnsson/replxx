@@ -308,7 +308,10 @@ int InputBuffer::completeLine(PromptBase& pi) {
 		}
 	}
 	if ( ( startIndex < 0 ) || ! strchr( setup.specialPrefixes, _buf32[startIndex] ) ) {
-		++startIndex;
+		++ startIndex;
+	}
+	while ( ( startIndex > 0 ) && ( strchr( setup.specialPrefixes, _buf32[startIndex - 1] ) != nullptr ) ) {
+		-- startIndex;
 	}
 	int itemLength = _pos - startIndex;
 	Utf32String unicodeCopy(&_buf32[startIndex], itemLength);
