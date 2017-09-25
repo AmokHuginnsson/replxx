@@ -20,6 +20,7 @@ Setup::Setup()
 	, completeOnEmpty( true )
 	, beepOnAmbiguousCompletion( false )
 	, completionCallback( nullptr )
+	, ctxCompletionCallback( nullptr )
 	, highlighterCallback( nullptr ) {
 }
 

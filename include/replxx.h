@@ -75,7 +75,9 @@ void replxx_set_highlighter_callback(replxx_highlighter_callback_t* fn);
 
 typedef struct replxx_completions replxx_completions;
 typedef void(replxx_completion_callback_t)(const char*, replxx_completions*);
+typedef void(replxx_ctx_completion_callback_t)(const char*, int, replxx_completions*);
 void replxx_set_completion_callback(replxx_completion_callback_t* fn);
+void replxx_set_ctx_completion_callback(replxx_ctx_completion_callback_t* fn);
 void replxx_add_completion(replxx_completions* lc, const char* str);
 
 char* replxx_input(const char* prompt);

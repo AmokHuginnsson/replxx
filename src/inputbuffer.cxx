@@ -313,12 +313,19 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	while ( ( startIndex > 0 ) && ( strchr( setup.specialPrefixes, _buf32[startIndex - 1] ) != nullptr ) ) {
 		-- startIndex;
 	}
-	int itemLength = _pos - startIndex;
-	Utf32String unicodeCopy(&_buf32[startIndex], itemLength);
-	Utf8String parseItem(unicodeCopy);
 
+	int itemLength( _pos - startIndex );
+	int offset( setup.ctxCompletionCallback ? 0 : startIndex );
+	int len( setup.ctxCompletionCallback ? _pos : itemLength );
+
+	Utf32String unicodeCopy(&_buf32[offset], len);
+	Utf8String parseItem(unicodeCopy);
 	// get a list of completions
-	setup.completionCallback(parseItem.get(), &lc);
+	if ( setup.ctxCompletionCallback ) {
+		setup.ctxCompletionCallback(parseItem.get(), startIndex, &lc);
+	} else {
+		setup.completionCallback(parseItem.get(), &lc);
+	}
 
 	// if no completions, we are done
 	if (lc.completionStrings.size() == 0) {
@@ -618,7 +625,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 		}
 
 		// ctrl-I/tab, command completion, needs to be before switch statement
-		if (c == ctrlChar('I') && setup.completionCallback) {
+		if (c == ctrlChar('I') && (setup.completionCallback || setup.ctxCompletionCallback)) {
 			if ( ( _pos == 0 ) && ! setup.completeOnEmpty ) {
 				// SERVER-4967 -- in earlier versions, you could paste
 				// previous output
