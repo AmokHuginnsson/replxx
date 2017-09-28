@@ -221,10 +221,10 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 	pi.promptPreviousInputLen = _len;
 
 	// display the input line
-	if ( setup.highlighterCallback ) {
+	if ( setup.highlighterCallback && !setup.noColor ) {
 		highlight( highlightIdx, indicateError );
 		if (write32(1, _display.data(), _display.size()) == -1) return;
-	} else if (highlightIdx != -1) {
+	} else if ((highlightIdx != -1) && !setup.noColor) {
 		if (write32(1, _buf32.get(), highlightIdx) == -1) return;
 		setDisplayAttribute(true, indicateError); /* bright blue (visible with both B&W bg) */
 		if (write32(1, &_buf32[highlightIdx], 1) == -1) return;
@@ -251,10 +251,10 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 					 pi.promptIndentation + 1, pi.promptCursorRowOffset == 0 ? 'K' : 'J' );	// 1-based on VT100
 	if (write(1, seq, strlen(seq)) == -1) return;
 
-	if ( setup.highlighterCallback ) {
+	if ( setup.highlighterCallback && !setup.noColor ) {
 		highlight( highlightIdx, indicateError );
 		if (write32(1, _display.data(), _display.size()) == -1) return;
-	} else if (highlightIdx != -1) {	// write unhighlighted text
+	} else if ( ( highlightIdx != -1 ) && !setup.noColor ) {	// write unhighlighted text
 		if (write32(1, _buf32.get(), highlightIdx) == -1) return;
 		setDisplayAttribute(true, indicateError);
 		if (write32(1, &_buf32[highlightIdx], 1) == -1) return;
@@ -510,12 +510,12 @@ int InputBuffer::completeLine(PromptBase& pi) {
 					fflush(stdout);
 
 					char const* col( ansi_color( replxx_color::BRIGHTMAGENTA ) );
-					if ( write( 1, col, strlen( col ) ) == -1)
+					if ( !setup.noColor && ( write( 1, col, strlen( col ) ) == -1 ) )
 						return -1;
 					if (write32(1, lc.completionStrings[index].get(), longestCommonPrefix) == -1)
 						return -1;
 					col = ansi_color( replxx_color::DEFAULT );
-					if ( write( 1, col, strlen( col ) ) == -1)
+					if ( !setup.noColor && ( write( 1, col, strlen( col ) ) == -1 ) )
 						return -1;
 
 					if (write32(1, lc.completionStrings[index].get() + longestCommonPrefix, itemLength - longestCommonPrefix) == -1)

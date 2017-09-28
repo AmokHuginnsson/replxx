@@ -19,6 +19,7 @@ Setup::Setup()
 	, doubleTabCompletion( false )
 	, completeOnEmpty( true )
 	, beepOnAmbiguousCompletion( false )
+	, noColor( false )
 	, completionCallback( nullptr )
 	, ctxCompletionCallback( nullptr )
 	, highlighterCallback( nullptr ) {

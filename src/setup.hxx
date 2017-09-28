@@ -14,6 +14,7 @@ struct Setup {
 	bool doubleTabCompletion;
 	bool completeOnEmpty;
 	bool beepOnAmbiguousCompletion;
+	bool noColor;
 	replxx_completion_callback_t* completionCallback;
 	replxx_ctx_completion_callback_t* ctxCompletionCallback;
 	replxx_highlighter_callback_t* highlighterCallback;

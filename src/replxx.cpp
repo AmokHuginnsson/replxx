@@ -467,6 +467,10 @@ void replxx_set_complete_on_empty(int val) {
 	setup.completeOnEmpty = val ? true : false;
 }
 
+void replxx_set_no_color( int val ) {
+	setup.noColor = val ? true : false;
+}
+
 void replxx_set_beep_on_ambiguous_completion(int val) {
 	setup.beepOnAmbiguousCompletion = val ? true : false;
 }
