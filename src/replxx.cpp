@@ -404,6 +404,10 @@ char* replxx_input(const char* prompt) {
 	}
 }
 
+void replxx_free( void* mem_ ) {
+	::free( mem_ );
+}
+
 int replxx_print( char const* format_, ... ) {
 	::std::va_list ap;
 	va_start( ap, format_ );

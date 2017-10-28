@@ -81,6 +81,7 @@ void replxx_set_ctx_completion_callback(replxx_ctx_completion_callback_t* fn);
 void replxx_add_completion(replxx_completions* lc, const char* str);
 
 char* replxx_input(const char* prompt);
+void replxx_free( void* );
 int replxx_print( char const*, ... );
 void replxx_set_preload_buffer(const char* preloadText);
 int replxx_history_add(const char* line);
@@ -106,3 +107,4 @@ int replxx_install_window_change_handler(void);
 #endif
 
 #endif /* __REPLXX_H */
+
