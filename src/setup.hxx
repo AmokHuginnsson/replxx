@@ -18,6 +18,7 @@ struct Setup {
 	replxx_completion_callback_t* completionCallback;
 	replxx_ctx_completion_callback_t* ctxCompletionCallback;
 	replxx_highlighter_callback_t* highlighterCallback;
+	replxx_hint_callback_t* hintCallback;
 	Setup( void );
 };
 

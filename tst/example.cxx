@@ -19,6 +19,16 @@ void completionHook (char const* prefix, replxx_completions* lc) {
 	}
 }
 
+void hintHook(char const* prefix, int, replxx_hints* lc, replxx_color::color*) {
+	size_t i;
+	size_t len( strlen( prefix ) );
+	for (i = 0;	examples[i] != NULL; ++i) {
+		if (strncmp(prefix, examples[i], strlen(prefix)) == 0) {
+			replxx_add_hint(lc, examples[i] + len);
+		}
+	}
+}
+
 void colorHook( char const* str_, replxx_color::color* colors_, int size_ ) {
 	for ( int i( 0 ); i < size_; ++ i ) {
 		if ( isdigit( str_[i] ) ) {
@@ -44,6 +54,7 @@ int main (int argc, char** argv) {
 	replxx_history_load(file);
 	replxx_set_completion_callback(completionHook);
 	replxx_set_highlighter_callback(colorHook);
+	replxx_set_hint_callback(hintHook);
 
 	printf("starting...\n");
 

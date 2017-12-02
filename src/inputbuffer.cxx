@@ -114,7 +114,9 @@ void InputBuffer::highlight( int highlightIdx, bool error_ ) {
 	std::vector<replxx_color::color> colors( _len, replxx_color::DEFAULT );
 	Utf32String unicodeCopy(_buf32.get(), _len);
 	Utf8String parseItem(unicodeCopy);
-	setup.highlighterCallback(parseItem.get(), colors.data(), _len);
+	if ( setup.highlighterCallback ) {
+		setup.highlighterCallback(parseItem.get(), colors.data(), _len);
+	}
 	if ( highlightIdx != -1 ) {
 		colors[highlightIdx] = error_ ? replxx_color::ERROR : replxx_color::BRIGHTRED;
 	}
@@ -128,6 +130,25 @@ void InputBuffer::highlight( int highlightIdx, bool error_ ) {
 		_display.push_back( _buf32[i] );
 	}
 	setColor( replxx_color::DEFAULT );
+}
+
+void InputBuffer::handle_hints( void ) {
+	if ( setup.hintCallback && ( _pos == _len ) ) {
+		replxx_hints lh;
+		replxx_color::color c( replxx_color::GRAY );
+		Utf32String unicodeCopy( _buf32.get(), _pos );
+		Utf8String parseItem(unicodeCopy);
+		setup.hintCallback( parseItem.get(), start_index(), &lh, &c );
+		if ( lh.hintsStrings.size() == 1 ) {
+			setColor( c );
+			Utf32String const& hint( lh.hintsStrings.front() );
+			for ( size_t i( 0 ); i < hint.length(); ++ i ) {
+				_display.push_back( hint[i] );
+			}
+			setColor( replxx_color::DEFAULT );
+		}
+		lh.hintsStrings.clear();
+	}
 }
 
 /**
@@ -207,6 +228,8 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 													calculateColumnPosition(_buf32.get(), _pos), xCursorPos,
 													yCursorPos);
 
+	highlight( highlightIdx, indicateError );
+	handle_hints();
 #ifdef _WIN32
 	// position at the end of the prompt, clear to end of previous input
 	CONSOLE_SCREEN_BUFFER_INFO inf;
@@ -221,15 +244,8 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 	pi.promptPreviousInputLen = _len;
 
 	// display the input line
-	if ( setup.highlighterCallback && !setup.noColor ) {
-		highlight( highlightIdx, indicateError );
+	if ( !setup.noColor ) {
 		if (write32(1, _display.data(), _display.size()) == -1) return;
-	} else if ((highlightIdx != -1) && !setup.noColor) {
-		if (write32(1, _buf32.get(), highlightIdx) == -1) return;
-		setDisplayAttribute(true, indicateError); /* bright blue (visible with both B&W bg) */
-		if (write32(1, &_buf32[highlightIdx], 1) == -1) return;
-		setDisplayAttribute(false, indicateError);
-		if (write32(1, _buf32.get() + highlightIdx + 1, _len - highlightIdx - 1) == -1) return;
 	} else {
 		if (write32(1, _buf32.get(), _len) == -1) return;
 	}
@@ -251,15 +267,8 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 					 pi.promptIndentation + 1, pi.promptCursorRowOffset == 0 ? 'K' : 'J' );	// 1-based on VT100
 	if (write(1, seq, strlen(seq)) == -1) return;
 
-	if ( setup.highlighterCallback && !setup.noColor ) {
-		highlight( highlightIdx, indicateError );
+	if ( !setup.noColor ) {
 		if (write32(1, _display.data(), _display.size()) == -1) return;
-	} else if ( ( highlightIdx != -1 ) && !setup.noColor ) {	// write unhighlighted text
-		if (write32(1, _buf32.get(), highlightIdx) == -1) return;
-		setDisplayAttribute(true, indicateError);
-		if (write32(1, &_buf32[highlightIdx], 1) == -1) return;
-		setDisplayAttribute(false, indicateError);
-		if (write32(1, _buf32.get() + highlightIdx + 1, _len - highlightIdx - 1) == -1) return;
 	} else {	// highlightIdx the matching brace/bracket/parenthesis
 		if (write32(1, _buf32.get(), _len) == -1) return;
 	}
@@ -283,6 +292,22 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 			pi.promptExtraLines + yCursorPos;	// remember row for next pass
 }
 
+int InputBuffer::start_index() {
+	int startIndex = _pos;
+	while (--startIndex >= 0) {
+		if (strchr(setup.breakChars, _buf32[startIndex])) {
+			break;
+		}
+	}
+	if ( ( startIndex < 0 ) || ! strchr( setup.specialPrefixes, _buf32[startIndex] ) ) {
+		++ startIndex;
+	}
+	while ( ( startIndex > 0 ) && ( strchr( setup.specialPrefixes, _buf32[startIndex - 1] ) != nullptr ) ) {
+		-- startIndex;
+	}
+	return ( startIndex );
+}
+
 /**
  * Handle command completion, using a completionCallback() routine to provide
  * possible substitutions
@@ -301,18 +326,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	// character and
 	// extract a copy to parse.	we also handle the case where tab is hit while
 	// not at end-of-line.
-	int startIndex = _pos;
-	while (--startIndex >= 0) {
-		if (strchr(setup.breakChars, _buf32[startIndex])) {
-			break;
-		}
-	}
-	if ( ( startIndex < 0 ) || ! strchr( setup.specialPrefixes, _buf32[startIndex] ) ) {
-		++ startIndex;
-	}
-	while ( ( startIndex > 0 ) && ( strchr( setup.specialPrefixes, _buf32[startIndex - 1] ) != nullptr ) ) {
-		-- startIndex;
-	}
+	int startIndex( start_index() );
 
 	int itemLength( _pos - startIndex );
 	int offset( setup.ctxCompletionCallback ? 0 : startIndex );

@@ -80,6 +80,11 @@ void replxx_set_completion_callback(replxx_completion_callback_t* fn);
 void replxx_set_ctx_completion_callback(replxx_ctx_completion_callback_t* fn);
 void replxx_add_completion(replxx_completions* lc, const char* str);
 
+typedef struct replxx_hints replxx_hints;
+typedef void(replxx_hint_callback_t)(const char*, int, replxx_hints*, replxx_color::color*);
+void replxx_set_hint_callback(replxx_hint_callback_t* fn);
+void replxx_add_hint(replxx_hints* lh, const char* str);
+
 char* replxx_input(const char* prompt);
 void replxx_free( void* );
 int replxx_print( char const*, ... );

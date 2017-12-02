@@ -22,7 +22,8 @@ Setup::Setup()
 	, noColor( false )
 	, completionCallback( nullptr )
 	, ctxCompletionCallback( nullptr )
-	, highlighterCallback( nullptr ) {
+	, highlighterCallback( nullptr )
+	, hintCallback( nullptr ) {
 }
 
 Setup setup;

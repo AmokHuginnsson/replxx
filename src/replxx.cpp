@@ -439,6 +439,14 @@ void replxx_set_highlighter_callback(replxx_highlighter_callback_t* fn) {
 	setup.highlighterCallback = fn;
 }
 
+void replxx_set_hint_callback(replxx_hint_callback_t* fn) {
+	setup.hintCallback = fn;
+}
+
+void replxx_add_hint(replxx_hints* lh, const char* str) {
+	lh->hintsStrings.push_back(Utf32String(str));
+}
+
 void replxx_add_completion(replxx_completions* lc, const char* str) {
 	lc->completionStrings.push_back(Utf32String(str));
 }

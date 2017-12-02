@@ -11,6 +11,10 @@ struct replxx_completions {
 	std::vector<replxx::Utf32String> completionStrings;
 };
 
+struct replxx_hints {
+	std::vector<replxx::Utf32String> hintsStrings;
+};
+
 namespace replxx {
 
 struct PromptBase;
@@ -35,7 +39,9 @@ private:
 	int completeLine(PromptBase& pi);
 	void refreshLine(PromptBase& pi);
 	void highlight( int, bool );
+	void handle_hints( void );
 	void setColor( replxx_color::color );
+	int start_index( void );
 
  public:
 	InputBuffer(int bufferLen)
