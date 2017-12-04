@@ -68,14 +68,16 @@ char const* ansi_color( replxx_color::color color_ ) {
 	static char const cyan[] = "\033[0;22;36m";
 	static char const lightgray[] = "\033[0;22;37m";
 
-	static char const gray[] = "\033[0;1;30m";
-	static char const brightred[] = "\033[0;1;31m";
-	static char const brightgreen[] = "\033[0;1;32m";
-	static char const yellow[] = "\033[0;1;33m";
-	static char const brightblue[] = "\033[0;1;34m";
-	static char const brightmagenta[] = "\033[0;1;35m";
-	static char const brightcyan[] = "\033[0;1;36m";
-	static char const white[] = "\033[0;1;37m";
+	static char const* TERM( getenv( "TERM" ) );
+	static bool const has256color( TERM ? ( strstr( TERM, "256" ) != nullptr ) : false );
+	static char const* gray = has256color ? "\033[0;1;90m" : "\033[0;1;30m";
+	static char const* brightred = has256color ? "\033[0;1;91m" : "\033[0;1;31m";
+	static char const* brightgreen = has256color ? "\033[0;1;92m" : "\033[0;1;32m";
+	static char const* yellow = has256color ? "\033[0;1;93m" : "\033[0;1;33m";
+	static char const* brightblue = has256color ? "\033[0;1;94m" : "\033[0;1;34m";
+	static char const* brightmagenta = has256color ? "\033[0;1;95m" : "\033[0;1;35m";
+	static char const* brightcyan = has256color ? "\033[0;1;96m" : "\033[0;1;36m";
+	static char const* white = has256color ? "\033[0;1;97m" : "\033[0;1;37m";
 	static char const error[] = "\033[101;1;33m";
 
 	char const* code( reset );
