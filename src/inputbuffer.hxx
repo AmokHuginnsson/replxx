@@ -28,6 +28,7 @@ private:
 	input_buffer_t _buf32;      // input buffer
 	char_widths_t  _charWidths; // character widths from mk_wcwidth()
 	display_t       _display;
+	Utf32String _hint;
 	int _buflen; // buffer size in characters
 	int _len;    // length of text in input buffer
 	int _pos;    // character position in buffer ( 0 <= _pos <= _len )
@@ -47,6 +48,8 @@ private:
 	InputBuffer(int bufferLen)
 			: _buf32(new char32_t[bufferLen])
 			, _charWidths(new char[bufferLen])
+			, _display()
+			, _hint()
 			, _buflen(bufferLen - 1)
 			, _len(0)
 			, _pos(0)

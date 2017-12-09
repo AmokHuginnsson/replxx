@@ -135,6 +135,7 @@ void InputBuffer::highlight( int highlightIdx, bool error_ ) {
 }
 
 void InputBuffer::handle_hints( void ) {
+	_hint = Utf32String();
 	if ( setup.hintCallback && ( _pos == _len ) ) {
 		replxx_hints lh;
 		replxx_color::color c( replxx_color::GRAY );
@@ -143,13 +144,12 @@ void InputBuffer::handle_hints( void ) {
 		setup.hintCallback( parseItem.get(), start_index(), &lh, &c );
 		if ( lh.hintsStrings.size() == 1 ) {
 			setColor( c );
-			Utf32String const& hint( lh.hintsStrings.front() );
-			for ( size_t i( 0 ); i < hint.length(); ++ i ) {
-				_display.push_back( hint[i] );
+			_hint = lh.hintsStrings.front();
+			for ( size_t i( 0 ); i < _hint.length(); ++ i ) {
+				_display.push_back( _hint[i] );
 			}
 			setColor( replxx_color::DEFAULT );
 		}
-		lh.hintsStrings.clear();
 	}
 }
 
@@ -218,20 +218,26 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 		}
 	}
 
-	// calculate the position of the end of the input line
-	int xEndOfInput, yEndOfInput;
-	calculateScreenPosition(pi.promptIndentation, 0, pi.promptScreenColumns,
-													calculateColumnPosition(_buf32.get(), _len), xEndOfInput,
-													yEndOfInput);
-
-	// calculate the desired position of the cursor
-	int xCursorPos, yCursorPos;
-	calculateScreenPosition(pi.promptIndentation, 0, pi.promptScreenColumns,
-													calculateColumnPosition(_buf32.get(), _pos), xCursorPos,
-													yCursorPos);
-
 	highlight( highlightIdx, indicateError );
 	handle_hints();
+
+	// calculate the position of the end of the input line
+	int xEndOfInput( 0 ), yEndOfInput( 0 );
+	calculateScreenPosition(
+		pi.promptIndentation, 0, pi.promptScreenColumns,
+		calculateColumnPosition( _buf32.get(), _len ) + ( !setup.noColor ? calculateColumnPosition( _hint.get(), _hint.length() ) : 0 ),
+		xEndOfInput, yEndOfInput
+	);
+
+	// calculate the desired position of the cursor
+	int xCursorPos( 0 ), yCursorPos( 0 );
+	calculateScreenPosition(
+		pi.promptIndentation, 0, pi.promptScreenColumns,
+		calculateColumnPosition(_buf32.get(), _pos),
+		xCursorPos,
+		yCursorPos
+	);
+
 #ifdef _WIN32
 	// position at the end of the prompt, clear to end of previous input
 	CONSOLE_SCREEN_BUFFER_INFO inf;
