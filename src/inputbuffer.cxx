@@ -117,7 +117,7 @@ void InputBuffer::highlight( int highlightIdx, bool error_ ) {
 	Utf32String unicodeCopy(_buf32.get(), _len);
 	Utf8String parseItem(unicodeCopy);
 	if ( setup.highlighterCallback ) {
-		setup.highlighterCallback(parseItem.get(), colors.data(), _len);
+		setup.highlighterCallback( parseItem.get(), colors.data(), _len, setup.highlighterUserdata );
 	}
 	if ( highlightIdx != -1 ) {
 		colors[highlightIdx] = error_ ? replxx_color::ERROR : replxx_color::BRIGHTRED;
@@ -141,7 +141,7 @@ void InputBuffer::handle_hints( void ) {
 		replxx_color::color c( replxx_color::GRAY );
 		Utf32String unicodeCopy( _buf32.get(), _pos );
 		Utf8String parseItem(unicodeCopy);
-		setup.hintCallback( parseItem.get(), start_index(), &lh, &c );
+		setup.hintCallback( parseItem.get(), start_index(), &lh, &c, setup.hintUserdata );
 		if ( lh.hintsStrings.size() == 1 ) {
 			setColor( c );
 			_hint = lh.hintsStrings.front();
@@ -335,19 +335,12 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	// extract a copy to parse.	we also handle the case where tab is hit while
 	// not at end-of-line.
 	int startIndex( start_index() );
-
 	int itemLength( _pos - startIndex );
-	int offset( setup.ctxCompletionCallback ? 0 : startIndex );
-	int len( setup.ctxCompletionCallback ? _pos : itemLength );
 
-	Utf32String unicodeCopy(&_buf32[offset], len);
+	Utf32String unicodeCopy(_buf32.get(), _pos);
 	Utf8String parseItem(unicodeCopy);
 	// get a list of completions
-	if ( setup.ctxCompletionCallback ) {
-		setup.ctxCompletionCallback(parseItem.get(), startIndex, &lc);
-	} else {
-		setup.completionCallback(parseItem.get(), &lc);
-	}
+	setup.completionCallback( parseItem.get(), startIndex, &lc, setup.completionUserdata );
 
 	// if no completions, we are done
 	if (lc.completionStrings.size() == 0) {
@@ -647,7 +640,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 		}
 
 		// ctrl-I/tab, command completion, needs to be before switch statement
-		if (c == ctrlChar('I') && (setup.completionCallback || setup.ctxCompletionCallback)) {
+		if (c == ctrlChar('I') && setup.completionCallback) {
 			if ( ( _pos == 0 ) && ! setup.completeOnEmpty ) {
 				// SERVER-4967 -- in earlier versions, you could paste
 				// previous output

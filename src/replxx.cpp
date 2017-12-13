@@ -426,21 +426,19 @@ int replxx_print( char const* format_, ... ) {
 }
 
 /* Register a callback function to be called for tab-completion. */
-void replxx_set_completion_callback(replxx_completion_callback_t* fn) {
+void replxx_set_completion_callback(replxx_completion_callback_t* fn, void* userData) {
 	setup.completionCallback = fn;
+	setup.completionUserdata = userData;
 }
 
-/* Register a callback function to be called for tab-ctx-completion. */
-void replxx_set_ctx_completion_callback(replxx_ctx_completion_callback_t* fn) {
-	setup.ctxCompletionCallback = fn;
-}
-
-void replxx_set_highlighter_callback(replxx_highlighter_callback_t* fn) {
+void replxx_set_highlighter_callback(replxx_highlighter_callback_t* fn, void* userData) {
 	setup.highlighterCallback = fn;
+	setup.highlighterUserdata = userData;
 }
 
-void replxx_set_hint_callback(replxx_hint_callback_t* fn) {
+void replxx_set_hint_callback(replxx_hint_callback_t* fn, void* userData) {
 	setup.hintCallback = fn;
+	setup.hintUserdata = userData;
 }
 
 void replxx_add_hint(replxx_hints* lh, const char* str) {

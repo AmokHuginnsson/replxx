@@ -21,9 +21,11 @@ Setup::Setup()
 	, beepOnAmbiguousCompletion( false )
 	, noColor( false )
 	, completionCallback( nullptr )
-	, ctxCompletionCallback( nullptr )
 	, highlighterCallback( nullptr )
-	, hintCallback( nullptr ) {
+	, hintCallback( nullptr )
+	, completionUserdata( nullptr )
+	, highlighterUserdata( nullptr )
+	, hintUserdata( nullptr ) {
 }
 
 Setup setup;
