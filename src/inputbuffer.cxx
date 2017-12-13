@@ -116,7 +116,9 @@ void InputBuffer::highlight( int highlightIdx, bool error_ ) {
 	std::vector<replxx_color::color> colors( _len, replxx_color::DEFAULT );
 	Utf32String unicodeCopy(_buf32.get(), _len);
 	Utf8String parseItem(unicodeCopy);
-	if ( setup.highlighterCallback ) {
+	if ( setup.udHighlighterCallback ) {
+		setup.udHighlighterCallback(parseItem.get(), colors.data(), _len, setup.highlighterUserdata);
+	} else if ( setup.highlighterCallback ) {
 		setup.highlighterCallback(parseItem.get(), colors.data(), _len);
 	}
 	if ( highlightIdx != -1 ) {
@@ -136,12 +138,16 @@ void InputBuffer::highlight( int highlightIdx, bool error_ ) {
 
 void InputBuffer::handle_hints( void ) {
 	_hint = Utf32String();
-	if ( setup.hintCallback && ( _pos == _len ) ) {
+	if ( (setup.hintCallback || setup.udHintCallback) && ( _pos == _len ) ) {
 		replxx_hints lh;
 		replxx_color::color c( replxx_color::GRAY );
 		Utf32String unicodeCopy( _buf32.get(), _pos );
 		Utf8String parseItem(unicodeCopy);
-		setup.hintCallback( parseItem.get(), start_index(), &lh, &c );
+      if (setup.udHintCallback) {
+         setup.udHintCallback( parseItem.get(), start_index(), &lh, &c, setup.hintUserdata );
+      } else {
+         setup.hintCallback( parseItem.get(), start_index(), &lh, &c );
+      }
 		if ( lh.hintsStrings.size() == 1 ) {
 			setColor( c );
 			_hint = lh.hintsStrings.front();
@@ -343,8 +349,12 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	Utf32String unicodeCopy(&_buf32[offset], len);
 	Utf8String parseItem(unicodeCopy);
 	// get a list of completions
-	if ( setup.ctxCompletionCallback ) {
+	if ( setup.udCtxCompletionCallback ) {
+		setup.udCtxCompletionCallback(parseItem.get(), startIndex, &lc, setup.ctxCompletionUserdata);
+	} else if ( setup.ctxCompletionCallback ) {
 		setup.ctxCompletionCallback(parseItem.get(), startIndex, &lc);
+	} else if ( setup.udCompletionCallback ) {
+		setup.udCompletionCallback(parseItem.get(), &lc, setup.completionUserdata);
 	} else {
 		setup.completionCallback(parseItem.get(), &lc);
 	}
@@ -647,7 +657,8 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 		}
 
 		// ctrl-I/tab, command completion, needs to be before switch statement
-		if (c == ctrlChar('I') && (setup.completionCallback || setup.ctxCompletionCallback)) {
+		if (c == ctrlChar('I') && (setup.completionCallback || setup.ctxCompletionCallback
+                                 || setup.udCompletionCallback || setup.udCtxCompletionCallback)) {
 			if ( ( _pos == 0 ) && ! setup.completeOnEmpty ) {
 				// SERVER-4967 -- in earlier versions, you could paste
 				// previous output
@@ -1138,7 +1149,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 						++_len;
 						_buf32[_len] = '\0';
 						int inputLen = calculateColumnPosition(_buf32.get(), _len);
-						if ( !setup.highlighterCallback && ( pi.promptIndentation + inputLen < pi.promptScreenColumns ) ) {
+						if ( (!setup.highlighterCallback && !setup.udHighlighterCallback) && ( pi.promptIndentation + inputLen < pi.promptScreenColumns ) ) {
 							if (inputLen > pi.promptPreviousInputLen)
 								pi.promptPreviousInputLen = inputLen;
 							/* Avoid a full update of the line in the
