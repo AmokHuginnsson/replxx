@@ -430,17 +430,39 @@ void replxx_set_completion_callback(replxx_completion_callback_t* fn) {
 	setup.completionCallback = fn;
 }
 
+/* Register a callback function to be called for tab-completion. */
+void replxx_set_ud_completion_callback(replxx_ud_completion_callback_t* fn, void* user_data) {
+	setup.udCompletionCallback = fn;
+	setup.completionUserdata = user_data;
+}
+
 /* Register a callback function to be called for tab-ctx-completion. */
 void replxx_set_ctx_completion_callback(replxx_ctx_completion_callback_t* fn) {
 	setup.ctxCompletionCallback = fn;
+}
+
+/* Register a callback function to be called for tab-ctx-completion. */
+void replxx_set_ud_ctx_completion_callback(replxx_ud_ctx_completion_callback_t* fn, void* user_data) {
+	setup.udCtxCompletionCallback = fn;
+	setup.ctxCompletionUserdata = user_data;
 }
 
 void replxx_set_highlighter_callback(replxx_highlighter_callback_t* fn) {
 	setup.highlighterCallback = fn;
 }
 
+void replxx_set_ud_highlighter_callback(replxx_ud_highlighter_callback_t* fn, void* user_data) {
+	setup.udHighlighterCallback = fn;
+	setup.highlighterUserdata = user_data;
+}
+
 void replxx_set_hint_callback(replxx_hint_callback_t* fn) {
 	setup.hintCallback = fn;
+}
+
+void replxx_set_ud_hint_callback(replxx_ud_hint_callback_t* fn, void* user_data) {
+	setup.udHintCallback = fn;
+	setup.hintUserdata = user_data;
 }
 
 void replxx_add_hint(replxx_hints* lh, const char* str) {
