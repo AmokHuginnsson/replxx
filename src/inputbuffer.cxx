@@ -271,8 +271,11 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 		if (write(1, seq, strlen(seq)) == -1) return;
 	}
 	// position at the end of the prompt, clear to end of screen
-	snprintf(seq, sizeof seq, "\x1b[%dG\x1b[%c",
-					 pi.promptIndentation + 1, pi.promptCursorRowOffset == 0 ? 'K' : 'J' );	// 1-based on VT100
+	snprintf(
+		seq, sizeof seq, "\x1b[%dG\x1b[%c",
+		pi.promptIndentation + 1, /* 1-based on VT100 */
+		'J'
+	);
 	if (write(1, seq, strlen(seq)) == -1) return;
 
 	if ( !setup.noColor ) {
