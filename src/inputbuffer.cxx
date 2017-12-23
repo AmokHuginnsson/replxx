@@ -134,9 +134,9 @@ void InputBuffer::highlight( int highlightIdx, bool error_ ) {
 	setColor( replxx_color::DEFAULT );
 }
 
-void InputBuffer::handle_hints( void ) {
+void InputBuffer::handle_hints( bool handleHints_ ) {
 	_hint = Utf32String();
-	if ( setup.hintCallback && ( _pos == _len ) ) {
+	if ( handleHints_ && setup.hintCallback && ( _pos == _len ) ) {
 		replxx_hints lh;
 		replxx_color::color c( replxx_color::GRAY );
 		Utf32String unicodeCopy( _buf32.get(), _pos );
@@ -159,7 +159,7 @@ void InputBuffer::handle_hints( void ) {
  * @param pi	 PromptBase struct holding information about the prompt and our
  * screen position
  */
-void InputBuffer::refreshLine(PromptBase& pi) {
+void InputBuffer::refreshLine(PromptBase& pi, bool handleHints_) {
 	// check for a matching brace/bracket/paren, remember its position if found
 	int highlightIdx = -1;
 	bool indicateError = false;
@@ -219,7 +219,7 @@ void InputBuffer::refreshLine(PromptBase& pi) {
 	}
 
 	highlight( highlightIdx, indicateError );
-	handle_hints();
+	handle_hints( handleHints_ );
 
 	// calculate the position of the end of the input line
 	int xEndOfInput( 0 ), yEndOfInput( 0 );
@@ -710,7 +710,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				// we need one last refresh with the cursor at the end of the line
 				// so we don't display the next prompt over the previous input line
 				_pos = _len;	// pass _len as _pos for EOL
-				refreshLine(pi);
+				refreshLine(pi, false);
 				if (write(1, "^C", 2) == -1) return -1;	// Display the ^C we got
 				return -1;
 
@@ -839,13 +839,13 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				killRing.lastAction = KillRing::actionKill;
 				break;
 
-			case ctrlChar('J'):	// ctrl-J/linefeed/newline, accept line
-			case ctrlChar('M'):	// ctrl-M/return/enter
+			case ctrlChar('J'): // ctrl-J/linefeed/newline, accept line
+			case ctrlChar('M'): // ctrl-M/return/enter
 				killRing.lastAction = KillRing::actionOther;
 				// we need one last refresh with the cursor at the end of the line
 				// so we don't display the next prompt over the previous input line
-				_pos = _len;	// pass _len as _pos for EOL
-				refreshLine(pi);
+				_pos = _len; // pass _len as _pos for EOL
+				refreshLine(pi, false);
 				historyPreviousIndex = historyRecallMostRecent ? historyIndex : -2;
 				--historyLen;
 				free(history[historyLen]);
@@ -923,19 +923,19 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				}
 				break;
 
-			case META + 'p':	// Alt-P, reverse history search for prefix
-			case META + 'P':	// Alt-P, reverse history search for prefix
-			case META + 'n':	// Alt-N, forward history search for prefix
-			case META + 'N':	// Alt-N, forward history search for prefix
+			case META + 'p': // Alt-P, reverse history search for prefix
+			case META + 'P': // Alt-P, reverse history search for prefix
+			case META + 'n': // Alt-N, forward history search for prefix
+			case META + 'N': // Alt-N, forward history search for prefix
 				commonPrefixSearch( pi, c );
 				updatePrefix = false;
 				break;
-			case ctrlChar('R'):	// ctrl-R, reverse history search
-			case ctrlChar('S'):	// ctrl-S, forward history search
+			case ctrlChar('R'): // ctrl-R, reverse history search
+			case ctrlChar('S'): // ctrl-S, forward history search
 				terminatingKeystroke = incrementalHistorySearch(pi, c);
 				break;
 
-			case ctrlChar('T'):	// ctrl-T, transpose characters
+			case ctrlChar('T'): // ctrl-T, transpose characters
 				killRing.lastAction = KillRing::actionOther;
 				if (_pos > 0 && _len > 1) {
 					historyRecallMostRecent = false;
@@ -948,8 +948,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				}
 				break;
 
-			case ctrlChar(
-					'U'):	// ctrl-U, kill all characters to the left of the cursor
+			case ctrlChar('U'): // ctrl-U, kill all characters to the left of the cursor
 				if (_pos > 0) {
 					historyRecallMostRecent = false;
 					killRing.kill(&_buf32[0], _pos, false);

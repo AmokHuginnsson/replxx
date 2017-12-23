@@ -38,9 +38,9 @@ private:
 	int incrementalHistorySearch(PromptBase& pi, int startChar);
 	void commonPrefixSearch(PromptBase& pi, int startChar);
 	int completeLine(PromptBase& pi);
-	void refreshLine(PromptBase& pi);
+	void refreshLine(PromptBase& pi, bool = true);
 	void highlight( int, bool );
-	void handle_hints( void );
+	void handle_hints( bool );
 	void setColor( replxx_color::color );
 	int start_index( void );
 
