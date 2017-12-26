@@ -527,13 +527,13 @@ int InputBuffer::completeLine(PromptBase& pi) {
 					itemLength = static_cast<int>(lc.completionStrings[index].length());
 					fflush(stdout);
 
-					char const* col( ansi_color( replxx_color::BRIGHTMAGENTA ) );
-					if ( !setup.noColor && ( write( 1, col, strlen( col ) ) == -1 ) )
+					static Utf32String const col( ansi_color( replxx_color::BRIGHTMAGENTA ) );
+					if ( !setup.noColor && ( write32( 1, col.get(), col.length() ) == -1 ) )
 						return -1;
 					if (write32(1, lc.completionStrings[index].get(), longestCommonPrefix) == -1)
 						return -1;
-					col = ansi_color( replxx_color::DEFAULT );
-					if ( !setup.noColor && ( write( 1, col, strlen( col ) ) == -1 ) )
+					static Utf32String const res( ansi_color( replxx_color::DEFAULT ) );
+					if ( !setup.noColor && ( write32( 1, res.get(), res.length() ) == -1 ) )
 						return -1;
 
 					if (write32(1, lc.completionStrings[index].get() + longestCommonPrefix, itemLength - longestCommonPrefix) == -1)
