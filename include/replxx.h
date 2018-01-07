@@ -44,6 +44,8 @@
 extern "C" {
 #endif
 
+/*! \brief Color definitions to use in highlighter callbacks.
+ */
 struct replxx_color {
 	enum color {
 		BLACK         = 0,
@@ -70,28 +72,153 @@ struct replxx_color {
 	char dummy;
 };
 
-typedef void (replxx_highlighter_callback_t)(char const* input, replxx_color::color* colors, int size, void* user_data);
-void replxx_set_highlighter_callback(replxx_highlighter_callback_t* fn, void* user_data);
+/*! \brief Highlighter callback type definition.
+ *
+ * If user want to have colorful input she must simply install highlighter callback.
+ * The callback would be invoked by the library after each change to the input done by
+ * the user. After callback returns library uses data from colors buffer to colorize
+ * displayed user input.
+ *
+ * \param input - an input entered by the user so far.
+ * \param colors - output buffer for color information.
+ * \param size - size of output buffer for color information.
+ * \param userData - pointer to opaque user data block.
+ */
+typedef void (replxx_highlighter_callback_t)(char const* input, replxx_color::color* colors, int size, void* userData);
+
+/*! \brief Register highlighter callback.
+ *
+ * \param fn - user defined callback function.
+ * \param userData - pointer to opaque user data block to be passed into each invocation of the callback.
+ */
+void replxx_set_highlighter_callback(replxx_highlighter_callback_t* fn, void* userData);
 
 typedef struct replxx_completions replxx_completions;
-typedef void(replxx_completion_callback_t)(const char*, int, replxx_completions*, void*);
-void replxx_set_completion_callback(replxx_completion_callback_t* fn, void* user_data);
-void replxx_add_completion(replxx_completions* lc, const char* str);
+
+/*! \brief Completions callback type definition.
+ *
+ * \e breakPos is counted in Unicode code points (not in bytes!).
+ *
+ * For user input:
+ * if ( obj.me
+ *
+ * input == "if ( obj.me"
+ * breakPos == 4 or breakPos == 8 (depending on \e replxx_set_word_break_characters())
+ *
+ * \param input - the whole input entered by the user so far.
+ * \param breakPos - index of last break character before cursor.
+ * \param completions - pointer to opaque list of user completions.
+ * \param userData - pointer to opaque user data block.
+ */
+typedef void(replxx_completion_callback_t)(const char* input, int breakPos, replxx_completions* completions, void* userData);
+
+/*! \brief Register completion callback.
+ *
+ * \param fn - user defined callback function.
+ * \param userData - pointer to opaque user data block to be passed into each invocation of the callback.
+ */
+void replxx_set_completion_callback(replxx_completion_callback_t* fn, void* userData);
+
+/*! \brief Add another possible completion for current user input.
+ *
+ * \param completions - pointer to opaque list of user completions.
+ * \param str - UTF-8 encoded completion string.
+ */
+void replxx_add_completion(replxx_completions* completions, const char* str);
 
 typedef struct replxx_hints replxx_hints;
-typedef void(replxx_hint_callback_t)(const char*, int, replxx_hints*, replxx_color::color*, void*);
-void replxx_set_hint_callback(replxx_hint_callback_t* fn, void* user_data);
-void replxx_add_hint(replxx_hints* lh, const char* str);
 
+/*! \brief Hints callback type definition.
+ *
+ * \e breakPos is counted in Unicode code points (not in bytes!).
+ *
+ * For user input:
+ * if ( obj.me
+ *
+ * input == "if ( obj.me"
+ * breakPos == 4 or breakPos == 8 (depending on replxx_set_word_break_characters())
+ *
+ * \param input - the whole input entered by the user so far.
+ * \param breakPos - index of last break character before cursor.
+ * \param hints - pointer to opaque list of possible hints.
+ * \param color - a color used for displaying hints.
+ * \param userData - pointer to opaque user data block.
+ */
+typedef void(replxx_hint_callback_t)(const char* input, int breakPos, replxx_hints* hints, replxx_color::color* color, void* userData);
+
+/*! \brief Register hints callback.
+ *
+ * \param fn - user defined callback function.
+ * \param userData - pointer to opaque user data block to be passed into each invocation of the callback.
+ */
+void replxx_set_hint_callback(replxx_hint_callback_t* fn, void* userData);
+
+/*! \brief Add another possible hint for current user input.
+ *
+ * \param hints - pointer to opaque list of hints.
+ * \param str - UTF-8 encoded hint string.
+ */
+void replxx_add_hint(replxx_hints* hints, const char* str);
+
+/*! \brief Read line of user input.
+ *
+ * \param prompt - prompt to be displayed before getting user input.
+ * \return An input given by the user (or nullptr on EOF).
+ */
 char* replxx_input(const char* prompt);
-void replxx_free( void* );
-int replxx_print( char const*, ... );
+
+/*! \brief Free memory previously allocated by replxx_input().
+ *
+ * \param mem - pointer to memory buffer to be freed.
+ */
+void replxx_free( void* mem );
+
+/*! \brief Print formatted string to standard output.
+ *
+ * This function ensures proper handling of ANSI escape sequences
+ * contained in printed data, which is especially useful on Windows
+ * since Unixes handle them correctly out of the box.
+ *
+ * \param fmt - printf style format.
+ */
+int replxx_print( char const* fmt, ... );
+
 void replxx_set_preload_buffer(const char* preloadText);
+
 int replxx_history_add(const char* line);
-void replxx_set_word_break_characters( char const* );
-void replxx_set_special_prefixes( char const* );
+
+/*! \brief Set set of word break characters.
+ *
+ * This setting influences \e breakPos in completion and hints callbacks
+ * and how completions are printed.
+ *
+ * \param wordBreakers - 7-bit ASCII set of word breaking characters.
+ */
+void replxx_set_word_break_characters( char const* wordBreakers );
+
+/*! \brief Set special prefixes.
+ *
+ * Special prefixes are word breaking characters
+ * that do not affect \e breakPos in completion and hints callbacks.
+ *
+ * \param specialPrefixes - 7-bit ASCII set of special prefixes.
+ */
+void replxx_set_special_prefixes( char const* specialPrefixes );
+
+/*! \brief Set maximum allowed length of user input.
+ */
 void replxx_set_max_line_size(int len);
+
+/*! \brief Set tab completion behavior.
+ *
+ * \param val - use double tab to invoke completions (if != 0).
+ */
 void replxx_set_double_tab_completion(int val);
+
+/*! \brief Set tab completion behavior.
+ *
+ * \param val - invoke completion even if user input is empty (if != 0).
+ */
 void replxx_set_complete_on_empty(int val);
 void replxx_set_beep_on_ambiguous_completion(int val);
 void replxx_set_no_color( int );

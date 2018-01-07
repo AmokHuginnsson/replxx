@@ -22,6 +22,7 @@ programs.
 * history handling
 * completion
 * syntax highlighting
+* hints
 * BSD license source code
 * Only uses a subset of VT100 escapes (ANSI.SYS compatible)
 * UTF8 aware
@@ -32,7 +33,7 @@ replacement for the sake of supporting UTF8 and Windows. It deviates
 from 10gen Inc.'s goal to create a C++ interface to linenoise. This
 library uses C++ internally, but to the user it provides a pure C
 interface that is compatible with the original linenoise API.
-C interface. 
+C interface.
 
 ## Requirements
 
