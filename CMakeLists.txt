@@ -1,6 +1,6 @@
 # -*- mode: CMAKE; -*-
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.12)
 
 project(replxx CXX)
 
@@ -59,8 +59,6 @@ else()
 
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src)
-
 # build libreplxx
 add_library(
   replxx
@@ -79,6 +77,12 @@ add_library(
   src/windows.cxx
 )
 
+add_library(Replxx::Replxx ALIAS replxx)
+
+target_include_directories(replxx
+   PUBLIC ${PROJECT_SOURCE_DIR}/include
+   PRIVATE ${PROJECT_SOURCE_DIR}/src)
+
 # install
 install(TARGETS replxx DESTINATION lib)
 
@@ -92,8 +96,8 @@ add_executable(
 )
 
 target_link_libraries(
-  example
-  replxx
+   example
+   PRIVATE replxx
 )
 
 # packaging
