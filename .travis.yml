@@ -1,0 +1,12 @@
+language: C++
+script:
+  - mkdir -p build && cd build
+  - cmake ..
+  - make
+addons:
+  apt:
+    packages:
+      - cmake
+sudo: false
+cache:
+  ccache: true
