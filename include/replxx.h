@@ -209,6 +209,10 @@ void replxx_set_special_prefixes( char const* specialPrefixes );
  */
 void replxx_set_max_line_size(int len);
 
+/*! \brief Set maximum number of displayed hint rows.
+ */
+void replxx_set_max_hint_rows(int count);
+
 /*! \brief Set tab completion behavior.
  *
  * \param val - use double tab to invoke completions (if != 0).
@@ -220,8 +224,21 @@ void replxx_set_double_tab_completion(int val);
  * \param val - invoke completion even if user input is empty (if != 0).
  */
 void replxx_set_complete_on_empty(int val);
+
+/*! \brief Set tab completion behavior.
+ *
+ * \param val - beep if completion is ambiguous (if != 0).
+ */
 void replxx_set_beep_on_ambiguous_completion(int val);
-void replxx_set_no_color( int );
+
+/*! \brief Disable output coloring.
+ *
+ * \param val - if set to non-zero disable output colors.
+ */
+void replxx_set_no_color( int val );
+
+/*! \brief Set maximum number of entries in history list.
+ */
 int replxx_set_max_history_size(int len);
 char* replxx_history_line(int index);
 int replxx_history_save(const char* filename);

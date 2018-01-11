@@ -2,8 +2,9 @@
 
 namespace {
 
-#define REPLXX_MAX_LINE 4096
-#define REPLXX_DEFAULT_HISTORY_MAX_LEN 1000
+static int const REPLXX_MAX_LINE( 4096 );
+static int const REPLXX_DEFAULT_HISTORY_MAX_LEN( 1000 );
+static int const REPLXX_MAX_HINT_ROWS( 4 );
 char const defaultBreakChars[] = " =+-/\\*?\"'`&<>;|@{([])}";
 
 }
@@ -13,6 +14,7 @@ namespace replxx {
 Setup::Setup()
 	: maxLineLength( REPLXX_MAX_LINE )
 	, historyMaxLen( REPLXX_DEFAULT_HISTORY_MAX_LEN )
+	, maxHintRows( REPLXX_MAX_HINT_ROWS )
 	, breakChars( defaultBreakChars )
 	, specialPrefixes( "" )
 	, completionCountCutoff( 100 )

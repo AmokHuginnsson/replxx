@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <memory>
 #include <cerrno>
 
@@ -134,19 +135,47 @@ void InputBuffer::highlight( int highlightIdx, bool error_ ) {
 	setColor( replxx_color::DEFAULT );
 }
 
-void InputBuffer::handle_hints( bool handleHints_ ) {
+void InputBuffer::handle_hints( int columns_, HINT_ACTION hintAction_ ) {
 	_hint = Utf32String();
-	if ( handleHints_ && setup.hintCallback && ( _pos == _len ) ) {
+	if ( ( hintAction_ != HINT_ACTION::SKIP ) && setup.hintCallback && ( _pos == _len ) ) {
+		if ( hintAction_ == HINT_ACTION::REGENERATE ) {
+			_hintSelection = -1;
+		}
 		replxx_hints lh;
 		replxx_color::color c( replxx_color::GRAY );
 		Utf32String unicodeCopy( _buf32.get(), _pos );
 		Utf8String parseItem(unicodeCopy);
-		setup.hintCallback( parseItem.get(), start_index(), &lh, &c, setup.hintUserdata );
-		if ( lh.hintsStrings.size() == 1 ) {
+		int startIndex( start_index() );
+		setup.hintCallback( parseItem.get(), startIndex, &lh, &c, setup.hintUserdata );
+		int hintCount( lh.hintsStrings.size() );
+		if ( hintCount == 1 ) {
 			setColor( c );
 			_hint = lh.hintsStrings.front();
 			for ( size_t i( 0 ); i < _hint.length(); ++ i ) {
 				_display.push_back( _hint[i] );
+			}
+			setColor( replxx_color::DEFAULT );
+		} else if ( setup.maxHintRows > 0 ) {
+			if ( ( _hintSelection < -1 ) || ( _hintSelection >= hintCount ) ) {
+				_hintSelection = -1;
+			}
+			setColor( c );
+			if ( _hintSelection != -1 ) {
+				_hint = lh.hintsStrings[_hintSelection];
+				for ( size_t i( 0 ); i < _hint.length(); ++ i ) {
+					_display.push_back( _hint[i] );
+				}
+			}
+			for ( int hintRow( 0 ); hintRow < min( hintCount, setup.maxHintRows ); ++ hintRow ) {
+				_display.push_back( '\n' );
+				int col( 0 );
+				for ( int i( startIndex ); ( i < _pos ) && ( col < columns_ ); ++ i, ++ col ) {
+					_display.push_back( _buf32[i] );
+				}
+				Utf32String const& h( lh.hintsStrings[( hintRow + max( _hintSelection, 0 ) ) % hintCount] );
+				for ( size_t i( 0 ); ( i < h.length() ) && ( col < columns_ ); ++ i, ++ col ) {
+					_display.push_back( h[i] );
+				}
 			}
 			setColor( replxx_color::DEFAULT );
 		}
@@ -159,7 +188,7 @@ void InputBuffer::handle_hints( bool handleHints_ ) {
  * @param pi	 PromptBase struct holding information about the prompt and our
  * screen position
  */
-void InputBuffer::refreshLine(PromptBase& pi, bool handleHints_) {
+void InputBuffer::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	// check for a matching brace/bracket/paren, remember its position if found
 	int highlightIdx = -1;
 	bool indicateError = false;
@@ -219,7 +248,7 @@ void InputBuffer::refreshLine(PromptBase& pi, bool handleHints_) {
 	}
 
 	highlight( highlightIdx, indicateError );
-	handle_hints( handleHints_ );
+	handle_hints( pi.promptScreenColumns, hintAction_ );
 
 	// calculate the position of the end of the input line
 	int xEndOfInput( 0 ), yEndOfInput( 0 );
@@ -228,6 +257,7 @@ void InputBuffer::refreshLine(PromptBase& pi, bool handleHints_) {
 		calculateColumnPosition( _buf32.get(), _len ) + ( !setup.noColor ? calculateColumnPosition( _hint.get(), _hint.length() ) : 0 ),
 		xEndOfInput, yEndOfInput
 	);
+	yEndOfInput += count( _display.begin(), _display.end(), '\n' );
 
 	// calculate the desired position of the cursor
 	int xCursorPos( 0 ), yCursorPos( 0 );
@@ -356,8 +386,13 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	int longestCommonPrefix = 0;
 	int displayLength = 0;
 	int completionsCount( lc.completionStrings.size() );
+	int selectedCompletion( 0 );
+	if ( _hintSelection != -1 ) {
+		selectedCompletion = _hintSelection;
+		completionsCount = 1;
+	}
 	if ( completionsCount == 1) {
-		longestCommonPrefix = static_cast<int>(lc.completionStrings[0].length());
+		longestCommonPrefix = static_cast<int>(lc.completionStrings[selectedCompletion].length());
 	} else {
 		bool keepGoing = true;
 		while (keepGoing) {
@@ -388,7 +423,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
 		}
 		Utf32String displayText(displayLength + 1);
 		memcpy(displayText.get(), _buf32.get(), sizeof(char32_t) * startIndex);
-		memcpy(&displayText[startIndex], &lc.completionStrings[0][0],
+		memcpy(&displayText[startIndex], &lc.completionStrings[selectedCompletion][0],
 					 sizeof(char32_t) * longestCommonPrefix);
 		int tailIndex = startIndex + longestCommonPrefix;
 		memcpy(&displayText[tailIndex], &_buf32[_pos],
@@ -710,7 +745,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				// we need one last refresh with the cursor at the end of the line
 				// so we don't display the next prompt over the previous input line
 				_pos = _len;	// pass _len as _pos for EOL
-				refreshLine(pi, false);
+				refreshLine(pi, HINT_ACTION::SKIP);
 				if (write(1, "^C", 2) == -1) return -1;	// Display the ^C we got
 				return -1;
 
@@ -845,7 +880,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				// we need one last refresh with the cursor at the end of the line
 				// so we don't display the next prompt over the previous input line
 				_pos = _len; // pass _len as _pos for EOL
-				refreshLine(pi, false);
+				refreshLine(pi, HINT_ACTION::SKIP);
 				historyPreviousIndex = historyRecallMostRecent ? historyIndex : -2;
 				--historyLen;
 				free(history[historyLen]);
@@ -921,6 +956,16 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 					_len = _pos = static_cast<int>(ucharCount);
 					refreshLine(pi);
 				}
+				break;
+			case CTRL + UP_ARROW_KEY:
+				killRing.lastAction = KillRing::actionOther;
+				-- _hintSelection;
+				refreshLine(pi, HINT_ACTION::REPAINT);
+				break;
+			case CTRL + DOWN_ARROW_KEY:
+				killRing.lastAction = KillRing::actionOther;
+				++ _hintSelection;
+				refreshLine(pi, HINT_ACTION::REPAINT);
 				break;
 
 			case META + 'p': // Alt-P, reverse history search for prefix

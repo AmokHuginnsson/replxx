@@ -8,6 +8,7 @@ namespace replxx {
 struct Setup {
 	int maxLineLength;
 	int historyMaxLen;
+	int maxHintRows;
 	char const* breakChars;
 	char const* specialPrefixes;
 	int completionCountCutoff;

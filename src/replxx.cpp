@@ -461,6 +461,10 @@ void replxx_set_max_line_size(int len) {
 	setup.maxLineLength = len;
 }
 
+void replxx_set_max_hint_rows(int count) {
+	setup.maxHintRows = count;
+}
+
 void replxx_set_word_break_characters( char const* breakChars_ ) {
 	setup.breakChars = breakChars_;
 }
