@@ -32,8 +32,8 @@ public:
 private:
 	input_buffer_t _buf32;      // input buffer
 	char_widths_t  _charWidths; // character widths from mk_wcwidth()
-	display_t       _display;
-	Utf32String _hint;
+	display_t      _display;
+	Utf32String    _hint;
 	int _buflen; // buffer size in characters
 	int _len;    // length of text in input buffer
 	int _pos;    // character position in buffer ( 0 <= _pos <= _len )
@@ -46,7 +46,7 @@ private:
 	int completeLine(PromptBase& pi);
 	void refreshLine(PromptBase& pi, HINT_ACTION = HINT_ACTION::REGENERATE);
 	void highlight( int, bool );
-	void handle_hints( int, HINT_ACTION );
+	void handle_hints( PromptBase&, HINT_ACTION );
 	void setColor( replxx_color::color );
 	int start_index( void );
 

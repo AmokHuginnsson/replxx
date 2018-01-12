@@ -135,7 +135,7 @@ void InputBuffer::highlight( int highlightIdx, bool error_ ) {
 	setColor( replxx_color::DEFAULT );
 }
 
-void InputBuffer::handle_hints( int columns_, HINT_ACTION hintAction_ ) {
+void InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
 	_hint = Utf32String();
 	if ( ( hintAction_ != HINT_ACTION::SKIP ) && setup.hintCallback && ( _pos == _len ) ) {
 		if ( hintAction_ == HINT_ACTION::REGENERATE ) {
@@ -156,7 +156,9 @@ void InputBuffer::handle_hints( int columns_, HINT_ACTION hintAction_ ) {
 			}
 			setColor( replxx_color::DEFAULT );
 		} else if ( setup.maxHintRows > 0 ) {
-			if ( ( _hintSelection < -1 ) || ( _hintSelection >= hintCount ) ) {
+			if ( _hintSelection < -1 ) {
+				_hintSelection = hintCount - 1;
+			} else if ( _hintSelection >= hintCount ) {
 				_hintSelection = -1;
 			}
 			setColor( c );
@@ -168,12 +170,21 @@ void InputBuffer::handle_hints( int columns_, HINT_ACTION hintAction_ ) {
 			}
 			for ( int hintRow( 0 ); hintRow < min( hintCount, setup.maxHintRows ); ++ hintRow ) {
 				_display.push_back( '\n' );
-				int col( 0 );
-				for ( int i( startIndex ); ( i < _pos ) && ( col < columns_ ); ++ i, ++ col ) {
+				int col( pi.promptIndentation );
+				for ( int i( 0 ); i < col; ++ i ) {
+					_display.push_back( ' ' );
+				}
+				for ( int i( startIndex ); ( i < _pos ) && ( col < pi.promptScreenColumns ); ++ i, ++ col ) {
 					_display.push_back( _buf32[i] );
 				}
-				Utf32String const& h( lh.hintsStrings[( hintRow + max( _hintSelection, 0 ) ) % hintCount] );
-				for ( size_t i( 0 ); ( i < h.length() ) && ( col < columns_ ); ++ i, ++ col ) {
+				int hintNo( hintRow + _hintSelection + 1 );
+				if ( hintNo == hintCount ) {
+					continue;
+				} else if ( hintNo > hintCount ) {
+					-- hintNo;
+				}
+				Utf32String const& h( lh.hintsStrings[hintNo % hintCount] );
+				for ( size_t i( 0 ); ( i < h.length() ) && ( col < pi.promptScreenColumns ); ++ i, ++ col ) {
 					_display.push_back( h[i] );
 				}
 			}
@@ -248,7 +259,7 @@ void InputBuffer::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	}
 
 	highlight( highlightIdx, indicateError );
-	handle_hints( pi.promptScreenColumns, hintAction_ );
+	handle_hints( pi, hintAction_ );
 
 	// calculate the position of the end of the input line
 	int xEndOfInput( 0 ), yEndOfInput( 0 );
