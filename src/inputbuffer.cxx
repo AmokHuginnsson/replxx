@@ -170,8 +170,8 @@ void InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
 			}
 			for ( int hintRow( 0 ); hintRow < min( hintCount, setup.maxHintRows ); ++ hintRow ) {
 				_display.push_back( '\n' );
-				int col( pi.promptIndentation );
-				for ( int i( 0 ); i < col; ++ i ) {
+				int col( 0 );
+				for ( int i( 0 ); i < ( pi.promptIndentation + startIndex ); ++ i, ++ col ) {
 					_display.push_back( ' ' );
 				}
 				for ( int i( startIndex ); ( i < _pos ) && ( col < pi.promptScreenColumns ); ++ i, ++ col ) {
