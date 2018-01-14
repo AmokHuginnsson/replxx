@@ -46,7 +46,7 @@ private:
 	int completeLine(PromptBase& pi);
 	void refreshLine(PromptBase& pi, HINT_ACTION = HINT_ACTION::REGENERATE);
 	void highlight( int, bool );
-	void handle_hints( PromptBase&, HINT_ACTION );
+	int handle_hints( PromptBase&, HINT_ACTION );
 	void setColor( replxx_color::color );
 	int start_index( void );
 

@@ -45,7 +45,7 @@ T* HandleEsc(T* p, T* end) {
 						break;
 					case 30:
 					case 90:
-						WIN_ATTR._consoleColor = BACKGROUND_WHITE;
+						WIN_ATTR._consoleColor = thisBackground;
 						break;
 					case 31:
 					case 91:
@@ -132,6 +132,10 @@ int win_print( char const* str_, int size_ ) {
 	int count( 0 );
 	char const* s( str_ );
 	char const* e( str_ + size_ );
+	UINT inputCodePage( GetConsoleCP() );
+	UINT outputCodePage( GetConsoleOutputCP() );
+	SetConsoleCP( 65001 );
+	SetConsoleOutputCP( 65001 );
 	while ( str_ < e ) {
 		if ( *str_ == 27 ) {
 			if ( s < str_ ) {
@@ -149,6 +153,8 @@ int win_print( char const* str_, int size_ ) {
 		WriteConsole( GetStdHandle( STD_OUTPUT_HANDLE ), s, static_cast<DWORD>( str_ - s ), nullptr, nullptr );
 		count += ( str_ - s );
 	}
+	SetConsoleCP( inputCodePage );
+	SetConsoleOutputCP( outputCodePage );
 	return ( count );
 }
 

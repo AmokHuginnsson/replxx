@@ -240,23 +240,8 @@ void dynamicRefresh(PromptBase& pi, char32_t* buf32, int len, int pos) {
 
 }
 
-/**
- * Clear the screen ONLY (no redisplay of anything)
- */
-void replxx_clear_screen(void) {
-#ifdef _WIN32
-	COORD coord = {0, 0};
-	CONSOLE_SCREEN_BUFFER_INFO inf;
-	HANDLE screenHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-	GetConsoleScreenBufferInfo(screenHandle, &inf);
-	SetConsoleCursorPosition(screenHandle, coord);
-	DWORD count;
-	FillConsoleOutputCharacterA(screenHandle, ' ', inf.dwSize.X * inf.dwSize.Y,
-															coord, &count);
-#else
-	char const clearCode[] = "\033c\033[H\033[2J\033[0m";
-	if (write(1, clearCode, sizeof ( clearCode ) - 1) <= 0) return;
-#endif
+void replxx_clear_screen( void ) {
+	replxx::clear_screen( CLEAR_SCREEN::WHOLE );
 }
 
 static string preloadedBufferContents;	// used with replxx_set_preload_buffer

@@ -135,9 +135,10 @@ void InputBuffer::highlight( int highlightIdx, bool error_ ) {
 	setColor( replxx_color::DEFAULT );
 }
 
-void InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
+int InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
 	_hint = Utf32String();
-	if ( ( hintAction_ != HINT_ACTION::SKIP ) && setup.hintCallback && ( _pos == _len ) ) {
+	int len( 0 );
+	if ( !setup.noColor && ( hintAction_ != HINT_ACTION::SKIP ) && setup.hintCallback && ( _pos == _len ) ) {
 		if ( hintAction_ == HINT_ACTION::REGENERATE ) {
 			_hintSelection = -1;
 		}
@@ -151,11 +152,17 @@ void InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
 		if ( hintCount == 1 ) {
 			setColor( c );
 			_hint = lh.hintsStrings.front();
-			for ( size_t i( 0 ); i < _hint.length(); ++ i ) {
+			len = _hint.length();
+			for ( int i( 0 ); i < len; ++ i ) {
 				_display.push_back( _hint[i] );
 			}
 			setColor( replxx_color::DEFAULT );
 		} else if ( setup.maxHintRows > 0 ) {
+			int startCol( pi.promptIndentation + startIndex );
+			int maxCol( pi.promptScreenColumns );
+#ifdef _WIN32
+			-- maxCol;
+#endif
 			if ( _hintSelection < -1 ) {
 				_hintSelection = hintCount - 1;
 			} else if ( _hintSelection >= hintCount ) {
@@ -164,17 +171,23 @@ void InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
 			setColor( c );
 			if ( _hintSelection != -1 ) {
 				_hint = lh.hintsStrings[_hintSelection];
-				for ( size_t i( 0 ); i < _hint.length(); ++ i ) {
+				len = min<int>( _hint.length(), maxCol - startCol - _len );
+				for ( int i( 0 ); i < len; ++ i ) {
 					_display.push_back( _hint[i] );
 				}
 			}
+			setColor( replxx_color::DEFAULT );
 			for ( int hintRow( 0 ); hintRow < min( hintCount, setup.maxHintRows ); ++ hintRow ) {
+#ifdef _WIN32
+				_display.push_back( '\r' );
+#endif
 				_display.push_back( '\n' );
 				int col( 0 );
-				for ( int i( 0 ); i < ( pi.promptIndentation + startIndex ); ++ i, ++ col ) {
+				for ( int i( 0 ); ( i < startCol ) && ( col < maxCol ); ++ i, ++ col ) {
 					_display.push_back( ' ' );
 				}
-				for ( int i( startIndex ); ( i < _pos ) && ( col < pi.promptScreenColumns ); ++ i, ++ col ) {
+				setColor( c );
+				for ( int i( startIndex ); ( i < _pos ) && ( col < maxCol ); ++ i, ++ col ) {
 					_display.push_back( _buf32[i] );
 				}
 				int hintNo( hintRow + _hintSelection + 1 );
@@ -184,13 +197,14 @@ void InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
 					-- hintNo;
 				}
 				Utf32String const& h( lh.hintsStrings[hintNo % hintCount] );
-				for ( size_t i( 0 ); ( i < h.length() ) && ( col < pi.promptScreenColumns ); ++ i, ++ col ) {
+				for ( size_t i( 0 ); ( i < h.length() ) && ( col < maxCol ); ++ i, ++ col ) {
 					_display.push_back( h[i] );
 				}
+				setColor( replxx_color::DEFAULT );
 			}
-			setColor( replxx_color::DEFAULT );
 		}
 	}
+	return ( len );
 }
 
 /**
@@ -259,13 +273,12 @@ void InputBuffer::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	}
 
 	highlight( highlightIdx, indicateError );
-	handle_hints( pi, hintAction_ );
-
+	int hintLen( handle_hints( pi, hintAction_ ) );
 	// calculate the position of the end of the input line
 	int xEndOfInput( 0 ), yEndOfInput( 0 );
 	calculateScreenPosition(
 		pi.promptIndentation, 0, pi.promptScreenColumns,
-		calculateColumnPosition( _buf32.get(), _len ) + ( !setup.noColor ? calculateColumnPosition( _hint.get(), _hint.length() ) : 0 ),
+		calculateColumnPosition( _buf32.get(), _len ) + hintLen,
 		xEndOfInput, yEndOfInput
 	);
 	yEndOfInput += count( _display.begin(), _display.end(), '\n' );
@@ -286,10 +299,7 @@ void InputBuffer::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	inf.dwCursorPosition.X = pi.promptIndentation;	// 0-based on Win32
 	inf.dwCursorPosition.Y -= pi.promptCursorRowOffset - pi.promptExtraLines;
 	SetConsoleCursorPosition(console_out, inf.dwCursorPosition);
-	DWORD count;
-	if (_len < pi.promptPreviousInputLen)
-		FillConsoleOutputCharacterA(console_out, ' ', pi.promptPreviousInputLen,
-																inf.dwCursorPosition, &count);
+	clear_screen( CLEAR_SCREEN::TO_END );
 	pi.promptPreviousInputLen = _len;
 
 	// display the input line
@@ -302,7 +312,7 @@ void InputBuffer::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	// position the cursor
 	GetConsoleScreenBufferInfo(console_out, &inf);
 	inf.dwCursorPosition.X = xCursorPos;	// 0-based on Win32
-	inf.dwCursorPosition.Y -= yEndOfInput - yCursorPos;
+	inf.dwCursorPosition.Y -= ( yEndOfInput - yCursorPos );
 	SetConsoleCursorPosition(console_out, inf.dwCursorPosition);
 #else	// _WIN32
 	char seq[64];
@@ -509,12 +519,13 @@ int InputBuffer::completeLine(PromptBase& pi) {
 		if (columnCount < 1) {
 			columnCount = 1;
 		}
-		if (!onNewLine) {	// skip this if we showed "Display all %d possibilities?"
-			int savePos =
-					_pos;	// move cursor to EOL to avoid overwriting the command line
+		if (!onNewLine) { // skip this if we showed "Display all %d possibilities?"
+			int savePos = _pos; // move cursor to EOL to avoid overwriting the command line
 			_pos = _len;
-			refreshLine(pi);
+			refreshLine( pi, HINT_ACTION::SKIP );
 			_pos = savePos;
+		} else {
+			clear_screen( CLEAR_SCREEN::TO_END );
 		}
 		size_t pauseRow = getScreenRows() - 1;
 		size_t rowCount =

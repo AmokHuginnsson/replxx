@@ -16,6 +16,11 @@ void disableRawMode(void);
 char32_t readUnicodeCharacter(void);
 void beep();
 char32_t read_char(void);
+enum class CLEAR_SCREEN {
+	WHOLE,
+	TO_END
+};
+void clear_screen( CLEAR_SCREEN );
 
 namespace tty {
 

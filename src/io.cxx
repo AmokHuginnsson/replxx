@@ -39,6 +39,8 @@ HANDLE console_out;
 static HANDLE console_in;
 static DWORD oldMode;
 static WORD oldDisplayAttribute;
+static UINT const inputCodePage( GetConsoleCP() );
+static UINT const outputCodePage( GetConsoleOutputCP() );
 #else
 static struct termios orig_termios; /* in order to restore at exit */
 #endif
@@ -172,7 +174,8 @@ int enableRawMode(void) {
 	if (!console_in) {
 		console_in = GetStdHandle(STD_INPUT_HANDLE);
 		console_out = GetStdHandle(STD_OUTPUT_HANDLE);
-
+		SetConsoleCP( 65001 );
+		SetConsoleOutputCP( 65001 );
 		GetConsoleMode(console_in, &oldMode);
 		SetConsoleMode(console_in, oldMode &
 																	 ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT |
@@ -223,6 +226,8 @@ fatal:
 void disableRawMode(void) {
 #ifdef _WIN32
 	SetConsoleMode(console_in, oldMode);
+	SetConsoleCP( inputCodePage );
+	SetConsoleOutputCP( outputCodePage );
 	console_in = 0;
 	console_out = 0;
 #else
@@ -464,6 +469,37 @@ char32_t read_char(void) {
 
 	return EscapeSequenceProcessing::doDispatch(c);
 #endif	// #_WIN32
+}
+
+/**
+ * Clear the screen ONLY (no redisplay of anything)
+ */
+void clear_screen( CLEAR_SCREEN clearScreen_ ) {
+#ifdef _WIN32
+	COORD coord = {0, 0};
+	CONSOLE_SCREEN_BUFFER_INFO inf;
+	HANDLE screenHandle = GetStdHandle( STD_OUTPUT_HANDLE );
+	bool toEnd( clearScreen_ == CLEAR_SCREEN::TO_END );
+	GetConsoleScreenBufferInfo( screenHandle, &inf );
+	if ( ! toEnd ) {
+		SetConsoleCursorPosition( screenHandle, coord );
+	}
+	DWORD count;
+	FillConsoleOutputCharacterA(
+		screenHandle, ' ',
+		( inf.dwSize.Y - ( toEnd ? inf.dwCursorPosition.Y : 0 ) ) * inf.dwSize.X,
+		( toEnd ? inf.dwCursorPosition : coord ),
+		&count
+	);
+#else
+	if ( clearScreen_ == CLEAR_SCREEN::WHOLE ) {
+		char const clearCode[] = "\033c\033[H\033[2J\033[0m";
+		static_cast<void>( write(1, clearCode, sizeof ( clearCode ) - 1) >= 0 );
+	} else {
+		char const clearCode[] = "\033[J";
+		static_cast<void>( write(1, clearCode, sizeof ( clearCode ) - 1) >= 0 );
+	}
+#endif
 }
 
 }
