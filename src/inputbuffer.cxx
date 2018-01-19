@@ -980,14 +980,18 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				}
 				break;
 			case CTRL + UP_ARROW_KEY:
-				killRing.lastAction = KillRing::actionOther;
-				-- _hintSelection;
-				refreshLine(pi, HINT_ACTION::REPAINT);
+				if ( ! setup.noColor ) {
+					killRing.lastAction = KillRing::actionOther;
+					-- _hintSelection;
+					refreshLine(pi, HINT_ACTION::REPAINT);
+				}
 				break;
 			case CTRL + DOWN_ARROW_KEY:
-				killRing.lastAction = KillRing::actionOther;
-				++ _hintSelection;
-				refreshLine(pi, HINT_ACTION::REPAINT);
+				if ( ! setup.noColor ) {
+					killRing.lastAction = KillRing::actionOther;
+					++ _hintSelection;
+					refreshLine(pi, HINT_ACTION::REPAINT);
+				}
 				break;
 
 			case META + 'p': // Alt-P, reverse history search for prefix
