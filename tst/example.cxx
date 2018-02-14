@@ -72,17 +72,17 @@ int main (int argc, char** argv) {
 				char* hist = replxx_history_line(index);
 				if (hist == NULL) break;
 				printf("%4d: %s\n", index, hist);
-				free(hist);
+				replxx_free(hist);
 			 }
 		}
 		if (*result == '\0') {
-			free(result);
+			replxx_free(result);
 			break;
 		}
 
 		printf( "thanks for the input: %s\n", result );
 		replxx_history_add(result);
-		free(result);
+		replxx_free(result);
 	}
 	replxx_history_save(file);
 	replxx_history_free();
