@@ -167,7 +167,7 @@ void replxx_add_hint(replxx_hints* hints, const char* str);
  */
 char* replxx_input(const char* prompt);
 
-/*! \brief Free memory previously allocated by replxx_input().
+/*! \brief Free memory previously allocated by replxx_input() or replxx_history_line().
  *
  * \param mem - pointer to memory buffer to be freed.
  */
