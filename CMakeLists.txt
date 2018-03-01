@@ -13,7 +13,7 @@ endif()
 message(STATUS "Build mode: ${CMAKE_BUILD_TYPE}")
 
 # INFO
-set(REPLXX_VERSION "0.0.1" CACHE path "replxx version")
+set(REPLXX_VERSION "0.0.0" CACHE path "replxx version")
 set(REPLXX_DISPLAY_NAME "replxx")
 set(REPLXX_URL_INFO_ABOUT "https://github.com/AmokHuginnsson/replxx")
 set(REPLXX_CONTACT "amok@codestation.org")
