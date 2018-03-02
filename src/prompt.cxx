@@ -29,12 +29,12 @@ bool PromptBase::write() {
 	return true;
 }
 
-PromptInfo::PromptInfo(const char* textPtr, int columns) {
+PromptInfo::PromptInfo(std::string const& text_, int columns) {
 	promptExtraLines = 0;
 	promptLastLinePosition = 0;
 	promptPreviousLen = 0;
 	promptScreenColumns = columns;
-	Utf32String tempUnicode(textPtr);
+	Utf32String tempUnicode(text_.c_str());
 
 	// strip control characters from the prompt -- we do allow newline
 	char32_t* pIn = tempUnicode.get();
@@ -157,8 +157,8 @@ void DynamicPrompt::updateSearchPrompt(void) {
 	promptText = tempUnicode;
 }
 
-void DynamicPrompt::updateSearchText(const char32_t* textPtr) {
-	Utf32String tempUnicode(textPtr);
+void DynamicPrompt::updateSearchText(const char32_t* text_) {
+	Utf32String tempUnicode(text_);
 	searchTextLen = static_cast<int>(tempUnicode.chars());
 	searchText = tempUnicode;
 	updateSearchPrompt();

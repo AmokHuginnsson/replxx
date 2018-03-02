@@ -1,102 +1,141 @@
-#include <cstdlib>
+#include <fstream>
 #include <cstring>
 
+#ifndef _WIN32
+
+#include <unistd.h>
+#include <sys/stat.h>
+
+#endif /* _WIN32 */
+
 #include "history.hxx"
-#include "setup.hxx"
+
+using namespace std;
 
 namespace replxx {
 
-int historyLen = 0;
-int historyIndex = 0;
-char8_t** history = NULL;
-// used to emulate Windows command prompt on down-arrow after a recall
-// we use -2 as our "not set" value because we add 1 to the previous index on
-// down-arrow,
-// and zero is a valid index (so -1 is a valid "previous index")
-int historyPreviousIndex = -2;
-bool historyRecallMostRecent = false;
+static int const REPLXX_DEFAULT_HISTORY_MAX_LEN( 1000 );
 
-void history_free(void) {
-	if (history) {
-		for (int j = 0; j < historyLen; ++j) free(history[j]);
-		historyLen = 0;
-		free(history);
-		history = 0;
+History::History( void )
+	: _data()
+	, _maxSize( REPLXX_DEFAULT_HISTORY_MAX_LEN )
+	, _index( 0 )
+	, _previousIndex( -2 )
+	, _recallMostRecent( false ) {
+}
+
+void History::add( std::string const& line ) {
+	if ( ( _maxSize > 0 ) && ( _data.empty() || ( line != _data.back() ) ) ) {
+		if ( size() == _maxSize ) {
+			_data.erase( _data.begin() );
+			if ( -- _previousIndex < -1 ) {
+				_previousIndex = -2;
+			}
+		}
+		_data.push_back( line );
 	}
 }
 
-int history_add(const char* line) {
-	if (setup.historyMaxLen == 0) {
-		return 0;
+int History::save( std::string const& filename ) {
+#ifndef _WIN32
+	mode_t old_umask = umask( S_IXUSR | S_IRWXG| S_IRWXO );
+#endif
+	ofstream histFile( filename );
+	if ( ! histFile ) {
+		return ( -1 );
 	}
-	if (history == NULL) {
-		history =
-				reinterpret_cast<char8_t**>(malloc(sizeof(char8_t*) * setup.historyMaxLen));
-		if (history == NULL) {
-			return 0;
-		}
-		memset(history, 0, (sizeof(char*) * setup.historyMaxLen));
-	}
-	char8_t* linecopy = strdup8(line);
-	if (!linecopy) {
-		return 0;
-	}
-
-	// convert newlines in multi-line code to spaces before storing
-	char8_t* p = linecopy;
-	while (*p) {
-		if (*p == '\n') {
-			*p = ' ';
-		}
-		++p;
-	}
-
-	// prevent duplicate history entries
-	if (historyLen > 0 && history[historyLen - 1] != nullptr &&
-			strcmp(reinterpret_cast<char const*>(history[historyLen - 1]),
-						 reinterpret_cast<char const*>(linecopy)) == 0) {
-		free(linecopy);
-		return 0;
-	}
-
-	if (historyLen == setup.historyMaxLen) {
-		free(history[0]);
-		memmove(history, history + 1, sizeof(char*) * (setup.historyMaxLen - 1));
-		--historyLen;
-		if (--historyPreviousIndex < -1) {
-			historyPreviousIndex = -2;
+#ifndef _WIN32
+	umask( old_umask );
+	chmod( filename.c_str(), S_IRUSR | S_IWUSR );
+#endif
+	for ( string const& h : _data ) {
+		if ( ! h.empty() ) {
+			histFile << h << endl;
 		}
 	}
-
-	history[historyLen] = linecopy;
-	++historyLen;
-	return 1;
+	return ( 0 );
 }
 
-int set_max_history_size(int len) {
-	if (len < 1) {
-		return 0;
+int History::load( std::string const& filename ) {
+	ifstream histFile( filename );
+	if ( ! histFile ) {
+		return ( -1 );
 	}
-	if (history) {
-		int tocopy = historyLen;
-		char8_t** newHistory =
-				reinterpret_cast<char8_t**>(malloc(sizeof(char8_t*) * len));
-		if (newHistory == NULL) {
-			return 0;
+	string line;
+	while ( getline( histFile, line ).good() ) {
+		string::size_type eol( line.find_first_of( "\r\n" ) );
+		if ( eol != string::npos ) {
+			line.erase( eol );
 		}
-		if (len < tocopy) {
-			tocopy = len;
+		if ( ! line.empty() ) {
+			add( line );
 		}
-		memcpy(newHistory, history + setup.historyMaxLen - tocopy,
-					 sizeof(char8_t*) * tocopy);
-		free(history);
-		history = newHistory;
 	}
-	setup.historyMaxLen = len;
-	if (historyLen > setup.historyMaxLen) {
-		historyLen = setup.historyMaxLen;
+	return 0;
+}
+
+void History::set_max_size( int size_ ) {
+	if ( size_ >= 0 ) {
+		_maxSize = size_;
+		int curSize( size() );
+		if ( _maxSize < curSize ) {
+			_data.erase( _data.begin(), _data.begin() + ( curSize - _maxSize ) );
+		}
 	}
-	return 1;
+}
+
+void History::reset_pos( int pos_ ) {
+	if ( pos_ == -1 ) {
+		_index = size() - 1;
+		_recallMostRecent = false;
+	} else {
+		_index = pos_;
+	}
+}
+
+bool History::move( bool up_ ) {
+	if (_previousIndex != -2 && ! up_ ) {
+		_index = 1 + _previousIndex;	// emulate Windows down-arrow
+	} else {
+		_index += up_ ? -1 : 1;
+	}
+	_previousIndex = -2;
+	if (_index < 0) {
+		_index = 0;
+		return ( false );
+	} else if ( _index >= size() ) {
+		_index = size() - 1;
+		return ( false );
+	}
+	_recallMostRecent = true;
+	return ( true );
+}
+
+void History::jump( bool start_ ) {
+	_index = start_ ? 0 : size() - 1;
+	_previousIndex = -2;
+	_recallMostRecent = true;
+}
+
+bool History::common_prefix_search( std::string const& prefix_, int prefixSize_, bool back_ ) {
+	int direct( size() + ( back_ ? -1 : 1 ) );
+	int i( ( _index + direct ) % _data.size() );
+	while ( i != _index ) {
+		if ( ( strncmp( prefix_.c_str(), _data[i].c_str(), prefixSize_ ) == 0 )
+			&& ( strcmp( prefix_.c_str(), _data[i].c_str() ) != 0 ) ) {
+			_index = i;
+			_previousIndex = -2;
+			_recallMostRecent = true;
+			return ( true );
+		}
+		i += direct;
+		i %= _data.size();
+	}
+	return ( false );
+}
+
+std::string const& History::operator[] ( int idx_ ) const {
+	return ( _data[ idx_ ] );
 }
 
 }

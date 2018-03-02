@@ -2,7 +2,7 @@
 
 cmake_minimum_required(VERSION 2.8.12)
 
-project(replxx CXX)
+project( replxx )
 
 set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/build")
 
@@ -13,7 +13,7 @@ endif()
 message(STATUS "Build mode: ${CMAKE_BUILD_TYPE}")
 
 # INFO
-set(REPLXX_VERSION "0.0.0" CACHE path "replxx version")
+set(REPLXX_VERSION "0.0.1" CACHE path "replxx version")
 set(REPLXX_DISPLAY_NAME "replxx")
 set(REPLXX_URL_INFO_ABOUT "https://github.com/AmokHuginnsson/replxx")
 set(REPLXX_CONTACT "amok@codestation.org")
@@ -70,8 +70,7 @@ add_library(
   src/inputbuffer.cxx
   src/io.cxx
   src/prompt.cxx
-  src/replxx.cpp
-  src/setup.cxx
+  src/replxx.cxx
   src/util.cxx
   src/wcwidth.cpp
   src/windows.cxx
@@ -91,13 +90,13 @@ install(FILES include/replxx.h DESTINATION include)
 
 # build example
 add_executable(
-  example
-  tst/example.cxx
+  example-c-api
+  examples/c-api.c
 )
 
 target_link_libraries(
-   example
-   PRIVATE replxx
+   example-c-api
+   PRIVATE replxx stdc++
 )
 
 # packaging

@@ -4,16 +4,9 @@
 #include <vector>
 #include <memory>
 
-#include "replxx.h"
+#include "replxx.hxx"
+#include "replxx_impl.hxx"
 #include "prompt.hxx"
-
-struct replxx_completions {
-	std::vector<replxx::Utf32String> completionStrings;
-};
-
-struct replxx_hints {
-	std::vector<replxx::Utf32String> hintsStrings;
-};
 
 namespace replxx {
 
@@ -30,6 +23,7 @@ public:
 		SKIP
 	};
 private:
+	ReplxxImpl& _replxx;
 	input_buffer_t _buf32;      // input buffer
 	char_widths_t  _charWidths; // character widths from mk_wcwidth()
 	display_t      _display;
@@ -39,6 +33,7 @@ private:
 	int _pos;    // character position in buffer ( 0 <= _pos <= _len )
 	int _prefix; // prefix length used in common prefix search
 	int _hintSelection; // Currently selected hint.
+	History& _history;
 
 	void clearScreen(PromptBase& pi);
 	int incrementalHistorySearch(PromptBase& pi, int startChar);
@@ -47,12 +42,13 @@ private:
 	void refreshLine(PromptBase& pi, HINT_ACTION = HINT_ACTION::REGENERATE);
 	void highlight( int, bool );
 	int handle_hints( PromptBase&, HINT_ACTION );
-	void setColor( replxx_color::color );
+	void setColor( Replxx::Color );
 	int start_index( void );
 
  public:
-	InputBuffer(int bufferLen)
-		: _buf32(new char32_t[bufferLen])
+	InputBuffer(ReplxxImpl& replxx_, int bufferLen)
+		: _replxx( replxx_ )
+		, _buf32(new char32_t[bufferLen])
 		, _charWidths(new char[bufferLen])
 		, _display()
 		, _hint()
@@ -60,7 +56,8 @@ private:
 		, _len(0)
 		, _pos(0)
 		, _prefix( 0 )
-		, _hintSelection( -1 ) {
+		, _hintSelection( -1 )
+		, _history( replxx_.history() ) {
 		_buf32[0] = 0;
 	}
 	void preloadBuffer( char const* preloadText );

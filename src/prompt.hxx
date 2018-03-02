@@ -28,7 +28,7 @@ struct PromptBase {						// a convenience struct for grouping prompt info
 };
 
 struct PromptInfo : public PromptBase {
-	PromptInfo(const char* textPtr, int columns);
+	PromptInfo(std::string const& textPtr, int columns);
 };
 
 extern Utf32String previousSearchText;	// remembered across invocations of replxx_input()
