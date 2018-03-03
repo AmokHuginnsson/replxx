@@ -32,6 +32,7 @@
 #define HAVE_REPLXX_REPLXX_IMPL_HXX_INCLUDED 1
 
 #include <vector>
+#include <memory>
 #include <string>
 
 #include "replxx.hxx"
@@ -44,9 +45,11 @@ class ReplxxImpl {
 public:
 	typedef std::vector<Utf32String> completions_t;
 	typedef std::vector<Utf32String> hints_t;
+	typedef std::unique_ptr<char[]> input_buffer_t;
 private:
-	History _history;
 	int _maxLineLength;
+	input_buffer_t _inputBuffer;
+	History _history;
 	int _maxHintRows;
 	char const* _breakChars;
 	char const* _specialPrefixes;
@@ -68,7 +71,7 @@ public:
 	void set_completion_callback( Replxx::completion_callback_t const& fn, void* userData );
 	void set_highlighter_callback( Replxx::highlighter_callback_t const& fn, void* userData );
 	void set_hint_callback( Replxx::hint_callback_t const& fn, void* userData );
-	char* input( std::string const& prompt );
+	char const* input( std::string const& prompt );
 	int print( char const* fmt, ... );
 	void history_add( std::string const& line );
 	int history_save( std::string const& filename );

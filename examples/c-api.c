@@ -62,7 +62,7 @@ int main (int argc, char** argv) {
 	char const* prompt = "\x1b[1;32mreplxx\x1b[0m> ";
 
 	while (1) {
-		char* result = replxx_input( replxx, prompt );
+		char const* result = replxx_input( replxx, prompt );
 
 		if (result == NULL) {
 			printf("\n");
@@ -76,13 +76,11 @@ int main (int argc, char** argv) {
 			}
 		}
 		if (*result == '\0') {
-			replxx_free(result);
 			break;
 		}
 
 		printf( "thanks for the input: %s\n", result );
 		replxx_history_add( replxx, result );
-		replxx_free(result);
 	}
 	replxx_history_save( replxx, file );
 	replxx_end( replxx );

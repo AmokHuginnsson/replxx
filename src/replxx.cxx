@@ -89,6 +89,7 @@
 #include <memory>
 #include <cerrno>
 #include <cstdarg>
+#include <cassert>
 
 #ifdef _WIN32
 
@@ -99,7 +100,6 @@
 #define snprintf _snprintf	// Microsoft headers use underscores in some names
 #endif
 #define strcasecmp _stricmp
-#define strdup _strdup
 #define write _write
 #define STDIN_FILENO 0
 
@@ -173,8 +173,9 @@ static bool isUnsupportedTerm(void) {
 }
 
 ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
-	: _history()
-	, _maxLineLength( REPLXX_MAX_LINE )
+	: _maxLineLength( REPLXX_MAX_LINE )
+	, _inputBuffer( new char[_maxLineLength * sizeof ( char32_t ) + 1] )
+	, _history()
 	, _maxHintRows( REPLXX_MAX_HINT_ROWS )
 	, _breakChars( defaultBreakChars )
 	, _specialPrefixes( "" )
@@ -292,7 +293,7 @@ void ReplxxImpl::set_preload_buffer( std::string const& preloadText ) {
 	}
 }
 
-char* ReplxxImpl::input( std::string const& prompt ) {
+char const* ReplxxImpl::input( std::string const& prompt ) {
 #ifndef _WIN32
 	gotResize = false;
 #endif
@@ -307,20 +308,19 @@ char* ReplxxImpl::input( std::string const& prompt ) {
 			if (!pi.write()) return 0;
 			fflush(stdout);
 			if (_preloadedBuffer.empty()) {
-				unique_ptr<char[]> buf8(new char[_maxLineLength]);
-				if (fgets(buf8.get(), _maxLineLength, stdin) == NULL) {
+				if (fgets(_inputBuffer.get(), _maxLineLength, stdin) == NULL) {
 					return NULL;
 				}
-				size_t len = strlen(buf8.get());
-				while (len && (buf8[len - 1] == '\n' || buf8[len - 1] == '\r')) {
+				size_t len = strlen(_inputBuffer.get());
+				while (len && (_inputBuffer[len - 1] == '\n' || _inputBuffer[len - 1] == '\r')) {
 					--len;
-					buf8[len] = '\0';
+					_inputBuffer[len] = '\0';
 				}
-				return strdup(buf8.get());	// caller must free buffer
+				return ( _inputBuffer.get() );
 			} else {
-				char* buf8 = strdup(_preloadedBuffer.c_str());
+				strncpy( _inputBuffer.get(), _preloadedBuffer.c_str(), _maxLineLength );
 				_preloadedBuffer.clear();
-				return buf8;	// caller must free buffer
+				return ( _inputBuffer.get() );
 			}
 		} else {
 			if (enableRawMode() == -1) {
@@ -336,25 +336,24 @@ char* ReplxxImpl::input( std::string const& prompt ) {
 			if (count == -1) {
 				return NULL;
 			}
+			assert( ib.length() < _maxLineLength );
 			printf("\n");
 			size_t bufferSize = sizeof(char32_t) * ib.length() + 1;
-			unique_ptr<char[]> buf8(new char[bufferSize]);
-			copyString32to8(buf8.get(), bufferSize, ib.buf());
-			return strdup(buf8.get());	// caller must free buffer
+			copyString32to8(_inputBuffer.get(), bufferSize, ib.buf());
+			return ( _inputBuffer.get() );
 		}
 	} else { // input not from a terminal, we should work with piped input, i.e. redirected stdin
-		unique_ptr<char[]> buf8(new char[_maxLineLength]);
-		if (fgets(buf8.get(), _maxLineLength, stdin) == NULL) {
+		if (fgets(_inputBuffer.get(), _maxLineLength, stdin) == NULL) {
 			return NULL;
 		}
 
 		// if fgets() gave us the newline, remove it
-		int count = static_cast<int>(strlen(buf8.get()));
-		if (count > 0 && buf8[count - 1] == '\n') {
+		int count = static_cast<int>( strlen( _inputBuffer.get() ) );
+		if (count > 0 && _inputBuffer[count - 1] == '\n') {
 			--count;
-			buf8[count] = '\0';
+			_inputBuffer[count] = '\0';
 		}
-		return strdup(buf8.get());	// caller must free buffer
+		return ( _inputBuffer.get() );
 	}
 }
 
@@ -399,6 +398,9 @@ void ReplxxImpl::set_max_history_size( int len ) {
 }
 
 void ReplxxImpl::set_max_line_size( int len ) {
+	if ( len > _maxLineLength ) {
+		_inputBuffer.reset( new char[len * sizeof ( char32_t ) + 1] );
+	}
 	_maxLineLength = len;
 }
 
@@ -467,7 +469,7 @@ void replxx_set_preload_buffer(::Replxx* replxx_, const char* preloadText) {
  * @return the returned string belongs to the caller on return and must be
  * freed to prevent memory leaks
  */
-char* replxx_input( ::Replxx* replxx_, const char* prompt ) {
+char const* replxx_input( ::Replxx* replxx_, const char* prompt ) {
 	replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::ReplxxImpl*>( replxx_ ) );
 	return ( replxx->input( prompt ) );
 }

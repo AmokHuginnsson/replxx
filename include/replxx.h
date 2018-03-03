@@ -181,13 +181,7 @@ void replxx_add_hint( replxx_hints* hints, const char* str );
  * \param prompt - prompt to be displayed before getting user input.
  * \return An input given by the user (or nullptr on EOF).
  */
-char* replxx_input( Replxx*, const char* prompt );
-
-/*! \brief Free memory previously allocated by replxx_input() or replxx_history_line().
- *
- * \param mem - pointer to memory buffer to be freed.
- */
-void replxx_free( void* mem );
+char const* replxx_input( Replxx*, const char* prompt );
 
 /*! \brief Print formatted string to standard output.
  *

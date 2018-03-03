@@ -163,7 +163,7 @@ public:
 	 * \param prompt - prompt to be displayed before getting user input.
 	 * \return An input given by the user (or nullptr on EOF).
 	 */
-	char* input( std::string const& prompt );
+	char const* input( std::string const& prompt );
 
 	/*! \brief Print formatted string to standard output.
 	 *
