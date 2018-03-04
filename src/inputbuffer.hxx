@@ -23,7 +23,7 @@ public:
 		SKIP
 	};
 private:
-	ReplxxImpl& _replxx;
+	Replxx::ReplxxImpl& _replxx;
 	input_buffer_t _buf32;      // input buffer
 	char_widths_t  _charWidths; // character widths from mk_wcwidth()
 	display_t      _display;
@@ -46,7 +46,7 @@ private:
 	int start_index( void );
 
  public:
-	InputBuffer(ReplxxImpl& replxx_, int bufferLen)
+	InputBuffer( Replxx::ReplxxImpl& replxx_, int bufferLen )
 		: _replxx( replxx_ )
 		, _buf32(new char32_t[bufferLen])
 		, _charWidths(new char[bufferLen])

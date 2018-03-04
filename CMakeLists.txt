@@ -94,6 +94,16 @@ add_executable(
   examples/c-api.c
 )
 
+add_executable(
+  example-cxx-api
+  examples/cxx-api.cxx
+)
+
+target_link_libraries(
+   example-cxx-api
+   PRIVATE replxx
+)
+
 target_link_libraries(
    example-c-api
    PRIVATE replxx stdc++

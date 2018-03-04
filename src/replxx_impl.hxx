@@ -41,7 +41,7 @@
 
 namespace replxx {
 
-class ReplxxImpl {
+class Replxx::ReplxxImpl {
 public:
 	typedef std::vector<Utf32String> completions_t;
 	typedef std::vector<Utf32String> hints_t;
@@ -72,7 +72,6 @@ public:
 	void set_highlighter_callback( Replxx::highlighter_callback_t const& fn, void* userData );
 	void set_hint_callback( Replxx::hint_callback_t const& fn, void* userData );
 	char const* input( std::string const& prompt );
-	int print( char const* fmt, ... );
 	void history_add( std::string const& line );
 	int history_save( std::string const& filename );
 	int history_load( std::string const& filename );
@@ -128,6 +127,7 @@ public:
 	int completion_count_cutoff( void ) const {
 		return ( _completionCountCutoff );
 	}
+	int print( char const* , int );
 private:
 	ReplxxImpl( ReplxxImpl const& ) = delete;
 	ReplxxImpl& operator = ( ReplxxImpl const& ) = delete;

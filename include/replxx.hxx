@@ -113,9 +113,9 @@ public:
 	 */
 	typedef std::function<hints_t ( std::string const& input, int breakPos, Color& color, void* userData )> hint_callback_t;
 
-private:
 	class ReplxxImpl;
-	typedef std::unique_ptr<ReplxxImpl> impl_t;
+private:
+	typedef std::unique_ptr<ReplxxImpl, void (*)( ReplxxImpl* )> impl_t;
 	impl_t _impl;
 
 public:
@@ -137,26 +137,12 @@ public:
 	 */
 	void set_highlighter_callback( highlighter_callback_t const& fn, void* userData );
 
-	/*! \brief Add another possible completion for current user input.
-	 *
-	 * \param completions - pointer to opaque list of user completions.
-	 * \param str - UTF-8 encoded completion string.
-	 */
-	void add_completion( std::string const& str );
-
 	/*! \brief Register hints callback.
 	 *
 	 * \param fn - user defined callback function.
 	 * \param userData - pointer to opaque user data block to be passed into each invocation of the callback.
 	 */
 	void set_hint_callback( hint_callback_t const& fn, void* userData );
-
-	/*! \brief Add another possible hint for current user input.
-	 *
-	 * \param hints - pointer to opaque list of hints.
-	 * \param str - UTF-8 encoded hint string.
-	 */
-	void add_hint( std::string const& str );
 
 	/*! \brief Read line of user input.
 	 *
@@ -175,12 +161,12 @@ public:
 	 */
 	int print( char const* fmt, ... );
 
-	int history_add( std::string const& line );
+	void history_add( std::string const& line );
 	int history_save( std::string const& filename );
 	int history_load( std::string const& filename );
-	std::string history_line( int index );
+	std::string const& history_line( int index );
 
-	void set_preload_buffer(const char* preloadText);
+	void set_preload_buffer( std::string const& preloadText );
 
 	/*! \brief Set set of word break characters.
 	 *
@@ -210,33 +196,32 @@ public:
 
 	/*! \brief Set tab completion behavior.
 	 *
-	 * \param val - use double tab to invoke completions (if != 0).
+	 * \param val - use double tab to invoke completions.
 	 */
-	void set_double_tab_completion( int val );
+	void set_double_tab_completion( bool val );
 
 	/*! \brief Set tab completion behavior.
 	 *
-	 * \param val - invoke completion even if user input is empty (if != 0).
+	 * \param val - invoke completion even if user input is empty.
 	 */
-	void set_complete_on_empty( int val );
+	void set_complete_on_empty( bool val );
 
 	/*! \brief Set tab completion behavior.
 	 *
-	 * \param val - beep if completion is ambiguous (if != 0).
+	 * \param val - beep if completion is ambiguous.
 	 */
-	void set_beep_on_ambiguous_completion( int val );
+	void set_beep_on_ambiguous_completion( bool val );
 
 	/*! \brief Disable output coloring.
 	 *
 	 * \param val - if set to non-zero disable output colors.
 	 */
-	void set_no_color( int val );
+	void set_no_color( bool val );
 
 	/*! \brief Set maximum number of entries in history list.
 	 */
-	int set_max_history_size( int len );
+	void set_max_history_size( int len );
 	void clear_screen( void );
-	/* the following is extension to the original linenoise API */
 	int install_window_change_handler( void );
 
 private:

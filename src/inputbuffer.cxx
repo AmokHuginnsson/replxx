@@ -138,7 +138,7 @@ int InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
 		Utf32String unicodeCopy( _buf32.get(), _pos );
 		Utf8String parseItem(unicodeCopy);
 		int startIndex( start_index() );
-		ReplxxImpl::hints_t hints( _replxx.call_hinter( parseItem.get(), startIndex, c ) );
+		Replxx::ReplxxImpl::hints_t hints( _replxx.call_hinter( parseItem.get(), startIndex, c ) );
 		int hintCount( hints.size() );
 		if ( hintCount == 1 ) {
 			setColor( c );
@@ -384,7 +384,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	Utf32String unicodeCopy(_buf32.get(), _pos);
 	Utf8String parseItem(unicodeCopy);
 	// get a list of completions
-	ReplxxImpl::completions_t completions( _replxx.call_completer( parseItem.get(), startIndex ) );
+	Replxx::ReplxxImpl::completions_t completions( _replxx.call_completer( parseItem.get(), startIndex ) );
 
 	// if no completions, we are done
 	if (completions.size() == 0) {
