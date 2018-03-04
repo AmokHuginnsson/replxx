@@ -1,10 +1,10 @@
 # -*- mode: CMAKE; -*-
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.0)
 
-project( replxx )
+project( replxx VERSION 0.0.1 LANGUAGES CXX C )
 
-set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/build")
+set( CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/build" )
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE string "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE)
@@ -13,7 +13,6 @@ endif()
 message(STATUS "Build mode: ${CMAKE_BUILD_TYPE}")
 
 # INFO
-set(REPLXX_VERSION "0.0.1" CACHE path "replxx version")
 set(REPLXX_DISPLAY_NAME "replxx")
 set(REPLXX_URL_INFO_ABOUT "https://github.com/AmokHuginnsson/replxx")
 set(REPLXX_CONTACT "amok@codestation.org")
@@ -120,7 +119,7 @@ endif ()
 
 set(CPACK_PACKAGE_VENDOR  "codestation.org")
 set(CPACK_PACKAGE_CONTACT "amok@codestation.org")
-set(CPACK_PACKAGE_VERSION "${REPLXX_VERSION}")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 
 set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
