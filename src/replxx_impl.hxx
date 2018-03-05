@@ -76,6 +76,7 @@ public:
 	int history_save( std::string const& filename );
 	int history_load( std::string const& filename );
 	std::string const& history_line( int index );
+	int history_size( void ) const;
 	void set_preload_buffer(std::string const& preloadText);
 	void set_word_break_characters( char const* wordBreakers );
 	void set_special_prefixes( char const* specialPrefixes );

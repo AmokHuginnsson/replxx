@@ -196,6 +196,7 @@ int replxx_print( Replxx*, char const* fmt, ... );
 void replxx_set_preload_buffer( Replxx*, const char* preloadText );
 
 void replxx_history_add( Replxx*, const char* line );
+int replxx_history_size( Replxx* );
 
 /*! \brief Set set of word break characters.
  *

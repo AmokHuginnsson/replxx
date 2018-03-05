@@ -85,7 +85,7 @@ target_include_directories(replxx
 install(TARGETS replxx DESTINATION lib)
 
 # headers
-install(FILES include/replxx.h DESTINATION include)
+install(FILES include/replxx.hxx include/replxx.h DESTINATION include)
 
 # build example
 add_executable(

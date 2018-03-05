@@ -64,7 +64,7 @@ int main ( int, char** ) {
 			break;
 		} else if (!strncmp(result, "/history", 8)) {
 			/* Display the current history. */
-			for (int index = 0; ; ++index) {
+			for ( int index = 0, size = replxx.history_size(); index < size; ++index ) {
 				cout << setw( 4 ) << index << ": " << replxx.history_line( index ) << endl;
 			}
 		}

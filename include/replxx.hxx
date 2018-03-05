@@ -164,6 +164,7 @@ public:
 	void history_add( std::string const& line );
 	int history_save( std::string const& filename );
 	int history_load( std::string const& filename );
+	int history_size( void ) const;
 	std::string const& history_line( int index );
 
 	void set_preload_buffer( std::string const& preloadText );

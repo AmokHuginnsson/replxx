@@ -27,7 +27,8 @@ void hintHook(char const* prefix, int bp, replxx_hints* lc, ReplxxColor* c, void
 }
 
 void colorHook( char const* str_, ReplxxColor* colors_, int size_, void* ud ) {
-	for ( int i = 0; i < size_; ++ i ) {
+	int i = 0;
+	for ( ; i < size_; ++ i ) {
 		if ( isdigit( str_[i] ) ) {
 			colors_[i] = BRIGHTMAGENTA;
 		}
@@ -69,7 +70,9 @@ int main (int argc, char** argv) {
 			break;
 		} else if (!strncmp(result, "/history", 8)) {
 			/* Display the current history. */
-			for (int index = 0; ; ++index) {
+			int index = 0;
+			int size = replxx_history_size( replxx );
+			for ( ; index < size; ++index) {
 				char const* hist = replxx_history_line( replxx, index );
 				if (hist == NULL) break;
 				printf("%4d: %s\n", index, hist);

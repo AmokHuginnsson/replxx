@@ -206,6 +206,10 @@ int Replxx::ReplxxImpl::history_load( std::string const& filename ) {
 	return ( _history.load( filename ) );
 }
 
+int Replxx::ReplxxImpl::history_size( void ) const {
+	return ( _history.size() );
+}
+
 Replxx::ReplxxImpl::completions_t Replxx::ReplxxImpl::call_completer( std::string const& input, int breakPos ) const {
 	Replxx::completions_t completionsIntermediary(
 		!! _completionCallback
@@ -483,6 +487,10 @@ int Replxx::history_load( std::string const& filename ) {
 	return ( _impl->history_load( filename ) );
 }
 
+int Replxx::history_size( void ) const {
+	return ( _impl->history_size() );
+}
+
 std::string const& Replxx::history_line( int index ) {
 	return ( _impl->history_line( index ) );
 }
@@ -741,6 +749,11 @@ int replxx_history_save( ::Replxx* replxx_, const char* filename ) {
 int replxx_history_load( ::Replxx* replxx_, const char* filename ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	return ( replxx->history_load( filename ) );
+}
+
+int replxx_history_size( ::Replxx* replxx_ ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	return ( replxx->history_size() );
 }
 
 /* This special mode is used by replxx in order to print scan codes
