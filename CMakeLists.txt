@@ -103,9 +103,13 @@ target_link_libraries(
    PRIVATE replxx
 )
 
+if ( NOT MSVC )
+	set( CXX_LIB stdc++ )
+endif()
+
 target_link_libraries(
    example-c-api
-   PRIVATE replxx stdc++
+	 PRIVATE replxx ${CXX_LIB}
 )
 
 # packaging
