@@ -1,6 +1,7 @@
 # Read Evaluate Print Loop ++
 
 ![demo](https://drive.google.com/uc?export=download&id=0B53g2Y3z7rWNT2dCRGVVNldaRnc)
+
 [![Build Status](https://travis-ci.org/AmokHuginnsson/replxx.svg?branch=master)](https://travis-ci.org/AmokHuginnsson/replxx)
 
 A small, portable GNU readline replacement for Linux, Windows and
@@ -43,47 +44,53 @@ some recent version of CMake.
 
 ## Build instructions
 
-To build this library on Linux, first create a build directory
+### *nix
+
+1. Create a build directory
 
 ```bash
-mkdir -p build
+mkdir build && cd build
 ```
 
-and then build the library:
+2. Build the library
 
 ```bash
-(cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make)
+cmake -DCMAKE_BUILD_TYPE=Release .. && make
 ```
 
-To build and install the library at the default target location, use
+3. Install the library at the default target location
 
 ```bash
-(cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make && sudo make install)
+sudo make install
 ```
 
-The default installation location can be adjusted by setting the `DESTDIR`
+ The default installation location can be adjusted by setting the `DESTDIR`
 variable when invoking `make install`:
 
 ```bash
-(cd build && make DESTDIR=/tmp install)
+make DESTDIR=/tmp install
 ```
 
-To build the library on Windows, use these commands in an MS-DOS command 
-prompt:
+### Windows
+
+1. Create a build directory in MS-DOS command prompt
 
 ```
-md build
-cd build
+mkdir build && cd build
 ```
 
-After that, invoke the appropriate command to create the files for your
-target environment:
+2. Generate Visual Studio solution file with cmake
 
-* 32 bit: `cmake -G "Visual Studio 12 2013" -DCMAKE_BUILD_TYPE=Release ..`
-* 64 bit: `cmake -G "Visual Studio 12 2013 Win64" -DCMAKE_BUILD_TYPE=Release ..`
+* 32 bit: 
+```bash
+cmake -G "Visual Studio 12 2013" -DCMAKE_BUILD_TYPE=Release ..`
+```
+* 64 bit:
+```bash
+`cmake -G "Visual Studio 12 2013 Win64" -DCMAKE_BUILD_TYPE=Release ..`
+```
 
-After that, open the generated file `replxx.sln` from the `build`
-subdirectory with Visual Studio.
+3. Open the generated file `replxx.sln` in the `build` subdirectory with Visual Studio.
 
 ## Tested with...
 
