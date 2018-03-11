@@ -76,7 +76,8 @@ make DESTDIR=/tmp install
 1. Create a build directory in MS-DOS command prompt
 
 ```
-mkdir build && cd build
+md build
+cd build
 ```
 
 2. Generate Visual Studio solution file with cmake
