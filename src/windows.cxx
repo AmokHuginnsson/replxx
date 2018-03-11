@@ -4,20 +4,17 @@
 
 #include "windows.hxx"
 #include "conversion.hxx"
+#include "io.hxx"
+
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+static DWORD const ENABLE_VIRTUAL_TERMINAL_PROCESSING = 4;
+#endif
+
+using namespace std;
 
 namespace replxx {
 
 WinAttributes WIN_ATTR;
-
-size_t OutputWin(char16_t* text16, char32_t* text32, size_t len32) {
-	size_t count16 = 0;
-
-	copyString32to16(text16, len32, &count16, text32, len32);
-	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), text16,
-								static_cast<DWORD>(count16), nullptr, nullptr);
-
-	return count16;
-}
 
 template<typename T>
 T* HandleEsc(T* p, T* end) {
@@ -103,58 +100,45 @@ T* HandleEsc(T* p, T* end) {
 	return p;
 }
 
-size_t WinWrite32(char16_t* text16, char32_t* text32, size_t len32) {
-	char32_t* p = text32;
-	char32_t* q = p;
-	char32_t* e = text32 + len32;
-	size_t count16 = 0;
-
-	while (p < e) {
-		if (*p == 27) {
-			if (q < p) {
-				count16 += OutputWin(text16, q, p - q);
+int win_write( char const* str_, int size_ ) {
+	int count( 0 );
+	DWORD currentMode( 0 );
+	HANDLE consoleOut( GetStdHandle( STD_OUTPUT_HANDLE ) );
+	if ( tty::out && GetConsoleMode( consoleOut, &currentMode ) ) {
+		UINT inputCodePage( GetConsoleCP() );
+		UINT outputCodePage( GetConsoleOutputCP() );
+		SetConsoleCP( 65001 );
+		SetConsoleOutputCP( 65001 );
+		if ( SetConsoleMode( consoleOut, currentMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING ) ) {
+			WriteConsole( consoleOut, str_, size_, nullptr, nullptr );
+			count = size_;
+			SetConsoleMode( consoleOut, currentMode );
+		} else {
+			char const* s( str_ );
+			char const* e( str_ + size_ );
+			while ( str_ < e ) {
+				if ( *str_ == 27 ) {
+					if ( s < str_ ) {
+						WriteConsole( consoleOut, s, static_cast<DWORD>( str_ - s ), nullptr, nullptr );
+						count += ( str_ - s );
+					}
+					str_ = s = HandleEsc( str_ + 1, e );
+				} else {
+					++ str_;
+				}
 			}
 
-			q = p = HandleEsc(p + 1, e);
-		} else {
-			++p;
-		}
-	}
-
-	if (q < p) {
-		count16 += OutputWin(text16, q, p - q);
-	}
-
-	return count16;
-}
-
-int win_print( char const* str_, int size_ ) {
-	int count( 0 );
-	char const* s( str_ );
-	char const* e( str_ + size_ );
-	UINT inputCodePage( GetConsoleCP() );
-	UINT outputCodePage( GetConsoleOutputCP() );
-	SetConsoleCP( 65001 );
-	SetConsoleOutputCP( 65001 );
-	while ( str_ < e ) {
-		if ( *str_ == 27 ) {
 			if ( s < str_ ) {
-				WriteConsole( GetStdHandle( STD_OUTPUT_HANDLE ), s, static_cast<DWORD>( str_ - s ), nullptr, nullptr );
+				WriteConsole( consoleOut, s, static_cast<DWORD>( str_ - s ), nullptr, nullptr );
 				count += ( str_ - s );
 			}
-
-			str_ = s = HandleEsc( str_ + 1, e );
-		} else {
-			++ str_;
 		}
+		SetConsoleCP( inputCodePage );
+		SetConsoleOutputCP( outputCodePage );
+	} else {
+		_write( 1, str_, size_ );
+		count = size_;
 	}
-
-	if ( s < str_ ) {
-		WriteConsole( GetStdHandle( STD_OUTPUT_HANDLE ), s, static_cast<DWORD>( str_ - s ), nullptr, nullptr );
-		count += ( str_ - s );
-	}
-	SetConsoleCP( inputCodePage );
-	SetConsoleOutputCP( outputCodePage );
 	return ( count );
 }
 

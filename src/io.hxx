@@ -26,7 +26,6 @@ namespace tty {
 
 extern bool in;
 extern bool out;
-extern bool err;
 
 }
 

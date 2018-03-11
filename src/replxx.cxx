@@ -438,7 +438,7 @@ void Replxx::ReplxxImpl::set_no_color( bool val ) {
 
 int Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
 #ifdef _WIN32
-	int count( win_print( str_, size_ ) );
+	int count( win_write( str_, size_ ) );
 #else
 	int count( write( 1, str_, size_ ) );
 #endif

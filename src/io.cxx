@@ -7,9 +7,7 @@
 #include <conio.h>
 #include <windows.h>
 #include <io.h>
-#if _MSC_VER < 1900
-#define snprintf _snprintf	// Microsoft headers use underscores in some names
-#endif
+#define isatty _isatty
 #define strcasecmp _stricmp
 #define strdup _strdup
 #define write _write
@@ -53,51 +51,40 @@ static void repl_at_exit(void) { disableRawMode(); }
 namespace tty {
 
 bool is_a_tty( int fd_ ) {
-	bool aTTY( false );
+	bool aTTY( isatty( fd_ ) != 0 );
 #ifdef _WIN32
-	if ( _isatty( fd_ ) != 0 ) {
-		HANDLE h( (HANDLE)_get_osfhandle( fd_ ) );
-		if ( h != INVALID_HANDLE_VALUE ) {
-			DWORD st( 0 );
-			aTTY = GetConsoleMode( h, &st ) != 0;
+	do {
+		if ( aTTY ) {
+			break;
 		}
-	}
-#else
-	aTTY = isatty( fd_ ) != 0;
+		HANDLE h( (HANDLE)_get_osfhandle( fd_ ) );
+		if ( h == INVALID_HANDLE_VALUE ) {
+			break;
+		}
+		DWORD st( 0 );
+		if ( ! GetConsoleMode( h, &st ) ) {
+			break;
+		}
+		aTTY = true;
+	} while ( false );
 #endif
 	return ( aTTY );
 }
 
 bool in( is_a_tty( 0 ) );
 bool out( is_a_tty( 1 ) );
-bool err( is_a_tty( 2 ) );
 
 }
 
 int write32( int fd, char32_t* text32, int len32 ) {
-#ifdef _WIN32
-	if ( ( fd == 1 ) ? tty::out : tty::err ) {
-		size_t len16 = 2 * len32 + 1;
-		unique_ptr<char16_t[]> text16(new char16_t[len16]);
-		size_t count16 = WinWrite32(text16.get(), text32, len32);
-
-		return static_cast<int>(count16);
-	} else {
-		size_t len8 = 4 * len32 + 1;
-		unique_ptr<char[]> text8(new char[len8]);
-		size_t count8 = 0;
-
-		copyString32to8(text8.get(), len8, &count8, text32, len32);
-
-		return write(fd, text8.get(), static_cast<unsigned int>(count8));
-	}
-#else
 	size_t len8 = 4 * len32 + 1;
 	unique_ptr<char[]> text8(new char[len8]);
 	size_t count8 = 0;
 
 	copyString32to8(text8.get(), len8, &count8, text32, len32);
-
+#ifdef _WIN32
+	return win_write(text8.get(), count8);
+#else
 	return write(fd, text8.get(), count8);
 #endif
 }
@@ -171,15 +158,16 @@ void setDisplayAttribute(bool enhancedDisplay, bool error) {
 
 int enableRawMode(void) {
 #ifdef _WIN32
-	if (!console_in) {
-		console_in = GetStdHandle(STD_INPUT_HANDLE);
-		console_out = GetStdHandle(STD_OUTPUT_HANDLE);
+	if ( ! console_in ) {
+		console_in = GetStdHandle( STD_INPUT_HANDLE );
+		console_out = GetStdHandle( STD_OUTPUT_HANDLE );
 		SetConsoleCP( 65001 );
 		SetConsoleOutputCP( 65001 );
-		GetConsoleMode(console_in, &oldMode);
-		SetConsoleMode(console_in, oldMode &
-																	 ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT |
-																		 ENABLE_PROCESSED_INPUT));
+		GetConsoleMode( console_in, &oldMode );
+		SetConsoleMode(
+			console_in,
+			oldMode & ~( ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT )
+		);
 	}
 	return 0;
 #else
@@ -231,7 +219,9 @@ void disableRawMode(void) {
 	console_in = 0;
 	console_out = 0;
 #else
-	if (rawmode && tcsetattr(0, TCSADRAIN, &orig_termios) != -1) rawmode = 0;
+	if ( rawmode && tcsetattr(0, TCSADRAIN, &orig_termios ) != -1 ) {
+		rawmode = 0;
+	}
 #endif
 }
 
