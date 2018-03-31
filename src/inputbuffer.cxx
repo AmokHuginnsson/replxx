@@ -27,7 +27,6 @@
 #include "util.hxx"
 #include "io.hxx"
 #include "keycodes.hxx"
-#include "killring.hxx"
 #include "history.hxx"
 #include "replxx.hxx"
 
@@ -42,7 +41,6 @@ void dynamicRefresh(PromptBase& pi, char32_t* buf32, int len, int pos);
 #ifndef _WIN32
 extern bool gotResize;
 #endif
-static KillRing killRing;
 
 void InputBuffer::preloadBuffer(const char* preloadText) {
 	size_t ucharCount = 0;
@@ -633,7 +631,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 	pi.promptCursorRowOffset = pi.promptExtraLines;
 
 	// kill and yank start in "other" mode
-	killRing.lastAction = KillRing::actionOther;
+	_killRing.lastAction = KillRing::actionOther;
 
 	// when history search returns control to us, we execute its terminating
 	// keystroke
@@ -693,7 +691,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			// This hack (i.e. what the old code did) prevents command completion
 			//	on an empty line but lets users paste text with leading tabs.
 
-			killRing.lastAction = KillRing::actionOther;
+			_killRing.lastAction = KillRing::actionOther;
 			_history.reset_recall_most_recent();
 
 			// completeLine does the actual completion and replacement
@@ -712,14 +710,14 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 		switch (c) {
 			case ctrlChar('A'):	// ctrl-A, move cursor to start of line
 			case HOME_KEY:
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				_pos = 0;
 				refreshLine(pi);
 				break;
 
 			case ctrlChar('B'):	// ctrl-B, move cursor left by one character
 			case LEFT_ARROW_KEY:
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				if (_pos > 0) {
 					--_pos;
 					refreshLine(pi);
@@ -730,7 +728,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			case META + 'B':
 			case CTRL + LEFT_ARROW_KEY:
 			case META + LEFT_ARROW_KEY:	// Emacs allows Meta, bash & readline don't
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				if (_pos > 0) {
 					while (_pos > 0 && !isCharacterAlphanumeric(_buf32[_pos - 1])) {
 						--_pos;
@@ -743,7 +741,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				break;
 
 			case ctrlChar('C'):	// ctrl-C, abort this line
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				_history.reset_recall_most_recent();
 				errno = EAGAIN;
 				_history.drop_last();
@@ -756,7 +754,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 
 			case META + 'c':	// meta-C, give word initial Cap
 			case META + 'C':
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				_history.reset_recall_most_recent();
 				if (_pos < _len) {
 					while (_pos < _len && !isCharacterAlphanumeric(_buf32[_pos])) {
@@ -781,7 +779,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			// ctrl-D, delete the character under the cursor
 			// on an empty line, exit the shell
 			case ctrlChar('D'):
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				if (_len > 0 && _pos < _len) {
 					_history.reset_recall_most_recent();
 					memmove(_buf32.get() + _pos, _buf32.get() + _pos + 1, sizeof(char32_t) * (_len - _pos));
@@ -805,25 +803,25 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 					while (endingPos < _len && isCharacterAlphanumeric(_buf32[endingPos])) {
 						++endingPos;
 					}
-					killRing.kill(&_buf32[_pos], endingPos - _pos, true);
+					_killRing.kill(&_buf32[_pos], endingPos - _pos, true);
 					memmove(_buf32.get() + _pos, _buf32.get() + endingPos,
 									sizeof(char32_t) * (_len - endingPos + 1));
 					_len -= endingPos - _pos;
 					refreshLine(pi);
 				}
-				killRing.lastAction = KillRing::actionKill;
+				_killRing.lastAction = KillRing::actionKill;
 				break;
 
 			case ctrlChar('E'):	// ctrl-E, move cursor to end of line
 			case END_KEY:
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				_pos = _len;
 				refreshLine(pi);
 				break;
 
 			case ctrlChar('F'):	// ctrl-F, move cursor right by one character
 			case RIGHT_ARROW_KEY:
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				if (_pos < _len) {
 					++_pos;
 					refreshLine(pi);
@@ -834,7 +832,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			case META + 'F':
 			case CTRL + RIGHT_ARROW_KEY:
 			case META + RIGHT_ARROW_KEY:	// Emacs allows Meta, bash & readline don't
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				if (_pos < _len) {
 					while (_pos < _len && !isCharacterAlphanumeric(_buf32[_pos])) {
 						++_pos;
@@ -847,7 +845,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				break;
 
 			case ctrlChar('H'):	// backspace/ctrl-H, delete char to left of cursor
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				if (_pos > 0) {
 					_history.reset_recall_most_recent();
 					memmove(_buf32.get() + _pos - 1, _buf32.get() + _pos,
@@ -869,18 +867,18 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 					while (_pos > 0 && isCharacterAlphanumeric(_buf32[_pos - 1])) {
 						--_pos;
 					}
-					killRing.kill(&_buf32[_pos], startingPos - _pos, false);
+					_killRing.kill(&_buf32[_pos], startingPos - _pos, false);
 					memmove(_buf32.get() + _pos, _buf32.get() + startingPos,
 									sizeof(char32_t) * (_len - startingPos + 1));
 					_len -= startingPos - _pos;
 					refreshLine(pi);
 				}
-				killRing.lastAction = KillRing::actionKill;
+				_killRing.lastAction = KillRing::actionKill;
 				break;
 
 			case ctrlChar('J'): // ctrl-J/linefeed/newline, accept line
 			case ctrlChar('M'): // ctrl-M/return/enter
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				// we need one last refresh with the cursor at the end of the line
 				// so we don't display the next prompt over the previous input line
 				_pos = _len; // pass _len as _pos for EOL
@@ -890,11 +888,11 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				return _len;
 
 			case ctrlChar('K'):	// ctrl-K, kill from cursor to end of line
-				killRing.kill(&_buf32[_pos], _len - _pos, true);
+				_killRing.kill(&_buf32[_pos], _len - _pos, true);
 				_buf32[_pos] = '\0';
 				_len = _pos;
 				refreshLine(pi);
-				killRing.lastAction = KillRing::actionKill;
+				_killRing.lastAction = KillRing::actionKill;
 				_history.reset_recall_most_recent();
 				break;
 
@@ -904,7 +902,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 
 			case META + 'l':	// meta-L, lowercase word
 			case META + 'L':
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				if (_pos < _len) {
 					_history.reset_recall_most_recent();
 					while (_pos < _len && !isCharacterAlphanumeric(_buf32[_pos])) {
@@ -924,7 +922,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			case ctrlChar('P'):	// ctrl-P, recall previous line in history
 			case DOWN_ARROW_KEY:
 			case UP_ARROW_KEY:
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				// if not already recalling, add the current line to the history list so
 				// we don't
 				// have to special case it
@@ -949,14 +947,14 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				break;
 			case CTRL + UP_ARROW_KEY:
 				if ( ! _replxx.no_color() ) {
-					killRing.lastAction = KillRing::actionOther;
+					_killRing.lastAction = KillRing::actionOther;
 					-- _hintSelection;
 					refreshLine(pi, HINT_ACTION::REPAINT);
 				}
 				break;
 			case CTRL + DOWN_ARROW_KEY:
 				if ( ! _replxx.no_color() ) {
-					killRing.lastAction = KillRing::actionOther;
+					_killRing.lastAction = KillRing::actionOther;
 					++ _hintSelection;
 					refreshLine(pi, HINT_ACTION::REPAINT);
 				}
@@ -975,7 +973,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				break;
 
 			case ctrlChar('T'): // ctrl-T, transpose characters
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				if (_pos > 0 && _len > 1) {
 					_history.reset_recall_most_recent();
 					size_t leftCharPos = (_pos == _len) ? _pos - 2 : _pos - 1;
@@ -990,18 +988,18 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			case ctrlChar('U'): // ctrl-U, kill all characters to the left of the cursor
 				if (_pos > 0) {
 					_history.reset_recall_most_recent();
-					killRing.kill(&_buf32[0], _pos, false);
+					_killRing.kill(&_buf32[0], _pos, false);
 					_len -= _pos;
 					memmove(_buf32.get(), _buf32.get() + _pos, sizeof(char32_t) * (_len + 1));
 					_pos = 0;
 					refreshLine(pi);
 				}
-				killRing.lastAction = KillRing::actionKill;
+				_killRing.lastAction = KillRing::actionKill;
 				break;
 
 			case META + 'u':	// meta-U, uppercase word
 			case META + 'U':
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				if (_pos < _len) {
 					_history.reset_recall_most_recent();
 					while (_pos < _len && !isCharacterAlphanumeric(_buf32[_pos])) {
@@ -1028,19 +1026,19 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 					while (_pos > 0 && _buf32[_pos - 1] != ' ') {
 						--_pos;
 					}
-					killRing.kill(&_buf32[_pos], startingPos - _pos, false);
+					_killRing.kill(&_buf32[_pos], startingPos - _pos, false);
 					memmove(_buf32.get() + _pos, _buf32.get() + startingPos,
 									sizeof(char32_t) * (_len - startingPos + 1));
 					_len -= startingPos - _pos;
 					refreshLine(pi);
 				}
-				killRing.lastAction = KillRing::actionKill;
+				_killRing.lastAction = KillRing::actionKill;
 				break;
 
 			case ctrlChar('Y'):	// ctrl-Y, yank killed text
 				_history.reset_recall_most_recent();
 				{
-					Utf32String* restoredText = killRing.yank();
+					Utf32String* restoredText = _killRing.yank();
 					if (restoredText) {
 						bool truncated = false;
 						size_t ucharCount = restoredText->length();
@@ -1055,8 +1053,8 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 						_pos += static_cast<int>(ucharCount);
 						_len += static_cast<int>(ucharCount);
 						refreshLine(pi);
-						killRing.lastAction = KillRing::actionYank;
-						killRing.lastYankSize = ucharCount;
+						_killRing.lastAction = KillRing::actionYank;
+						_killRing.lastYankSize = ucharCount;
 						if (truncated) {
 							beep();
 						}
@@ -1068,31 +1066,31 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 
 			case META + 'y':	// meta-Y, "yank-pop", rotate popped text
 			case META + 'Y':
-				if (killRing.lastAction == KillRing::actionYank) {
+				if (_killRing.lastAction == KillRing::actionYank) {
 					_history.reset_recall_most_recent();
-					Utf32String* restoredText = killRing.yankPop();
+					Utf32String* restoredText = _killRing.yankPop();
 					if (restoredText) {
 						bool truncated = false;
 						size_t ucharCount = restoredText->length();
 						if (ucharCount >
-								static_cast<size_t>(killRing.lastYankSize + _buflen - _len)) {
-							ucharCount = killRing.lastYankSize + _buflen - _len;
+								static_cast<size_t>(_killRing.lastYankSize + _buflen - _len)) {
+							ucharCount = _killRing.lastYankSize + _buflen - _len;
 							truncated = true;
 						}
-						if (ucharCount > killRing.lastYankSize) {
-							memmove(_buf32.get() + _pos + ucharCount - killRing.lastYankSize,
+						if (ucharCount > _killRing.lastYankSize) {
+							memmove(_buf32.get() + _pos + ucharCount - _killRing.lastYankSize,
 											_buf32.get() + _pos, sizeof(char32_t) * (_len - _pos + 1));
-							memmove(_buf32.get() + _pos - killRing.lastYankSize, restoredText->get(),
+							memmove(_buf32.get() + _pos - _killRing.lastYankSize, restoredText->get(),
 											sizeof(char32_t) * ucharCount);
 						} else {
-							memmove(_buf32.get() + _pos - killRing.lastYankSize, restoredText->get(),
+							memmove(_buf32.get() + _pos - _killRing.lastYankSize, restoredText->get(),
 											sizeof(char32_t) * ucharCount);
-							memmove(_buf32.get() + _pos + ucharCount - killRing.lastYankSize,
+							memmove(_buf32.get() + _pos + ucharCount - _killRing.lastYankSize,
 											_buf32.get() + _pos, sizeof(char32_t) * (_len - _pos + 1));
 						}
-						_pos += static_cast<int>(ucharCount - killRing.lastYankSize);
-						_len += static_cast<int>(ucharCount - killRing.lastYankSize);
-						killRing.lastYankSize = ucharCount;
+						_pos += static_cast<int>(ucharCount - _killRing.lastYankSize);
+						_len += static_cast<int>(ucharCount - _killRing.lastYankSize);
+						_killRing.lastYankSize = ucharCount;
 						refreshLine(pi);
 						if (truncated) {
 							beep();
@@ -1117,7 +1115,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			// DEL, delete the character under the cursor
 			case 127:
 			case DELETE_KEY:
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				if (_len > 0 && _pos < _len) {
 					_history.reset_recall_most_recent();
 					memmove(_buf32.get() + _pos, _buf32.get() + _pos + 1, sizeof(char32_t) * (_len - _pos));
@@ -1130,7 +1128,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			case PAGE_UP_KEY:		// Page Up, beginning of history
 			case META + '>':		 // meta->, end of history
 			case PAGE_DOWN_KEY:	// Page Down, end of history
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				// if not already recalling, add the current line to the history list so
 				// we don't
 				// have to special case it
@@ -1151,7 +1149,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 
 			// not one of our special characters, maybe insert it in the buffer
 			default:
-				killRing.lastAction = KillRing::actionOther;
+				_killRing.lastAction = KillRing::actionOther;
 				_history.reset_recall_most_recent();
 				if (c & (META | CTRL)) {	// beep on unknown Ctrl and/or Meta keys
 					beep();
@@ -1201,7 +1199,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 }
 
 void InputBuffer::commonPrefixSearch(PromptBase& pi, int startChar) {
-	killRing.lastAction = KillRing::actionOther;
+	_killRing.lastAction = KillRing::actionOther;
 	size_t bufferSize = sizeof(char32_t) * length() + 1;
 	unique_ptr<char[]> buf8(new char[bufferSize]);
 	copyString32to8(buf8.get(), bufferSize, buf());

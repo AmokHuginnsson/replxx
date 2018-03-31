@@ -34,6 +34,7 @@ private:
 	int _prefix; // prefix length used in common prefix search
 	int _hintSelection; // Currently selected hint.
 	History& _history;
+	KillRing& _killRing;
 
 	void clearScreen(PromptBase& pi);
 	int incrementalHistorySearch(PromptBase& pi, int startChar);
@@ -57,7 +58,8 @@ private:
 		, _pos(0)
 		, _prefix( 0 )
 		, _hintSelection( -1 )
-		, _history( replxx_.history() ) {
+		, _history( replxx_.history() )
+		, _killRing( replxx_.kill_ring() ) {
 		_buf32[0] = 0;
 	}
 	void preloadBuffer( char const* preloadText );

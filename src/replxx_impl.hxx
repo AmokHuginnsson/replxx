@@ -37,6 +37,7 @@
 
 #include "replxx.hxx"
 #include "history.hxx"
+#include "killring.hxx"
 #include "utfstring.hxx"
 
 namespace replxx {
@@ -50,6 +51,7 @@ private:
 	int _maxLineLength;
 	input_buffer_t _inputBuffer;
 	History _history;
+	KillRing _killRing;
 	int _maxHintRows;
 	char const* _breakChars;
 	char const* _specialPrefixes;
@@ -94,6 +96,9 @@ public:
 	void call_highlighter( std::string const& input, Replxx::colors_t& colors ) const;
 	History& history( void ) {
 		return ( _history );
+	}
+	KillRing& kill_ring( void ) {
+		return ( _killRing );
 	}
 	bool has_hinter( void ) const {
 		return ( !! _hintCallback );

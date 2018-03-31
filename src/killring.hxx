@@ -14,7 +14,7 @@ class KillRing {
 	char indexToSlot[10];
 	std::vector<Utf32String> theRing;
 
- public:
+public:
 	enum action { actionOther, actionKill, actionYank };
 	action lastAction;
 	size_t lastYankSize;
