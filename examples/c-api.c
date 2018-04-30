@@ -40,7 +40,7 @@ void colorHook( char const* str_, ReplxxColor* colors_, int size_, void* ud ) {
 
 int main (int argc, char** argv) {
 	const char* examples[] = {
-		"db", "hello", "hallo", "hans", "hansekogge", "seamann", "quetzalcoatl", "quit", "power", NULL
+		"db", "hello", "hallo", "hello\\ world", "hans", "hansekogge", "seamann", "quetzalcoatl", "quit", "power", NULL
 	};
 	Replxx* replxx = replxx_init();
 	replxx_install_window_change_handler( replxx );
@@ -60,6 +60,8 @@ int main (int argc, char** argv) {
 	replxx_set_completion_callback( replxx, completionHook, examples );
 	replxx_set_highlighter_callback( replxx, colorHook, NULL );
 	replxx_set_hint_callback( replxx, hintHook, examples );
+	replxx_set_word_break_characters( replxx, " " );
+	replxx_set_escape_characters( replxx, "\\" );
 
 	printf("starting...\n");
 

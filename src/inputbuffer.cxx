@@ -347,7 +347,9 @@ int InputBuffer::start_index() {
 	int startIndex = _pos;
 	while (--startIndex >= 0) {
 		if ( strchr(_replxx.break_chars(), _buf32[startIndex]) ) {
-			break;
+			if ( strchr(_replxx.escape_chars(), _buf32[startIndex - 1]) == nullptr ) {
+				break;
+			}
 		}
 	}
 	if ( ( startIndex < 0 ) || ! strchr( _replxx.special_prefixes(), _buf32[startIndex] ) ) {

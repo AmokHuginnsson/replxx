@@ -79,6 +79,7 @@ int main() {
 	std::vector<std::string> examples {
 		".help", ".history", ".quit", ".exit", ".clear", ".prompt ",
 		"hello", "world", "db", "data", "drive", "print", "put",
+		"hello\\ world", "welcome\\ to\\ replxx",
 		"color_black", "color_red", "color_green", "color_brown", "color_blue",
 		"color_magenta", "color_cyan", "color_lightgray", "color_gray",
 		"color_brightred", "color_brightgreen", "color_yellow", "color_brightblue",
@@ -168,6 +169,8 @@ int main() {
 	rx.set_completion_callback(hook_completion, static_cast<void*>(&examples));
 	rx.set_highlighter_callback(hook_color, static_cast<void*>(&regex_color));
 	rx.set_hint_callback(hook_hint, static_cast<void*>(&examples));
+	rx.set_word_break_characters(" ");
+	rx.set_escape_characters("\\");
 
 	// display initial welcome message
 	std::cout

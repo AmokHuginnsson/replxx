@@ -179,6 +179,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _killRing()
 	, _maxHintRows( REPLXX_MAX_HINT_ROWS )
 	, _breakChars( defaultBreakChars )
+	, _escapeChars ( "" )
 	, _specialPrefixes( "" )
 	, _completionCountCutoff( 100 )
 	, _doubleTabCompletion( false )
@@ -419,6 +420,10 @@ void Replxx::ReplxxImpl::set_word_break_characters( char const* wordBreakers ) {
 	_breakChars = wordBreakers;
 }
 
+void Replxx::ReplxxImpl::set_escape_characters( const char* escapeChars ) {
+	_escapeChars = escapeChars;
+}
+
 void Replxx::ReplxxImpl::set_special_prefixes( char const* specialPrefixes ) {
 	_specialPrefixes = specialPrefixes;
 }
@@ -504,6 +509,10 @@ void Replxx::set_preload_buffer( std::string const& preloadText ) {
 
 void Replxx::set_word_break_characters( char const* wordBreakers ) {
 	_impl->set_word_break_characters( wordBreakers );
+}
+
+void Replxx::set_escape_characters( char const* escapeChars ) {
+	_impl->set_escape_characters( escapeChars );
 }
 
 void Replxx::set_special_prefixes( char const* specialPrefixes ) {
@@ -703,6 +712,11 @@ void replxx_set_max_hint_rows( ::Replxx* replxx_, int count ) {
 void replxx_set_word_break_characters( ::Replxx* replxx_, char const* breakChars_ ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->set_word_break_characters( breakChars_ );
+}
+
+void replxx_set_escape_characters( ::Replxx* replxx_, char const* escapeChars_ ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->set_escape_characters( escapeChars_ );
 }
 
 void replxx_set_special_prefixes( ::Replxx* replxx_, char const* specialPrefixes_ ) {

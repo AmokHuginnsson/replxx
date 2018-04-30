@@ -54,6 +54,7 @@ private:
 	KillRing _killRing;
 	int _maxHintRows;
 	char const* _breakChars;
+	char const* _escapeChars;
 	char const* _specialPrefixes;
 	int _completionCountCutoff;
 	bool _doubleTabCompletion;
@@ -81,6 +82,7 @@ public:
 	int history_size( void ) const;
 	void set_preload_buffer(std::string const& preloadText);
 	void set_word_break_characters( char const* wordBreakers );
+	void set_escape_characters( char const* escapeChars );
 	void set_special_prefixes( char const* specialPrefixes );
 	void set_max_line_size( int len );
 	void set_max_hint_rows( int count );
@@ -117,6 +119,9 @@ public:
 	}
 	char const* break_chars( void ) const {
 		return ( _breakChars );
+	}
+	char const* escape_chars( void ) const {
+		return ( _escapeChars );
 	}
 	char const* special_prefixes( void ) const {
 		return ( _specialPrefixes );

@@ -210,6 +210,15 @@ int replxx_history_size( Replxx* );
  */
 void replxx_set_word_break_characters( Replxx*, char const* wordBreakers );
 
+/*! \brief Set escape characters.
+ *
+ * This setting influences \e breakPos in completion and hints callbacks
+ * and how completions are printed.
+ *
+ * \param escapeChars - 7-bit ASCII set of word breaking characters.
+ */
+void replxx_set_escape_characters( Replxx*, char const* escapeChars );
+
 /*! \brief Set special prefixes.
  *
  * Special prefixes are word breaking characters

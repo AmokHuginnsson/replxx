@@ -181,6 +181,15 @@ public:
 	 */
 	void set_word_break_characters( char const* wordBreakers );
 
+	/*! \brief Set escape characters.
+	 *
+	 * This setting influences \e breakPos in completion and hints callbacks
+	 * and how completions are printed.
+	 *
+	 * \param escapeChars - 7-bit ASCII set of escape characters.
+	 */
+	void set_escape_characters( char const* escapeChars );
+
 	/*! \brief Set special prefixes.
 	 *
 	 * Special prefixes are word breaking characters
