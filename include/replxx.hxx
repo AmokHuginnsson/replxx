@@ -75,7 +75,7 @@ public:
 	 * input == "if ( obj.me"
 	 * breakPos == 4 or breakPos == 8 (depending on \e replxx_set_word_break_characters())
 	 *
-	 * \param input - the whole input entered by the user so far.
+	 * \param input - the whole UTF-8 encoded input entered by the user so far.
 	 * \param breakPos - index of last break character before cursor.
 	 * \param userData - pointer to opaque user data block.
 	 * \return A list of user completions.
@@ -89,7 +89,10 @@ public:
 	 * the user. After callback returns library uses data from colors buffer to colorize
 	 * displayed user input.
 	 *
-	 * \param input - an input entered by the user so far.
+	 * Size of \e colors buffer is equal to number of code points in user \e input
+	 * which will be different from simple `input.lenght()`!
+	 *
+	 * \param input - an UTF-8 encoded input entered by the user so far.
 	 * \param colors - output buffer for color information.
 	 * \param userData - pointer to opaque user data block.
 	 */
@@ -105,7 +108,7 @@ public:
 	 * input == "if ( obj.me"
 	 * breakPos == 4 or breakPos == 8 (depending on replxx_set_word_break_characters())
 	 *
-	 * \param input - the whole input entered by the user so far.
+	 * \param input - the whole UTF-8 encoded input entered by the user so far.
 	 * \param breakPos - index of last break character before cursor.
 	 * \param color - a color used for displaying hints.
 	 * \param userData - pointer to opaque user data block.
@@ -147,7 +150,7 @@ public:
 	/*! \brief Read line of user input.
 	 *
 	 * \param prompt - prompt to be displayed before getting user input.
-	 * \return An input given by the user (or nullptr on EOF).
+	 * \return An UTF-8 encoded input given by the user (or nullptr on EOF).
 	 */
 	char const* input( std::string const& prompt );
 

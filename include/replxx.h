@@ -95,7 +95,10 @@ void replxx_end( Replxx* replxx );
  * the user. After callback returns library uses data from colors buffer to colorize
  * displayed user input.
  *
- * \param input - an input entered by the user so far.
+ * \e size of \e colors buffer is equal to number of code points in user \e input
+ * which will be different from simple `strlen( input )`!
+ *
+ * \param input - an UTF-8 encoded input entered by the user so far.
  * \param colors - output buffer for color information.
  * \param size - size of output buffer for color information.
  * \param userData - pointer to opaque user data block.
@@ -121,7 +124,7 @@ typedef struct replxx_completions replxx_completions;
  * input == "if ( obj.me"
  * breakPos == 4 or breakPos == 8 (depending on \e replxx_set_word_break_characters())
  *
- * \param input - the whole input entered by the user so far.
+ * \param input - the whole UTF-8 encoded input entered by the user so far.
  * \param breakPos - index of last break character before cursor.
  * \param completions - pointer to opaque list of user completions.
  * \param userData - pointer to opaque user data block.
@@ -154,7 +157,7 @@ typedef struct replxx_hints replxx_hints;
  * input == "if ( obj.me"
  * breakPos == 4 or breakPos == 8 (depending on replxx_set_word_break_characters())
  *
- * \param input - the whole input entered by the user so far.
+ * \param input - the whole UTF-8 encoded input entered by the user so far.
  * \param breakPos - index of last break character before cursor.
  * \param hints - pointer to opaque list of possible hints.
  * \param color - a color used for displaying hints.
@@ -179,7 +182,7 @@ void replxx_add_hint( replxx_hints* hints, const char* str );
 /*! \brief Read line of user input.
  *
  * \param prompt - prompt to be displayed before getting user input.
- * \return An input given by the user (or nullptr on EOF).
+ * \return An UTF-8 encoded input given by the user (or nullptr on EOF).
  */
 char const* replxx_input( Replxx*, const char* prompt );
 

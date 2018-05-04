@@ -1166,7 +1166,11 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 						++_len;
 						_buf32[_len] = '\0';
 						int inputLen = calculateColumnPosition(_buf32.get(), _len);
-						if ( ! _replxx.has_highlighter() && ( pi.promptIndentation + inputLen < pi.promptScreenColumns ) ) {
+						if ( _replxx.no_color()
+							|| ( ! ( _replxx.has_highlighter() || _replxx.has_hinter() )
+								&& ( pi.promptIndentation + inputLen < pi.promptScreenColumns )
+							)
+						) {
 							if (inputLen > pi.promptPreviousInputLen)
 								pi.promptPreviousInputLen = inputLen;
 							/* Avoid a full update of the line in the
