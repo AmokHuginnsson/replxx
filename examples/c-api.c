@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "replxx.h"
 
@@ -9,7 +10,7 @@ void completionHook(char const* prefix, int bp, replxx_completions* lc, void* ud
 	char** examples = (char**)( ud );
 	size_t i;
 	for (i = 0;	examples[i] != NULL; ++i) {
-		if (strncmp(prefix, examples[i], strlen(prefix)) == 0) {
+		if (strncmp(prefix + bp, examples[i], strlen(prefix) - bp) == 0) {
 			replxx_add_completion(lc, examples[i]);
 		}
 	}
@@ -19,9 +20,11 @@ void hintHook(char const* prefix, int bp, replxx_hints* lc, ReplxxColor* c, void
 	char** examples = (char**)( ud );
 	size_t i;
 	size_t len = strlen( prefix );
-	for (i = 0;	examples[i] != NULL; ++i) {
-		if (strncmp(prefix, examples[i], strlen(prefix)) == 0) {
-			replxx_add_hint(lc, examples[i] + len);
+	if ( len > bp ) {
+		for (i = 0;	examples[i] != NULL; ++i) {
+			if (strncmp(prefix + bp, examples[i], strlen(prefix) - bp) == 0) {
+				replxx_add_hint(lc, examples[i] + len - bp);
+			}
 		}
 	}
 }
@@ -63,7 +66,10 @@ int main (int argc, char** argv) {
 	char const* prompt = "\x1b[1;32mreplxx\x1b[0m> ";
 
 	while (1) {
-		char const* result = replxx_input( replxx, prompt );
+		char const* result = NULL;
+		do {
+			result = replxx_input( replxx, prompt );
+		} while ( ( result == NULL ) && ( errno == EAGAIN ) );
 
 		if (result == NULL) {
 			printf("\n");

@@ -302,6 +302,7 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 #ifndef _WIN32
 	gotResize = false;
 #endif
+	errno = 0;
 	if ( tty::in ) {	// input is from a terminal
 		if (!_errorMessage.empty()) {
 			printf("%s", _errorMessage.c_str());

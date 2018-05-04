@@ -182,12 +182,13 @@ int main() {
 	// main repl loop
 	for (;;) {
 		// display the prompt and retrieve input from the user
-		char const* cinput = rx.input(prompt);
+		char const* cinput{ nullptr };
+
+		do {
+			cinput = rx.input(prompt);
+		} while ( ( cinput == nullptr ) && ( errno == EAGAIN ) );
 
 		if (cinput == nullptr) {
-			// reached EOF
-
-			std::cout << "\n";
 			break;
 		}
 
@@ -261,4 +262,6 @@ int main() {
 	rx.history_save(history_file);
 
 	std::cout << "\nExiting Replxx\n";
+
+	return 0;
 }

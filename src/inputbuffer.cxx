@@ -749,7 +749,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				// so we don't display the next prompt over the previous input line
 				_pos = _len;	// pass _len as _pos for EOL
 				refreshLine(pi, HINT_ACTION::SKIP);
-				if (write(1, "^C", 2) == -1) return -1;	// Display the ^C we got
+				if (write(1, "^C\r\n", 4) == -1) return -1;	// Display the ^C we got
 				return -1;
 
 			case META + 'c':	// meta-C, give word initial Cap
