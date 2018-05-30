@@ -2,7 +2,7 @@
 
 cmake_minimum_required(VERSION 3.0)
 
-project( replxx VERSION 0.0.1 LANGUAGES CXX C )
+project( replxx VERSION 0.0.2 LANGUAGES CXX C )
 
 set( CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/build" )
 

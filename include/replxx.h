@@ -36,7 +36,7 @@
 #ifndef __REPLXX_H
 #define __REPLXX_H
 
-#define REPLXX_VERSION "0.0.1"
+#define REPLXX_VERSION "0.0.2"
 #define REPLXX_VERSION_MAJOR 0
 #define REPLXX_VERSION_MINOR 0
 
