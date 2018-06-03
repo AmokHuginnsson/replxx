@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.0)
 
 project( replxx VERSION 0.0.2 LANGUAGES CXX C )
 
+option(REPLXX_BuildExamples "Build the examples." ON)
+
 set( CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/build" )
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -87,30 +89,32 @@ install(TARGETS replxx DESTINATION lib)
 # headers
 install(FILES include/replxx.hxx include/replxx.h DESTINATION include)
 
-# build example
-add_executable(
-  example-c-api
-  examples/c-api.c
-)
+if (REPLXX_BuildExamples)
+    # build example
+    add_executable(
+        example-c-api
+        examples/c-api.c
+    )
 
-add_executable(
-  example-cxx-api
-  examples/cxx-api.cxx
-)
+    add_executable(
+        example-cxx-api
+        examples/cxx-api.cxx
+    )
 
-target_link_libraries(
-   example-cxx-api
-   PRIVATE replxx
-)
+    target_link_libraries(
+        example-cxx-api
+        PRIVATE replxx
+    )
 
-if ( NOT MSVC )
-	set( CXX_LIB stdc++ )
+    if ( NOT MSVC )
+        set( CXX_LIB stdc++ )
+    endif()
+
+    target_link_libraries(
+        example-c-api
+        PRIVATE replxx ${CXX_LIB}
+    )
 endif()
-
-target_link_libraries(
-   example-c-api
-	 PRIVATE replxx ${CXX_LIB}
-)
 
 # packaging
 include(CPack)
