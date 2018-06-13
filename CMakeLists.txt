@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.0)
 project( replxx VERSION 0.0.2 LANGUAGES CXX C )
 
 option(REPLXX_BuildExamples "Build the examples." ON)
+option(BUILD_SHARED_LIBS "Build as a shared library" OFF)
 
 set( CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/build" )
 
@@ -63,7 +64,6 @@ endif()
 # build libreplxx
 add_library(
   replxx
-  STATIC
   src/conversion.cxx
   src/ConvertUTF.cpp
   src/escape.cxx
