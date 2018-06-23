@@ -110,7 +110,7 @@ int win_write( char const* str_, int size_ ) {
 		SetConsoleCP( 65001 );
 		SetConsoleOutputCP( 65001 );
 		if ( SetConsoleMode( consoleOut, currentMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING ) ) {
-			WriteConsole( consoleOut, str_, size_, nullptr, nullptr );
+			WriteConsoleA( consoleOut, str_, size_, nullptr, nullptr );
 			count = size_;
 			SetConsoleMode( consoleOut, currentMode );
 		} else {
@@ -119,7 +119,7 @@ int win_write( char const* str_, int size_ ) {
 			while ( str_ < e ) {
 				if ( *str_ == 27 ) {
 					if ( s < str_ ) {
-						WriteConsole( consoleOut, s, static_cast<DWORD>( str_ - s ), nullptr, nullptr );
+						WriteConsoleA( consoleOut, s, static_cast<DWORD>( str_ - s ), nullptr, nullptr );
 						count += ( str_ - s );
 					}
 					str_ = s = HandleEsc( str_ + 1, e );
@@ -129,7 +129,7 @@ int win_write( char const* str_, int size_ ) {
 			}
 
 			if ( s < str_ ) {
-				WriteConsole( consoleOut, s, static_cast<DWORD>( str_ - s ), nullptr, nullptr );
+				WriteConsoleA( consoleOut, s, static_cast<DWORD>( str_ - s ), nullptr, nullptr );
 				count += ( str_ - s );
 			}
 		}
