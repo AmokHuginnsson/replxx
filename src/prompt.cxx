@@ -3,7 +3,7 @@
 #include <conio.h>
 #include <windows.h>
 #include <io.h>
-#if _MSC_VER < 1900
+#if _MSC_VER < 1900 && defined (_MSC_VER)
 #define snprintf _snprintf	// Microsoft headers use underscores in some names
 #endif
 #define strcasecmp _stricmp
