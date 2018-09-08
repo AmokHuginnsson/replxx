@@ -1,12 +1,23 @@
-language: C++
-script:
-  - mkdir -p build && cd build
-  - cmake ..
-  - make
+os: linux
+dist: trusty
+sudo: false
+cache:
+  ccache: true
+group: stable
 addons:
   apt:
     packages:
       - cmake
-sudo: false
-cache:
-  ccache: true
+  sonarcloud:
+    organization: jarvisfriends
+script:
+  - mkdir -p build && cd build
+  - cmake ..
+  - make
+  - cd ..
+  - mkdir -p build_sonar_scanner && cd build_sonar_scanner
+  - cmake ..
+  - build-wrapper-linux-x86-64 --out-dir ../bw-output/ 'make'
+  - cd ..
+  - sonar-scanner
+language: c++
