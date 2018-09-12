@@ -51,6 +51,24 @@ Replxx::hints_t hook_hint(std::string const& context, int index, Replxx::Color& 
 	return hints;
 }
 
+int real_len( std::string const& s ) {
+	int len( 0 );
+	char m4( 128 + 64 + 32 + 16 );
+	char m3( 128 + 64 + 32 );
+	char m2( 128 + 64 );
+	for ( int i( 0 ); i < static_cast<int>( s.length() ); ++ i, ++ len ) {
+		char c( s[i] );
+		if ( ( c & m4 ) == m4 ) {
+			i += 3;
+		} else if ( ( c & m3 ) == m3 ) {
+			i += 2;
+		} else if ( ( c & m2 ) == m2 ) {
+			i += 1;
+		}
+	}
+	return ( len );
+}
+
 void hook_color(std::string const& context, Replxx::colors_t& colors, void* user_data) {
 	auto* regex_color = static_cast<std::vector<std::pair<std::string, Replxx::Color>>*>(user_data);
 
@@ -62,13 +80,14 @@ void hook_color(std::string const& context, Replxx::colors_t& colors, void* user
 
 		while(std::regex_search(str, match, std::regex(e.first))) {
 			std::string c {match[0]};
-			pos += std::string(match.prefix()).size();
+			pos += real_len( match.prefix() );
+			int len( real_len( c ) );
 
-			for (size_t i = 0; i < c.size(); ++i) {
+			for (int i = 0; i < len; ++i) {
 				colors.at(pos + i) = e.second;
 			}
 
-			pos += c.size();
+			pos += len;
 			str = match.suffix();
 		}
 	}
