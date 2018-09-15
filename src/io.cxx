@@ -291,6 +291,7 @@ char32_t read_char(void) {
 	DWORD count;
 	int modifierKeys = 0;
 	bool escSeen = false;
+	int highSurrogate( 0 );
 	while (true) {
 		ReadConsoleInputW(console_in, &rec, 1, &count);
 #if 0	// helper for debugging keystrokes, display info in the debug "Output"
@@ -359,7 +360,8 @@ char32_t read_char(void) {
 		if (escSeen) {
 			modifierKeys |= META;
 		}
-		if (rec.Event.KeyEvent.uChar.UnicodeChar == 0) {
+		int key( rec.Event.KeyEvent.uChar.UnicodeChar );
+		if ( key == 0 ) {
 			switch (rec.Event.KeyEvent.wVirtualKeyCode) {
 				case VK_LEFT:
 					return modifierKeys | LEFT_ARROW_KEY;
@@ -382,13 +384,22 @@ char32_t read_char(void) {
 				default:
 					continue;	// in raw mode, ReadConsoleInput shows shift, ctrl ...
 			}							//	... ignore them
-		} else if (rec.Event.KeyEvent.uChar.UnicodeChar ==
-							 ctrlChar('[')) {	// ESC, set flag for later
+		} else if ( key == ctrlChar('[') ) { // ESC, set flag for later
 			escSeen = true;
+			continue;
+		} else if ( ( key >= 0xD800 ) && ( key <= 0xDBFF ) ) {
+			highSurrogate = key - 0xD800;
 			continue;
 		} else {
 			// we got a real character, return it
-			return modifierKeys | rec.Event.KeyEvent.uChar.UnicodeChar;
+			if ( ( key >= 0xDC00 ) && ( key <= 0xDFFF ) ) {
+				key -= 0xDC00;
+				key |= ( highSurrogate << 10 );
+				key += 0x10000;
+			}
+			key |= modifierKeys;
+			highSurrogate = 0;
+			return ( key );
 		}
 	}
 
