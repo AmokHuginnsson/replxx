@@ -561,7 +561,7 @@ int Replxx::print( char const* format_, ... ) {
 }
 
 ::Replxx* replxx_init() {
-	return ( reinterpret_cast<::Replxx*>( new replxx::Replxx::ReplxxImpl( nullptr, nullptr, nullptr ) ) );
+	return ( reinterpret_cast< ::Replxx*>( new replxx::Replxx::ReplxxImpl( nullptr, nullptr, nullptr ) ) );
 }
 
 void replxx_end( ::Replxx* replxx_ ) {
