@@ -219,10 +219,6 @@ void replxx_set_word_break_characters( Replxx*, char const* wordBreakers );
  */
 void replxx_set_special_prefixes( Replxx*, char const* specialPrefixes );
 
-/*! \brief Set maximum allowed length of user input.
- */
-void replxx_set_max_line_size( Replxx*, int len );
-
 /*! \brief Set maximum number of displayed hint rows.
  */
 void replxx_set_max_hint_rows( Replxx*, int count );

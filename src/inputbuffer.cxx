@@ -42,8 +42,43 @@ void dynamicRefresh(PromptBase& pi, char32_t* buf32, int len, int pos);
 extern bool gotResize;
 #endif
 
+InputBuffer::InputBuffer( Replxx::ReplxxImpl& replxx_ )
+	: _replxx( replxx_ )
+	, _buflen( 0 )
+	, _buf32( nullptr )
+	, _charWidths( nullptr )
+	, _display()
+	, _hint()
+	, _len( 0 )
+	, _pos( 0 )
+	, _prefix( 0 )
+	, _hintSelection( -1 )
+	, _history( replxx_.history() )
+	, _killRing( replxx_.kill_ring() ) {
+	realloc( max( REPLXX_MAX_LINE - 1, replxx_.history().max_line_length() ) );
+	_buf32[0] = 0;
+}
+
+void InputBuffer::realloc( int len_ ) {
+	if ( ( len_ + 1 ) > _buflen ) {
+		int oldBufLen( _buflen );
+		_buflen = 1;
+		while ( ( len_ + 1 ) > _buflen ) {
+			_buflen *= 2;
+		}
+		input_buffer_t newBuf32(new char32_t[_buflen]);
+		char_widths_t newCharWidths(new char[_buflen]);
+		using std::swap;
+		memcpy( newBuf32.get(), _buf32.get(), sizeof ( char32_t ) * oldBufLen );
+		memcpy( newCharWidths.get(), _charWidths.get(), sizeof ( char ) * oldBufLen );
+		swap( _buf32, newBuf32 );
+		swap( _charWidths, newCharWidths );
+	}
+}
+
 void InputBuffer::preloadBuffer(const char* preloadText) {
 	size_t ucharCount = 0;
+	realloc( strlen( preloadText ) );
 	copyString8to32(_buf32.get(), _buflen + 1, ucharCount, preloadText);
 	recomputeCharacterWidths(_buf32.get(), _charWidths.get(), static_cast<int>(ucharCount));
 	_len = static_cast<int>(ucharCount);
@@ -424,11 +459,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	// if we can extend the item, extend it and return to main loop
 	if ( ( longestCommonPrefix > itemLength ) || ( completionsCount == 1 ) ) {
 		displayLength = _len + longestCommonPrefix - itemLength;
-		if (displayLength > _buflen) {
-			longestCommonPrefix -= displayLength - _buflen; // don't overflow buffer
-			displayLength = _buflen;                        // truncate the insertion
-			beep();                                         // and make a noise
-		}
+		realloc( displayLength );
 		Utf32String displayText(displayLength + 1);
 		memcpy(displayText.get(), _buf32.get(), sizeof(char32_t) * startIndex);
 		memcpy(&displayText[startIndex], &completions[selectedCompletion][0],
@@ -1040,12 +1071,8 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				{
 					Utf32String* restoredText = _killRing.yank();
 					if (restoredText) {
-						bool truncated = false;
 						size_t ucharCount = restoredText->length();
-						if (ucharCount > static_cast<size_t>(_buflen - _len)) {
-							ucharCount = _buflen - _len;
-							truncated = true;
-						}
+						realloc( _len + ucharCount );
 						memmove(_buf32.get() + _pos + ucharCount, _buf32.get() + _pos,
 										sizeof(char32_t) * (_len - _pos + 1));
 						memmove(_buf32.get() + _pos, restoredText->get(),
@@ -1055,9 +1082,6 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 						refreshLine(pi);
 						_killRing.lastAction = KillRing::actionYank;
 						_killRing.lastYankSize = ucharCount;
-						if (truncated) {
-							beep();
-						}
 					} else {
 						beep();
 					}
@@ -1070,13 +1094,8 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 					_history.reset_recall_most_recent();
 					Utf32String* restoredText = _killRing.yankPop();
 					if (restoredText) {
-						bool truncated = false;
 						size_t ucharCount = restoredText->length();
-						if (ucharCount >
-								static_cast<size_t>(_killRing.lastYankSize + _buflen - _len)) {
-							ucharCount = _killRing.lastYankSize + _buflen - _len;
-							truncated = true;
-						}
+						realloc( _len + ucharCount );
 						if (ucharCount > _killRing.lastYankSize) {
 							memmove(_buf32.get() + _pos + ucharCount - _killRing.lastYankSize,
 											_buf32.get() + _pos, sizeof(char32_t) * (_len - _pos + 1));
@@ -1092,9 +1111,6 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 						_len += static_cast<int>(ucharCount - _killRing.lastYankSize);
 						_killRing.lastYankSize = ucharCount;
 						refreshLine(pi);
-						if (truncated) {
-							beep();
-						}
 						break;
 					}
 				}
@@ -1148,52 +1164,50 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				break;
 
 			// not one of our special characters, maybe insert it in the buffer
-			default:
+			default: {
 				_killRing.lastAction = KillRing::actionOther;
 				_history.reset_recall_most_recent();
 				if (c & (META | CTRL)) {	// beep on unknown Ctrl and/or Meta keys
 					beep();
 					break;
 				}
-				if (_len < _buflen) {
-					if (isControlChar(c)) {	// don't insert control characters
-						beep();
-						break;
-					}
-					if (_len == _pos) {	// at end of buffer
-						_buf32[_pos] = c;
-						++_pos;
-						++_len;
-						_buf32[_len] = '\0';
-						int inputLen = calculateColumnPosition(_buf32.get(), _len);
-						if ( _replxx.no_color()
-							|| ( ! ( _replxx.has_highlighter() || _replxx.has_hinter() )
-								&& ( pi.promptIndentation + inputLen < pi.promptScreenColumns )
-							)
-						) {
-							if (inputLen > pi.promptPreviousInputLen)
-								pi.promptPreviousInputLen = inputLen;
-							/* Avoid a full update of the line in the
-							 * trivial case. */
-							if (write32(1, reinterpret_cast<char32_t*>(&c), 1) == -1)
-								return -1;
-						} else {
-							refreshLine(pi);
-						}
-					} else {	// not at end of buffer, have to move characters to our
-										// right
-						memmove(_buf32.get() + _pos + 1, _buf32.get() + _pos,
-										sizeof(char32_t) * (_len - _pos));
-						_buf32[_pos] = c;
-						++_len;
-						++_pos;
-						_buf32[_len] = '\0';
+				realloc( _len );
+				if (isControlChar(c)) {	// don't insert control characters
+					beep();
+					break;
+				}
+				if (_len == _pos) {	// at end of buffer
+					_buf32[_pos] = c;
+					++_pos;
+					++_len;
+					_buf32[_len] = '\0';
+					int inputLen = calculateColumnPosition(_buf32.get(), _len);
+					if ( _replxx.no_color()
+						|| ( ! ( _replxx.has_highlighter() || _replxx.has_hinter() )
+							&& ( pi.promptIndentation + inputLen < pi.promptScreenColumns )
+						)
+					) {
+						if (inputLen > pi.promptPreviousInputLen)
+							pi.promptPreviousInputLen = inputLen;
+						/* Avoid a full update of the line in the
+						 * trivial case. */
+						if (write32(1, reinterpret_cast<char32_t*>(&c), 1) == -1)
+							return -1;
+					} else {
 						refreshLine(pi);
 					}
-				} else {
-					beep();	// buffer is full, beep on new characters
+				} else {	// not at end of buffer, have to move characters to our
+									// right
+					memmove(_buf32.get() + _pos + 1, _buf32.get() + _pos,
+									sizeof(char32_t) * (_len - _pos));
+					_buf32[_pos] = c;
+					++_len;
+					++_pos;
+					_buf32[_len] = '\0';
+					refreshLine(pi);
 				}
 				break;
+			}
 		}
 		if ( updatePrefix ) {
 			_prefix = _pos;
@@ -1247,7 +1261,7 @@ int InputBuffer::incrementalHistorySearch(PromptBase& pi, int startChar) {
 	}
 	int historyLineLength = _len;
 	int historyLinePosition = _pos;
-	InputBuffer empty( _replxx, 1 );
+	InputBuffer empty( _replxx );
 	empty.refreshLine(pi); // erase the old input first
 	DynamicPrompt dp(pi, (startChar == ctrlChar('R')) ? -1 : 1);
 

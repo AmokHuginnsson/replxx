@@ -22,13 +22,14 @@ public:
 		REPAINT,
 		SKIP
 	};
+	static int const REPLXX_MAX_LINE = 4096;
 private:
 	Replxx::ReplxxImpl& _replxx;
+	int            _buflen;     // buffer size in characters
 	input_buffer_t _buf32;      // input buffer
 	char_widths_t  _charWidths; // character widths from mk_wcwidth()
 	display_t      _display;
 	Utf32String    _hint;
-	int _buflen; // buffer size in characters
 	int _len;    // length of text in input buffer
 	int _pos;    // character position in buffer ( 0 <= _pos <= _len )
 	int _prefix; // prefix length used in common prefix search
@@ -45,26 +46,15 @@ private:
 	int handle_hints( PromptBase&, HINT_ACTION );
 	void setColor( Replxx::Color );
 	int start_index( void );
+	void realloc( int );
 
- public:
-	InputBuffer( Replxx::ReplxxImpl& replxx_, int bufferLen )
-		: _replxx( replxx_ )
-		, _buf32(new char32_t[bufferLen])
-		, _charWidths(new char[bufferLen])
-		, _display()
-		, _hint()
-		, _buflen(bufferLen - 1)
-		, _len(0)
-		, _pos(0)
-		, _prefix( 0 )
-		, _hintSelection( -1 )
-		, _history( replxx_.history() )
-		, _killRing( replxx_.kill_ring() ) {
-		_buf32[0] = 0;
-	}
+public:
+	InputBuffer( Replxx::ReplxxImpl& );
 	void preloadBuffer( char const* preloadText );
-	int getInputLine(PromptBase& pi);
-	int length(void) const { return _len; }
+	int getInputLine( PromptBase& pi );
+	int length( void ) const {
+		return _len;
+	}
 	char32_t* buf() {
 		return ( _buf32.get() );
 	}

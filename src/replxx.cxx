@@ -86,6 +86,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 #include <memory>
 #include <cerrno>
 #include <cstdarg>
@@ -142,7 +143,6 @@ bool gotResize = false;
 
 namespace {
 
-static int const REPLXX_MAX_LINE( 4096 );
 static int const REPLXX_MAX_HINT_ROWS( 4 );
 char const defaultBreakChars[] = " =+-/\\*?\"'`&<>;|@{([])}";
 
@@ -173,8 +173,8 @@ static bool isUnsupportedTerm(void) {
 }
 
 Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
-	: _maxLineLength( REPLXX_MAX_LINE )
-	, _inputBuffer( new char[_maxLineLength * sizeof ( char32_t ) + 1] )
+	: _maxCharacterCount( 0 )
+	, _inputBuffer()
 	, _history()
 	, _killRing()
 	, _maxHintRows( REPLXX_MAX_HINT_ROWS )
@@ -193,6 +193,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _hintUserdata( nullptr )
 	, _preloadedBuffer()
 	, _errorMessage() {
+	realloc( InputBuffer::REPLXX_MAX_LINE );
 }
 
 void Replxx::ReplxxImpl::history_add( std::string const& line ) {
@@ -278,24 +279,37 @@ void Replxx::ReplxxImpl::set_preload_buffer( std::string const& preloadText ) {
 		whitespaceSeen = 0;
 		++ it;
 	}
-	bool lineTruncated = false;
-	int processedLength( static_cast<int>( _preloadedBuffer.length() ) );
-	if ( processedLength > ( _maxLineLength - 1 ) ) {
-		lineTruncated = true;
-		_preloadedBuffer.erase( _maxLineLength );
-	}
 	_errorMessage.clear();
 	if ( controlsStripped ) {
 		_errorMessage.assign( " [Edited line: control characters were converted to spaces]\n" );
 	}
-	if (lineTruncated) {
-		_errorMessage
-			.append( " [Edited line: the line length was reduced from " )
-			.append( to_string( processedLength ) )
-			.append( " to " )
-			.append( to_string( _preloadedBuffer.length() ) )
-			.append( "]\n" );
+}
+
+void Replxx::ReplxxImpl::realloc( int len ) {
+	if ( ( len + 1 ) > _maxCharacterCount ) {
+		_maxCharacterCount = 1;
+		while ( ( len + 1 ) > _maxCharacterCount ) {
+			_maxCharacterCount *= 2;
+		}
+		int bufferSize( _maxCharacterCount * sizeof ( char32_t ) );
+		_inputBuffer.reset( new char[bufferSize] );
+		memset( _inputBuffer.get(), 0, bufferSize );
 	}
+	_inputBuffer[len] = 0;
+	return;
+}
+
+void Replxx::ReplxxImpl::read_from_stdin( void ) {
+	if (_preloadedBuffer.empty()) {
+		getline( cin, _preloadedBuffer );
+	}
+	while ( ! _preloadedBuffer.empty() && ( ( _preloadedBuffer.back() == '\r' ) || ( _preloadedBuffer.back() == '\n' ) ) ) {
+		_preloadedBuffer.pop_back();
+	}
+	realloc( _preloadedBuffer.length() );
+	strncpy( _inputBuffer.get(), _preloadedBuffer.c_str(), _preloadedBuffer.length() );
+	_preloadedBuffer.clear();
+	return;
 }
 
 char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
@@ -313,52 +327,30 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 		if (isUnsupportedTerm()) {
 			if (!pi.write()) return 0;
 			fflush(stdout);
-			if (_preloadedBuffer.empty()) {
-				if (fgets(_inputBuffer.get(), _maxLineLength, stdin) == NULL) {
-					return NULL;
-				}
-				size_t len = strlen(_inputBuffer.get());
-				while (len && (_inputBuffer[len - 1] == '\n' || _inputBuffer[len - 1] == '\r')) {
-					--len;
-					_inputBuffer[len] = '\0';
-				}
-				return ( _inputBuffer.get() );
-			} else {
-				strncpy( _inputBuffer.get(), _preloadedBuffer.c_str(), _maxLineLength );
-				_preloadedBuffer.clear();
-				return ( _inputBuffer.get() );
-			}
+			read_from_stdin();
+			return ( _inputBuffer.get() );
 		} else {
 			if (enableRawMode() == -1) {
 				return NULL;
 			}
-			InputBuffer ib(*this, _maxLineLength);
+			InputBuffer ib(*this);
 			if (!_preloadedBuffer.empty()) {
 				ib.preloadBuffer(_preloadedBuffer.c_str());
 				_preloadedBuffer.clear();
 			}
-			int count = ib.getInputLine(pi);
+			int errCode = ib.getInputLine(pi);
 			disableRawMode();
-			if (count == -1) {
+			if (errCode == -1) {
 				return NULL;
 			}
-			assert( ib.length() < _maxLineLength );
 			printf("\n");
-			size_t bufferSize = sizeof(char32_t) * ib.length() + 1;
+			size_t bufferSize( sizeof(char32_t) * ib.length() + 1 );
+			realloc( bufferSize );
 			copyString32to8(_inputBuffer.get(), bufferSize, ib.buf());
 			return ( _inputBuffer.get() );
 		}
 	} else { // input not from a terminal, we should work with piped input, i.e. redirected stdin
-		if (fgets(_inputBuffer.get(), _maxLineLength, stdin) == NULL) {
-			return NULL;
-		}
-
-		// if fgets() gave us the newline, remove it
-		int count = static_cast<int>( strlen( _inputBuffer.get() ) );
-		if (count > 0 && _inputBuffer[count - 1] == '\n') {
-			--count;
-			_inputBuffer[count] = '\0';
-		}
+		read_from_stdin();
 		return ( _inputBuffer.get() );
 	}
 }
@@ -402,13 +394,6 @@ void Replxx::ReplxxImpl::set_hint_callback( Replxx::hint_callback_t const& fn, v
 
 void Replxx::ReplxxImpl::set_max_history_size( int len ) {
 	_history.set_max_size( len );
-}
-
-void Replxx::ReplxxImpl::set_max_line_size( int len ) {
-	if ( len > _maxLineLength ) {
-		_inputBuffer.reset( new char[len * sizeof ( char32_t ) + 1] );
-	}
-	_maxLineLength = len;
 }
 
 void Replxx::ReplxxImpl::set_max_hint_rows( int count ) {
@@ -508,10 +493,6 @@ void Replxx::set_word_break_characters( char const* wordBreakers ) {
 
 void Replxx::set_special_prefixes( char const* specialPrefixes ) {
 	_impl->set_special_prefixes( specialPrefixes );
-}
-
-void Replxx::set_max_line_size( int len ) {
-	_impl->set_max_line_size( len );
 }
 
 void Replxx::set_max_hint_rows( int count ) {
@@ -688,11 +669,6 @@ void replxx_history_add( ::Replxx* replxx_, const char* line ) {
 void replxx_set_max_history_size( ::Replxx* replxx_, int len ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->set_max_history_size( len );
-}
-
-void replxx_set_max_line_size( ::Replxx* replxx_, int len ) {
-	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
-	replxx->set_max_line_size( len );
 }
 
 void replxx_set_max_hint_rows( ::Replxx* replxx_, int count ) {

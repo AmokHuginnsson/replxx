@@ -48,7 +48,7 @@ public:
 	typedef std::vector<Utf32String> hints_t;
 	typedef std::unique_ptr<char[]> input_buffer_t;
 private:
-	int _maxLineLength;
+	int _maxCharacterCount;
 	input_buffer_t _inputBuffer;
 	History _history;
 	KillRing _killRing;
@@ -82,7 +82,6 @@ public:
 	void set_preload_buffer(std::string const& preloadText);
 	void set_word_break_characters( char const* wordBreakers );
 	void set_special_prefixes( char const* specialPrefixes );
-	void set_max_line_size( int len );
 	void set_max_hint_rows( int count );
 	void set_double_tab_completion( bool val );
 	void set_complete_on_empty( bool val );
@@ -137,6 +136,9 @@ public:
 private:
 	ReplxxImpl( ReplxxImpl const& ) = delete;
 	ReplxxImpl& operator = ( ReplxxImpl const& ) = delete;
+private:
+	void realloc( int len );
+	void read_from_stdin( void );
 };
 
 }

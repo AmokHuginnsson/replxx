@@ -190,10 +190,6 @@ public:
 	 */
 	void set_special_prefixes( char const* specialPrefixes );
 
-	/*! \brief Set maximum allowed length of user input.
-	 */
-	void set_max_line_size( int len );
-
 	/*! \brief Set maximum number of displayed hint rows.
 	 */
 	void set_max_hint_rows( int count );

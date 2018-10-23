@@ -19,6 +19,7 @@ static int const REPLXX_DEFAULT_HISTORY_MAX_LEN( 1000 );
 History::History( void )
 	: _data()
 	, _maxSize( REPLXX_DEFAULT_HISTORY_MAX_LEN )
+	, _maxLineLength( 0 )
 	, _index( 0 )
 	, _previousIndex( -2 )
 	, _recallMostRecent( false ) {
@@ -31,6 +32,9 @@ void History::add( std::string const& line ) {
 			if ( -- _previousIndex < -1 ) {
 				_previousIndex = -2;
 			}
+		}
+		if ( static_cast<int>( line.length() ) > _maxLineLength ) {
+			_maxLineLength = static_cast<int>( line.length() );
 		}
 		_data.push_back( line );
 	}
