@@ -713,31 +713,6 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			continue;
 		}
 
-		// ctrl-I/tab, command completion, needs to be before switch statement
-		if (c == ctrlChar('I') && _replxx.has_completer()) {
-			if ( ( _pos == 0 ) && ! _replxx.complete_on_empty() ) {
-				// SERVER-4967 -- in earlier versions, you could paste
-				// previous output
-				continue;	//	back into the shell ... this output may have leading tabs.
-			}
-			// This hack (i.e. what the old code did) prevents command completion
-			//	on an empty line but lets users paste text with leading tabs.
-
-			_killRing.lastAction = KillRing::actionOther;
-			_history.reset_recall_most_recent();
-
-			// completeLine does the actual completion and replacement
-			c = completeLine(pi);
-
-			if (c < 0)	// return on error
-				return _len;
-
-			if (c == 0)	// read next character when 0
-				continue;
-
-			// deliberate fall-through here, so we use the terminating character
-		}
-
 		bool updatePrefix( true );
 		switch (c) {
 			case ctrlChar('A'):	// ctrl-A, move cursor to start of line
@@ -908,6 +883,23 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				}
 				_killRing.lastAction = KillRing::actionKill;
 				break;
+			case ( ctrlChar('I') ): {
+				if ( _replxx.has_completer() && ( _replxx.complete_on_empty() || ( _pos > 0 ) ) ) {
+					_killRing.lastAction = KillRing::actionOther;
+					_history.reset_recall_most_recent();
+
+					// completeLine does the actual completion and replacement
+					c = completeLine(pi);
+
+					if ( c < 0 ) {
+						next = NEXT::BAIL;
+					} else if ( c != 0 ) {
+						terminatingKeystroke = c;
+					}
+				} else {
+					insert_character( pi, c );
+				}
+			} break;
 
 			case ctrlChar('J'): // ctrl-J/linefeed/newline, accept line
 			case ctrlChar('M'): // ctrl-M/return/enter
@@ -1168,49 +1160,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 
 			// not one of our special characters, maybe insert it in the buffer
 			default: {
-				_killRing.lastAction = KillRing::actionOther;
-				_history.reset_recall_most_recent();
-				if (c & (META | CTRL)) {	// beep on unknown Ctrl and/or Meta keys
-					beep();
-					break;
-				}
-				realloc( _len );
-				if (isControlChar(c)) {	// don't insert control characters
-					beep();
-					break;
-				}
-				if (_len == _pos) {	// at end of buffer
-					_buf32[_pos] = c;
-					++_pos;
-					++_len;
-					_buf32[_len] = '\0';
-					int inputLen = calculateColumnPosition(_buf32.get(), _len);
-					if ( _replxx.no_color()
-						|| ( ! ( _replxx.has_highlighter() || _replxx.has_hinter() )
-							&& ( pi.promptIndentation + inputLen < pi.promptScreenColumns )
-						)
-					) {
-						if (inputLen > pi.promptPreviousInputLen)
-							pi.promptPreviousInputLen = inputLen;
-						/* Avoid a full update of the line in the
-						 * trivial case. */
-						if (write32(1, reinterpret_cast<char32_t*>(&c), 1) == -1) {
-							next = NEXT::BAIL;
-							break;
-						}
-					} else {
-						refreshLine(pi);
-					}
-				} else {	// not at end of buffer, have to move characters to our
-									// right
-					memmove(_buf32.get() + _pos + 1, _buf32.get() + _pos,
-									sizeof(char32_t) * (_len - _pos));
-					_buf32[_pos] = c;
-					++_len;
-					++_pos;
-					_buf32[_len] = '\0';
-					refreshLine(pi);
-				}
+				next = insert_character( pi, c );
 				break;
 			}
 		}
@@ -1219,6 +1169,54 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 		}
 	}
 	return ( next == NEXT::RETURN ? _len : -1 );
+}
+
+InputBuffer::NEXT InputBuffer::insert_character( PromptBase& pi, int c ) {
+	_killRing.lastAction = KillRing::actionOther;
+	_history.reset_recall_most_recent();
+	/*
+	 * beep on unknown Ctrl and/or Meta keys
+	 * don't insert control characters
+	 */
+	if ( ( c & (META | CTRL ) ) || isControlChar( c ) ) {
+		beep();
+		return ( NEXT::CONTINUE );
+	}
+	realloc( _len );
+	if (_len == _pos) {	// at end of buffer
+		_buf32[_pos] = c;
+		++_pos;
+		++_len;
+		_buf32[_len] = '\0';
+		int inputLen = calculateColumnPosition(_buf32.get(), _len);
+		if ( _replxx.no_color()
+			|| ( ! ( _replxx.has_highlighter() || _replxx.has_hinter() )
+				&& ( pi.promptIndentation + inputLen < pi.promptScreenColumns )
+			)
+		) {
+			if (inputLen > pi.promptPreviousInputLen)
+				pi.promptPreviousInputLen = inputLen;
+			/* Avoid a full update of the line in the
+			 * trivial case. */
+			if (write32(1, reinterpret_cast<char32_t*>(&c), 1) == -1) {
+				return ( NEXT::BAIL );
+			}
+		} else {
+			refreshLine(pi);
+		}
+	} else {
+		/*
+		 * not at end of buffer, have to move characters to our right
+		 */
+		memmove(_buf32.get() + _pos + 1, _buf32.get() + _pos,
+						sizeof(char32_t) * (_len - _pos));
+		_buf32[_pos] = c;
+		++_len;
+		++_pos;
+		_buf32[_len] = '\0';
+		refreshLine(pi);
+	}
+	return ( NEXT::CONTINUE );
 }
 
 void InputBuffer::commonPrefixSearch(PromptBase& pi, int startChar) {

@@ -63,6 +63,8 @@ public:
 	char32_t* buf() {
 		return ( _buf32.get() );
 	}
+private:
+	NEXT insert_character( PromptBase&, int );
 };
 
 }
