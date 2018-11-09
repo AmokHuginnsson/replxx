@@ -22,6 +22,11 @@ public:
 		REPAINT,
 		SKIP
 	};
+	enum class NEXT {
+		CONTINUE,
+		RETURN,
+		BAIL
+	};
 	static int const REPLXX_MAX_LINE = 4096;
 private:
 	Replxx::ReplxxImpl& _replxx;

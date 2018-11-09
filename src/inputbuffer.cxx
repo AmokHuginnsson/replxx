@@ -674,7 +674,8 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 	}
 
 	// loop collecting characters, respond to line editing characters
-	while (true) {
+	NEXT next( NEXT::CONTINUE );
+	while ( next == NEXT::CONTINUE ) {
 		int c;
 		if (terminatingKeystroke == -1) {
 			c = read_char();	// get a new keystroke
@@ -780,8 +781,9 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				// so we don't display the next prompt over the previous input line
 				_pos = _len;	// pass _len as _pos for EOL
 				refreshLine(pi, HINT_ACTION::SKIP);
-				if (write(1, "^C\r\n", 4) == -1) return -1;	// Display the ^C we got
-				return -1;
+				static_cast<void>( write( 1, "^C\r\n", 4 ) == 0 );
+				next = NEXT::BAIL;
+				break;
 
 			case META + 'c':	// meta-C, give word initial Cap
 			case META + 'C':
@@ -818,7 +820,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 					refreshLine(pi);
 				} else if (_len == 0) {
 					_history.drop_last();
-					return -1;
+					next = NEXT::BAIL;
 				}
 				break;
 
@@ -916,7 +918,8 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				refreshLine(pi, HINT_ACTION::SKIP);
 				_history.commit_index();
 				_history.drop_last();
-				return _len;
+				next = NEXT::RETURN;
+				break;
 
 			case ctrlChar('K'):	// ctrl-K, kill from cursor to end of line
 				_killRing.kill(&_buf32[_pos], _len - _pos, true);
@@ -1191,8 +1194,10 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 							pi.promptPreviousInputLen = inputLen;
 						/* Avoid a full update of the line in the
 						 * trivial case. */
-						if (write32(1, reinterpret_cast<char32_t*>(&c), 1) == -1)
-							return -1;
+						if (write32(1, reinterpret_cast<char32_t*>(&c), 1) == -1) {
+							next = NEXT::BAIL;
+							break;
+						}
 					} else {
 						refreshLine(pi);
 					}
@@ -1213,7 +1218,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 			_prefix = _pos;
 		}
 	}
-	return _len;
+	return ( next == NEXT::RETURN ? _len : -1 );
 }
 
 void InputBuffer::commonPrefixSearch(PromptBase& pi, int startChar) {
