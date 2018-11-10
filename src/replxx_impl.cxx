@@ -1,17 +1,16 @@
 #include <algorithm>
 #include <memory>
 #include <cerrno>
+#include <iostream>
 
 #ifdef _WIN32
 
-#include <conio.h>
 #include <windows.h>
 #include <io.h>
 #if _MSC_VER < 1900
 #define snprintf _snprintf	// Microsoft headers use underscores in some names
 #endif
 #define strcasecmp _stricmp
-#define strdup _strdup
 #define write _write
 #define STDIN_FILENO 0
 
@@ -22,7 +21,11 @@
 
 #endif /* _WIN32 */
 
-#include "inputbuffer.hxx"
+#ifdef _WIN32
+#include "windows.hxx"
+#endif
+
+#include "replxx_impl.hxx"
 #include "prompt.hxx"
 #include "util.hxx"
 #include "io.hxx"
@@ -35,15 +38,51 @@ using namespace std;
 namespace replxx {
 
 struct PromptBase;
-
 void dynamicRefresh(PromptBase& pi, char32_t* buf32, int len, int pos);
+
+#ifndef _WIN32
+
+bool gotResize = false;
+
+#endif
+
+namespace {
+
+static int const REPLXX_MAX_HINT_ROWS( 4 );
+char const defaultBreakChars[] = " =+-/\\*?\"'`&<>;|@{([])}";
+
+#ifndef _WIN32
+
+static void WindowSizeChanged(int) {
+	// do nothing here but setting this flag
+	gotResize = true;
+}
+
+#endif
+
+static const char* unsupported_term[] = {"dumb", "cons25", "emacs", NULL};
+
+static bool isUnsupportedTerm(void) {
+	char* term = getenv("TERM");
+	if (term == NULL) {
+		return false;
+	}
+	for (int j = 0; unsupported_term[j]; ++j) {
+		if (!strcasecmp(term, unsupported_term[j])) {
+			return true;
+		}
+	}
+	return false;
+}
+
+}
 
 #ifndef _WIN32
 extern bool gotResize;
 #endif
 
-InputBuffer::InputBuffer( Replxx::ReplxxImpl& replxx_ )
-	: _replxx( replxx_ )
+Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
+	: _maxCharacterCount( 0 )
 	, _buflen( 0 )
 	, _buf32( nullptr )
 	, _charWidths( nullptr )
@@ -53,13 +92,40 @@ InputBuffer::InputBuffer( Replxx::ReplxxImpl& replxx_ )
 	, _pos( 0 )
 	, _prefix( 0 )
 	, _hintSelection( -1 )
-	, _history( replxx_.history() )
-	, _killRing( replxx_.kill_ring() ) {
-	realloc( max( REPLXX_MAX_LINE - 1, replxx_.history().max_line_length() ) );
+	, _history()
+	, _killRing()
+	, _maxHintRows( REPLXX_MAX_HINT_ROWS )
+	, _breakChars( defaultBreakChars )
+	, _specialPrefixes( "" )
+	, _completionCountCutoff( 100 )
+	, _doubleTabCompletion( false )
+	, _completeOnEmpty( true )
+	, _beepOnAmbiguousCompletion( false )
+	, _noColor( false )
+	, _completionCallback( nullptr )
+	, _highlighterCallback( nullptr )
+	, _hintCallback( nullptr )
+	, _completionUserdata( nullptr )
+	, _highlighterUserdata( nullptr )
+	, _hintUserdata( nullptr )
+	, _preloadedBuffer()
+	, _errorMessage() {
+	realloc_utf8_buffer( REPLXX_MAX_LINE );
+	realloc( max( REPLXX_MAX_LINE - 1, _history.max_line_length() ) );
 	_buf32[0] = 0;
 }
 
-void InputBuffer::realloc( int len_ ) {
+void Replxx::ReplxxImpl::clear( void ) {
+	_len = 0;
+	_pos = 0;
+	_prefix = 0;
+	_buf32[0] = 0;
+	_hintSelection = -1;
+	_hint = Utf32String();
+	_display.clear();
+}
+
+void Replxx::ReplxxImpl::realloc( int len_ ) {
 	if ( ( len_ + 1 ) > _buflen ) {
 		int oldBufLen( _buflen );
 		_buflen = 1;
@@ -76,7 +142,177 @@ void InputBuffer::realloc( int len_ ) {
 	}
 }
 
-void InputBuffer::preloadBuffer(const char* preloadText) {
+void Replxx::ReplxxImpl::realloc_utf8_buffer( int len ) {
+	if ( ( len + 1 ) > _maxCharacterCount ) {
+		_maxCharacterCount = 1;
+		while ( ( len + 1 ) > _maxCharacterCount ) {
+			_maxCharacterCount *= 2;
+		}
+		int bufferSize( _maxCharacterCount * sizeof ( char32_t ) );
+		_utf8Buffer.reset( new char[bufferSize] );
+		memset( _utf8Buffer.get(), 0, bufferSize );
+	}
+	_utf8Buffer[len] = 0;
+	return;
+}
+
+Replxx::ReplxxImpl::completions_t Replxx::ReplxxImpl::call_completer( std::string const& input, int breakPos ) const {
+	Replxx::completions_t completionsIntermediary(
+		!! _completionCallback
+			? _completionCallback( input, breakPos, _completionUserdata )
+			: Replxx::completions_t()
+	);
+	completions_t completions;
+	completions.reserve( completionsIntermediary.size() );
+	for ( std::string const& c : completionsIntermediary ) {
+		completions.emplace_back( c.c_str() );
+	}
+	return ( completions );
+}
+
+Replxx::ReplxxImpl::hints_t Replxx::ReplxxImpl::call_hinter( std::string const& input, int breakPos, Replxx::Color& color ) const {
+	Replxx::hints_t hintsIntermediary(
+		!! _hintCallback
+			? _hintCallback( input, breakPos, color, _hintUserdata )
+			: Replxx::hints_t()
+	);
+	hints_t hints;
+	hints.reserve( hintsIntermediary.size() );
+	for ( std::string const& h : hintsIntermediary ) {
+		hints.emplace_back( h.c_str() );
+	}
+	return ( hints );
+}
+
+void Replxx::ReplxxImpl::call_highlighter( std::string const& input, Replxx::colors_t& colors ) const {
+	if ( !! _highlighterCallback ) {
+		_highlighterCallback( input, colors, _highlighterUserdata );
+	}
+}
+
+void Replxx::ReplxxImpl::set_preload_buffer( std::string const& preloadText ) {
+	_preloadedBuffer = preloadText;
+	// remove characters that won't display correctly
+	bool controlsStripped = false;
+	int whitespaceSeen( 0 );
+	for ( std::string::iterator it( _preloadedBuffer.begin() ); it != _preloadedBuffer.end(); ) {
+		unsigned char c = *it;
+		if ( '\r' == c ) { // silently skip CR
+			_preloadedBuffer.erase( it, it + 1 );
+			continue;
+		}
+		if ( '\n' == c || '\t' == c ) { // note newline or tab
+			++ whitespaceSeen;
+			++ it;
+			continue;
+		}
+		if ( whitespaceSeen > 0 ) {
+			it -= whitespaceSeen;
+			*it = ' ';
+			_preloadedBuffer.erase( it + 1, it + whitespaceSeen - 1 );
+		}
+		if ( isControlChar( c ) ) { // remove other control characters, flag for message
+			controlsStripped = true;
+			if ( whitespaceSeen > 0 ) {
+				_preloadedBuffer.erase( it, it + 1 );
+				-- it;
+			} else {
+				*it = ' ';
+			}
+		}
+		whitespaceSeen = 0;
+		++ it;
+	}
+	_errorMessage.clear();
+	if ( controlsStripped ) {
+		_errorMessage.assign( " [Edited line: control characters were converted to spaces]\n" );
+	}
+}
+
+void Replxx::ReplxxImpl::read_from_stdin( void ) {
+	if (_preloadedBuffer.empty()) {
+		getline( cin, _preloadedBuffer );
+	}
+	while ( ! _preloadedBuffer.empty() && ( ( _preloadedBuffer.back() == '\r' ) || ( _preloadedBuffer.back() == '\n' ) ) ) {
+		_preloadedBuffer.pop_back();
+	}
+	realloc_utf8_buffer( _preloadedBuffer.length() );
+	strncpy( _utf8Buffer.get(), _preloadedBuffer.c_str(), _preloadedBuffer.length() );
+	_preloadedBuffer.clear();
+	return;
+}
+
+char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
+#ifndef _WIN32
+	gotResize = false;
+#endif
+	errno = 0;
+	if ( tty::in ) {	// input is from a terminal
+		if (!_errorMessage.empty()) {
+			printf("%s", _errorMessage.c_str());
+			fflush(stdout);
+			_errorMessage.clear();
+		}
+		PromptInfo pi(prompt, getScreenColumns());
+		if (isUnsupportedTerm()) {
+			if (!pi.write()) return 0;
+			fflush(stdout);
+			read_from_stdin();
+			return ( _utf8Buffer.get() );
+		} else {
+			if (enableRawMode() == -1) {
+				return NULL;
+			}
+			clear();
+			if (!_preloadedBuffer.empty()) {
+				preloadBuffer(_preloadedBuffer.c_str());
+				_preloadedBuffer.clear();
+			}
+			int errCode = getInputLine(pi);
+			disableRawMode();
+			if (errCode == -1) {
+				return NULL;
+			}
+			printf("\n");
+			size_t bufferSize( sizeof(char32_t) * length() + 1 );
+			realloc_utf8_buffer( bufferSize );
+			copyString32to8(_utf8Buffer.get(), bufferSize, buf());
+			return ( _utf8Buffer.get() );
+		}
+	} else { // input not from a terminal, we should work with piped input, i.e. redirected stdin
+		read_from_stdin();
+		return ( _utf8Buffer.get() );
+	}
+}
+
+void Replxx::ReplxxImpl::clear_screen( void ) {
+	replxx::clear_screen( CLEAR_SCREEN::WHOLE );
+}
+
+int Replxx::ReplxxImpl::install_window_change_handler( void ) {
+#ifndef _WIN32
+	struct sigaction sa;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sa.sa_handler = &WindowSizeChanged;
+
+	if (sigaction(SIGWINCH, &sa, nullptr) == -1) {
+		return errno;
+	}
+#endif
+	return 0;
+}
+
+int Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
+#ifdef _WIN32
+	int count( win_write( str_, size_ ) );
+#else
+	int count( write( 1, str_, size_ ) );
+#endif
+	return ( count );
+}
+
+void Replxx::ReplxxImpl::preloadBuffer(const char* preloadText) {
 	size_t ucharCount = 0;
 	realloc( strlen( preloadText ) );
 	copyString8to32(_buf32.get(), _buflen + 1, ucharCount, preloadText);
@@ -132,7 +368,7 @@ char const* ansi_color( Replxx::Color color_ ) {
 	return ( code );
 }
 
-void InputBuffer::setColor( Replxx::Color color_ ) {
+void Replxx::ReplxxImpl::setColor( Replxx::Color color_ ) {
 	char const* code( ansi_color( color_ ) );
 	while ( *code ) {
 		_display.push_back( *code );
@@ -140,11 +376,11 @@ void InputBuffer::setColor( Replxx::Color color_ ) {
 	}
 }
 
-void InputBuffer::highlight( int highlightIdx, bool error_ ) {
+void Replxx::ReplxxImpl::highlight( int highlightIdx, bool error_ ) {
 	Replxx::colors_t colors( _len, Replxx::Color::DEFAULT );
 	Utf32String unicodeCopy( _buf32.get(), _len );
 	Utf8String parseItem( unicodeCopy );
-	_replxx.call_highlighter( parseItem.get(), colors );
+	call_highlighter( parseItem.get(), colors );
 	if ( highlightIdx != -1 ) {
 		colors[highlightIdx] = error_ ? Replxx::Color::ERROR : Replxx::Color::BRIGHTRED;
 	}
@@ -160,10 +396,10 @@ void InputBuffer::highlight( int highlightIdx, bool error_ ) {
 	setColor( Replxx::Color::DEFAULT );
 }
 
-int InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
+int Replxx::ReplxxImpl::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
 	_hint = Utf32String();
 	int len( 0 );
-	if ( !_replxx.no_color() && ( hintAction_ != HINT_ACTION::SKIP ) && _replxx.has_hinter() && ( _pos == _len ) ) {
+	if ( !_noColor && ( hintAction_ != HINT_ACTION::SKIP ) && !! _hintCallback && ( _pos == _len ) ) {
 		if ( hintAction_ == HINT_ACTION::REGENERATE ) {
 			_hintSelection = -1;
 		}
@@ -171,7 +407,7 @@ int InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
 		Utf32String unicodeCopy( _buf32.get(), _pos );
 		Utf8String parseItem(unicodeCopy);
 		int startIndex( start_index() );
-		Replxx::ReplxxImpl::hints_t hints( _replxx.call_hinter( parseItem.get(), startIndex, c ) );
+		Replxx::ReplxxImpl::hints_t hints( call_hinter( parseItem.get(), startIndex, c ) );
 		int hintCount( hints.size() );
 		if ( hintCount == 1 ) {
 			setColor( c );
@@ -181,7 +417,7 @@ int InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
 				_display.push_back( _hint[i] );
 			}
 			setColor( Replxx::Color::DEFAULT );
-		} else if ( _replxx.max_hint_rows() > 0 ) {
+		} else if ( _maxHintRows > 0 ) {
 			int startCol( pi.promptIndentation + startIndex );
 			int maxCol( pi.promptScreenColumns );
 #ifdef _WIN32
@@ -201,7 +437,7 @@ int InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
 				}
 			}
 			setColor( Replxx::Color::DEFAULT );
-			for ( int hintRow( 0 ); hintRow < min( hintCount, _replxx.max_hint_rows() ); ++ hintRow ) {
+			for ( int hintRow( 0 ); hintRow < min( hintCount, _maxHintRows ); ++ hintRow ) {
 #ifdef _WIN32
 				_display.push_back( '\r' );
 #endif
@@ -237,7 +473,7 @@ int InputBuffer::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
  * @param pi	 PromptBase struct holding information about the prompt and our
  * screen position
  */
-void InputBuffer::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
+void Replxx::ReplxxImpl::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	// check for a matching brace/bracket/paren, remember its position if found
 	int highlightIdx = -1;
 	bool indicateError = false;
@@ -323,11 +559,11 @@ void InputBuffer::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	inf.dwCursorPosition.X = pi.promptIndentation;	// 0-based on Win32
 	inf.dwCursorPosition.Y -= pi.promptCursorRowOffset - pi.promptExtraLines;
 	SetConsoleCursorPosition(console_out, inf.dwCursorPosition);
-	clear_screen( CLEAR_SCREEN::TO_END );
+	replxx::clear_screen( CLEAR_SCREEN::TO_END );
 	pi.promptPreviousInputLen = _len;
 
 	// display the input line
-	if ( !_replxx.no_color() ) {
+	if ( !_noColor ) {
 		if (write32(1, _display.data(), _display.size()) == -1) return;
 	} else {
 		if (write32(1, _buf32.get(), _len) == -1) return;
@@ -353,7 +589,7 @@ void InputBuffer::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	);
 	if (write(1, seq, strlen(seq)) == -1) return;
 
-	if ( !_replxx.no_color() ) {
+	if ( !_noColor ) {
 		if (write32(1, _display.data(), _display.size()) == -1) return;
 	} else {	// highlightIdx the matching brace/bracket/parenthesis
 		if (write32(1, _buf32.get(), _len) == -1) return;
@@ -378,17 +614,17 @@ void InputBuffer::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 			pi.promptExtraLines + yCursorPos;	// remember row for next pass
 }
 
-int InputBuffer::start_index() {
+int Replxx::ReplxxImpl::start_index() {
 	int startIndex = _pos;
 	while (--startIndex >= 0) {
-		if ( strchr(_replxx.break_chars(), _buf32[startIndex]) ) {
+		if ( strchr(_breakChars, _buf32[startIndex]) ) {
 			break;
 		}
 	}
-	if ( ( startIndex < 0 ) || ! strchr( _replxx.special_prefixes(), _buf32[startIndex] ) ) {
+	if ( ( startIndex < 0 ) || ! strchr( _specialPrefixes, _buf32[startIndex] ) ) {
 		++ startIndex;
 	}
-	while ( ( startIndex > 0 ) && ( strchr( _replxx.special_prefixes(), _buf32[startIndex - 1] ) != nullptr ) ) {
+	while ( ( startIndex > 0 ) && ( strchr( _specialPrefixes, _buf32[startIndex - 1] ) != nullptr ) ) {
 		-- startIndex;
 	}
 	return ( startIndex );
@@ -404,7 +640,7 @@ int InputBuffer::start_index() {
  * @param pi		 PromptBase struct holding information about the prompt and our
  * screen position
  */
-int InputBuffer::completeLine(PromptBase& pi) {
+int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	char32_t c = 0;
 
 	// completionCallback() expects a parsable entity, so find the previous break
@@ -417,7 +653,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	Utf32String unicodeCopy(_buf32.get(), _pos);
 	Utf8String parseItem(unicodeCopy);
 	// get a list of completions
-	Replxx::ReplxxImpl::completions_t completions( _replxx.call_completer( parseItem.get(), startIndex ) );
+	Replxx::ReplxxImpl::completions_t completions( call_completer( parseItem.get(), startIndex ) );
 
 	// if no completions, we are done
 	if (completions.size() == 0) {
@@ -452,7 +688,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
 			}
 		}
 	}
-	if ( _replxx.beep_on_ambiguous_completion() && ( completionsCount != 1 ) ) {	// beep if ambiguous
+	if ( _beepOnAmbiguousCompletion && ( completionsCount != 1 ) ) {	// beep if ambiguous
 		beep();
 	}
 
@@ -474,7 +710,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
 		return 0;
 	}
 
-	if ( _replxx.double_tab_completion() ) {
+	if ( _doubleTabCompletion ) {
 		// we can't complete any further, wait for second tab
 		do {
 			c = read_char();
@@ -490,7 +726,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	// we got a second tab, maybe show list of possible completions
 	bool showCompletions = true;
 	bool onNewLine = false;
-	if (static_cast<int>( completions.size() ) > _replxx.completion_count_cutoff()) {
+	if ( static_cast<int>( completions.size() ) > _completionCountCutoff ) {
 		int savePos =
 				_pos;	// move cursor to EOL to avoid overwriting the command line
 		_pos = _len;
@@ -540,7 +776,7 @@ int InputBuffer::completeLine(PromptBase& pi) {
 			refreshLine( pi, HINT_ACTION::SKIP );
 			_pos = savePos;
 		} else {
-			clear_screen( CLEAR_SCREEN::TO_END );
+			replxx::clear_screen( CLEAR_SCREEN::TO_END );
 		}
 		size_t pauseRow = getScreenRows() - 1;
 		size_t rowCount =
@@ -600,12 +836,12 @@ int InputBuffer::completeLine(PromptBase& pi) {
 					fflush(stdout);
 
 					static Utf32String const col( ansi_color( Replxx::Color::BRIGHTMAGENTA ) );
-					if ( !_replxx.no_color() && ( write32( 1, col.get(), col.length() ) == -1 ) )
+					if ( !_noColor && ( write32( 1, col.get(), col.length() ) == -1 ) )
 						return -1;
 					if (write32(1, completions[index].get(), longestCommonPrefix) == -1)
 						return -1;
 					static Utf32String const res( ansi_color( Replxx::Color::DEFAULT ) );
-					if ( !_replxx.no_color() && ( write32( 1, res.get(), res.length() ) == -1 ) )
+					if ( !_noColor && ( write32( 1, res.get(), res.length() ) == -1 ) )
 						return -1;
 
 					if (write32(1, completions[index].get() + longestCommonPrefix, itemLength - longestCommonPrefix) == -1)
@@ -637,15 +873,15 @@ int InputBuffer::completeLine(PromptBase& pi) {
 	return 0;
 }
 
-int InputBuffer::getInputLine(PromptBase& pi) {
+int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 	// The latest history entry is always our current buffer
 	if (_len > 0) {
 		size_t bufferSize = sizeof(char32_t) * _len + 1;
 		unique_ptr<char[]> tempBuffer(new char[bufferSize]);
 		copyString32to8(tempBuffer.get(), bufferSize, _buf32.get());
-		_replxx.history_add(tempBuffer.get());
+		history_add(tempBuffer.get());
 	} else {
-		_replxx.history_add("");
+		history_add("");
 	}
 	_history.reset_pos();
 
@@ -884,7 +1120,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				_killRing.lastAction = KillRing::actionKill;
 				break;
 			case ( ctrlChar('I') ): {
-				if ( _replxx.has_completer() && ( _replxx.complete_on_empty() || ( _pos > 0 ) ) ) {
+				if ( !! _completionCallback && ( _completeOnEmpty || ( _pos > 0 ) ) ) {
 					_killRing.lastAction = KillRing::actionOther;
 					_history.reset_recall_most_recent();
 
@@ -972,14 +1208,14 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 				}
 				break;
 			case CTRL + UP_ARROW_KEY:
-				if ( ! _replxx.no_color() ) {
+				if ( ! _noColor ) {
 					_killRing.lastAction = KillRing::actionOther;
 					-- _hintSelection;
 					refreshLine(pi, HINT_ACTION::REPAINT);
 				}
 				break;
 			case CTRL + DOWN_ARROW_KEY:
-				if ( ! _replxx.no_color() ) {
+				if ( ! _noColor ) {
 					_killRing.lastAction = KillRing::actionOther;
 					++ _hintSelection;
 					refreshLine(pi, HINT_ACTION::REPAINT);
@@ -1171,7 +1407,7 @@ int InputBuffer::getInputLine(PromptBase& pi) {
 	return ( next == NEXT::RETURN ? _len : -1 );
 }
 
-InputBuffer::NEXT InputBuffer::insert_character( PromptBase& pi, int c ) {
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::insert_character( PromptBase& pi, int c ) {
 	_killRing.lastAction = KillRing::actionOther;
 	_history.reset_recall_most_recent();
 	/*
@@ -1189,8 +1425,8 @@ InputBuffer::NEXT InputBuffer::insert_character( PromptBase& pi, int c ) {
 		++_len;
 		_buf32[_len] = '\0';
 		int inputLen = calculateColumnPosition(_buf32.get(), _len);
-		if ( _replxx.no_color()
-			|| ( ! ( _replxx.has_highlighter() || _replxx.has_hinter() )
+		if ( _noColor
+			|| ( ! ( !! _highlighterCallback || !! _hintCallback )
 				&& ( pi.promptIndentation + inputLen < pi.promptScreenColumns )
 			)
 		) {
@@ -1219,7 +1455,7 @@ InputBuffer::NEXT InputBuffer::insert_character( PromptBase& pi, int c ) {
 	return ( NEXT::CONTINUE );
 }
 
-void InputBuffer::commonPrefixSearch(PromptBase& pi, int startChar) {
+void Replxx::ReplxxImpl::commonPrefixSearch(PromptBase& pi, int startChar) {
 	_killRing.lastAction = KillRing::actionOther;
 	size_t bufferSize = sizeof(char32_t) * length() + 1;
 	unique_ptr<char[]> buf8(new char[bufferSize]);
@@ -1249,7 +1485,7 @@ void InputBuffer::commonPrefixSearch(PromptBase& pi, int startChar) {
  * @param startChar the character that began the search, used to set the initial
  * direction
  */
-int InputBuffer::incrementalHistorySearch(PromptBase& pi, int startChar) {
+int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) {
 	size_t bufferSize;
 	size_t ucharCount = 0;
 
@@ -1262,10 +1498,12 @@ int InputBuffer::incrementalHistorySearch(PromptBase& pi, int startChar) {
 		copyString32to8(tempBuffer.get(), bufferSize, _buf32.get());
 		_history.update_last( tempBuffer.get() );
 	}
-	int historyLineLength = _len;
-	int historyLinePosition = _pos;
-	InputBuffer empty( _replxx );
-	empty.refreshLine(pi); // erase the old input first
+	int historyLineLength( _len );
+	int historyLinePosition( _pos );
+	_len = 0;
+	refreshLine(pi); // erase the old input first
+	_len = historyLineLength;
+
 	DynamicPrompt dp(pi, (startChar == ctrlChar('R')) ? -1 : 1);
 
 	dp.promptPreviousLen = pi.promptPreviousLen;
@@ -1510,8 +1748,8 @@ int InputBuffer::incrementalHistorySearch(PromptBase& pi, int startChar) {
 	return c;					 // pass a character or -1 back to main loop
 }
 
-void InputBuffer::clearScreen(PromptBase& pi) {
-	_replxx.clear_screen();
+void Replxx::ReplxxImpl::clearScreen(PromptBase& pi) {
+	clear_screen();
 	if (!pi.write()) return;
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap on Linux
@@ -1520,6 +1758,73 @@ void InputBuffer::clearScreen(PromptBase& pi) {
 #endif
 	pi.promptCursorRowOffset = pi.promptExtraLines;
 	refreshLine(pi);
+}
+
+void Replxx::ReplxxImpl::history_add( std::string const& line ) {
+	_history.add( line );
+}
+
+int Replxx::ReplxxImpl::history_save( std::string const& filename ) {
+	return ( _history.save( filename ) );
+}
+
+int Replxx::ReplxxImpl::history_load( std::string const& filename ) {
+	return ( _history.load( filename ) );
+}
+
+int Replxx::ReplxxImpl::history_size( void ) const {
+	return ( _history.size() );
+}
+
+std::string const& Replxx::ReplxxImpl::history_line( int index ) {
+	return ( _history[index] );
+}
+
+void Replxx::ReplxxImpl::set_completion_callback( Replxx::completion_callback_t const& fn, void* userData ) {
+	_completionCallback = fn;
+	_completionUserdata = userData;
+}
+
+void Replxx::ReplxxImpl::set_highlighter_callback( Replxx::highlighter_callback_t const& fn, void* userData ) {
+	_highlighterCallback = fn;
+	_highlighterUserdata = userData;
+}
+
+void Replxx::ReplxxImpl::set_hint_callback( Replxx::hint_callback_t const& fn, void* userData ) {
+	_hintCallback = fn;
+	_hintUserdata = userData;
+}
+
+void Replxx::ReplxxImpl::set_max_history_size( int len ) {
+	_history.set_max_size( len );
+}
+
+void Replxx::ReplxxImpl::set_max_hint_rows( int count ) {
+	_maxHintRows = count;
+}
+
+void Replxx::ReplxxImpl::set_word_break_characters( char const* wordBreakers ) {
+	_breakChars = wordBreakers;
+}
+
+void Replxx::ReplxxImpl::set_special_prefixes( char const* specialPrefixes ) {
+	_specialPrefixes = specialPrefixes;
+}
+
+void Replxx::ReplxxImpl::set_double_tab_completion( bool val ) {
+	_doubleTabCompletion = val;
+}
+
+void Replxx::ReplxxImpl::set_complete_on_empty( bool val ) {
+	_completeOnEmpty = val;
+}
+
+void Replxx::ReplxxImpl::set_beep_on_ambiguous_completion( bool val ) {
+	_beepOnAmbiguousCompletion = val;
+}
+
+void Replxx::ReplxxImpl::set_no_color( bool val ) {
+	_noColor = val;
 }
 
 /**

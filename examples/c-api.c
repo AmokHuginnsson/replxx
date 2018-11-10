@@ -18,8 +18,8 @@ void completionHook(char const* prefix, int bp, replxx_completions* lc, void* ud
 
 void hintHook(char const* prefix, int bp, replxx_hints* lc, ReplxxColor* c, void* ud) {
 	char** examples = (char**)( ud );
-	size_t i;
-	size_t len = strlen( prefix );
+	int i;
+	int len = strlen( prefix );
 	if ( len > bp ) {
 		for (i = 0;	examples[i] != NULL; ++i) {
 			if (strncmp(prefix + bp, examples[i], strlen(prefix) - bp) == 0) {
@@ -39,7 +39,7 @@ void colorHook( char const* str_, ReplxxColor* colors_, int size_, void* ud ) {
 }
 
 int main (int argc, char** argv) {
-	const char* examples[] = {
+	char* examples[] = {
 		"db", "hello", "hallo", "hans", "hansekogge", "seamann", "quetzalcoatl", "quit", "power", NULL
 	};
 	Replxx* replxx = replxx_init();

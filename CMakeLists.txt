@@ -68,7 +68,7 @@ add_library(
   src/ConvertUTF.cpp
   src/escape.cxx
   src/history.cxx
-  src/inputbuffer.cxx
+  src/replxx_impl.cxx
   src/io.cxx
   src/prompt.cxx
   src/replxx.cxx

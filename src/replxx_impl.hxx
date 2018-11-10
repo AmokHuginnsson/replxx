@@ -42,14 +42,39 @@
 
 namespace replxx {
 
+struct PromptBase;
+
 class Replxx::ReplxxImpl {
 public:
 	typedef std::vector<Utf32String> completions_t;
 	typedef std::vector<Utf32String> hints_t;
-	typedef std::unique_ptr<char[]> input_buffer_t;
+	typedef std::unique_ptr<char[]> utf8_buffer_t;
+	typedef std::unique_ptr<char32_t[]> input_buffer_t;
+	typedef std::unique_ptr<char[]> char_widths_t;
+	typedef std::vector<char32_t> display_t;
+	enum class HINT_ACTION {
+		REGENERATE,
+		REPAINT,
+		SKIP
+	};
+	enum class NEXT {
+		CONTINUE,
+		RETURN,
+		BAIL
+	};
+	static int const REPLXX_MAX_LINE = 4096;
 private:
 	int _maxCharacterCount;
-	input_buffer_t _inputBuffer;
+	utf8_buffer_t _utf8Buffer;
+	int            _buflen;     // buffer size in characters
+	input_buffer_t _buf32;      // input buffer
+	char_widths_t  _charWidths; // character widths from mk_wcwidth()
+	display_t      _display;
+	Utf32String    _hint;
+	int _len;    // length of text in input buffer
+	int _pos;    // character position in buffer ( 0 <= _pos <= _len )
+	int _prefix; // prefix length used in common prefix search
+	int _hintSelection; // Currently selected hint.
 	History _history;
 	KillRing _killRing;
 	int _maxHintRows;
@@ -93,52 +118,33 @@ public:
 	completions_t call_completer( std::string const& input, int breakPos ) const;
 	hints_t call_hinter( std::string const& input, int breakPos, Replxx::Color& color ) const;
 	void call_highlighter( std::string const& input, Replxx::colors_t& colors ) const;
-	History& history( void ) {
-		return ( _history );
-	}
-	KillRing& kill_ring( void ) {
-		return ( _killRing );
-	}
-	bool has_hinter( void ) const {
-		return ( !! _hintCallback );
-	}
-	bool has_completer( void ) const {
-		return ( !! _completionCallback );
-	}
-	bool has_highlighter( void ) const {
-		return ( !! _highlighterCallback );
-	}
-	bool no_color( void ) const {
-		return ( _noColor );
-	}
-	int max_hint_rows( void ) const {
-		return ( _maxHintRows );
-	}
-	char const* break_chars( void ) const {
-		return ( _breakChars );
-	}
-	char const* special_prefixes( void ) const {
-		return ( _specialPrefixes );
-	}
-	bool beep_on_ambiguous_completion( void ) const {
-		return ( _beepOnAmbiguousCompletion );
-	}
-	bool complete_on_empty( void ) const {
-		return ( _completeOnEmpty );
-	}
-	bool double_tab_completion( void ) const {
-		return ( _doubleTabCompletion );
-	}
-	int completion_count_cutoff( void ) const {
-		return ( _completionCountCutoff );
-	}
 	int print( char const* , int );
 private:
 	ReplxxImpl( ReplxxImpl const& ) = delete;
 	ReplxxImpl& operator = ( ReplxxImpl const& ) = delete;
 private:
-	void realloc( int len );
+	void preloadBuffer( char const* preloadText );
+	int getInputLine( PromptBase& pi );
+	int length( void ) const {
+		return _len;
+	}
+	char32_t* buf() {
+		return ( _buf32.get() );
+	}
+	NEXT insert_character( PromptBase&, int );
+	void realloc_utf8_buffer( int );
+	void realloc( int );
 	void read_from_stdin( void );
+	void clearScreen(PromptBase& pi);
+	int incrementalHistorySearch(PromptBase& pi, int startChar);
+	void commonPrefixSearch(PromptBase& pi, int startChar);
+	int completeLine(PromptBase& pi);
+	void refreshLine(PromptBase& pi, HINT_ACTION = HINT_ACTION::REGENERATE);
+	void highlight( int, bool );
+	int handle_hints( PromptBase&, HINT_ACTION );
+	void setColor( Replxx::Color );
+	int start_index( void );
+	void clear();
 };
 
 }
