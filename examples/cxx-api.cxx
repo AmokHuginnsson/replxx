@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "replxx.hxx"
+
 using Replxx = replxx::Replxx;
 
 // prototypes
@@ -178,7 +179,7 @@ int main() {
 	rx.set_max_history_size(12);
 
 	// set the max number of hint rows to show
-	rx.set_max_hint_rows(8);
+	rx.set_max_hint_rows(3);
 
 	// set the callbacks
 	rx.set_completion_callback(hook_completion, static_cast<void*>(&examples));
@@ -187,10 +188,10 @@ int main() {
 
 	// display initial welcome message
 	std::cout
-	<< "Welcome to Replxx\n"
-	<< "Press 'tab' to view autocompletions\n"
-	<< "Type '.help' for help\n"
-	<< "Type '.quit' or '.exit' to exit\n\n";
+		<< "Welcome to Replxx\n"
+		<< "Press 'tab' to view autocompletions\n"
+		<< "Type '.help' for help\n"
+		<< "Type '.quit' or '.exit' to exit\n\n";
 
 	// set the repl prompt
 	std::string prompt {"\x1b[1;32mreplxx\x1b[0m> "};
@@ -226,12 +227,12 @@ int main() {
 		} else if (input.compare(0, 5, ".help") == 0) {
 			// display the help output
 			std::cout
-			<< ".help\n\tdisplays the help output\n"
-			<< ".quit\n\texit the repl\n"
-			<< ".exit\n\texit the repl\n"
-			<< ".clear\n\tclears the screen\n"
-			<< ".history\n\tdisplays the history output\n"
-			<< ".prompt <str>\n\tset the repl prompt to <str>\n";
+				<< ".help\n\tdisplays the help output\n"
+				<< ".quit\n\texit the repl\n"
+				<< ".exit\n\texit the repl\n"
+				<< ".clear\n\tclears the screen\n"
+				<< ".history\n\tdisplays the history output\n"
+				<< ".prompt <str>\n\tset the repl prompt to <str>\n";
 
 			rx.history_add(input);
 			continue;
