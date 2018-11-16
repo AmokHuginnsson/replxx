@@ -2,7 +2,66 @@
 
 import pexpect
 import unittest
+import re
 import os
+
+keytab = {
+	"<home>": "\033[1~",
+	"<end>": "\033[4~",
+	"<ins>": "\033[2~",
+	"<del>": "\033[3~",
+	"<pgup>": "\033[5~",
+	"<pgdown>": "\033[6~",
+	"<backspace>": "",
+	"<tab>": "\t",
+	"<cr>": "\r",
+	"<lf>": "\n",
+	"<left>": "\033OD",
+	"<right>": "\033OC",
+	"<up>": "\033OA",
+	"<down>": "\033OB",
+	"<c-left>": "\033[1;5D",
+	"<c-right>": "\033[1;5C",
+	"<c-up>": "\033[1;5A",
+	"<c-down>": "\033[1;5B",
+	"<c-c>": "",
+	"<c-d>": "",
+	"<c-a>": "",
+	"<c-e>": "",
+	"<c-w>": "",
+	"<c-p>": "",
+	"<c-n>": "",
+	"<m-f>": "\033f",
+	"<m-b>": "\033b",
+	"<m-p>": "\033p",
+	"<m-n>": "\033n",
+	"<m-backspace>": "\033\177",
+	"<f1>": "\033OP",
+	"<f2>": "\033OQ"
+}
+
+termseq = {
+	"\x1b[0m": "<rst>",
+	"\x1b[J": "<ceos>",
+	"\x1b[0;1;30m": "<gray>",
+	"\x1b[0;22;31m": "<red>",
+	"\x1b[0;22;32m": "<green>",
+}
+
+def sym_to_raw( str_ ):
+	for sym, seq in keytab.items():
+		str_ = str_.replace( sym, seq )
+	return str_
+
+colRe = re.compile( "\\x1b\\[(\\d+)G" )
+upRe = re.compile( "\\x1b\\[(\\d+)A" )
+
+def seq_to_sym( str_ ):
+	for seq, sym in termseq.items():
+		str_ = str_.replace( seq, sym )
+	str_ = colRe.sub( "<c\\1>", str_ )
+	str_ = upRe.sub( "<u\\1>", str_ )
+	return str_
 
 class ReplxxTests( unittest.TestCase ):
 	_prompt_ = "\033\\[1;32mreplxx\033\\[0m> "
@@ -14,46 +73,46 @@ class ReplxxTests( unittest.TestCase ):
 		self_._replxx.expect( ReplxxTests._prompt_ )
 		self_.maxDiff = None
 	def check_scenario( self_, seq_, expected_ ):
-		self_._replxx.send( seq_ )
+		self_._replxx.send( sym_to_raw( seq_ ) )
 		self_._replxx.expect( ReplxxTests._prompt_ + "\r\nExiting Replxx\r\n" )
-		self_.assertSequenceEqual( self_._replxx.before, expected_ )
+		self_.assertSequenceEqual( seq_to_sym( self_._replxx.before ), expected_ )
 	def test_home_key( self_ ):
 		self_.check_scenario(
-			"abc\033[1~z\r",
-			"\x1b[9G\x1b[Ja\x1b[0m\x1b[0;1;30m\x1b[0m\x1b[10G\x1b[9G\x1b[Jab\x1b[0m\x1b[0;1;30m\x1b[0m\x1b[11G\x1b[9G\x1b[Jabc\x1b[0m\x1b[0;1;30m\x1b[0m\x1b[12G\x1b[9G\x1b[Jabc\x1b[0m\x1b[9G\x1b[9G\x1b[Jzabc\x1b[0m\x1b[10G\x1b[9G\x1b[Jzabc\x1b[0m\x1b[13G\r\n"
+			"abc<home>z<cr><c-d>",
+			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc<rst><c9><c9><ceos>zabc<rst><c10><c9><ceos>zabc<rst><c13>\r\n"
 			"zabc\r\n"
 		)
 	def test_end_key( self_ ):
 		self_.check_scenario(
-			"abc\033[1~z\033[4~q\r",
-			"\x1b[9G\x1b[Ja\x1b[0m\x1b[0;1;30m\x1b[0m\x1b[10G\x1b[9G\x1b[Jab\x1b[0m\x1b[0;1;30m\x1b[0m\x1b[11G\x1b[9G\x1b[Jabc\x1b[0m\x1b[0;1;30m\x1b[0m\x1b[12G\x1b[9G\x1b[Jabc\x1b[0m\x1b[9G\x1b[9G\x1b[Jzabc\x1b[0m\x1b[10G\x1b[9G\x1b[Jzabc\x1b[0m\x1b[0;1;30m\x1b[0m\x1b[13G\x1b[9G\x1b[Jzabcq\x1b[0m\x1b[0;1;30m\x1b[0m\x1b[14G\x1b[9G\x1b[Jzabcq\x1b[0m\x1b[14G\r\n"
+			"abc<home>z<end>q<cr><c-d>",
+			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc<rst><c9><c9><ceos>zabc<rst><c10><c9><ceos>zabc<rst><gray><rst><c13><c9><ceos>zabcq<rst><gray><rst><c14><c9><ceos>zabcq<rst><c14>\r\n"
 			"zabcq\r\n"
 		)
 	def test_hint_show( self_ ):
 		self_.check_scenario(
-			"co\r",
-			"\x1b[9G\x1b[Jc\x1b[0m\x1b[0;1;30m\x1b[0m\x1b[10G\x1b[9G\x1b[Jco\x1b[0m\x1b[0;1;30m\x1b[0m\r\n"
-			"        \x1b[0;1;30mcolor_black\x1b[0m\r\n"
-			"        \x1b[0;1;30mcolor_red\x1b[0m\r\n"
-			"        \x1b[0;1;30mcolor_green\x1b[0m\x1b[3A\x1b[11G\x1b[9G\x1b[Jco\x1b[0m\x1b[11G\r\n"
+			"co\r<c-d>",
+			"<c9><ceos>c<rst><gray><rst><c10><c9><ceos>co<rst><gray><rst>\r\n"
+			"        <gray>color_black<rst>\r\n"
+			"        <gray>color_red<rst>\r\n"
+			"        <gray>color_green<rst><u3><c11><c9><ceos>co<rst><c11>\r\n"
 			"co\r\n"
 		)
 	def test_hint_scroll_down( self_ ):
 		self_.check_scenario(
-			"co\033[1;5B\033[1;5B\t\r",
-			"\x1b[9G\x1b[Jc\x1b[0m\x1b[0;1;30m\x1b[0m\x1b[10G\x1b[9G\x1b[Jco\x1b[0m\x1b[0;1;30m\x1b[0m\r\n"
-			"        \x1b[0;1;30mcolor_black\x1b[0m\r\n"
-			"        \x1b[0;1;30mcolor_red\x1b[0m\r\n"
+			"co<c-down><c-down><tab><cr><c-d>",
+			"<c9><ceos>c<rst><gray><rst><c10><c9><ceos>co<rst><gray><rst>\r\n"
+			"        <gray>color_black<rst>\r\n"
+			"        <gray>color_red<rst>\r\n"
 			"        "
-			"\x1b[0;1;30mcolor_green\x1b[0m\x1b[3A\x1b[11G\x1b[9G\x1b[Jco\x1b[0m\x1b[0;1;30mlor_black\x1b[0m\r\n"
-			"        \x1b[0;1;30mcolor_red\x1b[0m\r\n"
-			"        \x1b[0;1;30mcolor_green\x1b[0m\r\n"
+			"<gray>color_green<rst><u3><c11><c9><ceos>co<rst><gray>lor_black<rst>\r\n"
+			"        <gray>color_red<rst>\r\n"
+			"        <gray>color_green<rst>\r\n"
 			"        "
-			"\x1b[0;1;30mcolor_brown\x1b[0m\x1b[3A\x1b[11G\x1b[9G\x1b[Jco\x1b[0m\x1b[0;1;30mlor_red\x1b[0m\r\n"
-			"        \x1b[0;1;30mcolor_green\x1b[0m\r\n"
-			"        \x1b[0;1;30mcolor_brown\x1b[0m\r\n"
+			"<gray>color_brown<rst><u3><c11><c9><ceos>co<rst><gray>lor_red<rst>\r\n"
+			"        <gray>color_green<rst>\r\n"
+			"        <gray>color_brown<rst>\r\n"
 			"        "
-			"\x1b[0;1;30mcolor_blue\x1b[0m\x1b[3A\x1b[11G\x1b[9G\x1b[J\x1b[0;22;31mcolor_red\x1b[0m\x1b[0;22;32m\x1b[0m\x1b[18G\x1b[9G\x1b[J\x1b[0;22;31mcolor_red\x1b[0m\x1b[18G\r\n"
+			"<gray>color_blue<rst><u3><c11><c9><ceos><red>color_red<rst><green><rst><c18><c9><ceos><red>color_red<rst><c18>\r\n"
 			"color_red\r\n"
 		)
 
