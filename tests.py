@@ -56,7 +56,11 @@ termseq = {
 	"\x1b[0;1;30m": "<gray>",
 	"\x1b[0;22;31m": "<red>",
 	"\x1b[0;22;32m": "<green>",
+	"\x1b[0;1;31m": "<brightred>",
+	"\x1b[0;1;34m": "<brightblue>",
+	"\x1b[0;1;35m": "<brightmagenta>",
 	"\x1b[0;1;37m": "<white>",
+	"\x1b[101;1;33m": "<err>"
 }
 colRe = re.compile( "\\x1b\\[(\\d+)G" )
 upRe = re.compile( "\\x1b\\[(\\d+)A" )
@@ -89,6 +93,12 @@ class ReplxxTests( unittest.TestCase ):
 		self_._replxx.send( sym_to_raw( seq_ ) )
 		self_._replxx.expect( ReplxxTests._prompt_ + "\r\nExiting Replxx\r\n" )
 		self_.assertSequenceEqual( seq_to_sym( self_._replxx.before ), expected_ )
+	def test_ctrl_c( self_ ):
+		self_.check_scenario(
+			"abc<c-c><c-d>",
+			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc<rst><c12>^C\r"
+			"\r\n"
+		)
 	def test_home_key( self_ ):
 		self_.check_scenario(
 			"abc<home>z<cr><c-d>",
@@ -192,6 +202,63 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		with open( "replxx_history.txt", "rb" ) as f:
 			self_.assertSequenceEqual( f.read().decode(), "one\ntwo\nthree\nfour\n" )
+	def test_paren_matching( self_ ):
+		self_.check_scenario(
+			"ab(cd)ef<left><left><left><left><left><left><left><cr><c-d>",
+			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>ab<brightmagenta>(<rst><gray><rst><c12><c9><ceos>ab<brightmagenta>(<rst>c<rst><gray><rst><c13><c9><ceos>ab<brightmagenta>(<rst>cd<rst><gray><rst><c14><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst><gray><rst><c15><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>e<rst><gray><rst><c16><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><gray><rst><c17><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c16><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c15><c9><ceos>ab<brightred>(<rst>cd<brightmagenta>)<rst>ef<rst><c14><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c13><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c12><c9><ceos>ab<brightmagenta>(<rst>cd<brightred>)<rst>ef<rst><c11><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c10><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c17>\r\n"
+			"ab(cd)ef\r\n"
+		)
+	def test_paren_not_matched( self_ ):
+		self_.check_scenario(
+			"a(b[c)d<left><left><left><left><left><left><left><cr><c-d>",
+			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>a<brightmagenta>(<rst><gray><rst><c11><c9><ceos>a<brightmagenta>(<rst>b<rst><gray><rst><c12><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst><gray><rst><c13><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<rst><gray><rst><c14><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst><gray><rst><c15><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><gray><rst><c16><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c15><c9><ceos>a<err>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c14><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c13><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c12><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c11><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<err>)<rst>d<rst><c10><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c9><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c16>\r\n"
+			"a(b[c)d\r\n"
+		)
+	def test_tab_completion( self_ ):
+		self_.check_scenario(
+			"co<tab><tab>bri<tab>b<tab><cr><c-d>",
+			"<c9><ceos>c<rst><gray><rst><c10><c9><ceos>co<rst><gray><rst>\r\n"
+			"        <gray>color_black<rst>\r\n"
+			"        <gray>color_red<rst>\r\n"
+			"        <gray>color_green<rst><u3><c11><c9><ceos>color_<rst><gray><rst>\r\n"
+			"        <gray>color_black<rst>\r\n"
+			"        <gray>color_red<rst>\r\n"
+			"        <gray>color_green<rst><u3><c15><c9><ceos>color_<rst><c15>\r\n"
+			"<brightmagenta>color_<rst>black          "
+			"<brightmagenta>color_<rst>cyan           "
+			"<brightmagenta>color_<rst>brightblue\r\n"
+			"<brightmagenta>color_<rst>red            "
+			"<brightmagenta>color_<rst>lightgray      "
+			"<brightmagenta>color_<rst>brightmagenta\r\n"
+			"<brightmagenta>color_<rst>green          "
+			"<brightmagenta>color_<rst>gray           "
+			"<brightmagenta>color_<rst>brightcyan\r\n"
+			"<brightmagenta>color_<rst>brown          "
+			"<brightmagenta>color_<rst>brightred      <brightmagenta>color_<rst>white\r\n"
+			"<brightmagenta>color_<rst>blue           "
+			"<brightmagenta>color_<rst>brightgreen    <brightmagenta>color_<rst>normal\r\n"
+			"<brightmagenta>color_<rst>magenta        <brightmagenta>color_<rst>yellow\r\n"
+			"\x1b[1;32mreplxx<rst>> <c9><ceos>color_<rst><gray><rst>\r\n"
+			"        <gray>color_black<rst>\r\n"
+			"        <gray>color_red<rst>\r\n"
+			"        <gray>color_green<rst><u3><c15><c9><ceos>color_b<rst><gray><rst>\r\n"
+			"        <gray>color_black<rst>\r\n"
+			"        <gray>color_brown<rst>\r\n"
+			"        <gray>color_blue<rst><u3><c16><c9><ceos>color_br<rst><gray><rst>\r\n"
+			"        <gray>color_brown<rst>\r\n"
+			"        <gray>color_brightred<rst>\r\n"
+			"        "
+			"<gray>color_brightgreen<rst><u3><c17><c9><ceos>color_bri<rst><gray><rst>\r\n"
+			"        <gray>color_brightred<rst>\r\n"
+			"        <gray>color_brightgreen<rst>\r\n"
+			"        "
+			"<gray>color_brightblue<rst><u3><c18><c9><ceos>color_bright<rst><gray><rst>\r\n"
+			"        <gray>color_brightred<rst>\r\n"
+			"        <gray>color_brightgreen<rst>\r\n"
+			"        "
+			"<gray>color_brightblue<rst><u3><c21><c9><ceos>color_brightb<rst><green>lue<rst><c22><c9><ceos><brightblue>color_brightblue<rst><green><rst><c25><c9><ceos><brightblue>color_brightblue<rst><c25>\r\n"
+			"color_brightblue\r\n"
+		)
 
 if __name__ == '__main__':
 	unittest.main()
