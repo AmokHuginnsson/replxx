@@ -57,6 +57,7 @@ termseq = {
 	"\x1b[0;22;31m": "<red>",
 	"\x1b[0;22;32m": "<green>",
 	"\x1b[0;1;31m": "<brightred>",
+	"\x1b[1;32m": "<brightgreen>",
 	"\x1b[0;1;34m": "<brightblue>",
 	"\x1b[0;1;35m": "<brightmagenta>",
 	"\x1b[0;1;37m": "<white>",
@@ -82,14 +83,13 @@ class ReplxxTests( unittest.TestCase ):
 	@classmethod
 	def setUpClass( cls ):
 		os.environ["TERM"] = "xterm"
-	def setUp( self_ ):
+	def check_scenario( self_, seq_, expected_, history = "one\ntwo\nthree\n" ):
 		with open( "replxx_history.txt", "wb" ) as f:
-			f.write( "one\ntwo\nthree\n".encode() )
+			f.write( history.encode() )
 			f.close()
 		self_._replxx = pexpect.spawn( "./build/example-cxx-api", maxread = 1, encoding = "utf-8", dimensions = ( 25, 80 ) )
 		self_._replxx.expect( ReplxxTests._prompt_ )
 		self_.maxDiff = None
-	def check_scenario( self_, seq_, expected_ ):
 		self_._replxx.send( sym_to_raw( seq_ ) )
 		self_._replxx.expect( ReplxxTests._prompt_ + "\r\nExiting Replxx\r\n" )
 		self_.assertSequenceEqual( seq_to_sym( self_._replxx.before ), expected_ )
@@ -238,7 +238,7 @@ class ReplxxTests( unittest.TestCase ):
 			"<brightmagenta>color_<rst>blue           "
 			"<brightmagenta>color_<rst>brightgreen    <brightmagenta>color_<rst>normal\r\n"
 			"<brightmagenta>color_<rst>magenta        <brightmagenta>color_<rst>yellow\r\n"
-			"\x1b[1;32mreplxx<rst>> <c9><ceos>color_<rst><gray><rst>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos>color_<rst><gray><rst>\r\n"
 			"        <gray>color_black<rst>\r\n"
 			"        <gray>color_red<rst>\r\n"
 			"        <gray>color_green<rst><u3><c15><c9><ceos>color_b<rst><gray><rst>\r\n"
@@ -259,6 +259,42 @@ class ReplxxTests( unittest.TestCase ):
 			"<gray>color_brightblue<rst><u3><c21><c9><ceos>color_brightb<rst><green>lue<rst><c22><c9><ceos><brightblue>color_brightblue<rst><green><rst><c25><c9><ceos><brightblue>color_brightblue<rst><c25>\r\n"
 			"color_brightblue\r\n"
 		)
+	def test_history_search_backward( self_ ):
+		self_.check_scenario(
+			"<c-r>repl<c-r><cr><c-d>",
+			"<c9><ceos><rst><gray><rst><c9><c1><ceos>(reverse-i-search)`': "
+			"<c23><c1><ceos>(reverse-i-search)`r': echo repl "
+			"golf<c29><c1><ceos>(reverse-i-search)`re': echo repl "
+			"golf<c30><c1><ceos>(reverse-i-search)`rep': echo repl "
+			"golf<c31><c1><ceos>(reverse-i-search)`repl': echo repl "
+			"golf<c32><c1><ceos>(reverse-i-search)`repl': charlie repl "
+			"delta<c35><c1><ceos><brightgreen>replxx<rst>> charlie repl "
+			"delta<c17><c9><ceos>charlie repl delta<rst><c27>\r\n"
+			"charlie repl delta\r\n",
+			"some command\n"
+			"alfa repl bravo\n"
+			"other request\n"
+			"charlie repl delta\n"
+			"misc input\n"
+			"echo repl golf\n"
+			"final thoughts\n"
+		)
+	def test_history_prefix_search_backward( self_ ):
+		self_.check_scenario(
+			"repl<m-p><m-p><cr><c-d>",
+			"<c9><ceos>r<rst><gray><rst><c10><c9><ceos>re<rst><gray><rst><c11><c9><ceos>rep<rst><gray><rst><c12><c9><ceos>repl<rst><gray><rst><c13><c9><ceos>repl_echo "
+			"golf<rst><gray><rst><c23><c9><ceos>repl_charlie "
+			"delta<rst><gray><rst><c27><c9><ceos>repl_charlie delta<rst><c27>\r\n"
+			"repl_charlie delta\r\n",
+			"some command\n"
+			"repl_alfa bravo\n"
+			"other request\n"
+			"repl_charlie delta\n"
+			"misc input\n"
+			"repl_echo golf\n"
+			"final thoughts\n"
+		)
+
 
 if __name__ == '__main__':
 	unittest.main()
