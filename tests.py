@@ -41,6 +41,7 @@ keytab = {
 	"<c-w>": "",
 	"<c-y>": "",
 	"<m-b>": "\033b",
+	"<m-c>": "\033c",
 	"<m-d>": "\033d",
 	"<m-f>": "\033f",
 	"<m-n>": "\033n",
@@ -294,8 +295,83 @@ class ReplxxTests( unittest.TestCase ):
 			"repl_echo golf\n"
 			"final thoughts\n"
 		)
+	def test_capitalize( self_ ):
+		self_.check_scenario(
+			"<up><home><right><m-c><m-c><right><right><m-c><m-c><m-c><cr><c-d>",
+			"<c9><ceos>abc defg ijklmn zzxq<rst><gray><rst><c29><c9><ceos>abc defg ijklmn "
+			"zzxq<rst><c9><c9><ceos>abc defg ijklmn zzxq<rst><c10><c9><ceos>aBc defg "
+			"ijklmn zzxq<rst><c12><c9><ceos>aBc Defg ijklmn zzxq<rst><c17><c9><ceos>aBc "
+			"Defg ijklmn zzxq<rst><c18><c9><ceos>aBc Defg ijklmn "
+			"zzxq<rst><c19><c9><ceos>aBc Defg iJklmn zzxq<rst><c24><c9><ceos>aBc Defg "
+			"iJklmn Zzxq<rst><gray><rst><c29><c9><ceos>aBc Defg iJklmn Zzxq<rst><c29>\r\n"
+			"aBc Defg iJklmn Zzxq\r\n",
+			"abc defg ijklmn zzxq\n"
+		)
+	def test_kill_to_beginning_of_line( self_ ):
+		self_.check_scenario(
+			"<up><home><c-right><c-right><right><c-u><end><c-y><cr><c-d>",
+			"<c9><ceos><brightblue>+<rst>abc defg<brightblue>--<rst>ijklmn "
+			"zzxq<brightblue>+<rst><gray><rst><c32><c9><ceos><brightblue>+<rst>abc "
+			"defg<brightblue>--<rst>ijklmn "
+			"zzxq<brightblue>+<rst><c9><c9><ceos><brightblue>+<rst>abc "
+			"defg<brightblue>--<rst>ijklmn "
+			"zzxq<brightblue>+<rst><c13><c9><ceos><brightblue>+<rst>abc "
+			"defg<brightblue>--<rst>ijklmn "
+			"zzxq<brightblue>+<rst><c18><c9><ceos><brightblue>+<rst>abc "
+			"defg<brightblue>--<rst>ijklmn "
+			"zzxq<brightblue>+<rst><c19><c9><ceos><brightblue>-<rst>ijklmn "
+			"zzxq<brightblue>+<rst><c9><c9><ceos><brightblue>-<rst>ijklmn "
+			"zzxq<brightblue>+<rst><gray><rst><c22><c9><ceos><brightblue>-<rst>ijklmn "
+			"zzxq<brightblue>++<rst>abc "
+			"defg<brightblue>-<rst><gray><rst><c32><c9><ceos><brightblue>-<rst>ijklmn "
+			"zzxq<brightblue>++<rst>abc defg<brightblue>-<rst><c32>\r\n"
+			"-ijklmn zzxq++abc defg-\r\n",
+			"+abc defg--ijklmn zzxq+\n"
+		)
+	def test_kill_to_end_of_line( self_ ):
+		self_.check_scenario(
+			"<up><home><c-right><c-right><right><c-k><home><c-y><cr><c-d>",
+			"<c9><ceos><brightblue>+<rst>abc defg<brightblue>--<rst>ijklmn "
+			"zzxq<brightblue>+<rst><gray><rst><c32><c9><ceos><brightblue>+<rst>abc "
+			"defg<brightblue>--<rst>ijklmn "
+			"zzxq<brightblue>+<rst><c9><c9><ceos><brightblue>+<rst>abc "
+			"defg<brightblue>--<rst>ijklmn "
+			"zzxq<brightblue>+<rst><c13><c9><ceos><brightblue>+<rst>abc "
+			"defg<brightblue>--<rst>ijklmn "
+			"zzxq<brightblue>+<rst><c18><c9><ceos><brightblue>+<rst>abc "
+			"defg<brightblue>--<rst>ijklmn "
+			"zzxq<brightblue>+<rst><c19><c9><ceos><brightblue>+<rst>abc "
+			"defg<brightblue>-<rst><gray><rst><c19><c9><ceos><brightblue>+<rst>abc "
+			"defg<brightblue>-<rst><c9><c9><ceos><brightblue>-<rst>ijklmn "
+			"zzxq<brightblue>++<rst>abc "
+			"defg<brightblue>-<rst><c22><c9><ceos><brightblue>-<rst>ijklmn "
+			"zzxq<brightblue>++<rst>abc defg<brightblue>-<rst><c32>\r\n"
+			"-ijklmn zzxq++abc defg-\r\n",
+			"+abc defg--ijklmn zzxq+\n"
+		)
+	def test_kill_next_word( self_ ):
+		self_.check_scenario(
+			"<up><home><c-right><m-d><c-right><c-y><cr><c-d>",
+			"<c9><ceos>alpha charlie bravo delta<rst><gray><rst><c34><c9><ceos>alpha "
+			"charlie bravo delta<rst><c9><c9><ceos>alpha charlie bravo "
+			"delta<rst><c14><c9><ceos>alpha bravo delta<rst><c14><c9><ceos>alpha bravo "
+			"delta<rst><c20><c9><ceos>alpha bravo charlie delta<rst><c28><c9><ceos>alpha "
+			"bravo charlie delta<rst><c34>\r\n"
+			"alpha bravo charlie delta\r\n",
+			"alpha charlie bravo delta\n"
+		)
+	def test_kill_prev_word( self_ ):
+		self_.check_scenario(
+			"<up><c-left><c-w><c-left><c-y><cr><c-d>",
+			"<c9><ceos>alpha charlie bravo delta<rst><gray><rst><c34><c9><ceos>alpha "
+			"charlie bravo delta<rst><c29><c9><ceos>alpha charlie "
+			"delta<rst><c23><c9><ceos>alpha charlie delta<rst><c15><c9><ceos>alpha bravo "
+			"charlie delta<rst><c21><c9><ceos>alpha bravo charlie delta<rst><c34>\r\n"
+			"alpha bravo charlie delta\r\n",
+			"alpha charlie bravo delta\n"
+		)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 	unittest.main()
 
