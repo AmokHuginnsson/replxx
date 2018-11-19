@@ -87,34 +87,6 @@ size_t strlen32(const char32_t* str) {
 	return ptr - str;
 }
 
-size_t strlen8(const char8_t* str) {
-	return strlen(reinterpret_cast<const char*>(str));
-}
-
-char8_t* strdup8(const char* src) {
-	return reinterpret_cast<char8_t*>(strdup(src));
-}
-
-
-void copyString32to16(char16_t* dst, size_t dstSize, size_t* dstCount,
-														 const char32_t* src, size_t srcSize) {
-	const UTF32* sourceStart = reinterpret_cast<const UTF32*>(src);
-	const UTF32* sourceEnd = sourceStart + srcSize;
-	char16_t* targetStart = reinterpret_cast<char16_t*>(dst);
-	char16_t* targetEnd = targetStart + dstSize;
-
-	ConversionResult res = ConvertUTF32toUTF16(
-			&sourceStart, sourceEnd, &targetStart, targetEnd, lenientConversion);
-
-	if (res == conversionOK) {
-		*dstCount = targetStart - reinterpret_cast<char16_t*>(dst);
-
-		if (*dstCount < dstSize) {
-			*targetStart = 0;
-		}
-	}
-}
-
 void copyString32to8(char* dst, size_t dstSize, size_t* dstCount,
 														const char32_t* src, size_t srcSize) {
 	if ( ! locale::is8BitEncoding ) {
