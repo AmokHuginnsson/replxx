@@ -44,8 +44,10 @@ keytab = {
 	"<m-c>": "\033c",
 	"<m-d>": "\033d",
 	"<m-f>": "\033f",
+	"<m-l>": "\033l",
 	"<m-n>": "\033n",
 	"<m-p>": "\033p",
+	"<m-u>": "\033u",
 	"<m-backspace>": "\033\177",
 	"<f1>": "\033OP",
 	"<f2>": "\033OQ"
@@ -307,6 +309,38 @@ class ReplxxTests( unittest.TestCase ):
 			"aBc Defg iJklmn Zzxq\r\n",
 			"abc defg ijklmn zzxq\n"
 		)
+	def test_make_upper_case( self_ ):
+		self_.check_scenario(
+			"<up><home><right><right><right><m-u><m-u><right><m-u><cr><c-d>",
+			"<c9><ceos>abcdefg hijklmno pqrstuvw<rst><gray><rst><c34><c9><ceos>abcdefg "
+			"hijklmno pqrstuvw<rst><c9><c9><ceos>abcdefg hijklmno "
+			"pqrstuvw<rst><c10><c9><ceos>abcdefg hijklmno "
+			"pqrstuvw<rst><c11><c9><ceos>abcdefg hijklmno "
+			"pqrstuvw<rst><c12><c9><ceos>abcDEFG hijklmno "
+			"pqrstuvw<rst><c16><c9><ceos>abcDEFG HIJKLMNO "
+			"pqrstuvw<rst><c25><c9><ceos>abcDEFG HIJKLMNO "
+			"pqrstuvw<rst><c26><c9><ceos>abcDEFG HIJKLMNO "
+			"PQRSTUVW<rst><gray><rst><c34><c9><ceos>abcDEFG HIJKLMNO "
+			"PQRSTUVW<rst><c34>\r\n"
+			"abcDEFG HIJKLMNO PQRSTUVW\r\n",
+			"abcdefg hijklmno pqrstuvw\n"
+		)
+	def test_make_lower_case( self_ ):
+		self_.check_scenario(
+			"<up><home><right><right><right><m-l><m-l><right><m-l><cr><c-d>",
+			"<c9><ceos>ABCDEFG HIJKLMNO PQRSTUVW<rst><gray><rst><c34><c9><ceos>ABCDEFG "
+			"HIJKLMNO PQRSTUVW<rst><c9><c9><ceos>ABCDEFG HIJKLMNO "
+			"PQRSTUVW<rst><c10><c9><ceos>ABCDEFG HIJKLMNO "
+			"PQRSTUVW<rst><c11><c9><ceos>ABCDEFG HIJKLMNO "
+			"PQRSTUVW<rst><c12><c9><ceos>ABCdefg HIJKLMNO "
+			"PQRSTUVW<rst><c16><c9><ceos>ABCdefg hijklmno "
+			"PQRSTUVW<rst><c25><c9><ceos>ABCdefg hijklmno "
+			"PQRSTUVW<rst><c26><c9><ceos>ABCdefg hijklmno "
+			"pqrstuvw<rst><gray><rst><c34><c9><ceos>ABCdefg hijklmno "
+			"pqrstuvw<rst><c34>\r\n"
+			"ABCdefg hijklmno pqrstuvw\r\n",
+			"ABCDEFG HIJKLMNO PQRSTUVW\n"
+		)
 	def test_kill_to_beginning_of_line( self_ ):
 		self_.check_scenario(
 			"<up><home><c-right><c-right><right><c-u><end><c-y><cr><c-d>",
@@ -360,7 +394,7 @@ class ReplxxTests( unittest.TestCase ):
 			"alpha bravo charlie delta\r\n",
 			"alpha charlie bravo delta\n"
 		)
-	def test_kill_prev_word( self_ ):
+	def test_kill_prev_word_to_white_space( self_ ):
 		self_.check_scenario(
 			"<up><c-left><c-w><c-left><c-y><cr><c-d>",
 			"<c9><ceos>alpha charlie bravo delta<rst><gray><rst><c34><c9><ceos>alpha "
@@ -369,6 +403,19 @@ class ReplxxTests( unittest.TestCase ):
 			"charlie delta<rst><c21><c9><ceos>alpha bravo charlie delta<rst><c34>\r\n"
 			"alpha bravo charlie delta\r\n",
 			"alpha charlie bravo delta\n"
+		)
+	def test_kill_prev_word( self_ ):
+		self_.check_scenario(
+			"<up><c-left><m-backspace><c-left><c-y><cr><c-d>",
+			"<c9><ceos>alpha<brightmagenta>.<rst>charlie "
+			"bravo<brightmagenta>.<rst>delta<rst><gray><rst><c34><c9><ceos>alpha<brightmagenta>.<rst>charlie "
+			"bravo<brightmagenta>.<rst>delta<rst><c29><c9><ceos>alpha<brightmagenta>.<rst>charlie "
+			"delta<rst><c23><c9><ceos>alpha<brightmagenta>.<rst>charlie "
+			"delta<rst><c15><c9><ceos>alpha<brightmagenta>.<rst>bravo<brightmagenta>.<rst>charlie "
+			"delta<rst><c21><c9><ceos>alpha<brightmagenta>.<rst>bravo<brightmagenta>.<rst>charlie "
+			"delta<rst><c34>\r\n"
+			"alpha.bravo.charlie delta\r\n",
+			"alpha.charlie bravo.delta\n"
 		)
 
 
