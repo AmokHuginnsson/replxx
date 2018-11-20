@@ -172,6 +172,10 @@ void Replxx::set_max_hint_rows( int count ) {
 	_impl->set_max_hint_rows( count );
 }
 
+void Replxx::set_completion_count_cutoff( int count ) {
+	_impl->set_completion_count_cutoff( count );
+}
+
 void Replxx::set_double_tab_completion( bool val ) {
 	_impl->set_double_tab_completion( val );
 }
@@ -347,6 +351,11 @@ void replxx_set_max_history_size( ::Replxx* replxx_, int len ) {
 void replxx_set_max_hint_rows( ::Replxx* replxx_, int count ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->set_max_hint_rows( count );
+}
+
+void replxx_set_completion_count_cutoff( ::Replxx* replxx_, int count ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->set_completion_count_cutoff( count );
 }
 
 void replxx_set_word_break_characters( ::Replxx* replxx_, char const* breakChars_ ) {

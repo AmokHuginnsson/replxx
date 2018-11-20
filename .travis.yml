@@ -1,12 +1,20 @@
 language: C++
+install:
+  - pip3 install --user --upgrade pip
+  - pip3 install --user --upgrade pexpect
 script:
   - mkdir -p build && cd build
-  - cmake ..
-  - make
+  - CXX=g++-7 cmake ..
+  - CXX=g++-7 make
+  - cd .. && ./tests.py
 addons:
   apt:
+    sources:
+      - ubuntu-toolchain-r-test
     packages:
+      - g++-7
       - cmake
+      - python3-pip
 sudo: false
 cache:
   ccache: true

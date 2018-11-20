@@ -38,23 +38,34 @@ void colorHook( char const* str_, ReplxxColor* colors_, int size_, void* ud ) {
 	}
 }
 
-int main (int argc, char** argv) {
+int main( int argc, char** argv ) {
 	char* examples[] = {
 		"db", "hello", "hallo", "hans", "hansekogge", "seamann", "quetzalcoatl", "quit", "power", NULL
 	};
 	Replxx* replxx = replxx_init();
 	replxx_install_window_change_handler( replxx );
 
-	while(argc > 1) {
-		argc--;
-		argv++;
-		if (!strcmp(*argv, "--keycodes")) {
+	int quiet = 0;
+	while ( argc > 1 ) {
+		-- argc;
+		++ argv;
+		if ( !strcmp( *argv, "--keycodes" ) ) {
 			replxx_debug_dump_print_codes();
 			exit(0);
 		}
+		switch ( (*argv)[0] ) {
+			case 'b': replxx_set_beep_on_ambiguous_completion( replxx, (*argv)[1] - '0' ); break;
+			case 'c': replxx_set_completion_count_cutoff( replxx, atoi( (*argv) + 1 ) );   break;
+			case 'e': replxx_set_complete_on_empty( replxx, (*argv)[1] - '0' );            break;
+			case 'd': replxx_set_double_tab_completion( replxx, (*argv)[1] - '0' );        break;
+			case 'h': replxx_set_max_hint_rows( replxx, atoi( (*argv) + 1 ) );             break;
+			case 's': replxx_set_max_history_size( replxx, atoi( (*argv) + 1 ) );          break;
+			case 'q': quiet = atoi( (*argv) + 1 );                                         break;
+		}
+
 	}
 
-	const char* file = "./history";
+	const char* file = "./replxx_history.txt";
 
 	replxx_history_load( replxx, file );
 	replxx_set_completion_callback( replxx, completionHook, examples );
@@ -84,14 +95,13 @@ int main (int argc, char** argv) {
 				printf("%4d: %s\n", index, hist);
 			}
 		}
-		if (*result == '\0') {
-			break;
+		if (*result != '\0') {
+			printf( quiet ? "%s\r\n" : "thanks for the input: %s\n", result );
+			replxx_history_add( replxx, result );
 		}
-
-		printf( "thanks for the input: %s\n", result );
-		replxx_history_add( replxx, result );
 	}
 	replxx_history_save( replxx, file );
+	printf( "Exiting Replxx\n" );
 	replxx_end( replxx );
 }
 

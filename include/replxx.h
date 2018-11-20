@@ -219,6 +219,10 @@ void replxx_set_word_break_characters( Replxx*, char const* wordBreakers );
  */
 void replxx_set_special_prefixes( Replxx*, char const* specialPrefixes );
 
+/*! \brief How many completions should trigger pagination.
+ */
+void replxx_set_completion_count_cutoff( Replxx*, int count );
+
 /*! \brief Set maximum number of displayed hint rows.
  */
 void replxx_set_max_hint_rows( Replxx*, int count );

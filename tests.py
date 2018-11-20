@@ -83,18 +83,25 @@ def seq_to_sym( str_ ):
 
 class ReplxxTests( unittest.TestCase ):
 	_prompt_ = "\033\\[1;32mreplxx\033\\[0m> "
-	@classmethod
-	def setUpClass( cls ):
-		os.environ["TERM"] = "xterm"
-	def check_scenario( self_, seq_, expected_, history = "one\ntwo\nthree\n" ):
+	_cxxSample_ = "./build/example-cxx-api"
+	_cSample_ = "./build/example-c-api"
+	def check_scenario(
+		self_, seq_, expected_,
+		history = "one\ntwo\nthree\n",
+		term = "xterm", command = _cxxSample_,
+		dimensions = ( 25, 80 ),
+		prompt = _prompt_,
+		end = _prompt_ + "\r\nExiting Replxx\r\n"
+	):
 		with open( "replxx_history.txt", "wb" ) as f:
 			f.write( history.encode() )
 			f.close()
-		self_._replxx = pexpect.spawn( "./build/example-cxx-api", maxread = 1, encoding = "utf-8", dimensions = ( 25, 80 ) )
-		self_._replxx.expect( ReplxxTests._prompt_ )
+		os.environ["TERM"] = term
+		self_._replxx = pexpect.spawn( command, maxread = 1, encoding = "utf-8", dimensions = dimensions )
+		self_._replxx.expect( prompt )
 		self_.maxDiff = None
 		self_._replxx.send( sym_to_raw( seq_ ) )
-		self_._replxx.expect( ReplxxTests._prompt_ + "\r\nExiting Replxx\r\n" )
+		self_._replxx.expect( end )
 		self_.assertSequenceEqual( seq_to_sym( self_._replxx.before ), expected_ )
 	def test_ctrl_c( self_ ):
 		self_.check_scenario(
@@ -417,7 +424,23 @@ class ReplxxTests( unittest.TestCase ):
 			"alpha.bravo.charlie delta\r\n",
 			"alpha.charlie bravo.delta\n"
 		)
-
+	def test_tab_completion_cutoff( self_ ):
+		self_.check_scenario(
+			"<tab>n<tab>y<cr><c-d>",
+			"<c9><ceos><rst><gray><rst><c9>\r\n"
+			"Display all 9 possibilities? (y or n)\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><gray><rst><c9>\r\n"
+			"Display all 9 possibilities? (y or n)<ceos>\r\n"
+			"<brightmagenta><rst>db            <brightmagenta><rst>hallo         "
+			"<brightmagenta><rst>hansekogge    <brightmagenta><rst>quetzalcoatl  "
+			"<brightmagenta><rst>power\r\n"
+			"<brightmagenta><rst>hello         <brightmagenta><rst>hans          "
+			"<brightmagenta><rst>seamann       <brightmagenta><rst>quit\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			command = ReplxxTests._cSample_ + " q1 c3"
+		)
 
 if __name__ == "__main__":
 	unittest.main()

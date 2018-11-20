@@ -190,6 +190,10 @@ public:
 	 */
 	void set_special_prefixes( char const* specialPrefixes );
 
+	/*! \brief How many completions should trigger pagination.
+	 */
+	void set_completion_count_cutoff( int count );
+
 	/*! \brief Set maximum number of displayed hint rows.
 	 */
 	void set_max_hint_rows( int count );

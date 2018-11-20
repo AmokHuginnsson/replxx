@@ -727,8 +727,7 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	bool showCompletions = true;
 	bool onNewLine = false;
 	if ( static_cast<int>( completions.size() ) > _completionCountCutoff ) {
-		int savePos =
-				_pos;	// move cursor to EOL to avoid overwriting the command line
+		int savePos = _pos; // move cursor to EOL to avoid overwriting the command line
 		_pos = _len;
 		refreshLine(pi);
 		_pos = savePos;
@@ -1797,6 +1796,10 @@ void Replxx::ReplxxImpl::set_hint_callback( Replxx::hint_callback_t const& fn, v
 
 void Replxx::ReplxxImpl::set_max_history_size( int len ) {
 	_history.set_max_size( len );
+}
+
+void Replxx::ReplxxImpl::set_completion_count_cutoff( int count ) {
+	_completionCountCutoff = count;
 }
 
 void Replxx::ReplxxImpl::set_max_hint_rows( int count ) {

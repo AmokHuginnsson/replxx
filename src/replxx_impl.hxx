@@ -113,6 +113,7 @@ public:
 	void set_beep_on_ambiguous_completion( bool val );
 	void set_no_color( bool val );
 	void set_max_history_size( int len );
+	void set_completion_count_cutoff( int len );
 	void clear_screen( void );
 	int install_window_change_handler( void );
 	completions_t call_completer( std::string const& input, int breakPos ) const;
