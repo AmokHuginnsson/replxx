@@ -294,7 +294,7 @@ char32_t read_char(void) {
 	int highSurrogate( 0 );
 	while (true) {
 		ReadConsoleInputW(console_in, &rec, 1, &count);
-#if 0	// helper for debugging keystrokes, display info in the debug "Output"
+#if __REPLXX_DEBUG__	// helper for debugging keystrokes, display info in the debug "Output"
 			 // window in the debugger
 				{
 						if ( rec.EventType == KEY_EVENT ) {
@@ -414,8 +414,7 @@ char32_t read_char(void) {
 // program
 // gives us on different keystrokes.	Hit ctrl-C to exit this mode.
 //
-#define _DEBUG_LINUX_KEYBOARD
-#if defined(_DEBUG_LINUX_KEYBOARD)
+#ifdef __REPLXX_DEBUG__
 	if (c == ctrlChar('^')) {	// ctrl-^, special debug mode, prints all keys hit,
 														 // ctrl-C to get out
 		printf(
@@ -466,7 +465,7 @@ char32_t read_char(void) {
 			}
 		}
 	}
-#endif	// _DEBUG_LINUX_KEYBOARD
+#endif	// __REPLXX_DEBUG__
 
 	return EscapeSequenceProcessing::doDispatch(c);
 #endif	// #_WIN32

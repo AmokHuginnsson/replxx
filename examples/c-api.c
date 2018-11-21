@@ -49,10 +49,12 @@ int main( int argc, char** argv ) {
 	while ( argc > 1 ) {
 		-- argc;
 		++ argv;
+#ifdef __REPLXX_DEBUG__
 		if ( !strcmp( *argv, "--keycodes" ) ) {
 			replxx_debug_dump_print_codes();
 			exit(0);
 		}
+#endif
 		switch ( (*argv)[0] ) {
 			case 'b': replxx_set_beep_on_ambiguous_completion( replxx, (*argv)[1] - '0' ); break;
 			case 'c': replxx_set_completion_count_cutoff( replxx, atoi( (*argv) + 1 ) );   break;

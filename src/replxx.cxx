@@ -421,6 +421,7 @@ int replxx_history_size( ::Replxx* replxx_ ) {
 /* This special mode is used by replxx in order to print scan codes
  * on screen for debugging / development purposes. It is implemented
  * by the replxx-c-api-example program using the --keycodes option. */
+#ifdef __REPLXX_DEBUG__
 void replxx_debug_dump_print_codes(void) {
 	char quit[4];
 
@@ -450,6 +451,7 @@ void replxx_debug_dump_print_codes(void) {
 	}
 	disableRawMode();
 }
+#endif // __REPLXX_DEBUG__
 
 int replxx_install_window_change_handler( ::Replxx* replxx_ ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
