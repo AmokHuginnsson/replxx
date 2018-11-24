@@ -88,7 +88,8 @@ class ReplxxTests( unittest.TestCase ):
 	def check_scenario(
 		self_, seq_, expected_,
 		history = "one\ntwo\nthree\n",
-		term = "xterm", command = _cxxSample_,
+		term = "xterm",
+		command = _cxxSample_,
 		dimensions = ( 25, 80 ),
 		prompt = _prompt_,
 		end = _prompt_ + "\r\nExiting Replxx\r\n"
@@ -103,6 +104,20 @@ class ReplxxTests( unittest.TestCase ):
 		self_._replxx.send( sym_to_raw( seq_ ) )
 		self_._replxx.expect( end )
 		self_.assertSequenceEqual( seq_to_sym( self_._replxx.before ), expected_ )
+	def test_unicode( self_ ):
+		self_.check_scenario(
+			"<up><cr><c-d>",
+			"<c9><ceos>aóą Ϩ 𓢀  󃔀  <rst><gray><rst><c21>"
+			"<c9><ceos>aóą Ϩ 𓢀  󃔀  <rst><c21>\r\n"
+			"aóą Ϩ 𓢀  󃔀  \r\n",
+			"aóą Ϩ 𓢀  󃔀  \n"
+		)
+	def test_bad_term( self_ ):
+		self_.check_scenario(
+			"a line of text<cr><c-d>",
+			"a line of text\r\na line of text\r\n",
+			term = "dumb"
+		)
 	def test_ctrl_c( self_ ):
 		self_.check_scenario(
 			"abc<c-c><c-d>",

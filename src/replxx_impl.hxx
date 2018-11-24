@@ -135,7 +135,7 @@ private:
 	NEXT insert_character( PromptBase&, int );
 	void realloc_utf8_buffer( int );
 	void realloc( int );
-	void read_from_stdin( void );
+	char const* read_from_stdin( void );
 	void clearScreen(PromptBase& pi);
 	int incrementalHistorySearch(PromptBase& pi, int startChar);
 	void commonPrefixSearch(PromptBase& pi, int startChar);
