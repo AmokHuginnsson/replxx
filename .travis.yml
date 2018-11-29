@@ -1,4 +1,5 @@
 language: C++
+dist: xenial
 install:
   - pip3 install --user --upgrade pip
   - pip3 install --user --upgrade pexpect
