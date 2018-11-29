@@ -62,6 +62,7 @@ int main( int argc, char** argv ) {
 			case 'd': replxx_set_double_tab_completion( replxx, (*argv)[1] - '0' );        break;
 			case 'h': replxx_set_max_hint_rows( replxx, atoi( (*argv) + 1 ) );             break;
 			case 's': replxx_set_max_history_size( replxx, atoi( (*argv) + 1 ) );          break;
+			case 'p': replxx_set_preload_buffer( replxx, (*argv) + 1 );                    break;
 			case 'q': quiet = atoi( (*argv) + 1 );                                         break;
 		}
 

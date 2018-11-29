@@ -456,6 +456,25 @@ class ReplxxTests( unittest.TestCase ):
 			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
 			command = ReplxxTests._cSample_ + " q1 c3"
 		)
+	def test_preload( self_ ):
+		self_.check_scenario(
+			"<cr><c-d>",
+			"<c9><ceos>Alice has a cat.<rst><gray><rst><c25>"
+			"<c9><ceos>Alice has a cat.<rst><c25>\r\n"
+			"Alice has a cat.\r"
+			"\r\n",
+			command = ReplxxTests._cSample_ + " q1 'pAlice has a cat.'"
+		)
+		self_.check_scenario(
+			"<cr><c-d>",
+			"<c9><ceos>Cat  eats  mice.\r\n"
+			"<rst><gray><rst><u1><c26><c9><ceos>Cat  eats  mice.\r\n"
+			"<rst><u1><c26>\r\n"
+			"Cat  eats  mice.\r\n"
+			"\r"
+			"\r\n",
+			command = ReplxxTests._cSample_ + " q1 'pCat\teats\tmice.\r\n'"
+		)
 
 if __name__ == "__main__":
 	unittest.main()
