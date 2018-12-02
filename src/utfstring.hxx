@@ -75,20 +75,26 @@ public:
 	~Utf32String() { delete[] _data; }
 
 public:
-	char32_t* get() const { return _data; }
+	char32_t* get() const {
+		return _data;
+	}
 
-	size_t length() const { return _length; }
-
-	size_t chars() const { return _length; }
+	size_t length() const {
+		return _length;
+	}
 
 	void initFromBuffer() {
 		for (_length = 0; _data[_length] != 0; ++_length) {
 		}
 	}
 
-	const char32_t& operator[](size_t pos) const { return _data[pos]; }
+	const char32_t& operator[](size_t pos) const {
+		return _data[pos];
+	}
 
-	char32_t& operator[](size_t pos) { return _data[pos]; }
+	char32_t& operator[](size_t pos) {
+		return _data[pos];
+	}
 
  private:
 	size_t _length;
@@ -106,10 +112,14 @@ public:
 		copyString32to8(_data, len, src.get());
 	}
 
-	~Utf8String() { delete[] _data; }
+	~Utf8String() {
+		delete[] _data;
+	}
 
 public:
-	char* get() const { return _data; }
+	char* get() const {
+		return _data;
+	}
 
 private:
 	char* _data;

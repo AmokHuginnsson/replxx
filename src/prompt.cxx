@@ -159,7 +159,7 @@ void DynamicPrompt::updateSearchPrompt(void) {
 
 void DynamicPrompt::updateSearchText(const char32_t* text_) {
 	Utf32String tempUnicode(text_);
-	searchTextLen = static_cast<int>(tempUnicode.chars());
+	searchTextLen = static_cast<int>(tempUnicode.length());
 	searchText = tempUnicode;
 	updateSearchPrompt();
 }

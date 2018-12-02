@@ -4,8 +4,8 @@ rm -rf build
 mkdir build
 cd build
 
-env CXXFLAGS=--coverage cmake ..
-env CXXFLAGS=--coverage make
+cmake -DCMAKE_BUILD_TYPE=coverage ..
+make
 
 lcov --base-directory .. --directory CMakeFiles --capture --initial --output-file replxx-baseline.info
 
