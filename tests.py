@@ -461,8 +461,7 @@ class ReplxxTests( unittest.TestCase ):
 			"<cr><c-d>",
 			"<c9><ceos>Alice has a cat.<rst><gray><rst><c25>"
 			"<c9><ceos>Alice has a cat.<rst><c25>\r\n"
-			"Alice has a cat.\r"
-			"\r\n",
+			"Alice has a cat.\r\n",
 			command = ReplxxTests._cSample_ + " q1 'pAlice has a cat.'"
 		)
 		self_.check_scenario(
@@ -471,9 +470,22 @@ class ReplxxTests( unittest.TestCase ):
 			"<rst><gray><rst><u1><c26><c9><ceos>Cat  eats  mice.\r\n"
 			"<rst><u1><c26>\r\n"
 			"Cat  eats  mice.\r\n"
-			"\r"
 			"\r\n",
 			command = ReplxxTests._cSample_ + " q1 'pCat\teats\tmice.\r\n'"
+		)
+		self_.check_scenario(
+			"<cr><c-d>",
+			"<c9><ceos>M Alice has a cat.<rst><gray><rst><c27>"
+			"<c9><ceos>M Alice has a cat.<rst><c27>\r\n"
+			"M Alice has a cat.\r\n",
+			command = ReplxxTests._cSample_ + " q1 'pMAlice has a cat.'"
+		)
+		self_.check_scenario(
+			"<cr><c-d>",
+			"<c9><ceos>M  Alice has a cat.<rst><gray><rst><c28>"
+			"<c9><ceos>M  Alice has a cat.<rst><c28>\r\n"
+			"M  Alice has a cat.\r\n",
+			command = ReplxxTests._cSample_ + " q1 'pM\t\t\t\tAlice has a cat.'"
 		)
 
 if __name__ == "__main__":

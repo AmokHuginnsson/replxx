@@ -99,7 +99,7 @@ int main( int argc, char** argv ) {
 			}
 		}
 		if (*result != '\0') {
-			printf( quiet ? "%s\r\n" : "thanks for the input: %s\n", result );
+			printf( quiet ? "%s\n" : "thanks for the input: %s\n", result );
 			replxx_history_add( replxx, result );
 		}
 	}
