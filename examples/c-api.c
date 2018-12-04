@@ -39,7 +39,8 @@ void colorHook( char const* str_, ReplxxColor* colors_, int size_, void* ud ) {
 }
 
 int main( int argc, char** argv ) {
-	char* examples[] = {
+#define MAX_EXAMPLE_COUNT 128
+	char* examples[MAX_EXAMPLE_COUNT + 1] = {
 		"db", "hello", "hallo", "hans", "hansekogge", "seamann", "quetzalcoatl", "quit", "power", NULL
 	};
 	Replxx* replxx = replxx_init();
@@ -59,6 +60,23 @@ int main( int argc, char** argv ) {
 			case 'b': replxx_set_beep_on_ambiguous_completion( replxx, (*argv)[1] - '0' ); break;
 			case 'c': replxx_set_completion_count_cutoff( replxx, atoi( (*argv) + 1 ) );   break;
 			case 'e': replxx_set_complete_on_empty( replxx, (*argv)[1] - '0' );            break;
+			case 'x': {
+				int i = 0;
+				char* p = (*argv) + 1, *o = p;
+				while ( i < MAX_EXAMPLE_COUNT ) {
+					int last = *p == 0;
+					if ( ( *p == ',' ) || last ) {
+						*p = 0;
+						examples[i ++] = o;
+						o = p + 1;
+						if ( last ) {
+							break;
+						}
+					}
+					++ p;
+				}
+				examples[i] = 0;
+			} break;
 			case 'd': replxx_set_double_tab_completion( replxx, (*argv)[1] - '0' );        break;
 			case 'h': replxx_set_max_hint_rows( replxx, atoi( (*argv) + 1 ) );             break;
 			case 's': replxx_set_max_history_size( replxx, atoi( (*argv) + 1 ) );          break;

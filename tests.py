@@ -54,7 +54,10 @@ keytab = {
 }
 
 termseq = {
+	"\x1bc": "<RIS>",
 	"\x1b[0m": "<rst>",
+	"\x1b[H": "<mvhm>",
+	"\x1b[2J": "<clr>",
 	"\x1b[J": "<ceos>",
 	"\x1b[0;1;30m": "<gray>",
 	"\x1b[0;22;31m": "<red>",
@@ -64,7 +67,8 @@ termseq = {
 	"\x1b[0;1;34m": "<brightblue>",
 	"\x1b[0;1;35m": "<brightmagenta>",
 	"\x1b[0;1;37m": "<white>",
-	"\x1b[101;1;33m": "<err>"
+	"\x1b[101;1;33m": "<err>",
+	"\x07": "<bell>"
 }
 colRe = re.compile( "\\x1b\\[(\\d+)G" )
 upRe = re.compile( "\\x1b\\[(\\d+)A" )
@@ -80,6 +84,26 @@ def seq_to_sym( str_ ):
 	str_ = colRe.sub( "<c\\1>", str_ )
 	str_ = upRe.sub( "<u\\1>", str_ )
 	return str_
+
+_words_ = [
+	"ada", "algol"
+	"bash", "basic",
+	"clojure", "cobol", "csharp",
+	"eiffel", "erlang",
+	"forth", "fortran", "fsharp",
+	"go", "groovy",
+	"haskell", "huginn",
+	"java", "javascript", "julia",
+	"kotlin",
+	"lisp", "lua",
+	"modula",
+	"nemerle",
+	"ocaml",
+	"perl", "php", "prolog", "python",
+	"rebol", "ruby", "rust",
+	"scala", "scheme", "sql", "swift",
+	"typescript"
+]
 
 class ReplxxTests( unittest.TestCase ):
 	_prompt_ = "\033\\[1;32mreplxx\033\\[0m> "
@@ -123,6 +147,26 @@ class ReplxxTests( unittest.TestCase ):
 			"abc<c-c><c-d>",
 			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc<rst><c12>^C\r"
 			"\r\n"
+		)
+	def test_ctrl_l( self_ ):
+		self_.check_scenario(
+			"<cr><cr><cr><c-l><c-d>",
+			"<c9><ceos><rst><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
+			"<brightgreen>replxx<rst>> <RIS><mvhm><clr><rst><brightgreen>replxx<rst>> "
+			"<c9><ceos><rst><gray><rst><c9>",
+			end = "\r\nExiting Replxx\r\n"
+		)
+		self_.check_scenario(
+			"<cr><up><c-left><c-l><cr><c-d>",
+			"<c9><ceos><rst><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos>first "
+			"second<rst><gray><rst><c21><c9><ceos>first "
+			"second<rst><c15><RIS><mvhm><clr><rst><brightgreen>replxx<rst>> "
+			"<c9><ceos>first second<rst><c15><c9><ceos>first second<rst><c21>\r\n"
+			"first second\r\n",
+			"first second\n"
 		)
 	def test_home_key( self_ ):
 		self_.check_scenario(
@@ -283,6 +327,31 @@ class ReplxxTests( unittest.TestCase ):
 			"        "
 			"<gray>color_brightblue<rst><u3><c21><c9><ceos>color_brightb<rst><green>lue<rst><c22><c9><ceos><brightblue>color_brightblue<rst><green><rst><c25><c9><ceos><brightblue>color_brightblue<rst><c25>\r\n"
 			"color_brightblue\r\n"
+		)
+	def test_completion_pager( self_ ):
+		cmd = ReplxxTests._cSample_ + " q1 x" + ",".join( _words_ )
+#		print( cmd );
+		self_.check_scenario(
+			"<tab>py<cr><c-d>",
+			"<c9><ceos><rst><c9>\r\n"
+			"<brightmagenta><rst>ada         <brightmagenta><rst>groovy      <brightmagenta><rst>perl\r\n"
+			"<brightmagenta><rst>algolbash   <brightmagenta><rst>haskell     <brightmagenta><rst>php\r\n"
+			"<brightmagenta><rst>basic       <brightmagenta><rst>huginn      <brightmagenta><rst>prolog\r\n"
+			"<brightmagenta><rst>clojure     <brightmagenta><rst>java        <brightmagenta><rst>python\r\n"
+			"<brightmagenta><rst>cobol       <brightmagenta><rst>javascript  <brightmagenta><rst>rebol\r\n"
+			"<brightmagenta><rst>csharp      <brightmagenta><rst>julia       <brightmagenta><rst>ruby\r\n"
+			"<brightmagenta><rst>eiffel      <brightmagenta><rst>kotlin      <brightmagenta><rst>rust\r\n"
+			"<brightmagenta><rst>erlang      <brightmagenta><rst>lisp        <brightmagenta><rst>scala\r\n"
+			"<brightmagenta><rst>forth       <brightmagenta><rst>lua         <brightmagenta><rst>scheme\r\n"
+			"--More--<bell>\r"
+			"\t\t\t\t\r"
+			"<brightmagenta><rst>fortran     <brightmagenta><rst>modula      <brightmagenta><rst>sql\r\n"
+			"<brightmagenta><rst>fsharp      <brightmagenta><rst>nemerle     <brightmagenta><rst>swift\r\n"
+			"<brightmagenta><rst>go          <brightmagenta><rst>ocaml       <brightmagenta><rst>typescript\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			dimensions = ( 10, 40 ),
+			command = cmd
 		)
 	def test_history_search_backward( self_ ):
 		self_.check_scenario(
