@@ -116,13 +116,14 @@ class ReplxxTests( unittest.TestCase ):
 		command = _cxxSample_,
 		dimensions = ( 25, 80 ),
 		prompt = _prompt_,
-		end = _prompt_ + "\r\nExiting Replxx\r\n"
+		end = _prompt_ + "\r\nExiting Replxx\r\n",
+		encoding = "utf-8"
 	):
 		with open( "replxx_history.txt", "wb" ) as f:
-			f.write( history.encode() )
+			f.write( history.encode( encoding ) )
 			f.close()
 		os.environ["TERM"] = term
-		self_._replxx = pexpect.spawn( command, maxread = 1, encoding = "utf-8", dimensions = dimensions )
+		self_._replxx = pexpect.spawn( command, maxread = 1, encoding = encoding, dimensions = dimensions )
 		self_._replxx.expect( prompt )
 		self_.maxDiff = None
 		self_._replxx.send( sym_to_raw( seq_ ) )
@@ -136,6 +137,23 @@ class ReplxxTests( unittest.TestCase ):
 			"aóą Ϩ 𓢀  󃔀  \r\n",
 			"aóą Ϩ 𓢀  󃔀  \n"
 		)
+	def test_8bit_encoding( self_ ):
+		LC_CTYPE = "LC_CTYPE"
+		exists = LC_CTYPE in os.environ
+		lcCtype = None
+		if exists:
+			lcCtype = os.environ[LC_CTYPE]
+		os.environ[LC_CTYPE] = "pl_PL.ISO-8859-2"
+		self_.check_scenario(
+			"<up><cr><c-d>",
+			"<c9><ceos>text ~ó~<rst><gray><rst><c17><c9><ceos>text ~ó~<rst><c17>\r\ntext ~ó~\r\n",
+			"text ~ó~\n",
+			encoding = "iso-8859-2"
+		)
+		if exists:
+			os.environ[LC_CTYPE] = lcCtype
+		else:
+			del os.environ[LC_CTYPE]
 	def test_bad_term( self_ ):
 		self_.check_scenario(
 			"a line of text<cr><c-d>",

@@ -262,8 +262,7 @@ char32_t readUnicodeCharacter(void) {
 				return unicodeChar[0];
 			}
 		} else {
-			utf8Count =
-					0;	// this shouldn't happen: got four bytes but no UTF-8 character
+			utf8Count = 0;	// this shouldn't happen: got four bytes but no UTF-8 character
 		}
 	}
 }
