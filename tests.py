@@ -105,6 +105,9 @@ _words_ = [
 	"typescript"
 ]
 
+def skip( test_ ):
+	return "SKIP" in os.environ and os.environ["SKIP"].find( test_ ) >= 0
+
 class ReplxxTests( unittest.TestCase ):
 	_prompt_ = "\033\\[1;32mreplxx\033\\[0m> "
 	_cxxSample_ = "./build/example-cxx-api"
@@ -148,6 +151,7 @@ class ReplxxTests( unittest.TestCase ):
 			"<rst><gray><rst><c21><c9><ceos>aóą Ϩ 𓢀  󃔀  <rst><c21>\r\n"
 			"aóą Ϩ 𓢀  󃔀  \r\n"
 		)
+	@unittest.skipIf( skip( "8bit_encoding" ), "broken platform" )
 	def test_8bit_encoding( self_ ):
 		LC_CTYPE = "LC_CTYPE"
 		exists = LC_CTYPE in os.environ

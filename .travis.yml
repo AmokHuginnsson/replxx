@@ -1,21 +1,16 @@
 language: C++
 dist: xenial
-install:
-  - pip3 install --user --upgrade pip
-  - pip3 install --user --upgrade pexpect
 script:
   - mkdir -p build && cd build
-  - CXX=g++-7 cmake ..
-  - CXX=g++-7 make
-  - cd .. && ./tests.py
+  - cmake ..
+  - make
+  - cd .. && env SKIP=8bit_encoding ./tests.py
 addons:
   apt:
-    sources:
-      - ubuntu-toolchain-r-test
     packages:
-      - g++-7
+      - g++
       - cmake
-      - python3-pip
+      - python3-pexpect
 sudo: false
 cache:
   ccache: true
