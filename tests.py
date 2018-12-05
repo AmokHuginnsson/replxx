@@ -137,6 +137,17 @@ class ReplxxTests( unittest.TestCase ):
 			"aóą Ϩ 𓢀  󃔀  \r\n",
 			"aóą Ϩ 𓢀  󃔀  \n"
 		)
+		self_.check_scenario(
+			"aóą Ϩ 𓢀  󃔀  <cr><c-d>",
+			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>aó<rst><gray><rst><c11><c9><ceos>aóą<rst><gray><rst><c12><c9><ceos>aóą "
+			"<rst><gray><rst><c13><c9><ceos>aóą Ϩ<rst><gray><rst><c14><c9><ceos>aóą Ϩ "
+			"<rst><gray><rst><c15><c9><ceos>aóą Ϩ 𓢀<rst><gray><rst><c16><c9><ceos>aóą Ϩ 𓢀 "
+			"<rst><gray><rst><c17><c9><ceos>aóą Ϩ 𓢀  "
+			"<rst><gray><rst><c18><c9><ceos>aóą Ϩ 𓢀  󃔀<rst><gray><rst><c19><c9><ceos>aóą Ϩ 𓢀  󃔀 "
+			"<rst><gray><rst><c20><c9><ceos>aóą Ϩ 𓢀  󃔀  "
+			"<rst><gray><rst><c21><c9><ceos>aóą Ϩ 𓢀  󃔀  <rst><c21>\r\n"
+			"aóą Ϩ 𓢀  󃔀  \r\n"
+		)
 	def test_8bit_encoding( self_ ):
 		LC_CTYPE = "LC_CTYPE"
 		exists = LC_CTYPE in os.environ
@@ -185,6 +196,27 @@ class ReplxxTests( unittest.TestCase ):
 			"<c9><ceos>first second<rst><c15><c9><ceos>first second<rst><c21>\r\n"
 			"first second\r\n",
 			"first second\n"
+		)
+	def test_backspace( self_ ):
+		self_.check_scenario(
+			"<up><c-a><m-f><c-right><backspace><backspace><backspace><backspace><cr><c-d>",
+			"<c9><ceos>one two three<rst><gray><rst><c22><c9><ceos>one two "
+			"three<rst><c9><c9><ceos>one two three<rst><c12><c9><ceos>one two "
+			"three<rst><c16><c9><ceos>one tw three<rst><c15><c9><ceos>one t "
+			"three<rst><c14><c9><ceos>one  three<rst><c13><c9><ceos>one "
+			"three<rst><c12><c9><ceos>one three<rst><c18>\r\n"
+			"one three\r\n",
+			"one two three\n"
+		)
+	def test_delete( self_ ):
+		self_.check_scenario(
+			"<up><m-b><c-left><del><c-d><del><c-d><cr><c-d>",
+			"<c9><ceos>one two three<rst><gray><rst><c22><c9><ceos>one two "
+			"three<rst><c17><c9><ceos>one two three<rst><c13><c9><ceos>one wo "
+			"three<rst><c13><c9><ceos>one o three<rst><c13><c9><ceos>one  "
+			"three<rst><c13><c9><ceos>one three<rst><c13><c9><ceos>one three<rst><c18>\r\n"
+			"one three\r\n",
+			"one two three\n"
 		)
 	def test_home_key( self_ ):
 		self_.check_scenario(
