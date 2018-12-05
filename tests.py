@@ -16,10 +16,14 @@ keytab = {
 	"<tab>": "\t",
 	"<cr>": "\r",
 	"<lf>": "\n",
-	"<left>": "\033OD",
-	"<right>": "\033OC",
-	"<up>": "\033OA",
-	"<down>": "\033OB",
+	"<left>": "\033[D",
+	"<aleft>": "\033OD",
+	"<right>": "\033[C",
+	"<aright>": "\033OC",
+	"<up>": "\033[A",
+	"<aup>": "\033OA",
+	"<down>": "\033[B",
+	"<adown>": "\033OB",
 	"<c-left>": "\033[1;5D",
 	"<c-right>": "\033[1;5C",
 	"<c-up>": "\033[1;5A",
@@ -48,6 +52,7 @@ keytab = {
 	"<m-n>": "\033n",
 	"<m-p>": "\033p",
 	"<m-u>": "\033u",
+	"<m-y>": "\033y",
 	"<m-backspace>": "\033\177",
 	"<f1>": "\033OP",
 	"<f2>": "\033OQ"
@@ -160,7 +165,7 @@ class ReplxxTests( unittest.TestCase ):
 			lcCtype = os.environ[LC_CTYPE]
 		os.environ[LC_CTYPE] = "pl_PL.ISO-8859-2"
 		self_.check_scenario(
-			"<up><cr><c-d>",
+			"<aup><cr><c-d>",
 			"<c9><ceos>text ~ó~<rst><gray><rst><c17><c9><ceos>text ~ó~<rst><c17>\r\ntext ~ó~\r\n",
 			"text ~ó~\n",
 			encoding = "iso-8859-2"
@@ -236,13 +241,13 @@ class ReplxxTests( unittest.TestCase ):
 		)
 	def test_left_key( self_ ):
 		self_.check_scenario(
-			"abc<left>x<left><left>y<cr><c-d>",
+			"abc<left>x<aleft><left>y<cr><c-d>",
 			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc<rst><c11><c9><ceos>abxc<rst><c12><c9><ceos>abxc<rst><c11><c9><ceos>abxc<rst><c10><c9><ceos>aybxc<rst><c11><c9><ceos>aybxc<rst><c14>\r\n"
 			"aybxc\r\n"
 		)
 	def test_right_key( self_ ):
 		self_.check_scenario(
-			"abc<home><right>x<right>y<cr><c-d>",
+			"abc<home><right>x<aright>y<cr><c-d>",
 			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc<rst><c9><c9><ceos>abc<rst><c10><c9><ceos>axbc<rst><c11><c9><ceos>axbc<rst><c12><c9><ceos>axbyc<rst><c13><c9><ceos>axbyc<rst><c14>\r\n"
 			"axbyc\r\n"
 		)
@@ -442,6 +447,49 @@ class ReplxxTests( unittest.TestCase ):
 			"repl_echo golf\n"
 			"final thoughts\n"
 		)
+	def test_history_browse( self_ ):
+		self_.check_scenario(
+			"<up><aup><pgup><down><up><up><adown><pgdown><up><down><down><up><cr><c-d>",
+			"<c9><ceos>twelve<rst><gray><rst><c15>"
+			"<c9><ceos>eleven<rst><gray><rst><c15>"
+			"<c9><ceos>one<rst><gray><rst><c12>"
+			"<c9><ceos>two<rst><gray><rst><c12>"
+			"<c9><ceos>one<rst><gray><rst><c12>"
+			"<c9><ceos>two<rst><gray><rst><c12>"
+			"<c9><ceos><rst><gray><rst><c9>"
+			"<c9><ceos>twelve<rst><gray><rst><c15>"
+			"<c9><ceos><rst><gray><rst><c9>"
+			"<c9><ceos>twelve<rst><gray><rst><c15>"
+			"<c9><ceos>twelve<rst><c15>\r\n"
+			"twelve\r\n",
+			"one\n"
+			"two\n"
+			"three\n"
+			"four\n"
+			"five\n"
+			"six\n"
+			"seven\n"
+			"eight\n"
+			"nine\n"
+			"ten\n"
+			"eleven\n"
+			"twelve\n"
+		)
+	def test_history_max_size( self_ ):
+		self_.check_scenario(
+			"<pgup><pgdown>a<cr><pgup><cr><c-d>",
+			"<c9><ceos>three<rst><gray><rst><c14><c9><ceos><rst><gray><rst><c9><c9><ceos>a<rst><gray><rst><c10><c9><ceos>a<rst><c10>\r\n"
+			"a\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos>four<rst><gray><rst><c13><c9><ceos>four<rst><c13>\r\n"
+			"four\r\n",
+			"one\n"
+			"two\n"
+			"three\n"
+			"four\n"
+			"five\n",
+			command = ReplxxTests._cSample_ + " q1 s3"
+		)
 	def test_capitalize( self_ ):
 		self_.check_scenario(
 			"<up><home><right><m-c><m-c><right><right><m-c><m-c><m-c><cr><c-d>",
@@ -561,6 +609,40 @@ class ReplxxTests( unittest.TestCase ):
 			"delta<rst><c34>\r\n"
 			"alpha.bravo.charlie delta\r\n",
 			"alpha.charlie bravo.delta\n"
+		)
+	def test_kill_ring( self_ ):
+		self_.check_scenario(
+			"<up><c-w><backspace><c-w><backspace><c-w><backspace><c-u><c-y><m-y><m-y><m-y> <c-y><m-y><m-y><m-y> <c-y><m-y><m-y><m-y> <c-y><m-y><m-y><m-y><cr><c-d>",
+			"<c9><ceos>delta charlie bravo alpha<rst><gray><rst><c34><c9><ceos>delta "
+			"charlie bravo <rst><gray><rst><c29><c9><ceos>delta charlie "
+			"bravo<rst><gray><rst><c28><c9><ceos>delta charlie "
+			"<rst><gray><rst><c23><c9><ceos>delta "
+			"charlie<rst><gray><rst><c22><c9><ceos>delta "
+			"<rst><gray><rst><c15>"
+			"<c9><ceos>delta<rst><gray><rst><c14>"
+			"<c9><ceos><rst><gray><rst><c9>"
+			"<c9><ceos>delta<rst><gray><rst><c14>"
+			"<c9><ceos>charlie<rst><gray><rst><c16>"
+			"<c9><ceos>bravo<rst><gray><rst><c14>"
+			"<c9><ceos>alpha<rst><gray><rst><c14>"
+			"<c9><ceos>alpha "
+			"<rst><gray><rst><c15><c9><ceos>alpha "
+			"alpha<rst><gray><rst><c20><c9><ceos>alpha "
+			"delta<rst><gray><rst><c20><c9><ceos>alpha "
+			"charlie<rst><gray><rst><c22><c9><ceos>alpha "
+			"bravo<rst><gray><rst><c20><c9><ceos>alpha bravo "
+			"<rst><gray><rst><c21><c9><ceos>alpha bravo "
+			"bravo<rst><gray><rst><c26><c9><ceos>alpha bravo "
+			"alpha<rst><gray><rst><c26><c9><ceos>alpha bravo "
+			"delta<rst><gray><rst><c26><c9><ceos>alpha bravo "
+			"charlie<rst><gray><rst><c28><c9><ceos>alpha bravo charlie "
+			"<rst><gray><rst><c29><c9><ceos>alpha bravo charlie "
+			"charlie<rst><gray><rst><c36><c9><ceos>alpha bravo charlie "
+			"bravo<rst><gray><rst><c34><c9><ceos>alpha bravo charlie "
+			"alpha<rst><gray><rst><c34><c9><ceos>alpha bravo charlie "
+			"delta<rst><gray><rst><c34><c9><ceos>alpha bravo charlie delta<rst><c34>\r\n"
+			"alpha bravo charlie delta\r\n",
+			"delta charlie bravo alpha\n"
 		)
 	def test_tab_completion_cutoff( self_ ):
 		self_.check_scenario(

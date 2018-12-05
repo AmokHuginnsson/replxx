@@ -27,7 +27,7 @@ History::History( void )
 
 void History::add( std::string const& line ) {
 	if ( ( _maxSize > 0 ) && ( _data.empty() || ( line != _data.back() ) ) ) {
-		if ( size() == _maxSize ) {
+		if ( size() > _maxSize ) {
 			_data.erase( _data.begin() );
 			if ( -- _previousIndex < -1 ) {
 				_previousIndex = -2;
