@@ -118,6 +118,8 @@ _words_ = [
 def skip( test_ ):
 	return "SKIP" in os.environ and os.environ["SKIP"].find( test_ ) >= 0
 
+verbosity = None
+
 class ReplxxTests( unittest.TestCase ):
 	_prompt_ = "\033\\[1;32mreplxx\033\\[0m> "
 	_cxxSample_ = "./build/example-cxx-api"
@@ -138,6 +140,8 @@ class ReplxxTests( unittest.TestCase ):
 			f.close()
 		os.environ["TERM"] = term
 		command = command.replace( "\n", "~" )
+		if verbosity >= 2:
+			print( "\nCMD: {}".format( command ) )
 		prompt = prompt.replace( "\n", "\r\n" ).replace( "\r\r", "\r" )
 		end = end.replace( "\n", "\r\n" ).replace( "\r\r", "\r" )
 		self_._replxx = pexpect.spawn( command, maxread = 1, encoding = encoding, dimensions = dimensions )
@@ -418,6 +422,65 @@ class ReplxxTests( unittest.TestCase ):
 			"<brightgreen>replxx<rst>> "
 			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
 			dimensions = ( 10, 40 ),
+			command = cmd
+		)
+		self_.check_scenario(
+			"<tab><cr><cr><cr><cr><c-d>",
+			"<c9><ceos><rst><c9>\r\n"
+			"<brightmagenta><rst>ada         <brightmagenta><rst>groovy      <brightmagenta><rst>perl\r\n"
+			"<brightmagenta><rst>algolbash   <brightmagenta><rst>haskell     <brightmagenta><rst>php\r\n"
+			"<brightmagenta><rst>basic       <brightmagenta><rst>huginn      <brightmagenta><rst>prolog\r\n"
+			"<brightmagenta><rst>clojure     <brightmagenta><rst>java        <brightmagenta><rst>python\r\n"
+			"<brightmagenta><rst>cobol       <brightmagenta><rst>javascript  <brightmagenta><rst>rebol\r\n"
+			"<brightmagenta><rst>csharp      <brightmagenta><rst>julia       <brightmagenta><rst>ruby\r\n"
+			"<brightmagenta><rst>eiffel      <brightmagenta><rst>kotlin      <brightmagenta><rst>rust\r\n"
+			"<brightmagenta><rst>erlang      <brightmagenta><rst>lisp        <brightmagenta><rst>scala\r\n"
+			"<brightmagenta><rst>forth       <brightmagenta><rst>lua         <brightmagenta><rst>scheme\r\n"
+			"--More--\r"
+			"\t\t\t\t\r"
+			"<brightmagenta><rst>fortran     <brightmagenta><rst>modula      <brightmagenta><rst>sql\r\n"
+			"--More--\r"
+			"\t\t\t\t\r"
+			"<brightmagenta><rst>fsharp      <brightmagenta><rst>nemerle     <brightmagenta><rst>swift\r\n"
+			"--More--\r"
+			"\t\t\t\t\r"
+			"<brightmagenta><rst>go          <brightmagenta><rst>ocaml       <brightmagenta><rst>typescript\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			dimensions = ( 10, 40 ),
+			command = cmd
+		)
+		self_.check_scenario(
+			"<tab><c-c><cr><c-d>",
+			"<c9><ceos><rst><c9>\r\n"
+			"<brightmagenta><rst>ada         <brightmagenta><rst>kotlin\r\n"
+			"<brightmagenta><rst>algolbash   <brightmagenta><rst>lisp\r\n"
+			"<brightmagenta><rst>basic       <brightmagenta><rst>lua\r\n"
+			"<brightmagenta><rst>clojure     <brightmagenta><rst>modula\r\n"
+			"<brightmagenta><rst>cobol       <brightmagenta><rst>nemerle\r\n"
+			"<brightmagenta><rst>csharp      <brightmagenta><rst>ocaml\r\n"
+			"<brightmagenta><rst>eiffel      <brightmagenta><rst>perl\r\n"
+			"--More--^C\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			dimensions = ( 8, 32 ),
+			command = cmd
+		)
+		self_.check_scenario(
+			"<tab>q<cr><c-d>",
+			"<c9><ceos><rst><c9>\r\n"
+			"<brightmagenta><rst>ada         <brightmagenta><rst>kotlin\r\n"
+			"<brightmagenta><rst>algolbash   <brightmagenta><rst>lisp\r\n"
+			"<brightmagenta><rst>basic       <brightmagenta><rst>lua\r\n"
+			"<brightmagenta><rst>clojure     <brightmagenta><rst>modula\r\n"
+			"<brightmagenta><rst>cobol       <brightmagenta><rst>nemerle\r\n"
+			"<brightmagenta><rst>csharp      <brightmagenta><rst>ocaml\r\n"
+			"<brightmagenta><rst>eiffel      <brightmagenta><rst>perl\r\n"
+			"--More--\r"
+			"\t\t\t\t\r"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			dimensions = ( 8, 32 ),
 			command = cmd
 		)
 	def test_double_tab_completion( self_ ):
@@ -774,6 +837,22 @@ class ReplxxTests( unittest.TestCase ):
 			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
 			command = ReplxxTests._cSample_ + " q1 c3"
 		)
+		self_.check_scenario(
+			"<tab>n<cr><c-d>",
+			"<c9><ceos><rst><gray><rst><c9>\r\n"
+			"Display all 9 possibilities? (y or n)\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			command = ReplxxTests._cSample_ + " q1 c3"
+		)
+		self_.check_scenario(
+			"<tab><c-c><cr><c-d>",
+			"<c9><ceos><rst><gray><rst><c9>\r\n"
+			"Display all 9 possibilities? (y or n)^C\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			command = ReplxxTests._cSample_ + " q1 c3"
+		)
 	def test_preload( self_ ):
 		self_.check_scenario(
 			"<cr><c-d>",
@@ -869,6 +948,14 @@ class ReplxxTests( unittest.TestCase ):
 			dimensions = ( 10, 40 )
 		)
 
+def parseArgs( self, func, argv ):
+	global verbosity
+	res = func( self, argv )
+	verbosity = self.verbosity
+	return res
+
 if __name__ == "__main__":
+	pa = unittest.TestProgram.parseArgs
+	unittest.TestProgram.parseArgs = lambda self, argv: parseArgs( self, pa, argv )
 	unittest.main()
 

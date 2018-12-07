@@ -176,7 +176,7 @@ int main() {
 	rx.history_load(history_file);
 
 	// set the max history size
-	rx.set_max_history_size(12);
+	rx.set_max_history_size(128);
 
 	// set the max number of hint rows to show
 	rx.set_max_hint_rows(3);
