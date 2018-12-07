@@ -38,6 +38,17 @@ void colorHook( char const* str_, ReplxxColor* colors_, int size_, void* ud ) {
 	}
 }
 
+char const* recode( char* s ) {
+	char const* r = s;
+	while ( *s ) {
+		if ( *s == '~' ) {
+			*s = '\n';
+		}
+		++ s;
+	}
+	return ( r );
+}
+
 int main( int argc, char** argv ) {
 #define MAX_EXAMPLE_COUNT 128
 	char* examples[MAX_EXAMPLE_COUNT + 1] = {
@@ -47,6 +58,7 @@ int main( int argc, char** argv ) {
 	replxx_install_window_change_handler( replxx );
 
 	int quiet = 0;
+	char const* prompt = "\x1b[1;32mreplxx\x1b[0m> ";
 	while ( argc > 1 ) {
 		-- argc;
 		++ argv;
@@ -80,7 +92,8 @@ int main( int argc, char** argv ) {
 			case 'd': replxx_set_double_tab_completion( replxx, (*argv)[1] - '0' );        break;
 			case 'h': replxx_set_max_hint_rows( replxx, atoi( (*argv) + 1 ) );             break;
 			case 's': replxx_set_max_history_size( replxx, atoi( (*argv) + 1 ) );          break;
-			case 'p': replxx_set_preload_buffer( replxx, (*argv) + 1 );                    break;
+			case 'i': replxx_set_preload_buffer( replxx, recode( (*argv) + 1 ) );          break;
+			case 'p': prompt = recode( (*argv) + 1 );                                      break;
 			case 'q': quiet = atoi( (*argv) + 1 );                                         break;
 		}
 
@@ -94,8 +107,6 @@ int main( int argc, char** argv ) {
 	replxx_set_hint_callback( replxx, hintHook, examples );
 
 	printf("starting...\n");
-
-	char const* prompt = "\x1b[1;32mreplxx\x1b[0m> ";
 
 	while (1) {
 		char const* result = NULL;
