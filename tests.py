@@ -535,6 +535,20 @@ class ReplxxTests( unittest.TestCase ):
 			"echo repl golf\n"
 			"final thoughts\n"
 		)
+		self_.check_scenario(
+			"<c-r>for<backspace><backspace>s<cr><c-d>",
+			"<c9><ceos><rst><gray><rst><c9><c1><ceos>(reverse-i-search)`': "
+			"<c23><c1><ceos>(reverse-i-search)`f': "
+			"swift<c27><c1><ceos>(reverse-i-search)`fo': "
+			"fortran<c25><c1><ceos>(reverse-i-search)`for': "
+			"fortran<c26><c1><ceos>(reverse-i-search)`fo': "
+			"fortran<c25><c1><ceos>(reverse-i-search)`f': "
+			"swift<c27><c1><ceos>(reverse-i-search)`fs': "
+			"fsharp<c25><c1><ceos><brightgreen>replxx<rst>> "
+			"fsharp<c9><c9><ceos>fsharp<rst><c15>\r\n"
+			"fsharp\r\n",
+			"\n".join( _words_ ) + "\n"
+		)
 	def test_history_prefix_search_backward( self_ ):
 		self_.check_scenario(
 			"repl<m-p><m-p><cr><c-d>",

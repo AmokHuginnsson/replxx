@@ -1475,22 +1475,18 @@ void Replxx::ReplxxImpl::commonPrefixSearch(PromptBase& pi, int startChar) {
 
 /**
  * Incremental history search -- take over the prompt and keyboard as the user
- * types a search
- * string, deletes characters from it, changes direction, and either accepts the
- * found line (for
- * execution orediting) or cancels.
- * @param pi				PromptBase struct holding information about the (old,
- * static) prompt and our
- *									screen position
- * @param startChar the character that began the search, used to set the initial
+ * types a search string, deletes characters from it, changes direction,
+ * and either accepts the found line (for execution orediting) or cancels.
+ * @param pi - PromptBase struct holding information about the (old,
+ * static) prompt and our screen position
+ * @param startChar - the character that began the search, used to set the initial
  * direction
  */
 int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) {
 	size_t bufferSize;
 
 	// if not already recalling, add the current line to the history list so we
-	// don't have to
-	// special case it
+	// don't have to special case it
 	if ( _history.is_last() ) {
 		bufferSize = sizeof(char32_t) * _len + 1;
 		unique_ptr<char[]> tempBuffer(new char[bufferSize]);
@@ -1615,6 +1611,7 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 					dp.searchText[dp.searchTextLen] = 0;
 					copyString32(tempUnicode.get(), dp.searchText.get(), dp.searchTextLen);
 					dp.updateSearchText(tempUnicode.get());
+					_history.reset_pos( dp.direction == -1 ? _history.size() - 1 : 0 );
 				} else {
 					beep();
 				}
@@ -1653,7 +1650,7 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 			int historySearchIndex = _history.current_pos();
 			int lineLength = static_cast<int>(ucharCount);
 			int lineSearchPos = historyLinePosition;
-			if (searchAgain) {
+			if ( searchAgain ) {
 				lineSearchPos += dp.direction;
 			}
 			searchAgain = false;
