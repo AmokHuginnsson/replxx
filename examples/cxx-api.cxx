@@ -186,6 +186,10 @@ int main() {
 	rx.set_highlighter_callback(hook_color, static_cast<void*>(&regex_color));
 	rx.set_hint_callback(hook_hint, static_cast<void*>(&examples));
 
+	// other api calls
+	rx.set_word_break_characters( " \t.,-%!;:=*~^'\"/?<>|[](){}" );
+	rx.set_special_prefixes( "\\" );
+
 	// display initial welcome message
 	std::cout
 		<< "Welcome to Replxx\n"
@@ -268,9 +272,10 @@ int main() {
 		} else {
 			// default action
 			// echo the input
-			std::cout << input << "\n";
 
-			rx.history_add(input);
+			rx.print( "%s\n", input.c_str() );
+
+			rx.history_add( input );
 			continue;
 		}
 	}

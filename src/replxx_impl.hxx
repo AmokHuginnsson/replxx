@@ -146,6 +146,7 @@ private:
 	void setColor( Replxx::Color );
 	int start_index( void );
 	void clear();
+	bool is_word_break_character( char32_t ) const;
 };
 
 }

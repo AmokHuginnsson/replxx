@@ -973,10 +973,10 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 			case META + LEFT_ARROW_KEY: // Emacs allows Meta, bash & readline don't
 				_killRing.lastAction = KillRing::actionOther;
 				if (_pos > 0) {
-					while (_pos > 0 && !isCharacterAlphanumeric(_buf32[_pos - 1])) {
+					while (_pos > 0 && is_word_break_character(_buf32[_pos - 1])) {
 						--_pos;
 					}
-					while (_pos > 0 && isCharacterAlphanumeric(_buf32[_pos - 1])) {
+					while (_pos > 0 && !is_word_break_character(_buf32[_pos - 1])) {
 						--_pos;
 					}
 					refreshLine(pi);
@@ -1001,16 +1001,16 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				_killRing.lastAction = KillRing::actionOther;
 				_history.reset_recall_most_recent();
 				if (_pos < _len) {
-					while (_pos < _len && !isCharacterAlphanumeric(_buf32[_pos])) {
+					while (_pos < _len && is_word_break_character(_buf32[_pos])) {
 						++_pos;
 					}
-					if (_pos < _len && isCharacterAlphanumeric(_buf32[_pos])) {
+					if (_pos < _len && !is_word_break_character(_buf32[_pos])) {
 						if (_buf32[_pos] >= 'a' && _buf32[_pos] <= 'z') {
 							_buf32[_pos] += 'A' - 'a';
 						}
 						++_pos;
 					}
-					while (_pos < _len && isCharacterAlphanumeric(_buf32[_pos])) {
+					while (_pos < _len && !is_word_break_character(_buf32[_pos])) {
 						if (_buf32[_pos] >= 'A' && _buf32[_pos] <= 'Z') {
 							_buf32[_pos] += 'a' - 'A';
 						}
@@ -1040,11 +1040,10 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				if (_pos < _len) {
 					_history.reset_recall_most_recent();
 					int endingPos = _pos;
-					while (endingPos < _len &&
-								 !isCharacterAlphanumeric(_buf32[endingPos])) {
+					while (endingPos < _len && is_word_break_character(_buf32[endingPos])) {
 						++endingPos;
 					}
-					while (endingPos < _len && isCharacterAlphanumeric(_buf32[endingPos])) {
+					while (endingPos < _len && !is_word_break_character(_buf32[endingPos])) {
 						++endingPos;
 					}
 					_killRing.kill(&_buf32[_pos], endingPos - _pos, true);
@@ -1078,10 +1077,10 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 			case META + RIGHT_ARROW_KEY: // Emacs allows Meta, bash & readline don't
 				_killRing.lastAction = KillRing::actionOther;
 				if (_pos < _len) {
-					while (_pos < _len && !isCharacterAlphanumeric(_buf32[_pos])) {
+					while (_pos < _len && is_word_break_character(_buf32[_pos])) {
 						++_pos;
 					}
-					while (_pos < _len && isCharacterAlphanumeric(_buf32[_pos])) {
+					while (_pos < _len && !is_word_break_character(_buf32[_pos])) {
 						++_pos;
 					}
 					refreshLine(pi);
@@ -1105,10 +1104,10 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				if (_pos > 0) {
 					_history.reset_recall_most_recent();
 					int startingPos = _pos;
-					while (_pos > 0 && !isCharacterAlphanumeric(_buf32[_pos - 1])) {
+					while (_pos > 0 && is_word_break_character(_buf32[_pos - 1])) {
 						--_pos;
 					}
-					while (_pos > 0 && isCharacterAlphanumeric(_buf32[_pos - 1])) {
+					while (_pos > 0 && !is_word_break_character(_buf32[_pos - 1])) {
 						--_pos;
 					}
 					_killRing.kill(&_buf32[_pos], startingPos - _pos, false);
@@ -1167,10 +1166,10 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				_killRing.lastAction = KillRing::actionOther;
 				if (_pos < _len) {
 					_history.reset_recall_most_recent();
-					while (_pos < _len && !isCharacterAlphanumeric(_buf32[_pos])) {
+					while (_pos < _len && is_word_break_character(_buf32[_pos])) {
 						++_pos;
 					}
-					while (_pos < _len && isCharacterAlphanumeric(_buf32[_pos])) {
+					while (_pos < _len && !is_word_break_character(_buf32[_pos])) {
 						if (_buf32[_pos] >= 'A' && _buf32[_pos] <= 'Z') {
 							_buf32[_pos] += 'a' - 'A';
 						}
@@ -1264,10 +1263,10 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				_killRing.lastAction = KillRing::actionOther;
 				if (_pos < _len) {
 					_history.reset_recall_most_recent();
-					while (_pos < _len && !isCharacterAlphanumeric(_buf32[_pos])) {
+					while (_pos < _len && is_word_break_character(_buf32[_pos])) {
 						++_pos;
 					}
-					while (_pos < _len && isCharacterAlphanumeric(_buf32[_pos])) {
+					while (_pos < _len && !is_word_break_character(_buf32[_pos])) {
 						if (_buf32[_pos] >= 'a' && _buf32[_pos] <= 'z') {
 							_buf32[_pos] += 'A' - 'a';
 						}
@@ -1350,12 +1349,14 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 
 #ifndef _WIN32
 			case ctrlChar('Z'): // ctrl-Z, job control
-				disableRawMode(); // Returning to Linux (whatever) shell, leave raw
-													 // mode
-				raise(SIGSTOP);	 // Break out in mid-line
-				enableRawMode();	 // Back from Linux shell, re-enter raw mode
-				if (!pi.write()) break; // Redraw prompt
-				refreshLine(pi);				 // Refresh the line
+				disableRawMode(); // Returning to Linux (whatever) shell, leave raw mode
+				raise(SIGSTOP);   // Break out in mid-line
+				enableRawMode();  // Back from Linux shell, re-enter raw mode
+				// Redraw prompt
+				if (!pi.write()) {
+					break;
+				}
+				refreshLine(pi);  // Refresh the line
 				break;
 #endif
 
@@ -1371,9 +1372,9 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				}
 				break;
 
-			case META + '<': 	 // meta-<, beginning of history
-			case PAGE_UP_KEY:  // Page Up, beginning of history
-			case META + '>': 	 // meta->, end of history
+			case META + '<':    // meta-<, beginning of history
+			case PAGE_UP_KEY:   // Page Up, beginning of history
+			case META + '>':    // meta->, end of history
 			case PAGE_DOWN_KEY: // Page Down, end of history
 				_killRing.lastAction = KillRing::actionOther;
 				// if not already recalling, add the current line to the history list so
@@ -1738,6 +1739,14 @@ void Replxx::ReplxxImpl::clearScreen(PromptBase& pi) {
 #endif
 	pi.promptCursorRowOffset = pi.promptExtraLines;
 	refreshLine(pi);
+}
+
+bool Replxx::ReplxxImpl::is_word_break_character( char32_t char_ ) const {
+	bool wbc( false );
+	if ( char_ < 128 ) {
+		wbc = strchr( _breakChars, static_cast<char>( char_ ) ) != nullptr;
+	}
+	return ( wbc );
 }
 
 void Replxx::ReplxxImpl::history_add( std::string const& line ) {

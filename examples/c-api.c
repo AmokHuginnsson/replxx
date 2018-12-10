@@ -49,6 +49,24 @@ char const* recode( char* s ) {
 	return ( r );
 }
 
+void split( char* str_, char** data_, int size_ ) {
+	int i = 0;
+	char* p = str_, *o = p;
+	while ( i < size_ ) {
+		int last = *p == 0;
+		if ( ( *p == ',' ) || last ) {
+			*p = 0;
+			data_[i ++] = o;
+			o = p + 1;
+			if ( last ) {
+				break;
+			}
+		}
+		++ p;
+	}
+	data_[i] = 0;
+}
+
 int main( int argc, char** argv ) {
 #define MAX_EXAMPLE_COUNT 128
 	char* examples[MAX_EXAMPLE_COUNT + 1] = {
@@ -72,29 +90,14 @@ int main( int argc, char** argv ) {
 			case 'b': replxx_set_beep_on_ambiguous_completion( replxx, (*argv)[1] - '0' ); break;
 			case 'c': replxx_set_completion_count_cutoff( replxx, atoi( (*argv) + 1 ) );   break;
 			case 'e': replxx_set_complete_on_empty( replxx, (*argv)[1] - '0' );            break;
-			case 'x': {
-				int i = 0;
-				char* p = (*argv) + 1, *o = p;
-				while ( i < MAX_EXAMPLE_COUNT ) {
-					int last = *p == 0;
-					if ( ( *p == ',' ) || last ) {
-						*p = 0;
-						examples[i ++] = o;
-						o = p + 1;
-						if ( last ) {
-							break;
-						}
-					}
-					++ p;
-				}
-				examples[i] = 0;
-			} break;
 			case 'd': replxx_set_double_tab_completion( replxx, (*argv)[1] - '0' );        break;
 			case 'h': replxx_set_max_hint_rows( replxx, atoi( (*argv) + 1 ) );             break;
 			case 's': replxx_set_max_history_size( replxx, atoi( (*argv) + 1 ) );          break;
 			case 'i': replxx_set_preload_buffer( replxx, recode( (*argv) + 1 ) );          break;
+			case 'w': replxx_set_word_break_characters( replxx, (*argv) + 1 );             break;
 			case 'p': prompt = recode( (*argv) + 1 );                                      break;
 			case 'q': quiet = atoi( (*argv) + 1 );                                         break;
+			case 'x': split( (*argv) + 1, examples, MAX_EXAMPLE_COUNT );                   break;
 		}
 
 	}
@@ -123,12 +126,14 @@ int main( int argc, char** argv ) {
 			int size = replxx_history_size( replxx );
 			for ( ; index < size; ++index) {
 				char const* hist = replxx_history_line( replxx, index );
-				if (hist == NULL) break;
-				printf("%4d: %s\n", index, hist);
+				if (hist == NULL) {
+					break;
+				}
+				replxx_print( replxx, "%4d: %s\n", index, hist );
 			}
 		}
 		if (*result != '\0') {
-			printf( quiet ? "%s\n" : "thanks for the input: %s\n", result );
+			replxx_print( replxx, quiet ? "%s\n" : "thanks for the input: %s\n", result );
 			replxx_history_add( replxx, result );
 		}
 	}

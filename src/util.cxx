@@ -6,14 +6,6 @@
 
 namespace replxx {
 
-bool isCharacterAlphanumeric(char32_t testChar) {
-#ifdef _WIN32
-	return (iswalnum((wint_t)testChar) != 0 ? true : false);
-#else
-	return (iswalnum(testChar) != 0 ? true : false);
-#endif
-}
-
 /**
  * convert {CTRL + 'A'}, {CTRL + 'a'} and {CTRL + ctrlChar( 'A' )} into
  * ctrlChar( 'A' )
