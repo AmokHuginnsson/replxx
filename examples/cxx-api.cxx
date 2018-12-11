@@ -189,6 +189,11 @@ int main() {
 	// other api calls
 	rx.set_word_break_characters( " \t.,-%!;:=*~^'\"/?<>|[](){}" );
 	rx.set_special_prefixes( "\\" );
+	rx.set_completion_count_cutoff( 128 );
+	rx.set_double_tab_completion( false );
+	rx.set_complete_on_empty( true );
+	rx.set_beep_on_ambiguous_completion( false );
+	rx.set_no_color( false );
 
 	// display initial welcome message
 	std::cout

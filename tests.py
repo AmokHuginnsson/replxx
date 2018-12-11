@@ -5,6 +5,8 @@ import unittest
 import re
 import os
 import subprocess
+import signal
+import time
 
 keytab = {
 	"<home>": "\033[1~",
@@ -50,6 +52,7 @@ keytab = {
 	"<c-v>": "",
 	"<c-w>": "",
 	"<c-y>": "",
+	"<c-z>": "",
 	"<m-b>": "\033b",
 	"<m-c>": "\033c",
 	"<m-d>": "\033d",
@@ -157,7 +160,15 @@ class ReplxxTests( unittest.TestCase ):
 		self_._replxx = pexpect.spawn( command, maxread = 1, encoding = encoding, dimensions = dimensions )
 		self_._replxx.expect( prompt )
 		self_.maxDiff = None
-		self_._replxx.send( sym_to_raw( seq_ ) )
+		seqs = seq_.split( "<c-z>" )
+		for seq in seqs:
+			last = seq is seqs[-1]
+			if not last:
+				seq += "<c-z>"
+			self_._replxx.send( sym_to_raw( seq ) )
+			if not last:
+				time.sleep( 0.25 )
+				self_._replxx.kill( signal.SIGCONT )
 		self_._replxx.expect( end )
 		self_.assertSequenceEqual( seq_to_sym( self_._replxx.before ), expected_ )
 	def test_unicode( self_ ):
@@ -208,6 +219,22 @@ class ReplxxTests( unittest.TestCase ):
 			"abc<c-c><c-d>",
 			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc<rst><c12>^C\r"
 			"\r\n"
+		)
+	def test_ctrl_z( self_ ):
+		self_.check_scenario(
+			"<up><c-z><cr><c-d>",
+			"<c9><ceos>three<rst><gray><rst><c14><brightgreen>replxx<rst>> "
+			"<c9><ceos>three<rst><gray><rst><c14><c9><ceos>three<rst><c14>\r\n"
+			"three\r\n"
+		)
+		self_.check_scenario(
+			"<c-r>w<c-z><cr><c-d>",
+			"<c9><ceos><rst><gray><rst><c9><c1><ceos>(reverse-i-search)`': "
+			"<c23><c1><ceos>(reverse-i-search)`w': "
+			"two<c25><c1><ceos>(reverse-i-search)`w': "
+			"two<c25><c1><ceos><brightgreen>replxx<rst>> "
+			"two<c10><c9><ceos>two<rst><c12>\r\n"
+			"two\r\n"
 		)
 	def test_ctrl_l( self_ ):
 		self_.check_scenario(
@@ -576,6 +603,17 @@ class ReplxxTests( unittest.TestCase ):
 			"fsharp<c25><c1><ceos><brightgreen>replxx<rst>> "
 			"fsharp<c9><c9><ceos>fsharp<rst><c15>\r\n"
 			"fsharp\r\n",
+			"\n".join( _words_ ) + "\n"
+		)
+		self_.check_scenario(
+			"<c-r>mod<c-l><cr><c-d>",
+			"<c9><ceos><rst><gray><rst><c9><c1><ceos>(reverse-i-search)`': "
+			"<c23><c1><ceos>(reverse-i-search)`m': "
+			"scheme<c28><c1><ceos>(reverse-i-search)`mo': "
+			"modula<c25><c1><ceos>(reverse-i-search)`mod': "
+			"modula<c26><c1><ceos><brightgreen>replxx<rst>> "
+			"<c9><RIS><mvhm><clr><rst><brightgreen>replxx<rst>> "
+			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
 			"\n".join( _words_ ) + "\n"
 		)
 	def test_history_prefix_search_backward( self_ ):
@@ -1067,6 +1105,24 @@ class ReplxxTests( unittest.TestCase ):
 			"xone_xtwo xthree-four xfive_xsix xseven-eight\r\n",
 			"one_two three-four five_six seven-eight\n",
 			command = ReplxxTests._cSample_ + " q1 'w \t_'"
+		)
+	def test_no_color( self_ ):
+		self_.check_scenario(
+			"<up> X<cr><c-d>",
+			"<c9><ceos>color_black color_red color_green color_brown color_blue "
+			"color_magenta color_cyan color_lightgray color_gray color_brightred "
+			"color_brightgreen color_yellow color_brightblue color_brightmagenta "
+			"color_brightcyan color_white<c70> X<u2><c9><ceos>color_black color_red "
+			"color_green color_brown color_blue color_magenta color_cyan color_lightgray "
+			"color_gray color_brightred color_brightgreen color_yellow color_brightblue "
+			"color_brightmagenta color_brightcyan color_white X<c72>\r\n"
+			"color_black color_red color_green color_brown color_blue color_magenta "
+			"color_cyan color_lightgray color_gray color_brightred color_brightgreen "
+			"color_yellow color_brightblue color_brightmagenta color_brightcyan "
+			"color_white X\r\n",
+			"color_black color_red color_green color_brown color_blue color_magenta color_cyan color_lightgray"
+			" color_gray color_brightred color_brightgreen color_yellow color_brightblue color_brightmagenta color_brightcyan color_white\n",
+			command = ReplxxTests._cSample_ + " q1 m1"
 		)
 	def test_no_terminal( self_ ):
 		res = subprocess.run( [ ReplxxTests._cSample_, "q1" ], input = b"replxx FTW!\n", stdout = subprocess.PIPE, stderr = subprocess.PIPE )
