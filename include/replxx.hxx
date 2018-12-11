@@ -80,7 +80,7 @@ public:
 	 * \param userData - pointer to opaque user data block.
 	 * \return A list of user completions.
 	 */
-	typedef std::function<completions_t ( std::string const& input, int breakPos, void* userData)> completion_callback_t;
+	typedef std::function<completions_t ( std::string const& input, int breakPos )> completion_callback_t;
 
 	/*! \brief Highlighter callback type definition.
 	 *
@@ -96,7 +96,7 @@ public:
 	 * \param colors - output buffer for color information.
 	 * \param userData - pointer to opaque user data block.
 	 */
-	typedef std::function<void ( std::string const& input, colors_t& colors, void* userData )> highlighter_callback_t;
+	typedef std::function<void ( std::string const& input, colors_t& colors )> highlighter_callback_t;
 
 	/*! \brief Hints callback type definition.
 	 *
@@ -114,7 +114,7 @@ public:
 	 * \param userData - pointer to opaque user data block.
 	 * \return A list of possible hints.
 	 */
-	typedef std::function<hints_t ( std::string const& input, int breakPos, Color& color, void* userData )> hint_callback_t;
+	typedef std::function<hints_t ( std::string const& input, int breakPos, Color& color )> hint_callback_t;
 
 	class ReplxxImpl;
 private:
@@ -129,23 +129,20 @@ public:
 	/*! \brief Register completion callback.
 	 *
 	 * \param fn - user defined callback function.
-	 * \param userData - pointer to opaque user data block to be passed into each invocation of the callback.
 	 */
-	void set_completion_callback( completion_callback_t const& fn, void* userData );
+	void set_completion_callback( completion_callback_t const& fn );
 
 	/*! \brief Register highlighter callback.
 	 *
 	 * \param fn - user defined callback function.
-	 * \param userData - pointer to opaque user data block to be passed into each invocation of the callback.
 	 */
-	void set_highlighter_callback( highlighter_callback_t const& fn, void* userData );
+	void set_highlighter_callback( highlighter_callback_t const& fn );
 
 	/*! \brief Register hints callback.
 	 *
 	 * \param fn - user defined callback function.
-	 * \param userData - pointer to opaque user data block to be passed into each invocation of the callback.
 	 */
-	void set_hint_callback( hint_callback_t const& fn, void* userData );
+	void set_hint_callback( hint_callback_t const& fn );
 
 	/*! \brief Read line of user input.
 	 *

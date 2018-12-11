@@ -105,9 +105,6 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _completionCallback( nullptr )
 	, _highlighterCallback( nullptr )
 	, _hintCallback( nullptr )
-	, _completionUserdata( nullptr )
-	, _highlighterUserdata( nullptr )
-	, _hintUserdata( nullptr )
 	, _preloadedBuffer()
 	, _errorMessage() {
 	realloc_utf8_buffer( REPLXX_MAX_LINE );
@@ -159,7 +156,7 @@ void Replxx::ReplxxImpl::realloc_utf8_buffer( int len ) {
 Replxx::ReplxxImpl::completions_t Replxx::ReplxxImpl::call_completer( std::string const& input, int breakPos ) const {
 	Replxx::completions_t completionsIntermediary(
 		!! _completionCallback
-			? _completionCallback( input, breakPos, _completionUserdata )
+			? _completionCallback( input, breakPos )
 			: Replxx::completions_t()
 	);
 	completions_t completions;
@@ -173,7 +170,7 @@ Replxx::ReplxxImpl::completions_t Replxx::ReplxxImpl::call_completer( std::strin
 Replxx::ReplxxImpl::hints_t Replxx::ReplxxImpl::call_hinter( std::string const& input, int breakPos, Replxx::Color& color ) const {
 	Replxx::hints_t hintsIntermediary(
 		!! _hintCallback
-			? _hintCallback( input, breakPos, color, _hintUserdata )
+			? _hintCallback( input, breakPos, color )
 			: Replxx::hints_t()
 	);
 	hints_t hints;
@@ -182,12 +179,6 @@ Replxx::ReplxxImpl::hints_t Replxx::ReplxxImpl::call_hinter( std::string const& 
 		hints.emplace_back( h.c_str() );
 	}
 	return ( hints );
-}
-
-void Replxx::ReplxxImpl::call_highlighter( std::string const& input, Replxx::colors_t& colors ) const {
-	if ( !! _highlighterCallback ) {
-		_highlighterCallback( input, colors, _highlighterUserdata );
-	}
 }
 
 void Replxx::ReplxxImpl::set_preload_buffer( std::string const& preloadText ) {
@@ -383,7 +374,9 @@ void Replxx::ReplxxImpl::highlight( int highlightIdx, bool error_ ) {
 	Replxx::colors_t colors( _len, Replxx::Color::DEFAULT );
 	Utf32String unicodeCopy( _buf32.get(), _len );
 	Utf8String parseItem( unicodeCopy );
-	call_highlighter( parseItem.get(), colors );
+	if ( !! _highlighterCallback ) {
+		_highlighterCallback( parseItem.get(), colors );
+	}
 	if ( highlightIdx != -1 ) {
 		colors[highlightIdx] = error_ ? Replxx::Color::ERROR : Replxx::Color::BRIGHTRED;
 	}
@@ -1769,19 +1762,16 @@ std::string const& Replxx::ReplxxImpl::history_line( int index ) {
 	return ( _history[index] );
 }
 
-void Replxx::ReplxxImpl::set_completion_callback( Replxx::completion_callback_t const& fn, void* userData ) {
+void Replxx::ReplxxImpl::set_completion_callback( Replxx::completion_callback_t const& fn ) {
 	_completionCallback = fn;
-	_completionUserdata = userData;
 }
 
-void Replxx::ReplxxImpl::set_highlighter_callback( Replxx::highlighter_callback_t const& fn, void* userData ) {
+void Replxx::ReplxxImpl::set_highlighter_callback( Replxx::highlighter_callback_t const& fn ) {
 	_highlighterCallback = fn;
-	_highlighterUserdata = userData;
 }
 
-void Replxx::ReplxxImpl::set_hint_callback( Replxx::hint_callback_t const& fn, void* userData ) {
+void Replxx::ReplxxImpl::set_hint_callback( Replxx::hint_callback_t const& fn ) {
 	_hintCallback = fn;
-	_hintUserdata = userData;
 }
 
 void Replxx::ReplxxImpl::set_max_history_size( int len ) {

@@ -11,16 +11,15 @@
 using Replxx = replxx::Replxx;
 
 // prototypes
-Replxx::completions_t hook_completion(std::string const& context, int index, void* user_data);
-Replxx::hints_t hook_hint(std::string const& context, int index, Replxx::Color& color, void* user_data);
-void hook_color(std::string const& str, Replxx::colors_t& colors, void* user_data);
+Replxx::completions_t hook_completion(std::string const& context, int index, std::vector<std::string> const& user_data);
+Replxx::hints_t hook_hint(std::string const& context, int index, Replxx::Color& color, std::vector<std::string> const& user_data);
+void hook_color(std::string const& str, Replxx::colors_t& colors, std::vector<std::pair<std::string, Replxx::Color>> const& user_data);
 
-Replxx::completions_t hook_completion(std::string const& context, int index, void* user_data) {
-	auto* examples = static_cast<std::vector<std::string>*>(user_data);
+Replxx::completions_t hook_completion(std::string const& context, int index, std::vector<std::string> const& examples) {
 	Replxx::completions_t completions;
 
 	std::string prefix {context.substr(index)};
-	for (auto const& e : *examples) {
+	for (auto const& e : examples) {
 		if (e.compare(0, prefix.size(), prefix) == 0) {
 			completions.emplace_back(e.c_str());
 		}
@@ -29,15 +28,14 @@ Replxx::completions_t hook_completion(std::string const& context, int index, voi
 	return completions;
 }
 
-Replxx::hints_t hook_hint(std::string const& context, int index, Replxx::Color& color, void* user_data) {
-	auto* examples = static_cast<std::vector<std::string>*>(user_data);
+Replxx::hints_t hook_hint(std::string const& context, int index, Replxx::Color& color, std::vector<std::string> const& examples) {
 	Replxx::hints_t hints;
 
 	// only show hint if prefix is at least 'n' chars long
 	// or if prefix begins with a specific character
 	std::string prefix {context.substr(index)};
 	if (prefix.size() >= 2 || (! prefix.empty() && prefix.at(0) == '.')) {
-		for (auto const& e : *examples) {
+		for (auto const& e : examples) {
 			if (e.compare(0, prefix.size(), prefix) == 0) {
 				hints.emplace_back(e.substr(prefix.size()).c_str());
 			}
@@ -70,11 +68,9 @@ int real_len( std::string const& s ) {
 	return ( len );
 }
 
-void hook_color(std::string const& context, Replxx::colors_t& colors, void* user_data) {
-	auto* regex_color = static_cast<std::vector<std::pair<std::string, Replxx::Color>>*>(user_data);
-
+void hook_color(std::string const& context, Replxx::colors_t& colors, std::vector<std::pair<std::string, Replxx::Color>> const& regex_color) {
 	// highlight matching regex sequences
-	for (auto const& e : *regex_color) {
+	for (auto const& e : regex_color) {
 		size_t pos {0};
 		std::string str = context;
 		std::smatch match;
@@ -182,9 +178,10 @@ int main() {
 	rx.set_max_hint_rows(3);
 
 	// set the callbacks
-	rx.set_completion_callback(hook_completion, static_cast<void*>(&examples));
-	rx.set_highlighter_callback(hook_color, static_cast<void*>(&regex_color));
-	rx.set_hint_callback(hook_hint, static_cast<void*>(&examples));
+	using namespace std::placeholders;
+	rx.set_completion_callback( std::bind( &hook_completion, _1, _2, cref( examples ) ) );
+	rx.set_highlighter_callback( std::bind( &hook_color, _1, _2, cref( regex_color ) ) );
+	rx.set_hint_callback( std::bind( &hook_hint, _1, _2, _3, cref( examples ) ) );
 
 	// other api calls
 	rx.set_word_break_characters( " \t.,-%!;:=*~^'\"/?<>|[](){}" );

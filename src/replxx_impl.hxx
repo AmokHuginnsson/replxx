@@ -88,16 +88,13 @@ private:
 	Replxx::completion_callback_t _completionCallback;
 	Replxx::highlighter_callback_t _highlighterCallback;
 	Replxx::hint_callback_t _hintCallback;
-	void* _completionUserdata;
-	void* _highlighterUserdata;
-	void* _hintUserdata;
 	std::string _preloadedBuffer; // used with set_preload_buffer
 	std::string _errorMessage;
 public:
 	ReplxxImpl( FILE*, FILE*, FILE* );
-	void set_completion_callback( Replxx::completion_callback_t const& fn, void* userData );
-	void set_highlighter_callback( Replxx::highlighter_callback_t const& fn, void* userData );
-	void set_hint_callback( Replxx::hint_callback_t const& fn, void* userData );
+	void set_completion_callback( Replxx::completion_callback_t const& fn );
+	void set_highlighter_callback( Replxx::highlighter_callback_t const& fn );
+	void set_hint_callback( Replxx::hint_callback_t const& fn );
 	char const* input( std::string const& prompt );
 	void history_add( std::string const& line );
 	int history_save( std::string const& filename );
@@ -118,7 +115,6 @@ public:
 	int install_window_change_handler( void );
 	completions_t call_completer( std::string const& input, int breakPos ) const;
 	hints_t call_hinter( std::string const& input, int breakPos, Replxx::Color& color ) const;
-	void call_highlighter( std::string const& input, Replxx::colors_t& colors ) const;
 	int print( char const* , int );
 private:
 	ReplxxImpl( ReplxxImpl const& ) = delete;

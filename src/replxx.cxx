@@ -120,16 +120,16 @@ Replxx::Replxx( void )
 	: _impl( new Replxx::ReplxxImpl( nullptr, nullptr, nullptr ), delete_ReplxxImpl ) {
 }
 
-void Replxx::set_completion_callback( completion_callback_t const& fn, void* userData ) {
-	_impl->set_completion_callback( fn, userData );
+void Replxx::set_completion_callback( completion_callback_t const& fn ) {
+	_impl->set_completion_callback( fn );
 }
 
-void Replxx::set_highlighter_callback( highlighter_callback_t const& fn, void* userData ) {
-	_impl->set_highlighter_callback( fn, userData );
+void Replxx::set_highlighter_callback( highlighter_callback_t const& fn ) {
+	_impl->set_highlighter_callback( fn );
 }
 
-void Replxx::set_hint_callback( hint_callback_t const& fn, void* userData ) {
-	_impl->set_hint_callback( fn, userData );
+void Replxx::set_hint_callback( hint_callback_t const& fn ) {
+	_impl->set_hint_callback( fn );
 }
 
 char const* Replxx::input( std::string const& prompt ) {
@@ -219,7 +219,8 @@ int Replxx::print( char const* format_, ... ) {
 }
 
 ::Replxx* replxx_init() {
-	return ( reinterpret_cast< ::Replxx*>( new replxx::Replxx::ReplxxImpl( nullptr, nullptr, nullptr ) ) );
+	typedef ::Replxx* replxx_data_t;
+	return ( reinterpret_cast<replxx_data_t>( new replxx::Replxx::ReplxxImpl( nullptr, nullptr, nullptr ) ) );
 }
 
 void replxx_end( ::Replxx* replxx_ ) {
@@ -289,7 +290,7 @@ replxx::Replxx::completions_t completions_fwd( replxx_completion_callback_t fn, 
 /* Register a callback function to be called for tab-completion. */
 void replxx_set_completion_callback(::Replxx* replxx_, replxx_completion_callback_t* fn, void* userData) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
-	replxx->set_completion_callback( std::bind( &completions_fwd, fn, _1, _2, _3 ), userData );
+	replxx->set_completion_callback( std::bind( &completions_fwd, fn, _1, _2, userData ) );
 }
 
 void highlighter_fwd( replxx_highlighter_callback_t fn, std::string const& input, replxx::Replxx::colors_t& colors, void* userData ) {
@@ -315,7 +316,7 @@ void highlighter_fwd( replxx_highlighter_callback_t fn, std::string const& input
 
 void replxx_set_highlighter_callback( ::Replxx* replxx_, replxx_highlighter_callback_t* fn, void* userData ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
-	replxx->set_highlighter_callback( std::bind( &highlighter_fwd, fn, _1, _2, _3 ), userData );
+	replxx->set_highlighter_callback( std::bind( &highlighter_fwd, fn, _1, _2, userData ) );
 }
 
 replxx::Replxx::hints_t hints_fwd( replxx_hint_callback_t fn, std::string const& input_, int breakPos_, replxx::Replxx::Color& color_, void* userData ) {
@@ -327,7 +328,7 @@ replxx::Replxx::hints_t hints_fwd( replxx_hint_callback_t fn, std::string const&
 
 void replxx_set_hint_callback( ::Replxx* replxx_, replxx_hint_callback_t* fn, void* userData ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
-	replxx->set_hint_callback( std::bind( &hints_fwd, fn, _1, _2, _3, _4 ), userData );
+	replxx->set_hint_callback( std::bind( &hints_fwd, fn, _1, _2, _3, userData ) );
 }
 
 void replxx_add_hint(replxx_hints* lh, const char* str) {
