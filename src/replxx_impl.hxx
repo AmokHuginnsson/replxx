@@ -79,7 +79,6 @@ private:
 	KillRing _killRing;
 	int _maxHintRows;
 	char const* _breakChars;
-	char const* _specialPrefixes;
 	int _completionCountCutoff;
 	bool _doubleTabCompletion;
 	bool _completeOnEmpty;
@@ -103,7 +102,6 @@ public:
 	int history_size( void ) const;
 	void set_preload_buffer(std::string const& preloadText);
 	void set_word_break_characters( char const* wordBreakers );
-	void set_special_prefixes( char const* specialPrefixes );
 	void set_max_hint_rows( int count );
 	void set_double_tab_completion( bool val );
 	void set_complete_on_empty( bool val );
@@ -113,8 +111,8 @@ public:
 	void set_completion_count_cutoff( int len );
 	void clear_screen( void );
 	int install_window_change_handler( void );
-	completions_t call_completer( std::string const& input, int breakPos ) const;
-	hints_t call_hinter( std::string const& input, int breakPos, Replxx::Color& color ) const;
+	completions_t call_completer( std::string const& input, int& ) const;
+	hints_t call_hinter( std::string const& input, int&, Replxx::Color& color ) const;
 	int print( char const* , int );
 private:
 	ReplxxImpl( ReplxxImpl const& ) = delete;
@@ -140,7 +138,7 @@ private:
 	void highlight( int, bool );
 	int handle_hints( PromptBase&, HINT_ACTION );
 	void setColor( Replxx::Color );
-	int start_index( void );
+	int context_length( void );
 	void clear();
 	bool is_word_break_character( char32_t ) const;
 };

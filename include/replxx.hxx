@@ -65,22 +65,16 @@ public:
 	typedef std::vector<Color> colors_t;
 	typedef std::vector<std::string> completions_t;
 	typedef std::vector<std::string> hints_t;
+
 	/*! \brief Completions callback type definition.
 	 *
-	 * \e breakPos is counted in Unicode code points (not in bytes!).
+	 * \e contextLen is counted in Unicode code points (not in bytes!).
 	 *
-	 * For user input:
-	 * if ( obj.me
-	 *
-	 * input == "if ( obj.me"
-	 * breakPos == 4 or breakPos == 8 (depending on \e replxx_set_word_break_characters())
-	 *
-	 * \param input - the whole UTF-8 encoded input entered by the user so far.
-	 * \param breakPos - index of last break character before cursor.
-	 * \param userData - pointer to opaque user data block.
+	 * \param input - UTF-8 encoded input entered by the user until current cursor position.
+	 * \param[out] contextLen - length of the additional context to provide while displaying completions.
 	 * \return A list of user completions.
 	 */
-	typedef std::function<completions_t ( std::string const& input, int breakPos )> completion_callback_t;
+	typedef std::function<completions_t ( std::string const& input, int& contextLen )> completion_callback_t;
 
 	/*! \brief Highlighter callback type definition.
 	 *
@@ -94,27 +88,17 @@ public:
 	 *
 	 * \param input - an UTF-8 encoded input entered by the user so far.
 	 * \param colors - output buffer for color information.
-	 * \param userData - pointer to opaque user data block.
 	 */
 	typedef std::function<void ( std::string const& input, colors_t& colors )> highlighter_callback_t;
 
 	/*! \brief Hints callback type definition.
 	 *
-	 * \e breakPos is counted in Unicode code points (not in bytes!).
-	 *
-	 * For user input:
-	 * if ( obj.me
-	 *
-	 * input == "if ( obj.me"
-	 * breakPos == 4 or breakPos == 8 (depending on replxx_set_word_break_characters())
-	 *
-	 * \param input - the whole UTF-8 encoded input entered by the user so far.
-	 * \param breakPos - index of last break character before cursor.
+	 * \param input - UTF-8 encoded input entered by the user until current cursor position.
+	 * \param contextLen[out] - length of the additional context to provide while displaying hints.
 	 * \param color - a color used for displaying hints.
-	 * \param userData - pointer to opaque user data block.
 	 * \return A list of possible hints.
 	 */
-	typedef std::function<hints_t ( std::string const& input, int breakPos, Color& color )> hint_callback_t;
+	typedef std::function<hints_t ( std::string const& input, int& contextLen, Color& color )> hint_callback_t;
 
 	class ReplxxImpl;
 private:
@@ -171,21 +155,11 @@ public:
 
 	/*! \brief Set set of word break characters.
 	 *
-	 * This setting influences \e breakPos in completion and hints callbacks
-	 * and how completions are printed.
+	 * This setting influences word based cursor movement and line editing capabilities.
 	 *
 	 * \param wordBreakers - 7-bit ASCII set of word breaking characters.
 	 */
 	void set_word_break_characters( char const* wordBreakers );
-
-	/*! \brief Set special prefixes.
-	 *
-	 * Special prefixes are word breaking characters
-	 * that do not affect \e breakPos in completion and hints callbacks.
-	 *
-	 * \param specialPrefixes - 7-bit ASCII set of special prefixes.
-	 */
-	void set_special_prefixes( char const* specialPrefixes );
 
 	/*! \brief How many completions should trigger pagination.
 	 */

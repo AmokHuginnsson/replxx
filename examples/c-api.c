@@ -5,25 +5,32 @@
 #include <errno.h>
 
 #include "replxx.h"
+#include "util.h"
 
-void completionHook(char const* prefix, int bp, replxx_completions* lc, void* ud) {
+void completionHook(char const* context, replxx_completions* lc, int* contextLen, void* ud) {
 	char** examples = (char**)( ud );
 	size_t i;
+
+	int utf8ContextLen = context_len( context );
+	int prefixLen = strlen( context ) - utf8ContextLen;
+	*contextLen = utf8str_codepoint_len( context + prefixLen, utf8ContextLen );
 	for (i = 0;	examples[i] != NULL; ++i) {
-		if (strncmp(prefix + bp, examples[i], strlen(prefix) - bp) == 0) {
-			replxx_add_completion(lc, examples[i]);
+		if (strncmp(context + prefixLen, examples[i], utf8ContextLen) == 0) {
+			replxx_add_completion(lc, examples[i] + utf8ContextLen);
 		}
 	}
 }
 
-void hintHook(char const* prefix, int bp, replxx_hints* lc, ReplxxColor* c, void* ud) {
+void hintHook(char const* context, replxx_hints* lc, int* contextLen, ReplxxColor* c, void* ud) {
 	char** examples = (char**)( ud );
 	int i;
-	int len = strlen( prefix );
-	if ( len > bp ) {
+	int utf8ContextLen = context_len( context );
+	int prefixLen = strlen( context ) - utf8ContextLen;
+	*contextLen = utf8str_codepoint_len( context + prefixLen, utf8ContextLen );
+	if ( *contextLen > 0 ) {
 		for (i = 0;	examples[i] != NULL; ++i) {
-			if (strncmp(prefix + bp, examples[i], strlen(prefix) - bp) == 0) {
-				replxx_add_hint(lc, examples[i] + len - bp);
+			if (strncmp(context + prefixLen, examples[i], utf8ContextLen) == 0) {
+				replxx_add_hint(lc, examples[i] + utf8ContextLen);
 			}
 		}
 	}

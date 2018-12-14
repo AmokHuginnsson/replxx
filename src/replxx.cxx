@@ -164,10 +164,6 @@ void Replxx::set_word_break_characters( char const* wordBreakers ) {
 	_impl->set_word_break_characters( wordBreakers );
 }
 
-void Replxx::set_special_prefixes( char const* specialPrefixes ) {
-	_impl->set_special_prefixes( specialPrefixes );
-}
-
 void Replxx::set_max_hint_rows( int count ) {
 	_impl->set_max_hint_rows( count );
 }
@@ -281,9 +277,9 @@ struct replxx_hints {
 	replxx::Replxx::hints_t data;
 };
 
-replxx::Replxx::completions_t completions_fwd( replxx_completion_callback_t fn, std::string const& input_, int breakPos_, void* userData ) {
+replxx::Replxx::completions_t completions_fwd( replxx_completion_callback_t fn, std::string const& input_, int& contextLen_, void* userData ) {
 	replxx_completions completions;
-	fn( input_.c_str(), breakPos_, &completions, userData );
+	fn( input_.c_str(), &completions, &contextLen_, userData );
 	return ( completions.data );
 }
 
@@ -319,10 +315,10 @@ void replxx_set_highlighter_callback( ::Replxx* replxx_, replxx_highlighter_call
 	replxx->set_highlighter_callback( std::bind( &highlighter_fwd, fn, _1, _2, userData ) );
 }
 
-replxx::Replxx::hints_t hints_fwd( replxx_hint_callback_t fn, std::string const& input_, int breakPos_, replxx::Replxx::Color& color_, void* userData ) {
+replxx::Replxx::hints_t hints_fwd( replxx_hint_callback_t fn, std::string const& input_, int& contextLen_, replxx::Replxx::Color& color_, void* userData ) {
 	replxx_hints hints;
 	ReplxxColor c( static_cast<ReplxxColor>( color_ ) );
-	fn( input_.c_str(), breakPos_, &hints, &c, userData );
+	fn( input_.c_str(), &hints, &contextLen_, &c, userData );
 	return ( hints.data );
 }
 
@@ -362,11 +358,6 @@ void replxx_set_completion_count_cutoff( ::Replxx* replxx_, int count ) {
 void replxx_set_word_break_characters( ::Replxx* replxx_, char const* breakChars_ ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->set_word_break_characters( breakChars_ );
-}
-
-void replxx_set_special_prefixes( ::Replxx* replxx_, char const* specialPrefixes_ ) {
-	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
-	replxx->set_special_prefixes( specialPrefixes_ );
 }
 
 void replxx_set_double_tab_completion( ::Replxx* replxx_, int val ) {

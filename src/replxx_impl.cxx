@@ -96,7 +96,6 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _killRing()
 	, _maxHintRows( REPLXX_MAX_HINT_ROWS )
 	, _breakChars( defaultBreakChars )
-	, _specialPrefixes( "" )
 	, _completionCountCutoff( 100 )
 	, _doubleTabCompletion( false )
 	, _completeOnEmpty( true )
@@ -153,10 +152,10 @@ void Replxx::ReplxxImpl::realloc_utf8_buffer( int len ) {
 	return;
 }
 
-Replxx::ReplxxImpl::completions_t Replxx::ReplxxImpl::call_completer( std::string const& input, int breakPos ) const {
+Replxx::ReplxxImpl::completions_t Replxx::ReplxxImpl::call_completer( std::string const& input, int& contextLen_ ) const {
 	Replxx::completions_t completionsIntermediary(
 		!! _completionCallback
-			? _completionCallback( input, breakPos )
+			? _completionCallback( input, contextLen_ )
 			: Replxx::completions_t()
 	);
 	completions_t completions;
@@ -167,10 +166,10 @@ Replxx::ReplxxImpl::completions_t Replxx::ReplxxImpl::call_completer( std::strin
 	return ( completions );
 }
 
-Replxx::ReplxxImpl::hints_t Replxx::ReplxxImpl::call_hinter( std::string const& input, int breakPos, Replxx::Color& color ) const {
+Replxx::ReplxxImpl::hints_t Replxx::ReplxxImpl::call_hinter( std::string const& input, int& contextLen, Replxx::Color& color ) const {
 	Replxx::hints_t hintsIntermediary(
 		!! _hintCallback
-			? _hintCallback( input, breakPos, color )
+			? _hintCallback( input, contextLen, color )
 			: Replxx::hints_t()
 	);
 	hints_t hints;
@@ -393,71 +392,81 @@ void Replxx::ReplxxImpl::highlight( int highlightIdx, bool error_ ) {
 }
 
 int Replxx::ReplxxImpl::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
+	if ( _noColor ) {
+		return ( 0 );
+	}
+	if ( ! _hintCallback ) {
+		return ( 0 );
+	}
+	if ( hintAction_ == HINT_ACTION::SKIP ) {
+		return ( 0 );
+	}
+	if ( _pos != _len ) {
+		return ( 0 );
+	}
 	_hint = Utf32String();
 	int len( 0 );
-	if ( !_noColor && ( hintAction_ != HINT_ACTION::SKIP ) && !! _hintCallback && ( _pos == _len ) ) {
-		if ( hintAction_ == HINT_ACTION::REGENERATE ) {
+	if ( hintAction_ == HINT_ACTION::REGENERATE ) {
+		_hintSelection = -1;
+	}
+	Replxx::Color c( Replxx::Color::GRAY );
+	Utf32String unicodeCopy( _buf32.get(), _pos );
+	Utf8String parseItem(unicodeCopy);
+	int contextLen( context_length() );
+	Replxx::ReplxxImpl::hints_t hints( call_hinter( parseItem.get(), contextLen, c ) );
+	int hintCount( hints.size() );
+	if ( hintCount == 1 ) {
+		setColor( c );
+		_hint = hints.front();
+		len = _hint.length();
+		for ( int i( 0 ); i < len; ++ i ) {
+			_display.push_back( _hint[i] );
+		}
+		setColor( Replxx::Color::DEFAULT );
+	} else if ( _maxHintRows > 0 ) {
+		int startCol( pi.promptIndentation + _pos - contextLen );
+		int maxCol( pi.promptScreenColumns );
+#ifdef _WIN32
+		-- maxCol;
+#endif
+		if ( _hintSelection < -1 ) {
+			_hintSelection = hintCount - 1;
+		} else if ( _hintSelection >= hintCount ) {
 			_hintSelection = -1;
 		}
-		Replxx::Color c( Replxx::Color::GRAY );
-		Utf32String unicodeCopy( _buf32.get(), _pos );
-		Utf8String parseItem(unicodeCopy);
-		int startIndex( start_index() );
-		Replxx::ReplxxImpl::hints_t hints( call_hinter( parseItem.get(), startIndex, c ) );
-		int hintCount( hints.size() );
-		if ( hintCount == 1 ) {
-			setColor( c );
-			_hint = hints.front();
-			len = _hint.length();
+		setColor( c );
+		if ( _hintSelection != -1 ) {
+			_hint = hints[_hintSelection];
+			len = min<int>( _hint.length(), maxCol - startCol - _len );
 			for ( int i( 0 ); i < len; ++ i ) {
 				_display.push_back( _hint[i] );
 			}
-			setColor( Replxx::Color::DEFAULT );
-		} else if ( _maxHintRows > 0 ) {
-			int startCol( pi.promptIndentation + startIndex );
-			int maxCol( pi.promptScreenColumns );
+		}
+		setColor( Replxx::Color::DEFAULT );
+		for ( int hintRow( 0 ); hintRow < min( hintCount, _maxHintRows ); ++ hintRow ) {
 #ifdef _WIN32
-			-- maxCol;
+			_display.push_back( '\r' );
 #endif
-			if ( _hintSelection < -1 ) {
-				_hintSelection = hintCount - 1;
-			} else if ( _hintSelection >= hintCount ) {
-				_hintSelection = -1;
+			_display.push_back( '\n' );
+			int col( 0 );
+			for ( int i( 0 ); ( i < startCol ) && ( col < maxCol ); ++ i, ++ col ) {
+				_display.push_back( ' ' );
 			}
 			setColor( c );
-			if ( _hintSelection != -1 ) {
-				_hint = hints[_hintSelection];
-				len = min<int>( _hint.length(), maxCol - startCol - _len );
-				for ( int i( 0 ); i < len; ++ i ) {
-					_display.push_back( _hint[i] );
-				}
+			for ( int i( _pos - contextLen ); ( i < _pos ) && ( col < maxCol ); ++ i, ++ col ) {
+				_display.push_back( _buf32[i] );
+			}
+			int hintNo( hintRow + _hintSelection + 1 );
+			if ( hintNo == hintCount ) {
+				continue;
+			} else if ( hintNo > hintCount ) {
+				-- hintNo;
+			}
+			Utf32String const& h( hints[hintNo % hintCount] );
+			for ( size_t i( 0 ); ( i < h.length() ) && ( col < maxCol ); ++ i, ++ col ) {
+				_display.push_back( h[i] );
 			}
 			setColor( Replxx::Color::DEFAULT );
-			for ( int hintRow( 0 ); hintRow < min( hintCount, _maxHintRows ); ++ hintRow ) {
-#ifdef _WIN32
-				_display.push_back( '\r' );
-#endif
-				_display.push_back( '\n' );
-				int col( 0 );
-				for ( int i( 0 ); ( i < startCol ) && ( col < maxCol ); ++ i, ++ col ) {
-					_display.push_back( ' ' );
-				}
-				setColor( c );
-				for ( int i( startIndex ); ( i < _pos ) && ( col < maxCol ); ++ i, ++ col ) {
-					_display.push_back( _buf32[i] );
-				}
-				int hintNo( hintRow + _hintSelection + 1 );
-				if ( hintNo == hintCount ) {
-					continue;
-				} else if ( hintNo > hintCount ) {
-					-- hintNo;
-				}
-				Utf32String const& h( hints[hintNo % hintCount] );
-				for ( size_t i( 0 ); ( i < h.length() ) && ( col < maxCol ); ++ i, ++ col ) {
-					_display.push_back( h[i] );
-				}
-				setColor( Replxx::Color::DEFAULT );
-			}
 		}
 	}
 	return ( len );
@@ -609,29 +618,23 @@ void Replxx::ReplxxImpl::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	pi.promptCursorRowOffset = pi.promptExtraLines + yCursorPos; // remember row for next pass
 }
 
-int Replxx::ReplxxImpl::start_index() {
-	int startIndex = _pos;
-	while (--startIndex >= 0) {
-		if ( strchr(_breakChars, _buf32[startIndex]) ) {
+int Replxx::ReplxxImpl::context_length() {
+	int prefixLength = _pos;
+	while ( prefixLength > 0 ) {
+		if ( is_word_break_character( _buf32[prefixLength - 1] ) ) {
 			break;
 		}
+		-- prefixLength;
 	}
-	if ( ( startIndex < 0 ) || ! strchr( _specialPrefixes, _buf32[startIndex] ) ) {
-		++ startIndex;
-	}
-	while ( ( startIndex > 0 ) && ( strchr( _specialPrefixes, _buf32[startIndex - 1] ) != nullptr ) ) {
-		-- startIndex;
-	}
-	return ( startIndex );
+	return ( _pos - prefixLength );
 }
 
 /**
  * Handle command completion, using a completionCallback() routine to provide
  * possible substitutions
  * This routine handles the mechanics of updating the user's input buffer with
- * possible replacement
- * of text as the user selects a proposed completion string, or cancels the
- * completion attempt.
+ * possible replacement of text as the user selects a proposed completion string,
+ * or cancels the completion attempt.
  * @param pi - PromptBase struct holding information about the prompt and our
  * screen position
  */
@@ -642,13 +645,12 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	// character and
 	// extract a copy to parse.	we also handle the case where tab is hit while
 	// not at end-of-line.
-	int startIndex( start_index() );
-	int itemLength( _pos - startIndex );
 
 	Utf32String unicodeCopy(_buf32.get(), _pos);
 	Utf8String parseItem(unicodeCopy);
 	// get a list of completions
-	Replxx::ReplxxImpl::completions_t completions( call_completer( parseItem.get(), startIndex ) );
+	int contextLen( context_length() );
+	Replxx::ReplxxImpl::completions_t completions( call_completer( parseItem.get(), contextLen ) );
 
 	// if no completions, we are done
 	if (completions.size() == 0) {
@@ -658,7 +660,6 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 
 	// at least one completion
 	int longestCommonPrefix = 0;
-	int displayLength = 0;
 	int completionsCount( completions.size() );
 	int selectedCompletion( 0 );
 	if ( _hintSelection != -1 ) {
@@ -688,19 +689,16 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	}
 
 	// if we can extend the item, extend it and return to main loop
-	if ( ( longestCommonPrefix > itemLength ) || ( completionsCount == 1 ) ) {
-		displayLength = _len + longestCommonPrefix - itemLength;
-		realloc( displayLength );
-		Utf32String displayText(displayLength + 1);
-		memcpy(displayText.get(), _buf32.get(), sizeof(char32_t) * startIndex);
-		memcpy(&displayText[startIndex], &completions[selectedCompletion][0],
-					 sizeof(char32_t) * longestCommonPrefix);
-		int tailIndex = startIndex + longestCommonPrefix;
-		memcpy(&displayText[tailIndex], &_buf32[_pos],
-					 sizeof(char32_t) * (displayLength - tailIndex + 1));
-		copyString32(_buf32.get(), displayText.get(), displayLength);
-		_prefix = _pos = startIndex + longestCommonPrefix;
-		_len = displayLength;
+	if ( ( longestCommonPrefix > 0 ) || ( completionsCount == 1 ) ) {
+		int completedLength( _len + longestCommonPrefix );
+		realloc( completedLength );
+		Utf32String completedText( completedLength + 1 );
+		memcpy( completedText.get(), _buf32.get(), sizeof(char32_t) * _pos );
+		memcpy( &completedText[_pos], &completions[selectedCompletion][0], sizeof( char32_t ) * longestCommonPrefix );
+		memcpy( &completedText[_pos + longestCommonPrefix], &_buf32[_pos], sizeof( char32_t ) * ( _len - _pos ) );
+		copyString32( _buf32.get(), completedText.get(), completedLength );
+		_prefix = _pos = _pos + longestCommonPrefix;
+		_len = completedLength;
 		refreshLine(pi);
 		return 0;
 	}
@@ -750,11 +748,11 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	}
 
 	// if showing the list, do it the way readline does it
-	bool stopList = false;
-	if (showCompletions) {
+	bool stopList( false );
+	if ( showCompletions ) {
 		int longestCompletion = 0;
 		for (size_t j = 0; j < completions.size(); ++j) {
-			itemLength = static_cast<int>(completions[j].length());
+			int itemLength = static_cast<int>(completions[j].length()) + contextLen;
 			if (itemLength > longestCompletion) {
 				longestCompletion = itemLength;
 			}
@@ -825,24 +823,25 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 			for (int column = 0; column < columnCount; ++column) {
 				size_t index = (column * rowCount) + row;
 				if (index < completions.size()) {
-					itemLength = static_cast<int>(completions[index].length());
+					int itemLength = static_cast<int>(completions[index].length());
 					fflush(stdout);
 
 					static Utf32String const col( ansi_color( Replxx::Color::BRIGHTMAGENTA ) );
 					if ( !_noColor && ( write32( 1, col.get(), col.length() ) == -1 ) )
 						return -1;
-					if (write32(1, completions[index].get(), longestCommonPrefix) == -1)
+					if ( write32( 1, &_buf32[_pos - contextLen], contextLen ) == -1 )
 						return -1;
 					static Utf32String const res( ansi_color( Replxx::Color::DEFAULT ) );
 					if ( !_noColor && ( write32( 1, res.get(), res.length() ) == -1 ) )
 						return -1;
 
-					if (write32(1, completions[index].get() + longestCommonPrefix, itemLength - longestCommonPrefix) == -1)
+					if ( write32( 1, completions[index].get(), itemLength ) == -1 ) {
 						return -1;
+					}
 
 					if (((column + 1) * rowCount) + row < completions.size()) {
-						for (int k = itemLength; k < longestCompletion; ++k) {
-							printf(" ");
+						for ( int k( contextLen + itemLength ); k < longestCompletion; ++k ) {
+							printf( " " );
 						}
 					}
 				}
@@ -1788,10 +1787,6 @@ void Replxx::ReplxxImpl::set_max_hint_rows( int count ) {
 
 void Replxx::ReplxxImpl::set_word_break_characters( char const* wordBreakers ) {
 	_breakChars = wordBreakers;
-}
-
-void Replxx::ReplxxImpl::set_special_prefixes( char const* specialPrefixes ) {
-	_specialPrefixes = specialPrefixes;
 }
 
 void Replxx::ReplxxImpl::set_double_tab_completion( bool val ) {

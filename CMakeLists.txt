@@ -95,11 +95,13 @@ if (REPLXX_BuildExamples)
     add_executable(
         example-c-api
         examples/c-api.c
+        examples/util.c
     )
 
     add_executable(
         example-cxx-api
         examples/cxx-api.cxx
+        examples/util.c
     )
 
     target_link_libraries(
