@@ -26,6 +26,7 @@
 #endif
 
 #include "replxx_impl.hxx"
+#include "utf8string.hxx"
 #include "prompt.hxx"
 #include "util.hxx"
 #include "io.hxx"
@@ -117,7 +118,7 @@ void Replxx::ReplxxImpl::clear( void ) {
 	_prefix = 0;
 	_buf32[0] = 0;
 	_hintSelection = -1;
-	_hint = Utf32String();
+	_hint = UnicodeString();
 	_display.clear();
 }
 
@@ -371,7 +372,7 @@ void Replxx::ReplxxImpl::setColor( Replxx::Color color_ ) {
 
 void Replxx::ReplxxImpl::highlight( int highlightIdx, bool error_ ) {
 	Replxx::colors_t colors( _len, Replxx::Color::DEFAULT );
-	Utf32String unicodeCopy( _buf32.get(), _len );
+	UnicodeString unicodeCopy( _buf32.get(), _len );
 	Utf8String parseItem( unicodeCopy );
 	if ( !! _highlighterCallback ) {
 		_highlighterCallback( parseItem.get(), colors );
@@ -404,13 +405,13 @@ int Replxx::ReplxxImpl::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) 
 	if ( _pos != _len ) {
 		return ( 0 );
 	}
-	_hint = Utf32String();
+	_hint = UnicodeString();
 	int len( 0 );
 	if ( hintAction_ == HINT_ACTION::REGENERATE ) {
 		_hintSelection = -1;
 	}
 	Replxx::Color c( Replxx::Color::GRAY );
-	Utf32String unicodeCopy( _buf32.get(), _pos );
+	UnicodeString unicodeCopy( _buf32.get(), _pos );
 	Utf8String parseItem(unicodeCopy);
 	int contextLen( context_length() );
 	Replxx::ReplxxImpl::hints_t hints( call_hinter( parseItem.get(), contextLen, c ) );
@@ -462,7 +463,7 @@ int Replxx::ReplxxImpl::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) 
 			} else if ( hintNo > hintCount ) {
 				-- hintNo;
 			}
-			Utf32String const& h( hints[hintNo % hintCount] );
+			UnicodeString const& h( hints[hintNo % hintCount] );
 			for ( size_t i( 0 ); ( i < h.length() ) && ( col < maxCol ); ++ i, ++ col ) {
 				_display.push_back( h[i] );
 			}
@@ -646,7 +647,7 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	// extract a copy to parse.	we also handle the case where tab is hit while
 	// not at end-of-line.
 
-	Utf32String unicodeCopy(_buf32.get(), _pos);
+	UnicodeString unicodeCopy(_buf32.get(), _pos);
 	Utf8String parseItem(unicodeCopy);
 	// get a list of completions
 	int contextLen( context_length() );
@@ -692,7 +693,7 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	if ( ( longestCommonPrefix > 0 ) || ( completionsCount == 1 ) ) {
 		int completedLength( _len + longestCommonPrefix );
 		realloc( completedLength );
-		Utf32String completedText( completedLength + 1 );
+		UnicodeString completedText( completedLength + 1 );
 		memcpy( completedText.get(), _buf32.get(), sizeof(char32_t) * _pos );
 		memcpy( &completedText[_pos], &completions[selectedCompletion][0], sizeof( char32_t ) * longestCommonPrefix );
 		memcpy( &completedText[_pos + longestCommonPrefix], &_buf32[_pos], sizeof( char32_t ) * ( _len - _pos ) );
@@ -750,19 +751,19 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	// if showing the list, do it the way readline does it
 	bool stopList( false );
 	if ( showCompletions ) {
-		int longestCompletion = 0;
-		for (size_t j = 0; j < completions.size(); ++j) {
-			int itemLength = static_cast<int>(completions[j].length()) + contextLen;
-			if (itemLength > longestCompletion) {
+		int longestCompletion( 0 );
+		for ( size_t j( 0 ); j < completions.size(); ++ j ) {
+			int itemLength( static_cast<int>( completions[j].length() ) + contextLen );
+			if ( itemLength > longestCompletion ) {
 				longestCompletion = itemLength;
 			}
 		}
 		longestCompletion += 2;
 		int columnCount = pi.promptScreenColumns / longestCompletion;
-		if (columnCount < 1) {
+		if ( columnCount < 1 ) {
 			columnCount = 1;
 		}
-		if (!onNewLine) { // skip this if we showed "Display all %d possibilities?"
+		if ( ! onNewLine ) {  // skip this if we showed "Display all %d possibilities?"
 			int savePos = _pos; // move cursor to EOL to avoid overwriting the command line
 			_pos = _len;
 			refreshLine( pi, HINT_ACTION::SKIP );
@@ -826,12 +827,12 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 					int itemLength = static_cast<int>(completions[index].length());
 					fflush(stdout);
 
-					static Utf32String const col( ansi_color( Replxx::Color::BRIGHTMAGENTA ) );
+					static UnicodeString const col( ansi_color( Replxx::Color::BRIGHTMAGENTA ) );
 					if ( !_noColor && ( write32( 1, col.get(), col.length() ) == -1 ) )
 						return -1;
 					if ( write32( 1, &_buf32[_pos - contextLen], contextLen ) == -1 )
 						return -1;
-					static Utf32String const res( ansi_color( Replxx::Color::DEFAULT ) );
+					static UnicodeString const res( ansi_color( Replxx::Color::DEFAULT ) );
 					if ( !_noColor && ( write32( 1, res.get(), res.length() ) == -1 ) )
 						return -1;
 
@@ -1291,7 +1292,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 			case ctrlChar('Y'): // ctrl-Y, yank killed text
 				_history.reset_recall_most_recent();
 				{
-					Utf32String* restoredText = _killRing.yank();
+					UnicodeString* restoredText = _killRing.yank();
 					if (restoredText) {
 						size_t ucharCount = restoredText->length();
 						realloc( _len + ucharCount );
@@ -1314,7 +1315,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 			case META + 'Y':
 				if (_killRing.lastAction == KillRing::actionYank) {
 					_history.reset_recall_most_recent();
-					Utf32String* restoredText = _killRing.yankPop();
+					UnicodeString* restoredText = _killRing.yankPop();
 					if (restoredText) {
 						size_t ucharCount = restoredText->length();
 						realloc( _len + ucharCount );
@@ -1690,7 +1691,7 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 	PromptBase pb;
 	pb.promptChars = pi.promptIndentation;
 	pb.promptBytes = pi.promptBytes;
-	Utf32String tempUnicode(pb.promptBytes + 1);
+	UnicodeString tempUnicode(pb.promptBytes + 1);
 
 	copyString32(tempUnicode.get(), &pi.promptText[pi.promptLastLinePosition],
 							 pb.promptBytes - pi.promptLastLinePosition);

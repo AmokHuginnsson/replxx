@@ -38,7 +38,7 @@
 #include "replxx.hxx"
 #include "history.hxx"
 #include "killring.hxx"
-#include "utfstring.hxx"
+#include "unicodestring.hxx"
 
 namespace replxx {
 
@@ -46,8 +46,8 @@ struct PromptBase;
 
 class Replxx::ReplxxImpl {
 public:
-	typedef std::vector<Utf32String> completions_t;
-	typedef std::vector<Utf32String> hints_t;
+	typedef std::vector<UnicodeString> completions_t;
+	typedef std::vector<UnicodeString> hints_t;
 	typedef std::unique_ptr<char[]> utf8_buffer_t;
 	typedef std::unique_ptr<char32_t[]> input_buffer_t;
 	typedef std::unique_ptr<char[]> char_widths_t;
@@ -70,7 +70,7 @@ private:
 	input_buffer_t _buf32;      // input buffer
 	char_widths_t  _charWidths; // character widths from mk_wcwidth()
 	display_t      _display;
-	Utf32String    _hint;
+	UnicodeString  _hint;
 	int _len;    // length of text in input buffer
 	int _pos;    // character position in buffer ( 0 <= _pos <= _len )
 	int _prefix; // prefix length used in common prefix search

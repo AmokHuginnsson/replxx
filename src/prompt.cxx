@@ -34,7 +34,7 @@ PromptInfo::PromptInfo(std::string const& text_, int columns) {
 	promptLastLinePosition = 0;
 	promptPreviousLen = 0;
 	promptScreenColumns = columns;
-	Utf32String tempUnicode(text_.c_str());
+	UnicodeString tempUnicode(text_.c_str());
 
 	// strip control characters from the prompt -- we do allow newline
 	char32_t* pIn = tempUnicode.get();
@@ -106,18 +106,18 @@ PromptInfo::PromptInfo(std::string const& text_, int columns) {
 
 // Used with DynamicPrompt (history search)
 //
-const Utf32String forwardSearchBasePrompt("(i-search)`");
-const Utf32String reverseSearchBasePrompt("(reverse-i-search)`");
-const Utf32String endSearchBasePrompt("': ");
-Utf32String previousSearchText;	// remembered across invocations of replxx_input()
+const UnicodeString forwardSearchBasePrompt("(i-search)`");
+const UnicodeString reverseSearchBasePrompt("(reverse-i-search)`");
+const UnicodeString endSearchBasePrompt("': ");
+UnicodeString previousSearchText;	// remembered across invocations of replxx_input()
 
 DynamicPrompt::DynamicPrompt(PromptBase& pi, int initialDirection)
 		: searchTextLen(0), direction(initialDirection) {
 	promptScreenColumns = pi.promptScreenColumns;
 	promptCursorRowOffset = 0;
-	Utf32String emptyString(1);
+	UnicodeString emptyString(1);
 	searchText = emptyString;
-	const Utf32String* basePrompt =
+	const UnicodeString* basePrompt =
 			(direction > 0) ? &forwardSearchBasePrompt : &reverseSearchBasePrompt;
 	size_t promptStartLength = basePrompt->length();
 	promptChars =
@@ -127,7 +127,7 @@ DynamicPrompt::DynamicPrompt(PromptBase& pi, int initialDirection)
 																				 // that the history prompt won't wrap
 																				 // (!)
 	promptPreviousLen = promptChars;
-	Utf32String tempUnicode(promptChars + 1);
+	UnicodeString tempUnicode(promptChars + 1);
 	memcpy(tempUnicode.get(), basePrompt->get(),
 				 sizeof(char32_t) * promptStartLength);
 	memcpy(&tempUnicode[promptStartLength], endSearchBasePrompt.get(),
@@ -139,13 +139,13 @@ DynamicPrompt::DynamicPrompt(PromptBase& pi, int initialDirection)
 }
 
 void DynamicPrompt::updateSearchPrompt(void) {
-	const Utf32String* basePrompt =
+	const UnicodeString* basePrompt =
 			(direction > 0) ? &forwardSearchBasePrompt : &reverseSearchBasePrompt;
 	size_t promptStartLength = basePrompt->length();
 	promptChars = static_cast<int>(promptStartLength + searchTextLen +
 																 endSearchBasePrompt.length());
 	promptBytes = promptChars;
-	Utf32String tempUnicode(promptChars + 1);
+	UnicodeString tempUnicode(promptChars + 1);
 	memcpy(tempUnicode.get(), basePrompt->get(),
 				 sizeof(char32_t) * promptStartLength);
 	memcpy(&tempUnicode[promptStartLength], searchText.get(),
@@ -158,7 +158,7 @@ void DynamicPrompt::updateSearchPrompt(void) {
 }
 
 void DynamicPrompt::updateSearchText(const char32_t* text_) {
-	Utf32String tempUnicode(text_);
+	UnicodeString tempUnicode(text_);
 	searchTextLen = static_cast<int>(tempUnicode.length());
 	searchText = tempUnicode;
 	updateSearchPrompt();

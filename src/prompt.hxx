@@ -3,11 +3,11 @@
 
 #include <cstdlib>
 
-#include "utfstring.hxx"
+#include "unicodestring.hxx"
 
 namespace replxx {
 struct PromptBase {						// a convenience struct for grouping prompt info
-	Utf32String promptText;			// our copy of the prompt text, edited
+	UnicodeString promptText;			// our copy of the prompt text, edited
 	char* promptCharWidths;			// character widths from mk_wcwidth()
 	int promptChars;						 // chars in promptText
 	int promptBytes;						 // bytes in promptText
@@ -31,12 +31,12 @@ struct PromptInfo : public PromptBase {
 	PromptInfo(std::string const& textPtr, int columns);
 };
 
-extern Utf32String previousSearchText;	// remembered across invocations of replxx_input()
+extern UnicodeString previousSearchText;	// remembered across invocations of replxx_input()
 
 // changing prompt for "(reverse-i-search)`text':" etc.
 //
 struct DynamicPrompt : public PromptBase {
-	Utf32String searchText;	// text we are searching for
+	UnicodeString searchText;	// text we are searching for
 	char* searchCharWidths;	// character widths from mk_wcwidth()
 	int searchTextLen;			 // chars in searchText
 	int direction;					 // current search direction, 1=forward, -1=reverse
