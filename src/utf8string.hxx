@@ -13,7 +13,7 @@ public:
 	explicit Utf8String(const UnicodeString& src) {
 		size_t len = src.length() * 4 + 1;
 		_data = new char[len];
-		copyString32to8(_data, len, src.get());
+		copyString32to8(_data, len, src.get(), src.length());
 	}
 
 	~Utf8String() {

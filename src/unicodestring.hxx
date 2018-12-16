@@ -1,6 +1,7 @@
 #ifndef REPLXX_UNICODESTRING_HXX_INCLUDED
 #define REPLXX_UNICODESTRING_HXX_INCLUDED
 
+#include <vector>
 #include <cstring>
 
 #include "conversion.hxx"
@@ -8,97 +9,78 @@
 namespace replxx {
 
 class UnicodeString {
+private:
+	typedef std::vector<char32_t> data_buffer_t;
+	data_buffer_t _data;
 public:
 	UnicodeString()
-		: _length( 0 )
-		, _data( nullptr ) {
-		_data = new char32_t[1]();
+		: _data( 0 ) {
 	}
 
-	explicit UnicodeString(const char* src)
-		: _length( 0 )
-		, _data( nullptr ) {
-		size_t len = strlen(src);
-		_data = new char32_t[len + 1]();
-		copyString8to32(_data, len + 1, _length, src);
+	explicit UnicodeString( char const* src )
+		: _data() {
+		size_t byteCount( strlen( src ) );
+		_data.resize( byteCount + 1 );
+		int len( 0 );
+		copyString8to32( _data.data(), byteCount + 1, len, src );
+		_data.resize( len );
 	}
 
-	explicit UnicodeString(const char8_t* src)
-		: _length( 0 )
-		, _data( nullptr ) {
-		size_t len = strlen(reinterpret_cast<const char*>(src));
-		_data = new char32_t[len + 1]();
-		copyString8to32(_data, len + 1, _length, src);
+	explicit UnicodeString( char8_t const* src )
+		: UnicodeString( reinterpret_cast<const char*>( src ) ) {
 	}
 
-	explicit UnicodeString(const char32_t* src)
-		: _length( 0 )
-		, _data( nullptr ) {
-		for (_length = 0; src[_length] != 0; ++_length) {
+	explicit UnicodeString( char32_t const* src )
+		: _data() {
+		int len( 0 );
+		while ( src[len] != 0 ) {
+			++ len;
 		}
-		_data = new char32_t[_length + 1]();
-		memcpy(_data, src, _length * sizeof(char32_t));
+		_data.assign( src, src + len );
 	}
 
-	explicit UnicodeString(const char32_t* src, int len)
-		: _length( len )
-		, _data( nullptr ) {
-		_data = new char32_t[len + 1]();
-		memcpy(_data, src, len * sizeof(char32_t));
+	explicit UnicodeString( char32_t const* src, int len )
+		: _data() {
+		_data.assign( src, src + len );
 	}
 
-	explicit UnicodeString(int len)
-		: _length( 0 )
-		, _data( nullptr ) {
-		_data = new char32_t[len]();
+	explicit UnicodeString( int len )
+		: _data() {
+		_data.resize( len );
 	}
 
-	explicit UnicodeString(const UnicodeString& that)
-		: _length( 0 )
-		, _data( nullptr ) {
-		_data = new char32_t[that._length + 1]();
-		_length = that._length;
-		memcpy(_data, that._data, sizeof(char32_t) * _length);
-	}
+	explicit UnicodeString( UnicodeString const& ) = default;
+	UnicodeString& operator = ( UnicodeString const& ) = default;
 
-	UnicodeString& operator=(const UnicodeString& that) {
-		if (this != &that) {
-			delete[] _data;
-			_data = new char32_t[that._length]();
-			_length = that._length;
-			memcpy(_data, that._data, sizeof(char32_t) * _length);
-		}
-
+	UnicodeString& append( UnicodeString const& other ) {
+		_data.insert( _data.end(), other._data.begin(), other._data.end() );
 		return *this;
 	}
 
-	~UnicodeString() { delete[] _data; }
-
-public:
-	char32_t* get() const {
-		return _data;
+	UnicodeString& append( char32_t const* src, int len ) {
+		_data.insert( _data.end(), src, src + len );
+		return *this;
 	}
 
-	size_t length() const {
-		return _length;
+	char32_t const* get() const {
+		return _data.data();
 	}
 
-	void initFromBuffer() {
-		for (_length = 0; _data[_length] != 0; ++_length) {
-		}
+	char32_t* get() {
+		return _data.data();
 	}
 
-	const char32_t& operator[](size_t pos) const {
+	int length() const {
+		return static_cast<int>( _data.size() );
+	}
+
+	const char32_t& operator[]( size_t pos ) const {
 		return _data[pos];
 	}
 
-	char32_t& operator[](size_t pos) {
+	char32_t& operator[]( size_t pos ) {
 		return _data[pos];
 	}
-
- private:
-	size_t _length;
-	char32_t* _data;
 };
 
 }

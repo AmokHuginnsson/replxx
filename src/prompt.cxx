@@ -112,7 +112,8 @@ const UnicodeString endSearchBasePrompt("': ");
 UnicodeString previousSearchText;	// remembered across invocations of replxx_input()
 
 DynamicPrompt::DynamicPrompt(PromptBase& pi, int initialDirection)
-		: searchTextLen(0), direction(initialDirection) {
+	: searchTextLen(0)
+	, direction(initialDirection) {
 	promptScreenColumns = pi.promptScreenColumns;
 	promptCursorRowOffset = 0;
 	UnicodeString emptyString(1);
@@ -120,22 +121,18 @@ DynamicPrompt::DynamicPrompt(PromptBase& pi, int initialDirection)
 	const UnicodeString* basePrompt =
 			(direction > 0) ? &forwardSearchBasePrompt : &reverseSearchBasePrompt;
 	size_t promptStartLength = basePrompt->length();
-	promptChars =
-			static_cast<int>(promptStartLength + endSearchBasePrompt.length());
+	promptChars = static_cast<int>(promptStartLength + endSearchBasePrompt.length());
 	promptBytes = promptChars;
-	promptLastLinePosition = promptChars;	// TODO fix this, we are asssuming
-																				 // that the history prompt won't wrap
-																				 // (!)
+	promptLastLinePosition = promptChars; // TODO fix this, we are asssuming
+																				// that the history prompt won't wrap (!)
 	promptPreviousLen = promptChars;
-	UnicodeString tempUnicode(promptChars + 1);
-	memcpy(tempUnicode.get(), basePrompt->get(),
-				 sizeof(char32_t) * promptStartLength);
-	memcpy(&tempUnicode[promptStartLength], endSearchBasePrompt.get(),
-				 sizeof(char32_t) * (endSearchBasePrompt.length() + 1));
-	tempUnicode.initFromBuffer();
+	UnicodeString tempUnicode( *basePrompt );
+	tempUnicode.append( endSearchBasePrompt );
 	promptText = tempUnicode;
-	calculateScreenPosition(0, 0, pi.promptScreenColumns, promptChars,
-													promptIndentation, promptExtraLines);
+	calculateScreenPosition(
+		0, 0, pi.promptScreenColumns, promptChars,
+		promptIndentation, promptExtraLines
+	);
 }
 
 void DynamicPrompt::updateSearchPrompt(void) {
@@ -145,15 +142,8 @@ void DynamicPrompt::updateSearchPrompt(void) {
 	promptChars = static_cast<int>(promptStartLength + searchTextLen +
 																 endSearchBasePrompt.length());
 	promptBytes = promptChars;
-	UnicodeString tempUnicode(promptChars + 1);
-	memcpy(tempUnicode.get(), basePrompt->get(),
-				 sizeof(char32_t) * promptStartLength);
-	memcpy(&tempUnicode[promptStartLength], searchText.get(),
-				 sizeof(char32_t) * searchTextLen);
-	size_t endIndex = promptStartLength + searchTextLen;
-	memcpy(&tempUnicode[endIndex], endSearchBasePrompt.get(),
-				 sizeof(char32_t) * (endSearchBasePrompt.length() + 1));
-	tempUnicode.initFromBuffer();
+	UnicodeString tempUnicode( *basePrompt );
+	tempUnicode.append( searchText ).append( endSearchBasePrompt );
 	promptText = tempUnicode;
 }
 

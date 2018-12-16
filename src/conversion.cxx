@@ -41,8 +41,7 @@ bool is8BitEncoding( is_8bit_encoding() );
 
 }
 
-ConversionResult copyString8to32(char32_t* dst, size_t dstSize,
-																				size_t& dstCount, const char* src) {
+ConversionResult copyString8to32(char32_t* dst, int dstSize, int& dstCount, const char* src) {
 	ConversionResult res = ConversionResult::conversionOK;
 	if ( ! locale::is8BitEncoding ) {
 		const UTF8* sourceStart = reinterpret_cast<const UTF8*>(src);
@@ -71,24 +70,15 @@ ConversionResult copyString8to32(char32_t* dst, size_t dstSize,
 	return res;
 }
 
-ConversionResult copyString8to32(char32_t* dst, size_t dstSize,
-																				size_t& dstCount, const char8_t* src) {
-	return copyString8to32(dst, dstSize, dstCount,
-												 reinterpret_cast<const char*>(src));
+ConversionResult copyString8to32(char32_t* dst, int dstSize, int& dstCount, const char8_t* src) {
+	return copyString8to32(
+		dst, dstSize, dstCount, reinterpret_cast<const char*>(src)
+	);
 }
 
-size_t strlen32(const char32_t* str) {
-	const char32_t* ptr = str;
-
-	while (*ptr) {
-		++ptr;
-	}
-
-	return ptr - str;
-}
-
-void copyString32to8(char* dst, size_t dstSize, size_t* dstCount,
-														const char32_t* src, size_t srcSize) {
+void copyString32to8(
+	char* dst, int dstSize, const char32_t* src, int srcSize, int* dstCount
+) {
 	if ( ! locale::is8BitEncoding ) {
 		const UTF32* sourceStart = reinterpret_cast<const UTF32*>(src);
 		const UTF32* sourceEnd = sourceStart + srcSize;
@@ -99,14 +89,17 @@ void copyString32to8(char* dst, size_t dstSize, size_t* dstCount,
 				&sourceStart, sourceEnd, &targetStart, targetEnd, lenientConversion);
 
 		if (res == conversionOK) {
-			*dstCount = targetStart - reinterpret_cast<UTF8*>(dst);
+			int resCount( targetStart - reinterpret_cast<UTF8*>( dst ) );
 
-			if (*dstCount < dstSize) {
+			if ( resCount < dstSize ) {
 				*targetStart = 0;
+			}
+			if ( dstCount ) {
+				*dstCount = resCount;
 			}
 		}
 	} else {
-		size_t i( 0 );
+		int i( 0 );
 		for ( i = 0; ( i < dstSize ) && ( i < srcSize ) && src[i]; ++ i ) {
 			dst[i] = static_cast<char>( src[i] );
 		}
@@ -117,11 +110,6 @@ void copyString32to8(char* dst, size_t dstSize, size_t* dstCount,
 			dst[i] = 0;
 		}
 	}
-}
-
-void copyString32to8(char* dst, size_t dstLen, const char32_t* src) {
-	size_t dstCount = 0;
-	copyString32to8(dst, dstLen, &dstCount, src, strlen32(src));
 }
 
 void copyString32(char32_t* dst, const char32_t* src, size_t len) {

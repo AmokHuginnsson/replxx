@@ -76,12 +76,12 @@ bool out( is_a_tty( 1 ) );
 
 }
 
-int write32( int fd, char32_t* text32, int len32 ) {
-	size_t len8 = 4 * len32 + 1;
+int write32( int fd, char32_t const* text32, int len32 ) {
+	int len8 = 4 * len32 + 1;
 	unique_ptr<char[]> text8(new char[len8]);
-	size_t count8 = 0;
+	int count8 = 0;
 
-	copyString32to8(text8.get(), len8, &count8, text32, len32);
+	copyString32to8(text8.get(), len8, text32, len32, &count8);
 #ifdef _WIN32
 	return win_write(text8.get(), count8);
 #else
@@ -215,9 +215,8 @@ char32_t readUnicodeCharacter(void) {
 			utf8String[utf8Count++] = c;
 			utf8String[utf8Count] = 0;
 			char32_t unicodeChar[2];
-			size_t ucharCount;
-			ConversionResult res =
-					copyString8to32(unicodeChar, 2, ucharCount, utf8String);
+			int ucharCount( 0 );
+			ConversionResult res = copyString8to32(unicodeChar, 2, ucharCount, utf8String);
 			if (res == conversionOK && ucharCount) {
 				utf8Count = 0;
 				return unicodeChar[0];

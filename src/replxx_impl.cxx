@@ -271,7 +271,7 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 			printf("\n");
 			size_t bufferSize( sizeof(char32_t) * length() + 1 );
 			realloc_utf8_buffer( bufferSize );
-			copyString32to8(_utf8Buffer.get(), bufferSize, buf());
+			copyString32to8(_utf8Buffer.get(), bufferSize, buf(), length() );
 			return ( _utf8Buffer.get() );
 		}
 	} else { // input not from a terminal, we should work with piped input, i.e. redirected stdin
@@ -307,7 +307,7 @@ int Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
 }
 
 void Replxx::ReplxxImpl::preloadBuffer(const char* preloadText) {
-	size_t ucharCount = 0;
+	int ucharCount = 0;
 	realloc( strlen( preloadText ) );
 	copyString8to32(_buf32.get(), _buflen + 1, ucharCount, preloadText);
 	recomputeCharacterWidths(_buf32.get(), _charWidths.get(), static_cast<int>(ucharCount));
@@ -464,7 +464,7 @@ int Replxx::ReplxxImpl::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) 
 				-- hintNo;
 			}
 			UnicodeString const& h( hints[hintNo % hintCount] );
-			for ( size_t i( 0 ); ( i < h.length() ) && ( col < maxCol ); ++ i, ++ col ) {
+			for ( int i( 0 ); ( i < h.length() ) && ( col < maxCol ); ++ i, ++ col ) {
 				_display.push_back( h[i] );
 			}
 			setColor( Replxx::Color::DEFAULT );
@@ -871,7 +871,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 	if (_len > 0) {
 		size_t bufferSize = sizeof(char32_t) * _len + 1;
 		unique_ptr<char[]> tempBuffer(new char[bufferSize]);
-		copyString32to8(tempBuffer.get(), bufferSize, _buf32.get());
+		copyString32to8( tempBuffer.get(), bufferSize, _buf32.get(), _len );
 		history_add(tempBuffer.get());
 	} else {
 		history_add("");
@@ -1183,7 +1183,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				if ( _history.is_last() ) {
 					size_t tempBufferSize = sizeof(char32_t) * _len + 1;
 					unique_ptr<char[]> tempBuffer(new char[tempBufferSize]);
-					copyString32to8(tempBuffer.get(), tempBufferSize, _buf32.get());
+					copyString32to8(tempBuffer.get(), tempBufferSize, _buf32.get(), _len);
 					_history.update_last( tempBuffer.get() );
 				}
 				if ( ! _history.is_empty() ) {
@@ -1193,7 +1193,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 					if ( ! _history.move( c == ctrlChar('P') ) ) {
 						break;
 					}
-					size_t ucharCount = 0;
+					int ucharCount = 0;
 					copyString8to32(_buf32.get(), _buflen, ucharCount, _history.current().c_str());
 					_len = _pos = static_cast<int>(ucharCount);
 					refreshLine(pi);
@@ -1376,12 +1376,12 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				if ( _history.is_last() ) {
 					size_t tempBufferSize = sizeof(char32_t) * _len + 1;
 					unique_ptr<char[]> tempBuffer(new char[tempBufferSize]);
-					copyString32to8(tempBuffer.get(), tempBufferSize, _buf32.get());
+					copyString32to8(tempBuffer.get(), tempBufferSize, _buf32.get(), _len);
 					_history.update_last( tempBuffer.get() );
 				}
 				if ( ! _history.is_empty() ) {
 					_history.jump( (c == META + '<' || c == PAGE_UP_KEY) );
-					size_t ucharCount = 0;
+					int ucharCount = 0;
 					copyString8to32(_buf32.get(), _buflen, ucharCount, _history.current().c_str());
 					_len = _pos = static_cast<int>(ucharCount);
 					refreshLine(pi);
@@ -1453,14 +1453,14 @@ void Replxx::ReplxxImpl::commonPrefixSearch(PromptBase& pi, int startChar) {
 	_killRing.lastAction = KillRing::actionOther;
 	size_t bufferSize = sizeof(char32_t) * length() + 1;
 	unique_ptr<char[]> buf8(new char[bufferSize]);
-	copyString32to8(buf8.get(), bufferSize, buf());
+	copyString32to8(buf8.get(), bufferSize, buf(), length());
 	int prefixSize( calculateColumnPosition( _buf32.get(), _prefix ) );
 	if (
 		_history.common_prefix_search(
 			buf8.get(), prefixSize, ( startChar == ( META + 'p' ) ) || ( startChar == ( META + 'P' ) )
 		)
 	) {
-		size_t ucharCount = 0;
+		int ucharCount = 0;
 		copyString8to32( buf(), _buflen, ucharCount, _history.current().c_str() );
 		_len = _pos = static_cast<int>(ucharCount);
 		refreshLine(pi);
@@ -1484,7 +1484,7 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 	if ( _history.is_last() ) {
 		bufferSize = sizeof(char32_t) * _len + 1;
 		unique_ptr<char[]> tempBuffer(new char[bufferSize]);
-		copyString32to8(tempBuffer.get(), bufferSize, _buf32.get());
+		copyString32to8(tempBuffer.get(), bufferSize, _buf32.get(), _len);
 		_history.update_last( tempBuffer.get() );
 	}
 	int historyLineLength( _len );
@@ -1589,7 +1589,7 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 				enableRawMode();  // Back from Linux shell, re-enter raw mode
 				bufferSize = historyLineLength + 1;
 				unique_ptr<char32_t[]> tempUnicode(new char32_t[bufferSize]);
-				size_t ucharCount = 0;
+				int ucharCount = 0;
 				copyString8to32(tempUnicode.get(), bufferSize, ucharCount, _history.current().c_str());
 				dynamicRefresh(dp, tempUnicode.get(), historyLineLength, historyLinePosition);
 				continue;
@@ -1637,7 +1637,7 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 			activeHistoryLine = nullptr;
 		}
 		activeHistoryLine = new char32_t[bufferSize];
-		size_t ucharCount = 0;
+		int ucharCount = 0;
 		copyString8to32( activeHistoryLine, bufferSize, ucharCount, _history.current().c_str() );
 		if ( dp.searchTextLen > 0 ) {
 			bool found = false;
@@ -1691,11 +1691,7 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 	PromptBase pb;
 	pb.promptChars = pi.promptIndentation;
 	pb.promptBytes = pi.promptBytes;
-	UnicodeString tempUnicode(pb.promptBytes + 1);
-
-	copyString32(tempUnicode.get(), &pi.promptText[pi.promptLastLinePosition],
-							 pb.promptBytes - pi.promptLastLinePosition);
-	tempUnicode.initFromBuffer();
+	UnicodeString tempUnicode( &pi.promptText[pi.promptLastLinePosition], pb.promptBytes - pi.promptLastLinePosition );
 	pb.promptText = tempUnicode;
 	pb.promptExtraLines = 0;
 	pb.promptIndentation = pi.promptIndentation;
