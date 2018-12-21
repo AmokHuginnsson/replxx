@@ -25,7 +25,7 @@ Replxx::completions_t hook_completion(std::string const& context, int& contextLe
 	std::string prefix { context.substr(prefixLen) };
 	for (auto const& e : examples) {
 		if (e.compare(0, prefix.size(), prefix) == 0) {
-			completions.emplace_back(e.c_str() + utf8ContextLen);
+			completions.emplace_back(e.c_str());
 		}
 	}
 
@@ -46,7 +46,7 @@ Replxx::hints_t hook_hint(std::string const& context, int& contextLen, Replxx::C
 	if (prefix.size() >= 2 || (! prefix.empty() && prefix.at(0) == '.')) {
 		for (auto const& e : examples) {
 			if (e.compare(0, prefix.size(), prefix) == 0) {
-				hints.emplace_back(e.substr(prefix.size()).c_str());
+				hints.emplace_back(e.c_str());
 			}
 		}
 	}

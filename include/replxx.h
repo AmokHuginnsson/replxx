@@ -118,9 +118,19 @@ typedef struct replxx_completions replxx_completions;
  *
  * \e contextLen is counted in Unicode code points (not in bytes!).
  *
+ * For user input:
+ * if ( obj.me
+ *
+ * input == "if ( obj.me"
+ * contextLen == 2 (depending on \e replxx_set_word_break_characters())
+ *
+ * Client application is free to update \e contextLen to be 6 (or any orther non-negative
+ * number not greated than the number of code points in input) if it makes better sense
+ * for given client application semantics.
+ *
  * \param input - UTF-8 encoded input entered by the user until current cursor position.
  * \param completions - pointer to opaque list of user completions.
- * \param contextLen[out] - length of the additional context to provide while displaying completions.
+ * \param contextLen[in,out] - length of the additional context to provide while displaying completions.
  * \param userData - pointer to opaque user data block.
  */
 typedef void(replxx_completion_callback_t)(const char* input, replxx_completions* completions, int* contextLen, void* userData);
@@ -143,9 +153,21 @@ typedef struct replxx_hints replxx_hints;
 
 /*! \brief Hints callback type definition.
  *
+ * \e contextLen is counted in Unicode code points (not in bytes!).
+ *
+ * For user input:
+ * if ( obj.me
+ *
+ * input == "if ( obj.me"
+ * contextLen == 2 (depending on \e replxx_set_word_break_characters())
+ *
+ * Client application is free to update \e contextLen to be 6 (or any orther non-negative
+ * number not greated than the number of code points in input) if it makes better sense
+ * for given client application semantics.
+ *
  * \param input - UTF-8 encoded input entered by the user until current cursor position.
  * \param hints - pointer to opaque list of possible hints.
- * \param contextLen[out] - length of the additional context to provide while displaying hints.
+ * \param contextLen[in,out] - length of the additional context to provide while displaying hints.
  * \param color - a color used for displaying hints.
  * \param userData - pointer to opaque user data block.
  */

@@ -420,7 +420,7 @@ int Replxx::ReplxxImpl::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) 
 		setColor( c );
 		_hint = hints.front();
 		len = _hint.length();
-		for ( int i( 0 ); i < len; ++ i ) {
+		for ( int i( contextLen ); i < len; ++ i ) {
 			_display.push_back( _hint[i] );
 		}
 		setColor( Replxx::Color::DEFAULT );
@@ -439,7 +439,7 @@ int Replxx::ReplxxImpl::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) 
 		if ( _hintSelection != -1 ) {
 			_hint = hints[_hintSelection];
 			len = min<int>( _hint.length(), maxCol - startCol - _len );
-			for ( int i( 0 ); i < len; ++ i ) {
+			for ( int i( contextLen ); i < len; ++ i ) {
 				_display.push_back( _hint[i] );
 			}
 		}
@@ -464,7 +464,7 @@ int Replxx::ReplxxImpl::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) 
 				-- hintNo;
 			}
 			UnicodeString const& h( hints[hintNo % hintCount] );
-			for ( int i( 0 ); ( i < h.length() ) && ( col < maxCol ); ++ i, ++ col ) {
+			for ( int i( contextLen ); ( i < h.length() ) && ( col < maxCol ); ++ i, ++ col ) {
 				_display.push_back( h[i] );
 			}
 			setColor( Replxx::Color::DEFAULT );
@@ -690,15 +690,15 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	}
 
 	// if we can extend the item, extend it and return to main loop
-	if ( ( longestCommonPrefix > 0 ) || ( completionsCount == 1 ) ) {
-		int completedLength( _len + longestCommonPrefix );
+	if ( ( longestCommonPrefix > contextLen ) || ( completionsCount == 1 ) ) {
+		int completedLength( _len + longestCommonPrefix - contextLen );
 		realloc( completedLength );
 		UnicodeString completedText( completedLength + 1 );
-		memcpy( completedText.get(), _buf32.get(), sizeof(char32_t) * _pos );
-		memcpy( &completedText[_pos], &completions[selectedCompletion][0], sizeof( char32_t ) * longestCommonPrefix );
-		memcpy( &completedText[_pos + longestCommonPrefix], &_buf32[_pos], sizeof( char32_t ) * ( _len - _pos ) );
+		memcpy( completedText.get(), _buf32.get(), sizeof(char32_t) * ( _pos - contextLen ) );
+		memcpy( &completedText[_pos - contextLen], &completions[selectedCompletion][0], sizeof( char32_t ) * longestCommonPrefix );
+		memcpy( &completedText[_pos + longestCommonPrefix - contextLen], &_buf32[_pos - contextLen], sizeof( char32_t ) * ( _len - _pos ) );
 		copyString32( _buf32.get(), completedText.get(), completedLength );
-		_prefix = _pos = _pos + longestCommonPrefix;
+		_prefix = _pos = _pos + longestCommonPrefix - contextLen;
 		_len = completedLength;
 		refreshLine(pi);
 		return 0;
@@ -753,7 +753,7 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	if ( showCompletions ) {
 		int longestCompletion( 0 );
 		for ( size_t j( 0 ); j < completions.size(); ++ j ) {
-			int itemLength( static_cast<int>( completions[j].length() ) + contextLen );
+			int itemLength( static_cast<int>( completions[j].length() ) );
 			if ( itemLength > longestCompletion ) {
 				longestCompletion = itemLength;
 			}
@@ -830,18 +830,18 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 					static UnicodeString const col( ansi_color( Replxx::Color::BRIGHTMAGENTA ) );
 					if ( !_noColor && ( write32( 1, col.get(), col.length() ) == -1 ) )
 						return -1;
-					if ( write32( 1, &_buf32[_pos - contextLen], contextLen ) == -1 )
+					if ( write32( 1, &_buf32[_pos - contextLen], longestCommonPrefix ) == -1 )
 						return -1;
 					static UnicodeString const res( ansi_color( Replxx::Color::DEFAULT ) );
 					if ( !_noColor && ( write32( 1, res.get(), res.length() ) == -1 ) )
 						return -1;
 
-					if ( write32( 1, completions[index].get(), itemLength ) == -1 ) {
+					if ( write32( 1, completions[index].get() + longestCommonPrefix, itemLength - longestCommonPrefix ) == -1 ) {
 						return -1;
 					}
 
 					if (((column + 1) * rowCount) + row < completions.size()) {
-						for ( int k( contextLen + itemLength ); k < longestCompletion; ++k ) {
+						for ( int k( itemLength ); k < longestCompletion; ++k ) {
 							printf( " " );
 						}
 					}

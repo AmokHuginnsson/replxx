@@ -70,8 +70,18 @@ public:
 	 *
 	 * \e contextLen is counted in Unicode code points (not in bytes!).
 	 *
+	 * For user input:
+	 * if ( obj.me
+	 *
+	 * input == "if ( obj.me"
+	 * contextLen == 2 (depending on \e set_word_break_characters())
+	 *
+	 * Client application is free to update \e contextLen to be 6 (or any orther non-negative
+	 * number not greated than the number of code points in input) if it makes better sense
+	 * for given client application semantics.
+	 *
 	 * \param input - UTF-8 encoded input entered by the user until current cursor position.
-	 * \param[out] contextLen - length of the additional context to provide while displaying completions.
+	 * \param[in,out] contextLen - length of the additional context to provide while displaying completions.
 	 * \return A list of user completions.
 	 */
 	typedef std::function<completions_t ( std::string const& input, int& contextLen )> completion_callback_t;
@@ -93,8 +103,20 @@ public:
 
 	/*! \brief Hints callback type definition.
 	 *
+	 * \e contextLen is counted in Unicode code points (not in bytes!).
+	 *
+	 * For user input:
+	 * if ( obj.me
+	 *
+	 * input == "if ( obj.me"
+	 * contextLen == 2 (depending on \e set_word_break_characters())
+	 *
+	 * Client application is free to update \e contextLen to be 6 (or any orther non-negative
+	 * number not greated than the number of code points in input) if it makes better sense
+	 * for given client application semantics.
+	 *
 	 * \param input - UTF-8 encoded input entered by the user until current cursor position.
-	 * \param contextLen[out] - length of the additional context to provide while displaying hints.
+	 * \param contextLen[in,out] - length of the additional context to provide while displaying hints.
 	 * \param color - a color used for displaying hints.
 	 * \return A list of possible hints.
 	 */

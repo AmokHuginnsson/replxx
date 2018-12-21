@@ -16,7 +16,7 @@ void completionHook(char const* context, replxx_completions* lc, int* contextLen
 	*contextLen = utf8str_codepoint_len( context + prefixLen, utf8ContextLen );
 	for (i = 0;	examples[i] != NULL; ++i) {
 		if (strncmp(context + prefixLen, examples[i], utf8ContextLen) == 0) {
-			replxx_add_completion(lc, examples[i] + utf8ContextLen);
+			replxx_add_completion(lc, examples[i]);
 		}
 	}
 }
@@ -30,7 +30,7 @@ void hintHook(char const* context, replxx_hints* lc, int* contextLen, ReplxxColo
 	if ( *contextLen > 0 ) {
 		for (i = 0;	examples[i] != NULL; ++i) {
 			if (strncmp(context + prefixLen, examples[i], utf8ContextLen) == 0) {
-				replxx_add_hint(lc, examples[i] + utf8ContextLen);
+				replxx_add_hint(lc, examples[i]);
 			}
 		}
 	}
