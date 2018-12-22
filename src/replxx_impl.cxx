@@ -50,7 +50,11 @@ bool gotResize = false;
 namespace {
 
 static int const REPLXX_MAX_HINT_ROWS( 4 );
-char const defaultBreakChars[] = " =+-/\\*?\"'`&<>;|@{([])}";
+/*
+ * All whitespaces and all non-alphanumerical characters from ASCII range
+ * with an exception of an underscore ('_').
+ */
+char const defaultBreakChars[] = " \t\v\f\a\b\r\n`~!@#$%^&*()-=+[{]}\\|;:'\",<.>/?";
 
 #ifndef _WIN32
 
