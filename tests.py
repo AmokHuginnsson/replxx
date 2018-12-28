@@ -456,6 +456,17 @@ class ReplxxTests( unittest.TestCase ):
 			dimensions = ( 4, 24 ),
 			command = ReplxxTests._cSample_ + " q1 e1"
 		)
+		self_.check_scenario(
+			"<up><home>co<tab><cr><c-d>",
+			"<c9><ceos>abcd<brightmagenta>()<rst><gray><rst><c15>"
+			"<c9><ceos>abcd<brightmagenta>()<rst><c9>"
+			"<c9><ceos>cabcd<brightmagenta>()<rst><c10>"
+			"<c9><ceos>coabcd<brightmagenta>()<rst><c11>"
+			"<c9><ceos>color_abcd<brightmagenta>()<rst><c15>"
+			"<c9><ceos>color_abcd<brightmagenta>()<rst><c21>\r\n"
+			"color_abcd()\r\n",
+			"abcd()\n"
+		)
 	def test_completion_pager( self_ ):
 		cmd = ReplxxTests._cSample_ + " q1 x" + ",".join( _words_ )
 		self_.check_scenario(

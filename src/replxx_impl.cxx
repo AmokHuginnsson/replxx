@@ -700,7 +700,7 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 		UnicodeString completedText( completedLength + 1 );
 		memcpy( completedText.get(), _buf32.get(), sizeof(char32_t) * ( _pos - contextLen ) );
 		memcpy( &completedText[_pos - contextLen], &completions[selectedCompletion][0], sizeof( char32_t ) * longestCommonPrefix );
-		memcpy( &completedText[_pos + longestCommonPrefix - contextLen], &_buf32[_pos - contextLen], sizeof( char32_t ) * ( _len - _pos ) );
+		memcpy( &completedText[_pos + longestCommonPrefix - contextLen], &_buf32[_pos], sizeof( char32_t ) * ( _len - _pos ) );
 		copyString32( _buf32.get(), completedText.get(), completedLength );
 		_prefix = _pos = _pos + longestCommonPrefix - contextLen;
 		_len = completedLength;
