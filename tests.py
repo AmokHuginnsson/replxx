@@ -336,6 +336,15 @@ class ReplxxTests( unittest.TestCase ):
 			"        <gray>color_green<rst><u3><c11><c9><ceos>co<rst><c11>\r\n"
 			"co\r\n"
 		)
+		self_.check_scenario(
+			"<up><cr><c-d>",
+			"<c9><ceos>zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz "
+			"<brightgreen>color_brightgreen<rst><green><rst><c15><u3><c9><ceos>zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz "
+			"<brightgreen>color_brightgreen<rst><c15>\r\n"
+			"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz color_brightgreen\r\n",
+			"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz color_brightgreen\n",
+			dimensions = ( 64, 16 )
+		)
 	def test_hint_scroll_down( self_ ):
 		self_.check_scenario(
 			"co<c-down><c-down><tab><cr><c-d>",
@@ -1049,10 +1058,9 @@ class ReplxxTests( unittest.TestCase ):
 			"<brightred>color_brightred<rst> <brightgreen>color_brightgreen<rst> "
 			"<yellow>color_yellow<rst> <brightblue>color_brightblue<rst> "
 			"<brightmagenta>color_brightmagenta<rst> <brightcyan>color_brightcyan<rst> "
-			"<white>color_white<rst><green><rst>\r\n"
-			"<u1><c70><u2><c9><ceos><black>color_black<rst> <red>color_red<rst> "
-			"<green>color_green<rst> <brown>color_brown<rst> <blue>color_blue<rst> "
-			"<magenta>color_magenta<rst> <cyan>color_cyan<rst> "
+			"<white>color_white<rst><green><rst><c70><u2><c9><ceos><black>color_black<rst> "
+			"<red>color_red<rst> <green>color_green<rst> <brown>color_brown<rst> "
+			"<blue>color_blue<rst> <magenta>color_magenta<rst> <cyan>color_cyan<rst> "
 			"<lightgray>color_lightgray<rst> <gray>color_gray<rst> "
 			"<brightred>color_brightred<rst> <brightgreen>color_brightgreen<rst> "
 			"<yellow>color_yellow<rst> <brightblue>color_brightblue<rst> "

@@ -474,7 +474,7 @@ int Replxx::ReplxxImpl::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) 
 			setColor( Replxx::Color::DEFAULT );
 		}
 	}
-	return ( len );
+	return ( len - contextLen );
 }
 
 /**
