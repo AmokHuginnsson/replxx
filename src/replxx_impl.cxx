@@ -677,9 +677,15 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 		bool keepGoing = true;
 		while (keepGoing) {
 			for (int j = 0; j < completionsCount - 1; ++j) {
+				if (longestCommonPrefix >= completions[j].length() || longestCommonPrefix >= completions[j + 1].length())
+				{
+					keepGoing = false;
+					break;
+				}
+
 				char32_t c1 = completions[j][longestCommonPrefix];
 				char32_t c2 = completions[j + 1][longestCommonPrefix];
-				if ((0 == c1) || (0 == c2) || (c1 != c2)) {
+				if (c1 != c2) {
 					keepGoing = false;
 					break;
 				}
