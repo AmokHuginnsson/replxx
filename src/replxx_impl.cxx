@@ -634,6 +634,34 @@ int Replxx::ReplxxImpl::context_length() {
 	return ( _pos - prefixLength );
 }
 
+namespace {
+int longest_common_prefix( Replxx::ReplxxImpl::completions_t const& completions ) {
+	int completionsCount( completions.size() );
+	if ( completionsCount < 1 ) {
+		return ( 0 );
+	}
+	int longestCommonPrefix( 0 );
+	UnicodeString const& sample( completions.front() );
+	while ( true ) {
+		if ( longestCommonPrefix >= sample.length() ) {
+			return ( longestCommonPrefix );
+		}
+		char32_t sc( sample[longestCommonPrefix] );
+		for ( int i( 1 ); i < completionsCount; ++ i ) {
+			UnicodeString const& candidate( completions[i] );
+			if ( longestCommonPrefix >= candidate.length() ) {
+				return ( longestCommonPrefix );
+			}
+			char32_t cc( candidate[longestCommonPrefix] );
+			if ( cc != sc ) {
+				return ( longestCommonPrefix );
+			}
+		}
+		++ longestCommonPrefix;
+	}
+}
+}
+
 /**
  * Handle command completion, using a completionCallback() routine to provide
  * possible substitutions
@@ -674,20 +702,7 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	if ( completionsCount == 1) {
 		longestCommonPrefix = static_cast<int>(completions[selectedCompletion].length());
 	} else {
-		bool keepGoing = true;
-		while (keepGoing) {
-			for (int j = 0; j < completionsCount - 1; ++j) {
-				char32_t c1 = completions[j][longestCommonPrefix];
-				char32_t c2 = completions[j + 1][longestCommonPrefix];
-				if ((0 == c1) || (0 == c2) || (c1 != c2)) {
-					keepGoing = false;
-					break;
-				}
-			}
-			if (keepGoing) {
-				++longestCommonPrefix;
-			}
-		}
+		longestCommonPrefix = longest_common_prefix( completions );
 	}
 	if ( _beepOnAmbiguousCompletion && ( completionsCount != 1 ) ) { // beep if ambiguous
 		beep();
