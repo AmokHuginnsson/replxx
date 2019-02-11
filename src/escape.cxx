@@ -2,6 +2,8 @@
 #include "io.hxx"
 #include "keycodes.hxx"
 
+#ifndef _WIN32
+
 namespace replxx {
 
 namespace EscapeSequenceProcessing { // move these out of global namespace
@@ -302,4 +304,6 @@ char32_t doDispatch(char32_t c) {
 }	// namespace EscapeSequenceProcessing // move these out of global namespace
 
 }
+
+#endif /* #ifndef _WIN32 */
 
