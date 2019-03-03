@@ -136,8 +136,10 @@ void Replxx::ReplxxImpl::realloc( int len_ ) {
 		input_buffer_t newBuf32(new char32_t[_buflen]);
 		char_widths_t newCharWidths(new char[_buflen]);
 		using std::swap;
-		memcpy( newBuf32.get(), _buf32.get(), sizeof ( char32_t ) * oldBufLen );
-		memcpy( newCharWidths.get(), _charWidths.get(), sizeof ( char ) * oldBufLen );
+		if ( oldBufLen > 0 ) {
+			memcpy( newBuf32.get(), _buf32.get(), sizeof ( char32_t ) * oldBufLen );
+			memcpy( newCharWidths.get(), _charWidths.get(), sizeof ( char ) * oldBufLen );
+		}
 		swap( _buf32, newBuf32 );
 		swap( _charWidths, newCharWidths );
 	}
