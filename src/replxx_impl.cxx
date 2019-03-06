@@ -332,8 +332,13 @@ char const* ansi_color( Replxx::Color color_ ) {
 	static char const cyan[] = "\033[0;22;36m";
 	static char const lightgray[] = "\033[0;22;37m";
 
+#ifdef _WIN32
+	static bool const has256colorDefault( true );
+#else
+	static bool const has256colorDefault( false );
+#endif
 	static char const* TERM( getenv( "TERM" ) );
-	static bool const has256color( TERM ? ( strstr( TERM, "256" ) != nullptr ) : false );
+	static bool const has256color( TERM ? ( strstr( TERM, "256" ) != nullptr ) : has256colorDefault );
 	static char const* gray = has256color ? "\033[0;1;90m" : "\033[0;1;30m";
 	static char const* brightred = has256color ? "\033[0;1;91m" : "\033[0;1;31m";
 	static char const* brightgreen = has256color ? "\033[0;1;92m" : "\033[0;1;32m";
