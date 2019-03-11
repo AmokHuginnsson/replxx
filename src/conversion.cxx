@@ -63,9 +63,6 @@ ConversionResult copyString8to32(char32_t* dst, int dstSize, int& dstCount, cons
 		for ( dstCount = 0; ( dstCount < dstSize ) && src[dstCount]; ++ dstCount ) {
 			dst[dstCount] = src[dstCount];
 		}
-		if ( dstCount < dstSize ) {
-			dst[dstCount] = 0;
-		}
 	}
 	return res;
 }
@@ -112,27 +109,5 @@ void copyString32to8(
 	}
 }
 
-void copyString32(char32_t* dst, const char32_t* src, size_t len) {
-	while (0 < len && *src) {
-		*dst++ = *src++;
-		--len;
-	}
-
-	*dst = 0;
 }
 
-int strncmp32(const char32_t* left, const char32_t* right, size_t len) {
-	while (0 < len && *left) {
-		if (*left != *right) {
-			return *left - *right;
-		}
-
-		++left;
-		++right;
-		--len;
-	}
-
-	return 0;
-}
-
-}

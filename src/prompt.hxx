@@ -22,8 +22,7 @@ struct PromptBase {						// a convenience struct for grouping prompt info
 	int promptPreviousLen;			 // help erasing
 	int promptErrorCode;				 // error code (invalid UTF-8) or zero
 
-	PromptBase() : promptPreviousInputLen(0) {}
-
+	PromptBase( int );
 	bool write();
 };
 
@@ -37,13 +36,10 @@ extern UnicodeString previousSearchText;	// remembered across invocations of rep
 //
 struct DynamicPrompt : public PromptBase {
 	UnicodeString searchText;	// text we are searching for
-	char* searchCharWidths;	// character widths from mk_wcwidth()
-	int searchTextLen;			 // chars in searchText
 	int direction;					 // current search direction, 1=forward, -1=reverse
 
 	DynamicPrompt(PromptBase& pi, int initialDirection);
 	void updateSearchPrompt(void);
-	void updateSearchText(const char32_t* textPtr);
 };
 
 }

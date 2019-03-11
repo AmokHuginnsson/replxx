@@ -38,7 +38,7 @@
 #include "replxx.hxx"
 #include "history.hxx"
 #include "killring.hxx"
-#include "unicodestring.hxx"
+#include "utf8string.hxx"
 
 namespace replxx {
 
@@ -50,7 +50,7 @@ public:
 	typedef std::vector<UnicodeString> hints_t;
 	typedef std::unique_ptr<char[]> utf8_buffer_t;
 	typedef std::unique_ptr<char32_t[]> input_buffer_t;
-	typedef std::unique_ptr<char[]> char_widths_t;
+	typedef std::vector<char> char_widths_t;
 	typedef std::vector<char32_t> display_t;
 	enum class HINT_ACTION {
 		REGENERATE,
@@ -64,14 +64,11 @@ public:
 	};
 	static int const REPLXX_MAX_LINE = 4096;
 private:
-	int _maxCharacterCount;
-	utf8_buffer_t _utf8Buffer;
-	int            _buflen;     // buffer size in characters
-	input_buffer_t _buf32;      // input buffer
+	Utf8String     _utf8Buffer;
+	UnicodeString  _data;
 	char_widths_t  _charWidths; // character widths from mk_wcwidth()
 	display_t      _display;
 	UnicodeString  _hint;
-	int _len;    // length of text in input buffer
 	int _pos;    // character position in buffer ( 0 <= _pos <= _len )
 	int _prefix; // prefix length used in common prefix search
 	int _hintSelection; // Currently selected hint.
@@ -120,15 +117,7 @@ private:
 private:
 	void preloadBuffer( char const* preloadText );
 	int getInputLine( PromptBase& pi );
-	int length( void ) const {
-		return _len;
-	}
-	char32_t* buf() {
-		return ( _buf32.get() );
-	}
 	NEXT insert_character( PromptBase&, int );
-	void realloc_utf8_buffer( int );
-	void realloc( int );
 	char const* read_from_stdin( void );
 	void clearScreen(PromptBase& pi);
 	int incrementalHistorySearch(PromptBase& pi, int startChar);
