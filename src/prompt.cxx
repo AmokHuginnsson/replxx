@@ -32,11 +32,8 @@ PromptBase::PromptBase( int columns_ )
 	, promptPreviousLen( 0 ) {
 }
 
-bool PromptBase::write() {
-	if ( write32(1, promptText.get(), promptBytes) == -1 ) {
-		return false;
-	}
-	return true;
+void PromptBase::write() {
+	write32( promptText.get(), promptBytes );
 }
 
 PromptInfo::PromptInfo( std::string const& text_, int columns )

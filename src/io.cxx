@@ -76,17 +76,29 @@ bool out( is_a_tty( 1 ) );
 
 }
 
-int write32( int fd, char32_t const* text32, int len32 ) {
+void write32( char32_t const* text32, int len32 ) {
 	int len8 = 4 * len32 + 1;
 	unique_ptr<char[]> text8(new char[len8]);
 	int count8 = 0;
 
 	copyString32to8(text8.get(), len8, text32, len32, &count8);
+	int nWritten( 0 );
 #ifdef _WIN32
-	return win_write(text8.get(), count8);
+	nWritten = win_write( text8.get(), count8 );
 #else
-	return write(fd, text8.get(), count8);
+	nWritten = write( 1, text8.get(), count8 );
 #endif
+	if ( nWritten != count8 ) {
+		throw std::runtime_error( "write failed" );
+	}
+	return;
+}
+
+void write8( void const* data_, int size_ ) {
+	if ( write( 1, data_, size_ ) != size_ ) {
+		throw std::runtime_error( "write failed" );
+	}
+	return;
 }
 
 int getScreenColumns(void) {
@@ -174,11 +186,13 @@ fatal:
 
 void disableRawMode(void) {
 #ifdef _WIN32
-	SetConsoleMode(console_in, oldMode);
-	SetConsoleCP( inputCodePage );
-	SetConsoleOutputCP( outputCodePage );
-	console_in = 0;
-	console_out = 0;
+	if ( console_in ) {
+		SetConsoleMode(console_in, oldMode);
+		SetConsoleCP( inputCodePage );
+		SetConsoleOutputCP( outputCodePage );
+		console_in = 0;
+		console_out = 0;
+	}
 #else
 	if ( rawmode && tcsetattr(0, TCSADRAIN, &orig_termios ) != -1 ) {
 		rawmode = 0;

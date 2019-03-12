@@ -23,7 +23,7 @@ struct PromptBase {						// a convenience struct for grouping prompt info
 	int promptErrorCode;				 // error code (invalid UTF-8) or zero
 
 	PromptBase( int );
-	bool write();
+	void write();
 };
 
 struct PromptInfo : public PromptBase {
@@ -35,8 +35,8 @@ extern UnicodeString previousSearchText;	// remembered across invocations of rep
 // changing prompt for "(reverse-i-search)`text':" etc.
 //
 struct DynamicPrompt : public PromptBase {
-	UnicodeString searchText;	// text we are searching for
-	int direction;					 // current search direction, 1=forward, -1=reverse
+	UnicodeString searchText; // text we are searching for
+	int direction;            // current search direction, 1=forward, -1=reverse
 
 	DynamicPrompt(PromptBase& pi, int initialDirection);
 	void updateSearchPrompt(void);

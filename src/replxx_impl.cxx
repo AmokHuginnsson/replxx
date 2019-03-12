@@ -206,40 +206,40 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 #ifndef _WIN32
 	gotResize = false;
 #endif
-	errno = 0;
-	if ( tty::in ) { // input is from a terminal
+	try {
+		errno = 0;
+		if ( ! tty::in ) { // input not from a terminal, we should work with piped input, i.e. redirected stdin
+			return ( read_from_stdin() );
+		}
 		if (!_errorMessage.empty()) {
 			printf("%s", _errorMessage.c_str());
 			fflush(stdout);
 			_errorMessage.clear();
 		}
 		PromptInfo pi(prompt, getScreenColumns());
-		if (isUnsupportedTerm()) {
-			if ( ! pi.write() ) {
-				return nullptr;
-			}
+		if ( isUnsupportedTerm() ) {
+			pi.write();
 			fflush(stdout);
 			return ( read_from_stdin() );
-		} else {
-			if (enableRawMode() == -1) {
-				return nullptr;
-			}
-			clear();
-			if (!_preloadedBuffer.empty()) {
-				preloadBuffer(_preloadedBuffer.c_str());
-				_preloadedBuffer.clear();
-			}
-			int errCode = getInputLine(pi);
-			disableRawMode();
-			if (errCode == -1) {
-				return nullptr;
-			}
-			printf("\n");
-			_utf8Buffer.assign( _data );
-			return ( _utf8Buffer.get() );
 		}
-	} else { // input not from a terminal, we should work with piped input, i.e. redirected stdin
-		return ( read_from_stdin() );
+		if (enableRawMode() == -1) {
+			return nullptr;
+		}
+		clear();
+		if (!_preloadedBuffer.empty()) {
+			preloadBuffer(_preloadedBuffer.c_str());
+			_preloadedBuffer.clear();
+		}
+		if ( getInputLine(pi) == -1 ) {
+			return ( nullptr );
+		}
+		disableRawMode();
+		printf("\n");
+		_utf8Buffer.assign( _data );
+		return ( _utf8Buffer.get() );
+	} catch ( std::exception const& ) {
+		disableRawMode();
+		return ( nullptr );
 	}
 }
 
@@ -275,58 +275,6 @@ void Replxx::ReplxxImpl::preloadBuffer(const char* preloadText) {
 	_charWidths.resize( _data.length() );
 	recomputeCharacterWidths( _data.get(), _charWidths.data(), _data.length() );
 	_prefix = _pos = _data.length();
-}
-
-char const* ansi_color( Replxx::Color color_ ) {
-	static char const reset[] = "\033[0m";
-	static char const black[] = "\033[0;22;30m";
-	static char const red[] = "\033[0;22;31m";
-	static char const green[] = "\033[0;22;32m";
-	static char const brown[] = "\033[0;22;33m";
-	static char const blue[] = "\033[0;22;34m";
-	static char const magenta[] = "\033[0;22;35m";
-	static char const cyan[] = "\033[0;22;36m";
-	static char const lightgray[] = "\033[0;22;37m";
-
-#ifdef _WIN32
-	static bool const has256colorDefault( true );
-#else
-	static bool const has256colorDefault( false );
-#endif
-	static char const* TERM( getenv( "TERM" ) );
-	static bool const has256color( TERM ? ( strstr( TERM, "256" ) != nullptr ) : has256colorDefault );
-	static char const* gray = has256color ? "\033[0;1;90m" : "\033[0;1;30m";
-	static char const* brightred = has256color ? "\033[0;1;91m" : "\033[0;1;31m";
-	static char const* brightgreen = has256color ? "\033[0;1;92m" : "\033[0;1;32m";
-	static char const* yellow = has256color ? "\033[0;1;93m" : "\033[0;1;33m";
-	static char const* brightblue = has256color ? "\033[0;1;94m" : "\033[0;1;34m";
-	static char const* brightmagenta = has256color ? "\033[0;1;95m" : "\033[0;1;35m";
-	static char const* brightcyan = has256color ? "\033[0;1;96m" : "\033[0;1;36m";
-	static char const* white = has256color ? "\033[0;1;97m" : "\033[0;1;37m";
-	static char const error[] = "\033[101;1;33m";
-
-	char const* code( reset );
-	switch ( color_ ) {
-		case Replxx::Color::BLACK:         code = black;         break;
-		case Replxx::Color::RED:           code = red;           break;
-		case Replxx::Color::GREEN:         code = green;         break;
-		case Replxx::Color::BROWN:         code = brown;         break;
-		case Replxx::Color::BLUE:          code = blue;          break;
-		case Replxx::Color::MAGENTA:       code = magenta;       break;
-		case Replxx::Color::CYAN:          code = cyan;          break;
-		case Replxx::Color::LIGHTGRAY:     code = lightgray;     break;
-		case Replxx::Color::GRAY:          code = gray;          break;
-		case Replxx::Color::BRIGHTRED:     code = brightred;     break;
-		case Replxx::Color::BRIGHTGREEN:   code = brightgreen;   break;
-		case Replxx::Color::YELLOW:        code = yellow;        break;
-		case Replxx::Color::BRIGHTBLUE:    code = brightblue;    break;
-		case Replxx::Color::BRIGHTMAGENTA: code = brightmagenta; break;
-		case Replxx::Color::BRIGHTCYAN:    code = brightcyan;    break;
-		case Replxx::Color::WHITE:         code = white;         break;
-		case Replxx::Color::ERROR:         code = error;         break;
-		case Replxx::Color::DEFAULT:       code = reset;         break;
-	}
-	return ( code );
 }
 
 void Replxx::ReplxxImpl::setColor( Replxx::Color color_ ) {
@@ -535,9 +483,9 @@ void Replxx::ReplxxImpl::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 
 	// display the input line
 	if ( !_noColor ) {
-		if (write32(1, _display.data(), _display.size()) == -1) return;
+		write32( _display.data(), _display.size() );
 	} else {
-		if (write32(1, _data.get(), _data.length()) == -1) return;
+		write32( _data.get(), _data.length() );
 	}
 
 	// position the cursor
@@ -550,7 +498,7 @@ void Replxx::ReplxxImpl::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	int cursorRowMovement = pi.promptCursorRowOffset - pi.promptExtraLines;
 	if (cursorRowMovement > 0) { // move the cursor up as required
 		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
-		if (write(1, seq, strlen(seq)) == -1) return;
+		write8( seq, strlen(seq) );
 	}
 	// position at the end of the prompt, clear to end of screen
 	snprintf(
@@ -558,31 +506,28 @@ void Replxx::ReplxxImpl::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 		pi.promptIndentation + 1, /* 1-based on VT100 */
 		'J'
 	);
-	if (write(1, seq, strlen(seq)) == -1) return;
+	write8( seq, strlen(seq) );
 
 	if ( !_noColor ) {
-		if ( write32( 1, _display.data(), _display.size() ) == -1 ) {
-			return;
-		}
+		write32( _display.data(), _display.size() );
 	} else { // highlightIdx the matching brace/bracket/parenthesis
-		if ( write32( 1, _data.get(), _data.length() ) == -1 ) {
-			return;
-		}
+		write32( _data.get(), _data.length() );
 	}
 
 	// we have to generate our own newline on line wrap
-	if (xEndOfInput == 0 && yEndOfInput > 0)
-		if (write(1, "\n", 1) == -1) return;
+	if (xEndOfInput == 0 && yEndOfInput > 0) {
+		write8( "\n", 1 );
+	}
 
 	// position the cursor
 	cursorRowMovement = yEndOfInput - yCursorPos;
 	if (cursorRowMovement > 0) { // move the cursor up as required
 		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
-		if (write(1, seq, strlen(seq)) == -1) return;
+		write8( seq, strlen(seq) );
 	}
 	// position the cursor within the line
 	snprintf(seq, sizeof seq, "\x1b[%dG", xCursorPos + 1); // 1-based on VT100
-	if (write(1, seq, strlen(seq)) == -1) return;
+	write8( seq, strlen(seq) );
 #endif
 
 	pi.promptCursorRowOffset = pi.promptExtraLines + yCursorPos; // remember row for next pass
@@ -718,7 +663,8 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 				break;
 			case ctrlChar('C'):
 				showCompletions = false;
-				if (write(1, "^C", 2) == -1) return -1; // Display the ^C we got
+				// Display the ^C we got
+				write8( "^C", 2 );
 				c = 0;
 				break;
 		}
@@ -787,7 +733,8 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 						stopList = true;
 						break;
 					case ctrlChar('C'):
-						if (write(1, "^C", 2) == -1) return -1; // Display the ^C we got
+						// Display the ^C we got
+						write8( "^C", 2 );
 						stopList = true;
 						break;
 				}
@@ -804,17 +751,16 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 					fflush(stdout);
 
 					static UnicodeString const col( ansi_color( Replxx::Color::BRIGHTMAGENTA ) );
-					if ( !_noColor && ( write32( 1, col.get(), col.length() ) == -1 ) )
-						return -1;
-					if ( write32( 1, &_data[_pos - contextLen], longestCommonPrefix ) == -1 )
-						return -1;
-					static UnicodeString const res( ansi_color( Replxx::Color::DEFAULT ) );
-					if ( !_noColor && ( write32( 1, res.get(), res.length() ) == -1 ) )
-						return -1;
-
-					if ( write32( 1, completions[index].get() + longestCommonPrefix, itemLength - longestCommonPrefix ) == -1 ) {
-						return -1;
+					if ( !_noColor ) {
+						write32( col.get(), col.length() );
 					}
+					write32( &_data[_pos - contextLen], longestCommonPrefix );
+					static UnicodeString const res( ansi_color( Replxx::Color::DEFAULT ) );
+					if ( !_noColor ) {
+						write32( res.get(), res.length() );
+					}
+
+					write32( completions[index].get() + longestCommonPrefix, itemLength - longestCommonPrefix );
 
 					if (((column + 1) * rowCount) + row < completions.size()) {
 						for ( int k( itemLength ); k < longestCompletion; ++k ) {
@@ -829,13 +775,14 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 
 	// display the prompt on a new line, then redisplay the input buffer
 	if (!stopList || c == ctrlChar('C')) {
-		if (write(1, "\n", 1) == -1) return 0;
+		write8( "\n", 1 );
 	}
-	if (!pi.write()) return 0;
+	pi.write();
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap on Linux
-	if (pi.promptIndentation == 0 && pi.promptExtraLines > 0)
-		if (write(1, "\n", 1) == -1) return 0;
+	if (pi.promptIndentation == 0 && pi.promptExtraLines > 0) {
+		write8( "\n", 1 );
+	}
 #endif
 	pi.promptCursorRowOffset = pi.promptExtraLines;
 	refreshLine(pi);
@@ -853,12 +800,13 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 	_history.reset_pos();
 
 	// display the prompt
-	if (!pi.write()) return -1;
+	pi.write();
 
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap on Linux
-	if (pi.promptIndentation == 0 && pi.promptExtraLines > 0)
-		if (write(1, "\n", 1) == -1) return -1;
+	if (pi.promptIndentation == 0 && pi.promptExtraLines > 0) {
+		write8( "\n", 1 );
+	}
 #endif
 
 	// the cursor starts out at the end of the prompt
@@ -911,7 +859,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 		}
 
 		if (c == -2) {
-			if (!pi.write()) return -1;
+			pi.write();
 			refreshLine(pi);
 			continue;
 		}
@@ -959,7 +907,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				// so we don't display the next prompt over the previous input line
 				_pos = _data.length(); // pass _data.length() as _pos for EOL
 				refreshLine(pi, HINT_ACTION::SKIP);
-				static_cast<void>( write( 1, "^C\r\n", 4 ) == 0 );
+				write8( "^C\r\n", 4 );
 				next = NEXT::BAIL;
 				break;
 
@@ -1291,9 +1239,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				raise(SIGSTOP);   // Break out in mid-line
 				enableRawMode();  // Back from Linux shell, re-enter raw mode
 				// Redraw prompt
-				if (!pi.write()) {
-					break;
-				}
+				pi.write();
 				refreshLine(pi);  // Refresh the line
 				break;
 #endif
@@ -1366,9 +1312,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::insert_character( PromptBase& pi, i
 		if (inputLen > pi.promptPreviousInputLen) {
 			pi.promptPreviousInputLen = inputLen;
 		}
-		if (write32(1, reinterpret_cast<char32_t*>(&c), 1) == -1) {
-			return ( NEXT::BAIL );
-		}
+		write32(reinterpret_cast<char32_t*>(&c), 1);
 	} else {
 		refreshLine(pi);
 	}
@@ -1604,11 +1548,11 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 
 void Replxx::ReplxxImpl::clearScreen(PromptBase& pi) {
 	clear_screen();
-	if (!pi.write()) return;
+	pi.write();
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap on Linux
 	if (pi.promptIndentation == 0 && pi.promptExtraLines > 0) {
-		if (write(1, "\n", 1) == -1) return;
+		write8( "\n", 1 );
 	}
 #endif
 	pi.promptCursorRowOffset = pi.promptExtraLines;
@@ -1732,10 +1676,10 @@ void dynamicRefresh(PromptBase& pi, char32_t* buf32, int len, int pos) {
 	pi.promptPreviousInputLen = len;
 
 	// display the prompt
-	if (!pi.write()) return;
+	pi.write();
 
 	// display the input line
-	if (write32(1, buf32, len) == -1) return;
+	write32( buf32, len );
 
 	// position the cursor
 	GetConsoleScreenBufferInfo(console_out, &inf);
@@ -1747,31 +1691,32 @@ void dynamicRefresh(PromptBase& pi, char32_t* buf32, int len, int pos) {
 	int cursorRowMovement = pi.promptCursorRowOffset - pi.promptExtraLines;
 	if (cursorRowMovement > 0) { // move the cursor up as required
 		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
-		if (write(1, seq, strlen(seq)) == -1) return;
+		write8( seq, strlen( seq ) );
 	}
 	// position at the start of the prompt, clear to end of screen
 	snprintf(seq, sizeof seq, "\x1b[1G\x1b[J"); // 1-based on VT100
-	if (write(1, seq, strlen(seq)) == -1) return;
+	write8( seq, strlen( seq ) );
 
 	// display the prompt
-	if (!pi.write()) return;
+	pi.write();
 
 	// display the input line
-	if (write32(1, buf32, len) == -1) return;
+	write32( buf32, len );
 
 	// we have to generate our own newline on line wrap
-	if (xEndOfInput == 0 && yEndOfInput > 0)
-		if (write(1, "\n", 1) == -1) return;
+	if (xEndOfInput == 0 && yEndOfInput > 0) {
+		write8( "\n", 1 );
+	}
 
 	// position the cursor
 	cursorRowMovement = yEndOfInput - yCursorPos;
 	if (cursorRowMovement > 0) { // move the cursor up as required
 		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
-		if (write(1, seq, strlen(seq)) == -1) return;
+		write8( seq, strlen( seq ) );
 	}
 	// position the cursor within the line
 	snprintf(seq, sizeof seq, "\x1b[%dG", xCursorPos + 1); // 1-based on VT100
-	if (write(1, seq, strlen(seq)) == -1) return;
+	write8( seq, strlen( seq ) );
 #endif
 
 	pi.promptCursorRowOffset = pi.promptExtraLines + yCursorPos; // remember row for next pass

@@ -7,7 +7,8 @@
 
 namespace replxx {
 
-int write32( int fd, char32_t const* text32, int len32 );
+void write32( char32_t const*, int );
+void write8( void const*, int );
 int getScreenColumns(void);
 int getScreenRows(void);
 int enableRawMode(void);
