@@ -34,15 +34,15 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include "replxx.hxx"
 #include "history.hxx"
 #include "killring.hxx"
 #include "utf8string.hxx"
+#include "prompt.hxx"
 
 namespace replxx {
-
-struct PromptBase;
 
 class Replxx::ReplxxImpl {
 public:
@@ -62,7 +62,8 @@ public:
 		RETURN,
 		BAIL
 	};
-	static int const REPLXX_MAX_LINE = 4096;
+	typedef std::function<NEXT ( int )> key_press_handler_t;
+	typedef std::unordered_map<int, key_press_handler_t> key_press_handlers_t;
 private:
 	Utf8String     _utf8Buffer;
 	UnicodeString  _data;
@@ -81,6 +82,8 @@ private:
 	bool _completeOnEmpty;
 	bool _beepOnAmbiguousCompletion;
 	bool _noColor;
+	key_press_handlers_t _keyPressHandlers;
+	Prompt _prompt;
 	Replxx::completion_callback_t _completionCallback;
 	Replxx::highlighter_callback_t _highlighterCallback;
 	Replxx::hint_callback_t _hintCallback;
@@ -116,16 +119,22 @@ private:
 	ReplxxImpl& operator = ( ReplxxImpl const& ) = delete;
 private:
 	void preloadBuffer( char const* preloadText );
-	int getInputLine( PromptBase& pi );
-	NEXT insert_character( PromptBase&, int );
+	int getInputLine( void );
+	NEXT insert_character( int );
+	NEXT go_to_begining_of_line( int );
+	NEXT go_to_end_of_line( int );
+	NEXT move_one_char_left( int );
+	NEXT move_one_char_right( int );
+	NEXT move_one_word_left( int );
+	NEXT move_one_word_right( int );
 	char const* read_from_stdin( void );
-	void clearScreen(PromptBase& pi);
-	int incrementalHistorySearch(PromptBase& pi, int startChar);
-	void commonPrefixSearch(PromptBase& pi, int startChar);
-	int completeLine(PromptBase& pi);
-	void refreshLine(PromptBase& pi, HINT_ACTION = HINT_ACTION::REGENERATE);
+	void clearScreen();
+	int incrementalHistorySearch( int startChar );
+	void commonPrefixSearch( int startChar );
+	int completeLine( void );
+	void refreshLine( HINT_ACTION = HINT_ACTION::REGENERATE );
 	void highlight( int, bool );
-	int handle_hints( PromptBase&, HINT_ACTION );
+	int handle_hints( HINT_ACTION );
 	void setColor( Replxx::Color );
 	int context_length( void );
 	void clear();

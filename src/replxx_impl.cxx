@@ -38,8 +38,7 @@ using namespace std;
 
 namespace replxx {
 
-struct PromptBase;
-void dynamicRefresh(PromptBase& pi, char32_t* buf32, int len, int pos);
+void dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos);
 
 #ifndef _WIN32
 
@@ -82,10 +81,6 @@ static bool isUnsupportedTerm(void) {
 
 }
 
-#ifndef _WIN32
-extern bool gotResize;
-#endif
-
 Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	: _utf8Buffer()
 	, _data()
@@ -104,11 +99,30 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _completeOnEmpty( true )
 	, _beepOnAmbiguousCompletion( false )
 	, _noColor( false )
+	, _keyPressHandlers()
+	, _prompt()
 	, _completionCallback( nullptr )
 	, _highlighterCallback( nullptr )
 	, _hintCallback( nullptr )
 	, _preloadedBuffer()
 	, _errorMessage() {
+	using namespace std::placeholders;
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'A' ),        std::bind( &ReplxxImpl::go_to_begining_of_line, this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( HOME_KEY,               std::bind( &ReplxxImpl::go_to_begining_of_line, this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'E' ),        std::bind( &ReplxxImpl::go_to_end_of_line,      this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( END_KEY,                std::bind( &ReplxxImpl::go_to_end_of_line,      this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'B' ),        std::bind( &ReplxxImpl::move_one_char_left,     this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( LEFT_ARROW_KEY,         std::bind( &ReplxxImpl::move_one_char_left,     this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'F' ),        std::bind( &ReplxxImpl::move_one_char_right,    this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( RIGHT_ARROW_KEY,        std::bind( &ReplxxImpl::move_one_char_right,    this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'b',             std::bind( &ReplxxImpl::move_one_word_left,     this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'B',             std::bind( &ReplxxImpl::move_one_word_left,     this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( CTRL + LEFT_ARROW_KEY,  std::bind( &ReplxxImpl::move_one_word_left,     this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + LEFT_ARROW_KEY,  std::bind( &ReplxxImpl::move_one_word_left,     this, _1 ) ) ); // Emacs allows Meta, bash & readline don't
+	_keyPressHandlers.insert( make_pair( META + 'f',             std::bind( &ReplxxImpl::move_one_word_right,    this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'F',             std::bind( &ReplxxImpl::move_one_word_right,    this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( CTRL + RIGHT_ARROW_KEY, std::bind( &ReplxxImpl::move_one_word_right,    this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + RIGHT_ARROW_KEY, std::bind( &ReplxxImpl::move_one_word_right,    this, _1 ) ) ); // Emacs allows Meta, bash & readline don't
 }
 
 void Replxx::ReplxxImpl::clear( void ) {
@@ -216,9 +230,9 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 			fflush(stdout);
 			_errorMessage.clear();
 		}
-		PromptInfo pi(prompt, getScreenColumns());
+		_prompt.set_text( prompt );
 		if ( isUnsupportedTerm() ) {
-			pi.write();
+			_prompt.write();
 			fflush(stdout);
 			return ( read_from_stdin() );
 		}
@@ -230,7 +244,7 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 			preloadBuffer(_preloadedBuffer.c_str());
 			_preloadedBuffer.clear();
 		}
-		if ( getInputLine(pi) == -1 ) {
+		if ( getInputLine() == -1 ) {
 			return ( nullptr );
 		}
 		disableRawMode();
@@ -306,7 +320,7 @@ void Replxx::ReplxxImpl::highlight( int highlightIdx, bool error_ ) {
 	setColor( Replxx::Color::DEFAULT );
 }
 
-int Replxx::ReplxxImpl::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) {
+int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 	if ( _noColor ) {
 		return ( 0 );
 	}
@@ -338,8 +352,8 @@ int Replxx::ReplxxImpl::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) 
 		}
 		setColor( Replxx::Color::DEFAULT );
 	} else if ( _maxHintRows > 0 ) {
-		int startCol( pi.promptIndentation + _pos - contextLen );
-		int maxCol( pi.promptScreenColumns );
+		int startCol( _prompt._indentation + _pos - contextLen );
+		int maxCol( _prompt.screen_columns() );
 #ifdef _WIN32
 		-- maxCol;
 #endif
@@ -389,10 +403,10 @@ int Replxx::ReplxxImpl::handle_hints( PromptBase& pi, HINT_ACTION hintAction_ ) 
 /**
  * Refresh the user's input line: the prompt is already onscreen and is not
  * redrawn here
- * @param pi	 PromptBase struct holding information about the prompt and our
+ * @param pi	 Prompt struct holding information about the prompt and our
  * screen position
  */
-void Replxx::ReplxxImpl::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
+void Replxx::ReplxxImpl::refreshLine( HINT_ACTION hintAction_ ) {
 	// check for a matching brace/bracket/paren, remember its position if found
 	int highlightIdx = -1;
 	bool indicateError = false;
@@ -452,11 +466,11 @@ void Replxx::ReplxxImpl::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	}
 
 	highlight( highlightIdx, indicateError );
-	int hintLen( handle_hints( pi, hintAction_ ) );
+	int hintLen( handle_hints( hintAction_ ) );
 	// calculate the position of the end of the input line
 	int xEndOfInput( 0 ), yEndOfInput( 0 );
 	calculateScreenPosition(
-		pi.promptIndentation, 0, pi.promptScreenColumns,
+		_prompt._indentation, 0, _prompt.screen_columns(),
 		calculateColumnPosition( _data.get(), _data.length() ) + hintLen,
 		xEndOfInput, yEndOfInput
 	);
@@ -465,7 +479,7 @@ void Replxx::ReplxxImpl::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	// calculate the desired position of the cursor
 	int xCursorPos( 0 ), yCursorPos( 0 );
 	calculateScreenPosition(
-		pi.promptIndentation, 0, pi.promptScreenColumns,
+		_prompt._indentation, 0, _prompt.screen_columns(),
 		calculateColumnPosition(_data.get(), _pos),
 		xCursorPos,
 		yCursorPos
@@ -475,11 +489,11 @@ void Replxx::ReplxxImpl::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	// position at the end of the prompt, clear to end of previous input
 	CONSOLE_SCREEN_BUFFER_INFO inf;
 	GetConsoleScreenBufferInfo(console_out, &inf);
-	inf.dwCursorPosition.X = pi.promptIndentation; // 0-based on Win32
-	inf.dwCursorPosition.Y -= pi.promptCursorRowOffset - pi.promptExtraLines;
+	inf.dwCursorPosition.X = _prompt._indentation; // 0-based on Win32
+	inf.dwCursorPosition.Y -= _prompt._cursorRowOffset - _prompt._extraLines;
 	SetConsoleCursorPosition(console_out, inf.dwCursorPosition);
 	replxx::clear_screen( CLEAR_SCREEN::TO_END );
-	pi.promptPreviousInputLen = _data.length();
+	_prompt._previousInputLen = _data.length();
 
 	// display the input line
 	if ( !_noColor ) {
@@ -495,7 +509,7 @@ void Replxx::ReplxxImpl::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	SetConsoleCursorPosition(console_out, inf.dwCursorPosition);
 #else // _WIN32
 	char seq[64];
-	int cursorRowMovement = pi.promptCursorRowOffset - pi.promptExtraLines;
+	int cursorRowMovement = _prompt._cursorRowOffset - _prompt._extraLines;
 	if (cursorRowMovement > 0) { // move the cursor up as required
 		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
 		write8( seq, strlen(seq) );
@@ -503,7 +517,7 @@ void Replxx::ReplxxImpl::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	// position at the end of the prompt, clear to end of screen
 	snprintf(
 		seq, sizeof seq, "\x1b[%dG\x1b[%c",
-		pi.promptIndentation + 1, /* 1-based on VT100 */
+		_prompt._indentation + 1, /* 1-based on VT100 */
 		'J'
 	);
 	write8( seq, strlen(seq) );
@@ -530,7 +544,7 @@ void Replxx::ReplxxImpl::refreshLine(PromptBase& pi, HINT_ACTION hintAction_) {
 	write8( seq, strlen(seq) );
 #endif
 
-	pi.promptCursorRowOffset = pi.promptExtraLines + yCursorPos; // remember row for next pass
+	_prompt._cursorRowOffset = _prompt._extraLines + yCursorPos; // remember row for next pass
 }
 
 int Replxx::ReplxxImpl::context_length() {
@@ -578,10 +592,10 @@ int longest_common_prefix( Replxx::ReplxxImpl::completions_t const& completions 
  * This routine handles the mechanics of updating the user's input buffer with
  * possible replacement of text as the user selects a proposed completion string,
  * or cancels the completion attempt.
- * @param pi - PromptBase struct holding information about the prompt and our
+ * @param pi - Prompt struct holding information about the prompt and our
  * screen position
  */
-int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
+int Replxx::ReplxxImpl::completeLine( void ) {
 	char32_t c = 0;
 
 	// completionCallback() expects a parsable entity, so find the previous break
@@ -621,7 +635,7 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	if ( ( longestCommonPrefix > contextLen ) || ( completionsCount == 1 ) ) {
 		_data.insert( _pos, completions[selectedCompletion], contextLen, longestCommonPrefix - contextLen );
 		_prefix = _pos = _pos + longestCommonPrefix - contextLen;
-		refreshLine(pi);
+		refreshLine();
 		return 0;
 	}
 
@@ -644,7 +658,7 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	if ( static_cast<int>( completions.size() ) > _completionCountCutoff ) {
 		int savePos = _pos; // move cursor to EOL to avoid overwriting the command line
 		_pos = _data.length();
-		refreshLine(pi);
+		refreshLine();
 		_pos = savePos;
 		printf("\nDisplay all %u possibilities? (y or n)",
 					 static_cast<unsigned int>(completions.size()));
@@ -681,14 +695,14 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 			}
 		}
 		longestCompletion += 2;
-		int columnCount = pi.promptScreenColumns / longestCompletion;
+		int columnCount = _prompt.screen_columns() / longestCompletion;
 		if ( columnCount < 1 ) {
 			columnCount = 1;
 		}
 		if ( ! onNewLine ) {  // skip this if we showed "Display all %d possibilities?"
 			int savePos = _pos; // move cursor to EOL to avoid overwriting the command line
 			_pos = _data.length();
-			refreshLine( pi, HINT_ACTION::SKIP );
+			refreshLine( HINT_ACTION::SKIP );
 			_pos = savePos;
 		} else {
 			replxx::clear_screen( CLEAR_SCREEN::TO_END );
@@ -777,19 +791,19 @@ int Replxx::ReplxxImpl::completeLine(PromptBase& pi) {
 	if (!stopList || c == ctrlChar('C')) {
 		write8( "\n", 1 );
 	}
-	pi.write();
+	_prompt.write();
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap on Linux
-	if (pi.promptIndentation == 0 && pi.promptExtraLines > 0) {
+	if (_prompt._indentation == 0 && _prompt._extraLines > 0) {
 		write8( "\n", 1 );
 	}
 #endif
-	pi.promptCursorRowOffset = pi.promptExtraLines;
-	refreshLine(pi);
+	_prompt._cursorRowOffset = _prompt._extraLines;
+	refreshLine();
 	return 0;
 }
 
-int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
+int Replxx::ReplxxImpl::getInputLine( void ) {
 	// The latest history entry is always our current buffer
 	if ( _data.length() > 0 ) {
 		_utf8Buffer.assign( _data );
@@ -800,17 +814,17 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 	_history.reset_pos();
 
 	// display the prompt
-	pi.write();
+	_prompt.write();
 
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap on Linux
-	if (pi.promptIndentation == 0 && pi.promptExtraLines > 0) {
+	if ( ( _prompt._indentation == 0 ) && ( _prompt._extraLines > 0 ) ) {
 		write8( "\n", 1 );
 	}
 #endif
 
 	// the cursor starts out at the end of the prompt
-	pi.promptCursorRowOffset = pi.promptExtraLines;
+	_prompt._cursorRowOffset = _prompt._extraLines;
 
 	// kill and yank start in "other" mode
 	_killRing.lastAction = KillRing::actionOther;
@@ -821,7 +835,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 
 	// if there is already text in the buffer, display it first
 	if (_data.length() > 0) {
-		refreshLine(pi);
+		refreshLine();
 	}
 
 	// loop collecting characters, respond to line editing characters
@@ -836,9 +850,9 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				// caught a window resize event
 				// now redraw the prompt and line
 				gotResize = false;
-				pi.promptScreenColumns = getScreenColumns();
+				_prompt.update_screen_columns();
 				// redraw the original prompt with current input
-				dynamicRefresh( pi, _data.get(), _data.length(), _pos );
+				dynamicRefresh( _prompt, _data.get(), _data.length(), _pos );
 				continue;
 			}
 #endif
@@ -854,49 +868,18 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 		}
 
 		if (c == -1) {
-			refreshLine(pi);
+			refreshLine();
 			continue;
 		}
 
 		if (c == -2) {
-			pi.write();
-			refreshLine(pi);
+			_prompt.write();
+			refreshLine();
 			continue;
 		}
 
 		bool updatePrefix( true );
 		switch (c) {
-			case ctrlChar('A'): // ctrl-A, move cursor to start of line
-			case HOME_KEY:
-				_killRing.lastAction = KillRing::actionOther;
-				_pos = 0;
-				refreshLine(pi);
-				break;
-
-			case ctrlChar('B'): // ctrl-B, move cursor left by one character
-			case LEFT_ARROW_KEY:
-				_killRing.lastAction = KillRing::actionOther;
-				if (_pos > 0) {
-					--_pos;
-					refreshLine(pi);
-				}
-				break;
-
-			case META + 'b': // meta-B, move cursor left by one word
-			case META + 'B':
-			case CTRL + LEFT_ARROW_KEY:
-			case META + LEFT_ARROW_KEY: // Emacs allows Meta, bash & readline don't
-				_killRing.lastAction = KillRing::actionOther;
-				if (_pos > 0) {
-					while (_pos > 0 && is_word_break_character( _data[_pos - 1] ) ) {
-						--_pos;
-					}
-					while (_pos > 0 && !is_word_break_character( _data[_pos - 1] ) ) {
-						--_pos;
-					}
-					refreshLine(pi);
-				}
-				break;
 
 			case ctrlChar('C'): // ctrl-C, abort this line
 				_killRing.lastAction = KillRing::actionOther;
@@ -906,7 +889,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				// we need one last refresh with the cursor at the end of the line
 				// so we don't display the next prompt over the previous input line
 				_pos = _data.length(); // pass _data.length() as _pos for EOL
-				refreshLine(pi, HINT_ACTION::SKIP);
+				refreshLine( HINT_ACTION::SKIP );
 				write8( "^C\r\n", 4 );
 				next = NEXT::BAIL;
 				break;
@@ -931,7 +914,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 						}
 						++_pos;
 					}
-					refreshLine(pi);
+					refreshLine();
 				}
 				break;
 
@@ -942,7 +925,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				if ( ( _data.length() > 0 ) && ( _pos < _data.length() ) ) {
 					_history.reset_recall_most_recent();
 					_data.erase( _pos );
-					refreshLine(pi);
+					refreshLine();
 				} else if (_data.length() == 0) {
 					_history.drop_last();
 					next = NEXT::BAIL;
@@ -962,41 +945,9 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 					}
 					_killRing.kill( _data.get() + _pos, endingPos - _pos, true );
 					_data.erase( _pos, endingPos - _pos );
-					refreshLine(pi);
+					refreshLine();
 				}
 				_killRing.lastAction = KillRing::actionKill;
-				break;
-
-			case ctrlChar('E'): // ctrl-E, move cursor to end of line
-			case END_KEY:
-				_killRing.lastAction = KillRing::actionOther;
-				_pos = _data.length();
-				refreshLine(pi);
-				break;
-
-			case ctrlChar('F'): // ctrl-F, move cursor right by one character
-			case RIGHT_ARROW_KEY:
-				_killRing.lastAction = KillRing::actionOther;
-				if (_pos < _data.length()) {
-					++_pos;
-					refreshLine(pi);
-				}
-				break;
-
-			case META + 'f': // meta-F, move cursor right by one word
-			case META + 'F':
-			case CTRL + RIGHT_ARROW_KEY:
-			case META + RIGHT_ARROW_KEY: // Emacs allows Meta, bash & readline don't
-				_killRing.lastAction = KillRing::actionOther;
-				if ( _pos < _data.length() ) {
-					while ( _pos < _data.length() && is_word_break_character( _data[_pos] ) ) {
-						++_pos;
-					}
-					while ( _pos < _data.length() && !is_word_break_character( _data[_pos] ) ) {
-						++_pos;
-					}
-					refreshLine(pi);
-				}
 				break;
 
 			case ctrlChar('H'): // backspace/ctrl-H, delete char to left of cursor
@@ -1005,7 +956,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 					_history.reset_recall_most_recent();
 					-- _pos;
 					_data.erase( _pos );
-					refreshLine(pi);
+					refreshLine();
 				}
 				break;
 
@@ -1022,7 +973,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 					}
 					_killRing.kill( _data.get() + _pos, startingPos - _pos, false);
 					_data.erase( _pos, startingPos - _pos );
-					refreshLine(pi);
+					refreshLine();
 				}
 				_killRing.lastAction = KillRing::actionKill;
 				break;
@@ -1032,7 +983,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 					_history.reset_recall_most_recent();
 
 					// completeLine does the actual completion and replacement
-					c = completeLine(pi);
+					c = completeLine();
 
 					if ( c < 0 ) {
 						next = NEXT::BAIL;
@@ -1040,7 +991,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 						terminatingKeystroke = c;
 					}
 				} else {
-					insert_character( pi, c );
+					insert_character( c );
 				}
 			} break;
 
@@ -1050,7 +1001,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				// we need one last refresh with the cursor at the end of the line
 				// so we don't display the next prompt over the previous input line
 				_pos = _data.length(); // pass _data.length() as _pos for EOL
-				refreshLine(pi, HINT_ACTION::SKIP);
+				refreshLine( HINT_ACTION::SKIP );
 				_history.commit_index();
 				_history.drop_last();
 				next = NEXT::RETURN;
@@ -1059,13 +1010,13 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 			case ctrlChar('K'): // ctrl-K, kill from cursor to end of line
 				_killRing.kill( _data.get() + _pos, _data.length() - _pos, true );
 				_data.erase( _pos, _data.length() - _pos );
-				refreshLine(pi);
+				refreshLine();
 				_killRing.lastAction = KillRing::actionKill;
 				_history.reset_recall_most_recent();
 				break;
 
 			case ctrlChar('L'): // ctrl-L, clear screen and redisplay line
-				clearScreen(pi);
+				clearScreen();
 				break;
 
 			case META + 'l': // meta-L, lowercase word
@@ -1082,7 +1033,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 						}
 						++ _pos;
 					}
-					refreshLine(pi);
+					refreshLine();
 				}
 				break;
 
@@ -1107,21 +1058,21 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 					}
 					_data.assign( _history.current() );
 					_pos = _data.length();
-					refreshLine(pi);
+					refreshLine();
 				}
 				break;
 			case CTRL + UP_ARROW_KEY:
 				if ( ! _noColor ) {
 					_killRing.lastAction = KillRing::actionOther;
 					-- _hintSelection;
-					refreshLine(pi, HINT_ACTION::REPAINT);
+					refreshLine( HINT_ACTION::REPAINT );
 				}
 				break;
 			case CTRL + DOWN_ARROW_KEY:
 				if ( ! _noColor ) {
 					_killRing.lastAction = KillRing::actionOther;
 					++ _hintSelection;
-					refreshLine(pi, HINT_ACTION::REPAINT);
+					refreshLine( HINT_ACTION::REPAINT );
 				}
 				break;
 
@@ -1129,12 +1080,12 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 			case META + 'P': // Alt-P, reverse history search for prefix
 			case META + 'n': // Alt-N, forward history search for prefix
 			case META + 'N': // Alt-N, forward history search for prefix
-				commonPrefixSearch( pi, c );
+				commonPrefixSearch( c );
 				updatePrefix = false;
 				break;
 			case ctrlChar('R'): // ctrl-R, reverse history search
 			case ctrlChar('S'): // ctrl-S, forward history search
-				terminatingKeystroke = incrementalHistorySearch(pi, c);
+				terminatingKeystroke = incrementalHistorySearch( c );
 				break;
 
 			case ctrlChar('T'): // ctrl-T, transpose characters
@@ -1148,7 +1099,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 					if ( _pos != _data.length() ) {
 						++_pos;
 					}
-					refreshLine(pi);
+					refreshLine();
 				}
 				break;
 
@@ -1158,7 +1109,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 					_killRing.kill( _data.get(), _pos, false );
 					_data.erase( 0, _pos );
 					_pos = 0;
-					refreshLine(pi);
+					refreshLine();
 				}
 				_killRing.lastAction = KillRing::actionKill;
 				break;
@@ -1177,7 +1128,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 						}
 						++ _pos;
 					}
-					refreshLine(pi);
+					refreshLine();
 				}
 				break;
 
@@ -1194,7 +1145,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 					}
 					_killRing.kill( _data.get() + _pos, startingPos - _pos, false );
 					_data.erase( _pos, startingPos - _pos );
-					refreshLine(pi);
+					refreshLine();
 				}
 				_killRing.lastAction = KillRing::actionKill;
 				break;
@@ -1206,7 +1157,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 					if (restoredText) {
 						_data.insert( _pos, *restoredText, 0, restoredText->length() );
 						_pos += restoredText->length();
-						refreshLine(pi);
+						refreshLine();
 						_killRing.lastAction = KillRing::actionYank;
 						_killRing.lastYankSize = restoredText->length();
 					} else {
@@ -1226,7 +1177,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 						_data.insert( _pos, *restoredText, 0, restoredText->length() );
 						_pos += restoredText->length();
 						_killRing.lastYankSize = restoredText->length();
-						refreshLine(pi);
+						refreshLine();
 						break;
 					}
 				}
@@ -1239,8 +1190,8 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				raise(SIGSTOP);   // Break out in mid-line
 				enableRawMode();  // Back from Linux shell, re-enter raw mode
 				// Redraw prompt
-				pi.write();
-				refreshLine(pi);  // Refresh the line
+				_prompt.write();
+				refreshLine();  // Refresh the line
 				break;
 #endif
 
@@ -1251,7 +1202,7 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 				if (_data.length() > 0 && _pos < _data.length()) {
 					_history.reset_recall_most_recent();
 					_data.erase( _pos );
-					refreshLine(pi);
+					refreshLine();
 				}
 				break;
 
@@ -1271,13 +1222,18 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 					_history.jump( (c == META + '<' || c == PAGE_UP_KEY) );
 					_data.assign( _history.current().c_str() );
 					_pos = _data.length();
-					refreshLine(pi);
+					refreshLine();
 				}
 				break;
 
 			// not one of our special characters, maybe insert it in the buffer
 			default: {
-				next = insert_character( pi, c );
+				key_press_handlers_t::iterator it( _keyPressHandlers.find( c ) );
+				if ( it != _keyPressHandlers.end() ) {
+					next = it->second( c );
+				} else {
+					next = insert_character( c );
+				}
 				break;
 			}
 		}
@@ -1288,14 +1244,14 @@ int Replxx::ReplxxImpl::getInputLine(PromptBase& pi) {
 	return ( next == NEXT::RETURN ? _data.length() : -1 );
 }
 
-Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::insert_character( PromptBase& pi, int c ) {
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::insert_character( int c ) {
 	_killRing.lastAction = KillRing::actionOther;
 	_history.reset_recall_most_recent();
 	/*
 	 * beep on unknown Ctrl and/or Meta keys
 	 * don't insert control characters
 	 */
-	if ( ( c & (META | CTRL ) ) || isControlChar( c ) ) {
+	if ( ( c & ( META | CTRL ) ) || isControlChar( c ) ) {
 		beep();
 		return ( NEXT::CONTINUE );
 	}
@@ -1304,22 +1260,87 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::insert_character( PromptBase& pi, i
 	int inputLen = calculateColumnPosition( _data.get(), _data.length() );
 	if ( _noColor
 		|| ( ! ( !! _highlighterCallback || !! _hintCallback )
-			&& ( pi.promptIndentation + inputLen < pi.promptScreenColumns )
+			&& ( _prompt._indentation + inputLen < _prompt.screen_columns() )
 		)
 	) {
 		/* Avoid a full assign of the line in the
 		 * trivial case. */
-		if (inputLen > pi.promptPreviousInputLen) {
-			pi.promptPreviousInputLen = inputLen;
+		if (inputLen > _prompt._previousInputLen) {
+			_prompt._previousInputLen = inputLen;
 		}
 		write32(reinterpret_cast<char32_t*>(&c), 1);
 	} else {
-		refreshLine(pi);
+		refreshLine();
 	}
 	return ( NEXT::CONTINUE );
 }
 
-void Replxx::ReplxxImpl::commonPrefixSearch(PromptBase& pi, int startChar) {
+// ctrl-A, HOME: move cursor to start of line
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::go_to_begining_of_line( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	_pos = 0;
+	refreshLine();
+	return ( NEXT::CONTINUE );
+}
+
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::go_to_end_of_line( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	_pos = _data.length();
+	refreshLine();
+	return ( NEXT::CONTINUE );
+}
+
+// ctrl-B, move cursor left by one character
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::move_one_char_left( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	if (_pos > 0) {
+		--_pos;
+		refreshLine();
+	}
+	return ( NEXT::CONTINUE );
+}
+
+// ctrl-F, move cursor right by one character
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::move_one_char_right( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	if ( _pos < _data.length() ) {
+		++_pos;
+		refreshLine();
+	}
+	return ( NEXT::CONTINUE );
+}
+
+// meta-B, move cursor left by one word
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::move_one_word_left( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	if (_pos > 0) {
+		while (_pos > 0 && is_word_break_character( _data[_pos - 1] ) ) {
+			--_pos;
+		}
+		while (_pos > 0 && !is_word_break_character( _data[_pos - 1] ) ) {
+			--_pos;
+		}
+		refreshLine();
+	}
+	return ( NEXT::CONTINUE );
+}
+
+// meta-F, move cursor right by one word
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::move_one_word_right( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	if ( _pos < _data.length() ) {
+		while ( _pos < _data.length() && is_word_break_character( _data[_pos] ) ) {
+			++_pos;
+		}
+		while ( _pos < _data.length() && !is_word_break_character( _data[_pos] ) ) {
+			++_pos;
+		}
+		refreshLine();
+	}
+	return ( NEXT::CONTINUE );
+}
+
+void Replxx::ReplxxImpl::commonPrefixSearch( int startChar ) {
 	_killRing.lastAction = KillRing::actionOther;
 	_utf8Buffer.assign( _data );
 	int prefixSize( calculateColumnPosition( _data.get(), _prefix ) );
@@ -1330,20 +1351,18 @@ void Replxx::ReplxxImpl::commonPrefixSearch(PromptBase& pi, int startChar) {
 	) {
 		_data.assign( _history.current() );
 		_pos = _data.length();
-		refreshLine(pi);
+		refreshLine();
 	}
 }
 
 /**
  * Incremental history search -- take over the prompt and keyboard as the user
- * types a search string, deletes characters from it, changes direction,
+ * types a search string, deletes characters from it, changes _direction,
  * and either accepts the found line (for execution orediting) or cancels.
- * @param pi - PromptBase struct holding information about the (old,
- * static) prompt and our screen position
  * @param startChar - the character that began the search, used to set the initial
- * direction
+ * _direction
  */
-int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) {
+int Replxx::ReplxxImpl::incrementalHistorySearch( int startChar ) {
 
 	// if not already recalling, add the current line to the history list so we
 	// don't have to special case it
@@ -1354,13 +1373,13 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 	int historyLinePosition( _pos );
 	UnicodeString empty;
 	_data.swap( empty );
-	refreshLine(pi); // erase the old input first
+	refreshLine(); // erase the old input first
 	_data.swap( empty );
 
-	DynamicPrompt dp(pi, (startChar == ctrlChar('R')) ? -1 : 1);
+	DynamicPrompt dp( (startChar == ctrlChar('R')) ? -1 : 1 );
 
-	dp.promptPreviousLen = pi.promptPreviousLen;
-	dp.promptPreviousInputLen = pi.promptPreviousInputLen;
+	dp._previousLen = _prompt._previousLen;
+	dp._previousInputLen = _prompt._previousInputLen;
 	// draw user's text with our prompt
 	dynamicRefresh(dp, _data.get(), _data.length(), historyLinePosition);
 
@@ -1431,17 +1450,17 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 			// these characters stay in search mode and assign the display
 			case ctrlChar('S'):
 			case ctrlChar('R'):
-				if ( dp.searchText.length() == 0 ) { // if no current search text, recall previous text
+				if ( dp._searchText.length() == 0 ) { // if no current search text, recall previous text
 					if ( previousSearchText.length() > 0 ) {
-						dp.searchText = previousSearchText;
+						dp._searchText = previousSearchText;
 					}
 				}
-				if ((dp.direction == 1 && c == ctrlChar('R')) ||
-						(dp.direction == -1 && c == ctrlChar('S'))) {
-					dp.direction = 0 - dp.direction; // reverse direction
+				if ((dp._direction == 1 && c == ctrlChar('R')) ||
+						(dp._direction == -1 && c == ctrlChar('S'))) {
+					dp._direction = 0 - dp._direction; // reverse _direction
 					dp.updateSearchPrompt();         // change the prompt
 				} else {
-					searchAgain = true; // same direction, search again
+					searchAgain = true; // same _direction, search again
 				}
 				break;
 
@@ -1459,10 +1478,10 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 			// these characters assign the search string, and hence the selected input
 			// line
 			case ctrlChar('H'): // backspace/ctrl-H, delete char to left of cursor
-				if ( dp.searchText.length() > 0 ) {
-					dp.searchText.erase( dp.searchText.length() - 1 );
+				if ( dp._searchText.length() > 0 ) {
+					dp._searchText.erase( dp._searchText.length() - 1 );
 					dp.updateSearchPrompt();
-					_history.reset_pos( dp.direction == -1 ? _history.size() - 1 : 0 );
+					_history.reset_pos( dp._direction == -1 ? _history.size() - 1 : 0 );
 				} else {
 					beep();
 				}
@@ -1473,7 +1492,7 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 
 			default: {
 				if (!isControlChar(c) && c <= 0x0010FFFF) { // not an action character
-					dp.searchText.insert( dp.searchText.length(), c );
+					dp._searchText.insert( dp._searchText.length(), c );
 					dp.updateSearchPrompt();
 				} else {
 					beep();
@@ -1486,30 +1505,30 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 			break;
 		}
 		activeHistoryLine.assign( _history.current() );
-		if ( dp.searchText.length() > 0 ) {
+		if ( dp._searchText.length() > 0 ) {
 			bool found = false;
 			int historySearchIndex = _history.current_pos();
 			int lineSearchPos = historyLinePosition;
 			if ( searchAgain ) {
-				lineSearchPos += dp.direction;
+				lineSearchPos += dp._direction;
 			}
 			searchAgain = false;
 			while ( true ) {
-				while ( ( ( lineSearchPos + dp.searchText.length() ) <= activeHistoryLine.length() ) && ( lineSearchPos >= 0 ) ) {
-					if ( std::equal( dp.searchText.begin(), dp.searchText.end(), activeHistoryLine.begin() + lineSearchPos ) ) {
+				while ( ( ( lineSearchPos + dp._searchText.length() ) <= activeHistoryLine.length() ) && ( lineSearchPos >= 0 ) ) {
+					if ( std::equal( dp._searchText.begin(), dp._searchText.end(), activeHistoryLine.begin() + lineSearchPos ) ) {
 						found = true;
 						break;
 					}
-					lineSearchPos += dp.direction;
+					lineSearchPos += dp._direction;
 				}
 				if ( found ) {
 					_history.reset_pos( historySearchIndex );
 					historyLinePosition = lineSearchPos;
 					break;
-				} else if ( ( dp.direction > 0 ) ? ( historySearchIndex < _history.size() ) : ( historySearchIndex > 0 ) ) {
-					historySearchIndex += dp.direction;
+				} else if ( ( dp._direction > 0 ) ? ( historySearchIndex < _history.size() ) : ( historySearchIndex > 0 ) ) {
+					historySearchIndex += dp._direction;
 					activeHistoryLine.assign( _history[historySearchIndex] );
-					lineSearchPos = ( dp.direction > 0 ) ? 0 : ( activeHistoryLine.length() - dp.searchText.length() );
+					lineSearchPos = ( dp._direction > 0 ) ? 0 : ( activeHistoryLine.length() - dp._searchText.length() );
 				} else {
 					beep();
 					break;
@@ -1522,41 +1541,41 @@ int Replxx::ReplxxImpl::incrementalHistorySearch(PromptBase& pi, int startChar) 
 
 	// leaving history search, restore previous prompt, maybe make searched line
 	// current
-	PromptBase pb( pi.promptScreenColumns );
-	pb.promptChars = pi.promptIndentation;
-	pb.promptBytes = pi.promptBytes;
-	UnicodeString tempUnicode( &pi.promptText[pi.promptLastLinePosition], pb.promptBytes - pi.promptLastLinePosition );
-	pb.promptText = tempUnicode;
-	pb.promptExtraLines = 0;
-	pb.promptIndentation = pi.promptIndentation;
-	pb.promptLastLinePosition = 0;
-	pb.promptPreviousInputLen = activeHistoryLine.length();
-	pb.promptCursorRowOffset = dp.promptCursorRowOffset;
-	pb.promptScreenColumns = pi.promptScreenColumns;
-	pb.promptPreviousLen = dp.promptChars;
+	Prompt pb;
+	pb._characterCount = _prompt._indentation;
+	pb._byteCount = _prompt._byteCount;
+	UnicodeString tempUnicode( &_prompt._text[_prompt._lastLinePosition], pb._byteCount - _prompt._lastLinePosition );
+	pb._text = tempUnicode;
+	pb._extraLines = 0;
+	pb._indentation = _prompt._indentation;
+	pb._lastLinePosition = 0;
+	pb._previousInputLen = activeHistoryLine.length();
+	pb._cursorRowOffset = dp._cursorRowOffset;
+	pb.update_screen_columns();
+	pb._previousLen = dp._characterCount;
 	if ( useSearchedLine && ( activeHistoryLine.length() > 0 ) ) {
 		_history.set_recall_most_recent();
 		_data.assign( activeHistoryLine );
 		_prefix = _pos = historyLinePosition;
 	}
 	dynamicRefresh(pb, _data.get(), _data.length(), _pos); // redraw the original prompt with current input
-	pi.promptPreviousInputLen = _data.length();
-	pi.promptCursorRowOffset = pi.promptExtraLines + pb.promptCursorRowOffset;
-	previousSearchText = dp.searchText; // save search text for possible reuse on ctrl-R ctrl-R
+	_prompt._previousInputLen = _data.length();
+	_prompt._cursorRowOffset = _prompt._extraLines + pb._cursorRowOffset;
+	previousSearchText = dp._searchText; // save search text for possible reuse on ctrl-R ctrl-R
 	return c; // pass a character or -1 back to main loop
 }
 
-void Replxx::ReplxxImpl::clearScreen(PromptBase& pi) {
+void Replxx::ReplxxImpl::clearScreen( void ) {
 	clear_screen();
-	pi.write();
+	_prompt.write();
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap on Linux
-	if (pi.promptIndentation == 0 && pi.promptExtraLines > 0) {
+	if (_prompt._indentation == 0 && _prompt._extraLines > 0) {
 		write8( "\n", 1 );
 	}
 #endif
-	pi.promptCursorRowOffset = pi.promptExtraLines;
-	refreshLine(pi);
+	_prompt._cursorRowOffset = _prompt._extraLines;
+	refreshLine();
 }
 
 bool Replxx::ReplxxImpl::is_word_break_character( char32_t char_ ) const {
@@ -1634,28 +1653,28 @@ void Replxx::ReplxxImpl::set_no_color( bool val ) {
 /**
  * Display the dynamic incremental search prompt and the current user input
  * line.
- * @param pi	 PromptBase struct holding information about the prompt and our
+ * @param pi	 Prompt struct holding information about the prompt and our
  * screen position
  * @param buf32	input buffer to be displayed
  * @param len	count of characters in the buffer
  * @param pos	current cursor position within the buffer (0 <= pos <= len)
  */
-void dynamicRefresh(PromptBase& pi, char32_t* buf32, int len, int pos) {
+void dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos) {
 	// calculate the position of the end of the prompt
 	int xEndOfPrompt, yEndOfPrompt;
-	calculateScreenPosition(0, 0, pi.promptScreenColumns, pi.promptChars,
+	calculateScreenPosition(0, 0, pi.screen_columns(), pi._characterCount,
 													xEndOfPrompt, yEndOfPrompt);
-	pi.promptIndentation = xEndOfPrompt;
+	pi._indentation = xEndOfPrompt;
 
 	// calculate the position of the end of the input line
 	int xEndOfInput, yEndOfInput;
-	calculateScreenPosition(xEndOfPrompt, yEndOfPrompt, pi.promptScreenColumns,
+	calculateScreenPosition(xEndOfPrompt, yEndOfPrompt, pi.screen_columns(),
 													calculateColumnPosition(buf32, len), xEndOfInput,
 													yEndOfInput);
 
 	// calculate the desired position of the cursor
 	int xCursorPos, yCursorPos;
-	calculateScreenPosition(xEndOfPrompt, yEndOfPrompt, pi.promptScreenColumns,
+	calculateScreenPosition(xEndOfPrompt, yEndOfPrompt, pi.screen_columns(),
 													calculateColumnPosition(buf32, pos), xCursorPos,
 													yCursorPos);
 
@@ -1664,16 +1683,16 @@ void dynamicRefresh(PromptBase& pi, char32_t* buf32, int len, int pos) {
 	CONSOLE_SCREEN_BUFFER_INFO inf;
 	GetConsoleScreenBufferInfo(console_out, &inf);
 	inf.dwCursorPosition.X = 0;
-	inf.dwCursorPosition.Y -= pi.promptCursorRowOffset /*- pi.promptExtraLines*/;
+	inf.dwCursorPosition.Y -= pi._cursorRowOffset /*- pi._extraLines*/;
 	SetConsoleCursorPosition(console_out, inf.dwCursorPosition);
 	DWORD count;
 	FillConsoleOutputCharacterA(
 		console_out, ' ',
-		pi.promptPreviousLen + pi.promptPreviousInputLen,
+		pi._previousLen + pi._previousInputLen,
 		inf.dwCursorPosition, &count
 	);
-	pi.promptPreviousLen = pi.promptIndentation;
-	pi.promptPreviousInputLen = len;
+	pi._previousLen = pi._indentation;
+	pi._previousInputLen = len;
 
 	// display the prompt
 	pi.write();
@@ -1688,7 +1707,7 @@ void dynamicRefresh(PromptBase& pi, char32_t* buf32, int len, int pos) {
 	SetConsoleCursorPosition(console_out, inf.dwCursorPosition);
 #else // _WIN32
 	char seq[64];
-	int cursorRowMovement = pi.promptCursorRowOffset - pi.promptExtraLines;
+	int cursorRowMovement = pi._cursorRowOffset - pi._extraLines;
 	if (cursorRowMovement > 0) { // move the cursor up as required
 		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
 		write8( seq, strlen( seq ) );
@@ -1719,7 +1738,7 @@ void dynamicRefresh(PromptBase& pi, char32_t* buf32, int len, int pos) {
 	write8( seq, strlen( seq ) );
 #endif
 
-	pi.promptCursorRowOffset = pi.promptExtraLines + yCursorPos; // remember row for next pass
+	pi._cursorRowOffset = pi._extraLines + yCursorPos; // remember row for next pass
 }
 
 }

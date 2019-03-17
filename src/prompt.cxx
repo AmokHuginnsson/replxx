@@ -23,21 +23,24 @@
 
 namespace replxx {
 
-
-PromptBase::PromptBase( int columns_ )
-	: promptExtraLines( 0 )
-	, promptLastLinePosition( 0 )
-	, promptPreviousInputLen( 0 )
-	, promptScreenColumns( columns_ )
-	, promptPreviousLen( 0 ) {
+Prompt::Prompt( void )
+	: _extraLines( 0 )
+	, _lastLinePosition( 0 )
+	, _previousInputLen( 0 )
+	, _previousLen( 0 )
+	, _screenColumns( 0 ) {
+	update_screen_columns();
 }
 
-void PromptBase::write() {
-	write32( promptText.get(), promptBytes );
+void Prompt::write() {
+	write32( _text.get(), _byteCount );
 }
 
-PromptInfo::PromptInfo( std::string const& text_, int columns )
-	: PromptBase( columns ) {
+void Prompt::update_screen_columns( void ) {
+	_screenColumns = getScreenColumns();
+}
+
+void Prompt::set_text( std::string const& text_ ) {
 	UnicodeString tempUnicode( text_ );
 
 	// strip control characters from the prompt -- we do allow newline
@@ -56,13 +59,13 @@ PromptInfo::PromptInfo( std::string const& text_, int columns )
 			++out;
 			++in;
 			++len;
-			if ('\n' == c || ++x >= promptScreenColumns) {
+			if ('\n' == c || ++x >= _screenColumns) {
 				x = 0;
-				++promptExtraLines;
-				promptLastLinePosition = len;
+				++_extraLines;
+				_lastLinePosition = len;
 			}
 		} else if (c == '\x1b') {
-			if (strip) {
+			if ( strip ) {
 				// jump over control chars
 				++in;
 				if (*in == '[') {
@@ -99,12 +102,12 @@ PromptInfo::PromptInfo( std::string const& text_, int columns )
 			++in;
 		}
 	}
-	promptChars = len;
-	promptBytes = static_cast<int>(out - tempUnicode.begin());
-	promptText = tempUnicode;
+	_characterCount = len;
+	_byteCount = static_cast<int>(out - tempUnicode.begin());
+	_text = tempUnicode;
 
-	promptIndentation = len - promptLastLinePosition;
-	promptCursorRowOffset = promptExtraLines;
+	_indentation = len - _lastLinePosition;
+	_cursorRowOffset = _extraLines;
 }
 
 // Used with DynamicPrompt (history search)
@@ -114,35 +117,34 @@ const UnicodeString reverseSearchBasePrompt("(reverse-i-search)`");
 const UnicodeString endSearchBasePrompt("': ");
 UnicodeString previousSearchText;	// remembered across invocations of replxx_input()
 
-DynamicPrompt::DynamicPrompt(PromptBase& pi, int initialDirection)
-	: PromptBase( pi.promptScreenColumns )
-	, searchText()
-	, direction( initialDirection ) {
-	promptScreenColumns = pi.promptScreenColumns;
-	promptCursorRowOffset = 0;
+DynamicPrompt::DynamicPrompt( int initialDirection )
+	: Prompt()
+	, _searchText()
+	, _direction( initialDirection ) {
+	_cursorRowOffset = 0;
 	const UnicodeString* basePrompt =
-			(direction > 0) ? &forwardSearchBasePrompt : &reverseSearchBasePrompt;
+			(_direction > 0) ? &forwardSearchBasePrompt : &reverseSearchBasePrompt;
 	size_t promptStartLength = basePrompt->length();
-	promptChars = static_cast<int>(promptStartLength + endSearchBasePrompt.length());
-	promptBytes = promptChars;
-	promptLastLinePosition = promptChars; // TODO fix this, we are asssuming
-																				// that the history prompt won't wrap (!)
-	promptPreviousLen = promptChars;
-	promptText.assign( *basePrompt ).append( endSearchBasePrompt );
+	_characterCount = static_cast<int>(promptStartLength + endSearchBasePrompt.length());
+	_byteCount = _characterCount;
+	_lastLinePosition = _characterCount; // TODO fix this, we are asssuming
+	                                        // that the history prompt won't wrap (!)
+	_previousLen = _characterCount;
+	_text.assign( *basePrompt ).append( endSearchBasePrompt );
 	calculateScreenPosition(
-		0, 0, pi.promptScreenColumns, promptChars,
-		promptIndentation, promptExtraLines
+		0, 0, screen_columns(), _characterCount,
+		_indentation, _extraLines
 	);
 }
 
 void DynamicPrompt::updateSearchPrompt(void) {
 	const UnicodeString* basePrompt =
-			(direction > 0) ? &forwardSearchBasePrompt : &reverseSearchBasePrompt;
+			(_direction > 0) ? &forwardSearchBasePrompt : &reverseSearchBasePrompt;
 	size_t promptStartLength = basePrompt->length();
-	promptChars = static_cast<int>(promptStartLength + searchText.length() +
+	_characterCount = static_cast<int>(promptStartLength + _searchText.length() +
 																 endSearchBasePrompt.length());
-	promptBytes = promptChars;
-	promptText.assign( *basePrompt ).append( searchText ).append( endSearchBasePrompt );
+	_byteCount = _characterCount;
+	_text.assign( *basePrompt ).append( _searchText ).append( endSearchBasePrompt );
 }
 
 }
