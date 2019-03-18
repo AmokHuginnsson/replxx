@@ -130,7 +130,10 @@ int win_write( char const* str_, int size_ ) {
 							break;
 						}
 					}
-					str_ = s = HandleEsc( str_ + 1, e );
+					s = HandleEsc( str_ + 1, e );
+					int escaped( s - str_);
+					count += escaped;
+					str_ = s;
 				} else {
 					++ str_;
 				}
