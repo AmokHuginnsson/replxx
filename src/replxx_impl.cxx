@@ -633,8 +633,10 @@ int Replxx::ReplxxImpl::completeLine( void ) {
 
 	// if we can extend the item, extend it and return to main loop
 	if ( ( longestCommonPrefix > contextLen ) || ( completionsCount == 1 ) ) {
-		_data.insert( _pos, completions[selectedCompletion], contextLen, longestCommonPrefix - contextLen );
-		_prefix = _pos = _pos + longestCommonPrefix - contextLen;
+		_pos -= contextLen;
+		_data.erase( _pos, contextLen );
+		_data.insert( _pos, completions[selectedCompletion], 0, longestCommonPrefix );
+		_prefix = _pos = _pos + longestCommonPrefix;
 		refreshLine();
 		return 0;
 	}

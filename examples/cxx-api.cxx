@@ -20,12 +20,20 @@ Replxx::completions_t hook_completion(std::string const& context, int& contextLe
 	Replxx::completions_t completions;
 	int utf8ContextLen( context_len( context.c_str() ) );
 	int prefixLen( context.length() - utf8ContextLen );
+	if ( ( prefixLen > 0 ) && ( context[prefixLen - 1] == '\\' ) ) {
+		-- prefixLen;
+		++ utf8ContextLen;
+	}
 	contextLen = utf8str_codepoint_len( context.c_str() + prefixLen, utf8ContextLen );
 
 	std::string prefix { context.substr(prefixLen) };
-	for (auto const& e : examples) {
-		if (e.compare(0, prefix.size(), prefix) == 0) {
-			completions.emplace_back(e.c_str());
+	if ( prefix == "\\pi" ) {
+		completions.push_back( "π" );
+	} else {
+		for (auto const& e : examples) {
+			if (e.compare(0, prefix.size(), prefix) == 0) {
+				completions.emplace_back(e.c_str());
+			}
 		}
 	}
 

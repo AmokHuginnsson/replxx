@@ -476,6 +476,13 @@ class ReplxxTests( unittest.TestCase ):
 			"color_abcd()\r\n",
 			"abcd()\n"
 		)
+	def test_completion_shorter_result( self_ ):
+		self_.check_scenario(
+			"<up><tab><cr><c-d>",
+			"<c9><ceos>\\pi<rst><gray><rst><c12><c9><ceos>π<rst><gray><rst><c10><c9><ceos>π<rst><c10>\r\n"
+			"π\r\n",
+			"\\pi\n"
+		)
 	def test_completion_pager( self_ ):
 		cmd = ReplxxTests._cSample_ + " q1 x" + ",".join( _words_ )
 		self_.check_scenario(
