@@ -766,14 +766,16 @@ int Replxx::ReplxxImpl::completeLine( void ) {
 					int itemLength = static_cast<int>(completions[index].length());
 					fflush(stdout);
 
-					static UnicodeString const col( ansi_color( Replxx::Color::BRIGHTMAGENTA ) );
-					if ( !_noColor ) {
-						write32( col.get(), col.length() );
-					}
-					write32( &_data[_pos - contextLen], longestCommonPrefix );
-					static UnicodeString const res( ansi_color( Replxx::Color::DEFAULT ) );
-					if ( !_noColor ) {
-						write32( res.get(), res.length() );
+					if (longestCommonPrefix) {
+						static UnicodeString const col(ansi_color(Replxx::Color::BRIGHTMAGENTA));
+						if (!_noColor) {
+							write32(col.get(), col.length());
+						}
+						write32(&_data[_pos - contextLen], longestCommonPrefix);
+						static UnicodeString const res(ansi_color(Replxx::Color::DEFAULT));
+						if (!_noColor) {
+							write32(res.get(), res.length());
+						}
 					}
 
 					write32( completions[index].get() + longestCommonPrefix, itemLength - longestCommonPrefix );
