@@ -107,22 +107,38 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _preloadedBuffer()
 	, _errorMessage() {
 	using namespace std::placeholders;
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'A' ),        std::bind( &ReplxxImpl::go_to_begining_of_line, this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( HOME_KEY,               std::bind( &ReplxxImpl::go_to_begining_of_line, this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'E' ),        std::bind( &ReplxxImpl::go_to_end_of_line,      this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( END_KEY,                std::bind( &ReplxxImpl::go_to_end_of_line,      this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'B' ),        std::bind( &ReplxxImpl::move_one_char_left,     this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( LEFT_ARROW_KEY,         std::bind( &ReplxxImpl::move_one_char_left,     this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'F' ),        std::bind( &ReplxxImpl::move_one_char_right,    this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( RIGHT_ARROW_KEY,        std::bind( &ReplxxImpl::move_one_char_right,    this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'b',             std::bind( &ReplxxImpl::move_one_word_left,     this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'B',             std::bind( &ReplxxImpl::move_one_word_left,     this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( CTRL + LEFT_ARROW_KEY,  std::bind( &ReplxxImpl::move_one_word_left,     this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + LEFT_ARROW_KEY,  std::bind( &ReplxxImpl::move_one_word_left,     this, _1 ) ) ); // Emacs allows Meta, bash & readline don't
-	_keyPressHandlers.insert( make_pair( META + 'f',             std::bind( &ReplxxImpl::move_one_word_right,    this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'F',             std::bind( &ReplxxImpl::move_one_word_right,    this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( CTRL + RIGHT_ARROW_KEY, std::bind( &ReplxxImpl::move_one_word_right,    this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + RIGHT_ARROW_KEY, std::bind( &ReplxxImpl::move_one_word_right,    this, _1 ) ) ); // Emacs allows Meta, bash & readline don't
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'A' ),        std::bind( &ReplxxImpl::go_to_begining_of_line,     this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( HOME_KEY,               std::bind( &ReplxxImpl::go_to_begining_of_line,     this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'E' ),        std::bind( &ReplxxImpl::go_to_end_of_line,          this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( END_KEY,                std::bind( &ReplxxImpl::go_to_end_of_line,          this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'B' ),        std::bind( &ReplxxImpl::move_one_char_left,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( LEFT_ARROW_KEY,         std::bind( &ReplxxImpl::move_one_char_left,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'F' ),        std::bind( &ReplxxImpl::move_one_char_right,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( RIGHT_ARROW_KEY,        std::bind( &ReplxxImpl::move_one_char_right,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'b',             std::bind( &ReplxxImpl::move_one_word_left,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'B',             std::bind( &ReplxxImpl::move_one_word_left,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( CTRL + LEFT_ARROW_KEY,  std::bind( &ReplxxImpl::move_one_word_left,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + LEFT_ARROW_KEY,  std::bind( &ReplxxImpl::move_one_word_left,         this, _1 ) ) ); // Emacs allows Meta, bash & readline don't
+	_keyPressHandlers.insert( make_pair( META + 'f',             std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'F',             std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( CTRL + RIGHT_ARROW_KEY, std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + RIGHT_ARROW_KEY, std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ) ); // Emacs allows Meta, bash & readline don't
+	_keyPressHandlers.insert( make_pair( META + ctrlChar( 'H' ), std::bind( &ReplxxImpl::kill_word_to_left,          this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'd',             std::bind( &ReplxxImpl::kill_word_to_right,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'D',             std::bind( &ReplxxImpl::kill_word_to_right,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'W' ),        std::bind( &ReplxxImpl::kill_to_whitespace_to_left, this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'U' ),        std::bind( &ReplxxImpl::kill_to_begining_of_line,   this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'K' ),        std::bind( &ReplxxImpl::kill_to_end_of_line,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'Y' ),        std::bind( &ReplxxImpl::yank,                       this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'y',             std::bind( &ReplxxImpl::yank_cycle,                 this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'Y',             std::bind( &ReplxxImpl::yank_cycle,                 this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'c',             std::bind( &ReplxxImpl::capitalize_word,            this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'C',             std::bind( &ReplxxImpl::capitalize_word,            this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'l',             std::bind( &ReplxxImpl::lowercase_word,             this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'L',             std::bind( &ReplxxImpl::lowercase_word,             this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'u',             std::bind( &ReplxxImpl::uppercase_word,             this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + 'U',             std::bind( &ReplxxImpl::uppercase_word,             this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'T' ),        std::bind( &ReplxxImpl::transpose_characters,       this, _1 ) ) );
 }
 
 void Replxx::ReplxxImpl::clear( void ) {
@@ -898,30 +914,6 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 				next = NEXT::BAIL;
 				break;
 
-			case META + 'c': // meta-C, give word initial Cap
-			case META + 'C':
-				_killRing.lastAction = KillRing::actionOther;
-				_history.reset_recall_most_recent();
-				if (_pos < _data.length()) {
-					while ( _pos < _data.length() && is_word_break_character( _data[_pos] ) ) {
-						++_pos;
-					}
-					if (_pos < _data.length() && !is_word_break_character( _data[_pos] ) ) {
-						if ( _data[_pos] >= 'a' && _data[_pos] <= 'z' ) {
-							_data[_pos] += 'A' - 'a';
-						}
-						++_pos;
-					}
-					while (_pos < _data.length() && !is_word_break_character( _data[_pos] ) ) {
-						if ( _data[_pos] >= 'A' && _data[_pos] <= 'Z' ) {
-							_data[_pos] += 'a' - 'A';
-						}
-						++_pos;
-					}
-					refreshLine();
-				}
-				break;
-
 			// ctrl-D, delete the character under the cursor
 			// on an empty line, exit the shell
 			case ctrlChar('D'):
@@ -936,24 +928,6 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 				}
 				break;
 
-			case META + 'd': // meta-D, kill word to right of cursor
-			case META + 'D':
-				if ( _pos < _data.length() ) {
-					_history.reset_recall_most_recent();
-					int endingPos = _pos;
-					while ( endingPos < _data.length() && is_word_break_character( _data[endingPos] ) ) {
-						++ endingPos;
-					}
-					while ( endingPos < _data.length() && !is_word_break_character( _data[endingPos] ) ) {
-						++ endingPos;
-					}
-					_killRing.kill( _data.get() + _pos, endingPos - _pos, true );
-					_data.erase( _pos, endingPos - _pos );
-					refreshLine();
-				}
-				_killRing.lastAction = KillRing::actionKill;
-				break;
-
 			case ctrlChar('H'): // backspace/ctrl-H, delete char to left of cursor
 				_killRing.lastAction = KillRing::actionOther;
 				if ( _pos > 0 ) {
@@ -964,23 +938,6 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 				}
 				break;
 
-			// meta-Backspace, kill word to left of cursor
-			case META + ctrlChar('H'):
-				if ( _pos > 0 ) {
-					_history.reset_recall_most_recent();
-					int startingPos = _pos;
-					while ( _pos > 0 && is_word_break_character( _data[_pos - 1] ) ) {
-						-- _pos;
-					}
-					while ( _pos > 0 && !is_word_break_character( _data[_pos - 1] ) ) {
-						-- _pos;
-					}
-					_killRing.kill( _data.get() + _pos, startingPos - _pos, false);
-					_data.erase( _pos, startingPos - _pos );
-					refreshLine();
-				}
-				_killRing.lastAction = KillRing::actionKill;
-				break;
 			case ( ctrlChar('I') ): {
 				if ( !! _completionCallback && ( _completeOnEmpty || ( _pos > 0 ) ) ) {
 					_killRing.lastAction = KillRing::actionOther;
@@ -1011,34 +968,8 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 				next = NEXT::RETURN;
 				break;
 
-			case ctrlChar('K'): // ctrl-K, kill from cursor to end of line
-				_killRing.kill( _data.get() + _pos, _data.length() - _pos, true );
-				_data.erase( _pos, _data.length() - _pos );
-				refreshLine();
-				_killRing.lastAction = KillRing::actionKill;
-				_history.reset_recall_most_recent();
-				break;
-
 			case ctrlChar('L'): // ctrl-L, clear screen and redisplay line
 				clearScreen();
-				break;
-
-			case META + 'l': // meta-L, lowercase word
-			case META + 'L':
-				_killRing.lastAction = KillRing::actionOther;
-				if (_pos < _data.length()) {
-					_history.reset_recall_most_recent();
-					while ( _pos < _data.length() && is_word_break_character( _data[_pos] ) ) {
-						++ _pos;
-					}
-					while (_pos < _data.length() && !is_word_break_character( _data[_pos] ) ) {
-						if ( _data[_pos] >= 'A' && _data[_pos] <= 'Z' ) {
-							_data[_pos] += 'a' - 'A';
-						}
-						++ _pos;
-					}
-					refreshLine();
-				}
 				break;
 
 			case ctrlChar('N'): // ctrl-N, recall next line in history
@@ -1090,102 +1021,6 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 			case ctrlChar('R'): // ctrl-R, reverse history search
 			case ctrlChar('S'): // ctrl-S, forward history search
 				terminatingKeystroke = incrementalHistorySearch( c );
-				break;
-
-			case ctrlChar('T'): // ctrl-T, transpose characters
-				_killRing.lastAction = KillRing::actionOther;
-				if ( _pos > 0 && _data.length() > 1 ) {
-					_history.reset_recall_most_recent();
-					size_t leftCharPos = ( _pos == _data.length() ) ? _pos - 2 : _pos - 1;
-					char32_t aux = _data[leftCharPos];
-					_data[leftCharPos] = _data[leftCharPos + 1];
-					_data[leftCharPos + 1] = aux;
-					if ( _pos != _data.length() ) {
-						++_pos;
-					}
-					refreshLine();
-				}
-				break;
-
-			case ctrlChar('U'): // ctrl-U, kill all characters to the left of the cursor
-				if (_pos > 0) {
-					_history.reset_recall_most_recent();
-					_killRing.kill( _data.get(), _pos, false );
-					_data.erase( 0, _pos );
-					_pos = 0;
-					refreshLine();
-				}
-				_killRing.lastAction = KillRing::actionKill;
-				break;
-
-			case META + 'u': // meta-U, uppercase word
-			case META + 'U':
-				_killRing.lastAction = KillRing::actionOther;
-				if (_pos < _data.length()) {
-					_history.reset_recall_most_recent();
-					while ( _pos < _data.length() && is_word_break_character( _data[_pos] ) ) {
-						++ _pos;
-					}
-					while ( _pos < _data.length() && !is_word_break_character( _data[_pos] ) ) {
-						if ( _data[_pos] >= 'a' && _data[_pos] <= 'z') {
-							_data[_pos] += 'A' - 'a';
-						}
-						++ _pos;
-					}
-					refreshLine();
-				}
-				break;
-
-			// ctrl-W, kill to whitespace (not word) to left of cursor
-			case ctrlChar('W'):
-				if ( _pos > 0 ) {
-					_history.reset_recall_most_recent();
-					int startingPos = _pos;
-					while ( _pos > 0 && _data[_pos - 1] == ' ' ) {
-						--_pos;
-					}
-					while ( _pos > 0 && _data[_pos - 1] != ' ' ) {
-						-- _pos;
-					}
-					_killRing.kill( _data.get() + _pos, startingPos - _pos, false );
-					_data.erase( _pos, startingPos - _pos );
-					refreshLine();
-				}
-				_killRing.lastAction = KillRing::actionKill;
-				break;
-
-			case ctrlChar('Y'): // ctrl-Y, yank killed text
-				_history.reset_recall_most_recent();
-				{
-					UnicodeString* restoredText = _killRing.yank();
-					if (restoredText) {
-						_data.insert( _pos, *restoredText, 0, restoredText->length() );
-						_pos += restoredText->length();
-						refreshLine();
-						_killRing.lastAction = KillRing::actionYank;
-						_killRing.lastYankSize = restoredText->length();
-					} else {
-						beep();
-					}
-				}
-				break;
-
-			case META + 'y': // meta-Y, "yank-pop", rotate popped text
-			case META + 'Y':
-				if (_killRing.lastAction == KillRing::actionYank) {
-					_history.reset_recall_most_recent();
-					UnicodeString* restoredText = _killRing.yankPop();
-					if (restoredText) {
-						_pos -= _killRing.lastYankSize;
-						_data.erase( _pos, _killRing.lastYankSize );
-						_data.insert( _pos, *restoredText, 0, restoredText->length() );
-						_pos += restoredText->length();
-						_killRing.lastYankSize = restoredText->length();
-						refreshLine();
-						break;
-					}
-				}
-				beep();
 				break;
 
 #ifndef _WIN32
@@ -1337,6 +1172,203 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::move_one_word_right( int ) {
 			++_pos;
 		}
 		while ( _pos < _data.length() && !is_word_break_character( _data[_pos] ) ) {
+			++_pos;
+		}
+		refreshLine();
+	}
+	return ( NEXT::CONTINUE );
+}
+
+// meta-Backspace, kill word to left of cursor
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::kill_word_to_left( int ) {
+	if ( _pos > 0 ) {
+		_history.reset_recall_most_recent();
+		int startingPos = _pos;
+		while ( _pos > 0 && is_word_break_character( _data[_pos - 1] ) ) {
+			-- _pos;
+		}
+		while ( _pos > 0 && !is_word_break_character( _data[_pos - 1] ) ) {
+			-- _pos;
+		}
+		_killRing.kill( _data.get() + _pos, startingPos - _pos, false);
+		_data.erase( _pos, startingPos - _pos );
+		refreshLine();
+	}
+	_killRing.lastAction = KillRing::actionKill;
+	return ( NEXT::CONTINUE );
+}
+
+// meta-D, kill word to right of cursor
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::kill_word_to_right( int ) {
+	if ( _pos < _data.length() ) {
+		_history.reset_recall_most_recent();
+		int endingPos = _pos;
+		while ( endingPos < _data.length() && is_word_break_character( _data[endingPos] ) ) {
+			++ endingPos;
+		}
+		while ( endingPos < _data.length() && !is_word_break_character( _data[endingPos] ) ) {
+			++ endingPos;
+		}
+		_killRing.kill( _data.get() + _pos, endingPos - _pos, true );
+		_data.erase( _pos, endingPos - _pos );
+		refreshLine();
+	}
+	_killRing.lastAction = KillRing::actionKill;
+	return ( NEXT::CONTINUE );
+}
+
+// ctrl-W, kill to whitespace (not word) to left of cursor
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::kill_to_whitespace_to_left( int ) {
+	if ( _pos > 0 ) {
+		_history.reset_recall_most_recent();
+		int startingPos = _pos;
+		while ( _pos > 0 && _data[_pos - 1] == ' ' ) {
+			--_pos;
+		}
+		while ( _pos > 0 && _data[_pos - 1] != ' ' ) {
+			-- _pos;
+		}
+		_killRing.kill( _data.get() + _pos, startingPos - _pos, false );
+		_data.erase( _pos, startingPos - _pos );
+		refreshLine();
+	}
+	_killRing.lastAction = KillRing::actionKill;
+	return ( NEXT::CONTINUE );
+}
+
+// ctrl-K, kill from cursor to end of line
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::kill_to_end_of_line( int ) {
+	_killRing.kill( _data.get() + _pos, _data.length() - _pos, true );
+	_data.erase( _pos, _data.length() - _pos );
+	refreshLine();
+	_killRing.lastAction = KillRing::actionKill;
+	_history.reset_recall_most_recent();
+	return ( NEXT::CONTINUE );
+}
+
+// ctrl-U, kill all characters to the left of the cursor
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::kill_to_begining_of_line( int ) {
+	if (_pos > 0) {
+		_history.reset_recall_most_recent();
+		_killRing.kill( _data.get(), _pos, false );
+		_data.erase( 0, _pos );
+		_pos = 0;
+		refreshLine();
+	}
+	_killRing.lastAction = KillRing::actionKill;
+	return ( NEXT::CONTINUE );
+}
+
+// ctrl-Y, yank killed text
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::yank( int ) {
+	_history.reset_recall_most_recent();
+	UnicodeString* restoredText( _killRing.yank() );
+	if ( restoredText ) {
+		_data.insert( _pos, *restoredText, 0, restoredText->length() );
+		_pos += restoredText->length();
+		refreshLine();
+		_killRing.lastAction = KillRing::actionYank;
+		_killRing.lastYankSize = restoredText->length();
+	} else {
+		beep();
+	}
+	return ( NEXT::CONTINUE );
+}
+
+// meta-Y, "yank-pop", rotate popped text
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::yank_cycle( int ) {
+	if ( _killRing.lastAction != KillRing::actionYank ) {
+		beep();
+		return ( NEXT::CONTINUE );
+	}
+	_history.reset_recall_most_recent();
+	UnicodeString* restoredText = _killRing.yankPop();
+	if ( !restoredText ) {
+		beep();
+		return ( NEXT::CONTINUE );
+	}
+	_pos -= _killRing.lastYankSize;
+	_data.erase( _pos, _killRing.lastYankSize );
+	_data.insert( _pos, *restoredText, 0, restoredText->length() );
+	_pos += restoredText->length();
+	_killRing.lastYankSize = restoredText->length();
+	refreshLine();
+	return ( NEXT::CONTINUE );
+}
+
+// meta-C, give word initial Cap
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::capitalize_word( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	_history.reset_recall_most_recent();
+	if (_pos < _data.length()) {
+		while ( _pos < _data.length() && is_word_break_character( _data[_pos] ) ) {
+			++_pos;
+		}
+		if (_pos < _data.length() && !is_word_break_character( _data[_pos] ) ) {
+			if ( _data[_pos] >= 'a' && _data[_pos] <= 'z' ) {
+				_data[_pos] += 'A' - 'a';
+			}
+			++_pos;
+		}
+		while (_pos < _data.length() && !is_word_break_character( _data[_pos] ) ) {
+			if ( _data[_pos] >= 'A' && _data[_pos] <= 'Z' ) {
+				_data[_pos] += 'a' - 'A';
+			}
+			++_pos;
+		}
+		refreshLine();
+	}
+	return ( NEXT::CONTINUE );
+}
+
+// meta-L, lowercase word
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::lowercase_word( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	if (_pos < _data.length()) {
+		_history.reset_recall_most_recent();
+		while ( _pos < _data.length() && is_word_break_character( _data[_pos] ) ) {
+			++ _pos;
+		}
+		while (_pos < _data.length() && !is_word_break_character( _data[_pos] ) ) {
+			if ( _data[_pos] >= 'A' && _data[_pos] <= 'Z' ) {
+				_data[_pos] += 'a' - 'A';
+			}
+			++ _pos;
+		}
+		refreshLine();
+	}
+	return ( NEXT::CONTINUE );
+}
+
+// meta-U, uppercase word
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::uppercase_word( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	if (_pos < _data.length()) {
+		_history.reset_recall_most_recent();
+		while ( _pos < _data.length() && is_word_break_character( _data[_pos] ) ) {
+			++ _pos;
+		}
+		while ( _pos < _data.length() && !is_word_break_character( _data[_pos] ) ) {
+			if ( _data[_pos] >= 'a' && _data[_pos] <= 'z') {
+				_data[_pos] += 'A' - 'a';
+			}
+			++ _pos;
+		}
+		refreshLine();
+	}
+	return ( NEXT::CONTINUE );
+}
+
+// ctrl-T, transpose characters
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::transpose_characters( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	if ( _pos > 0 && _data.length() > 1 ) {
+		_history.reset_recall_most_recent();
+		size_t leftCharPos = ( _pos == _data.length() ) ? _pos - 2 : _pos - 1;
+		char32_t aux = _data[leftCharPos];
+		_data[leftCharPos] = _data[leftCharPos + 1];
+		_data[leftCharPos + 1] = aux;
+		if ( _pos != _data.length() ) {
 			++_pos;
 		}
 		refreshLine();

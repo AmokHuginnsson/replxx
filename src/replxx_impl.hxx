@@ -127,6 +127,17 @@ private:
 	NEXT move_one_char_right( int );
 	NEXT move_one_word_left( int );
 	NEXT move_one_word_right( int );
+	NEXT kill_word_to_left( int );
+	NEXT kill_word_to_right( int );
+	NEXT kill_to_whitespace_to_left( int );
+	NEXT kill_to_begining_of_line( int );
+	NEXT kill_to_end_of_line( int );
+	NEXT yank( int );
+	NEXT yank_cycle( int );
+	NEXT capitalize_word( int );
+	NEXT lowercase_word( int );
+	NEXT uppercase_word( int );
+	NEXT transpose_characters( int );
 	char const* read_from_stdin( void );
 	void clearScreen();
 	int incrementalHistorySearch( int startChar );
