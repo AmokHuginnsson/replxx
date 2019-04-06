@@ -139,6 +139,14 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	_keyPressHandlers.insert( make_pair( META + 'u',             std::bind( &ReplxxImpl::uppercase_word,             this, _1 ) ) );
 	_keyPressHandlers.insert( make_pair( META + 'U',             std::bind( &ReplxxImpl::uppercase_word,             this, _1 ) ) );
 	_keyPressHandlers.insert( make_pair( ctrlChar( 'T' ),        std::bind( &ReplxxImpl::transpose_characters,       this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'C' ),        std::bind( &ReplxxImpl::abort_line,                 this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'D' ),        std::bind( &ReplxxImpl::send_eof,                   this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( 127,                    std::bind( &ReplxxImpl::delete_character,           this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( DELETE_KEY,             std::bind( &ReplxxImpl::delete_character,           this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'H' ),        std::bind( &ReplxxImpl::backspace_character,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'J' ),        std::bind( &ReplxxImpl::commit_line,                this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'M' ),        std::bind( &ReplxxImpl::commit_line,                this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'L' ),        std::bind( &ReplxxImpl::clear_screen,               this, _1 ) ) );
 }
 
 void Replxx::ReplxxImpl::clear( void ) {
@@ -271,10 +279,6 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 		disableRawMode();
 		return ( nullptr );
 	}
-}
-
-void Replxx::ReplxxImpl::clear_screen( void ) {
-	replxx::clear_screen( CLEAR_SCREEN::WHOLE );
 }
 
 int Replxx::ReplxxImpl::install_window_change_handler( void ) {
@@ -901,43 +905,6 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 		bool updatePrefix( true );
 		switch (c) {
 
-			case ctrlChar('C'): // ctrl-C, abort this line
-				_killRing.lastAction = KillRing::actionOther;
-				_history.reset_recall_most_recent();
-				errno = EAGAIN;
-				_history.drop_last();
-				// we need one last refresh with the cursor at the end of the line
-				// so we don't display the next prompt over the previous input line
-				_pos = _data.length(); // pass _data.length() as _pos for EOL
-				refreshLine( HINT_ACTION::SKIP );
-				write8( "^C\r\n", 4 );
-				next = NEXT::BAIL;
-				break;
-
-			// ctrl-D, delete the character under the cursor
-			// on an empty line, exit the shell
-			case ctrlChar('D'):
-				_killRing.lastAction = KillRing::actionOther;
-				if ( ( _data.length() > 0 ) && ( _pos < _data.length() ) ) {
-					_history.reset_recall_most_recent();
-					_data.erase( _pos );
-					refreshLine();
-				} else if (_data.length() == 0) {
-					_history.drop_last();
-					next = NEXT::BAIL;
-				}
-				break;
-
-			case ctrlChar('H'): // backspace/ctrl-H, delete char to left of cursor
-				_killRing.lastAction = KillRing::actionOther;
-				if ( _pos > 0 ) {
-					_history.reset_recall_most_recent();
-					-- _pos;
-					_data.erase( _pos );
-					refreshLine();
-				}
-				break;
-
 			case ( ctrlChar('I') ): {
 				if ( !! _completionCallback && ( _completeOnEmpty || ( _pos > 0 ) ) ) {
 					_killRing.lastAction = KillRing::actionOther;
@@ -955,22 +922,6 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 					insert_character( c );
 				}
 			} break;
-
-			case ctrlChar('J'): // ctrl-J/linefeed/newline, accept line
-			case ctrlChar('M'): // ctrl-M/return/enter
-				_killRing.lastAction = KillRing::actionOther;
-				// we need one last refresh with the cursor at the end of the line
-				// so we don't display the next prompt over the previous input line
-				_pos = _data.length(); // pass _data.length() as _pos for EOL
-				refreshLine( HINT_ACTION::SKIP );
-				_history.commit_index();
-				_history.drop_last();
-				next = NEXT::RETURN;
-				break;
-
-			case ctrlChar('L'): // ctrl-L, clear screen and redisplay line
-				clearScreen();
-				break;
 
 			case ctrlChar('N'): // ctrl-N, recall next line in history
 			case ctrlChar('P'): // ctrl-P, recall previous line in history
@@ -1033,17 +984,6 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 				refreshLine();  // Refresh the line
 				break;
 #endif
-
-			// DEL, delete the character under the cursor
-			case 127:
-			case DELETE_KEY:
-				_killRing.lastAction = KillRing::actionOther;
-				if (_data.length() > 0 && _pos < _data.length()) {
-					_history.reset_recall_most_recent();
-					_data.erase( _pos );
-					refreshLine();
-				}
-				break;
 
 			case META + '<':    // meta-<, beginning of history
 			case PAGE_UP_KEY:   // Page Up, beginning of history
@@ -1376,6 +1316,66 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::transpose_characters( int ) {
 	return ( NEXT::CONTINUE );
 }
 
+// ctrl-C, abort this line
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::abort_line( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	_history.reset_recall_most_recent();
+	errno = EAGAIN;
+	_history.drop_last();
+	// we need one last refresh with the cursor at the end of the line
+	// so we don't display the next prompt over the previous input line
+	_pos = _data.length(); // pass _data.length() as _pos for EOL
+	refreshLine( HINT_ACTION::SKIP );
+	write8( "^C\r\n", 4 );
+	return ( NEXT::BAIL );
+}
+
+// DEL, delete the character under the cursor
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::delete_character( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	if ( ( _data.length() > 0 ) && ( _pos < _data.length() ) ) {
+		_history.reset_recall_most_recent();
+		_data.erase( _pos );
+		refreshLine();
+	}
+	return ( NEXT::CONTINUE );
+}
+
+// ctrl-D, delete the character under the cursor
+// on an empty line, exit the shell
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::send_eof( int key_ ) {
+	if ( _data.length() == 0 ) {
+		_history.drop_last();
+		return ( NEXT::BAIL );
+	}
+	return ( delete_character( key_ ) );
+}
+
+// backspace/ctrl-H, delete char to left of cursor
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::backspace_character( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	if ( _pos > 0 ) {
+		_history.reset_recall_most_recent();
+		-- _pos;
+		_data.erase( _pos );
+		refreshLine();
+	}
+	return ( NEXT::CONTINUE );
+}
+
+// ctrl-J/linefeed/newline, accept line
+// ctrl-M/return/enter
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::commit_line( int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	// we need one last refresh with the cursor at the end of the line
+	// so we don't display the next prompt over the previous input line
+	_pos = _data.length(); // pass _data.length() as _pos for EOL
+	refreshLine( HINT_ACTION::SKIP );
+	_history.commit_index();
+	_history.drop_last();
+	return ( NEXT::RETURN );
+}
+
 void Replxx::ReplxxImpl::commonPrefixSearch( int startChar ) {
 	_killRing.lastAction = KillRing::actionOther;
 	_utf8Buffer.assign( _data );
@@ -1601,8 +1601,9 @@ int Replxx::ReplxxImpl::incrementalHistorySearch( int startChar ) {
 	return c; // pass a character or -1 back to main loop
 }
 
-void Replxx::ReplxxImpl::clearScreen( void ) {
-	clear_screen();
+// ctrl-L, clear screen and redisplay line
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::clear_screen( int ) {
+	replxx::clear_screen( CLEAR_SCREEN::WHOLE );
 	_prompt.write();
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap on Linux
@@ -1612,6 +1613,7 @@ void Replxx::ReplxxImpl::clearScreen( void ) {
 #endif
 	_prompt._cursorRowOffset = _prompt._extraLines;
 	refreshLine();
+	return ( NEXT::CONTINUE );
 }
 
 bool Replxx::ReplxxImpl::is_word_break_character( char32_t char_ ) const {

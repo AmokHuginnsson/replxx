@@ -109,7 +109,6 @@ public:
 	void set_no_color( bool val );
 	void set_max_history_size( int len );
 	void set_completion_count_cutoff( int len );
-	void clear_screen( void );
 	int install_window_change_handler( void );
 	completions_t call_completer( std::string const& input, int& ) const;
 	hints_t call_hinter( std::string const& input, int&, Replxx::Color& color ) const;
@@ -138,8 +137,13 @@ private:
 	NEXT lowercase_word( int );
 	NEXT uppercase_word( int );
 	NEXT transpose_characters( int );
+	NEXT abort_line( int );
+	NEXT send_eof( int );
+	NEXT delete_character( int );
+	NEXT backspace_character( int );
+	NEXT commit_line( int );
+	NEXT clear_screen( int );
 	char const* read_from_stdin( void );
-	void clearScreen();
 	int incrementalHistorySearch( int startChar );
 	void commonPrefixSearch( int startChar );
 	int completeLine( void );

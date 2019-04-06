@@ -193,7 +193,7 @@ void Replxx::set_max_history_size( int len ) {
 }
 
 void Replxx::clear_screen( void ) {
-	_impl->clear_screen();
+	replxx::clear_screen( CLEAR_SCREEN::WHOLE );
 }
 
 int Replxx::install_window_change_handler( void ) {
@@ -223,9 +223,8 @@ void replxx_end( ::Replxx* replxx_ ) {
 	delete reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ );
 }
 
-void replxx_clear_screen( ::Replxx* replxx_ ) {
-	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
-	return ( replxx->clear_screen() );
+void replxx_clear_screen( ::Replxx* ) {
+	replxx::clear_screen( CLEAR_SCREEN::WHOLE );
 }
 
 /**
