@@ -147,6 +147,19 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	_keyPressHandlers.insert( make_pair( ctrlChar( 'J' ),        std::bind( &ReplxxImpl::commit_line,                this, _1 ) ) );
 	_keyPressHandlers.insert( make_pair( ctrlChar( 'M' ),        std::bind( &ReplxxImpl::commit_line,                this, _1 ) ) );
 	_keyPressHandlers.insert( make_pair( ctrlChar( 'L' ),        std::bind( &ReplxxImpl::clear_screen,               this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'N' ),        std::bind( &ReplxxImpl::history_next,               this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'P' ),        std::bind( &ReplxxImpl::history_previous,           this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( DOWN_ARROW_KEY,         std::bind( &ReplxxImpl::history_next,               this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( UP_ARROW_KEY,           std::bind( &ReplxxImpl::history_previous,           this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + '>',             std::bind( &ReplxxImpl::history_last,               this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( META + '<',             std::bind( &ReplxxImpl::history_first,              this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( PAGE_DOWN_KEY,          std::bind( &ReplxxImpl::history_last,               this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( PAGE_UP_KEY,            std::bind( &ReplxxImpl::history_first,              this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( CTRL + UP_ARROW_KEY,    std::bind( &ReplxxImpl::hint_previous,              this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( CTRL + DOWN_ARROW_KEY,  std::bind( &ReplxxImpl::hint_next,                  this, _1 ) ) );
+#ifndef _WIN32
+	_keyPressHandlers.insert( make_pair( ctrlChar( 'Z' ),        std::bind( &ReplxxImpl::suspend,                    this, _1 ) ) );
+#endif
 }
 
 void Replxx::ReplxxImpl::clear( void ) {
@@ -904,7 +917,6 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 
 		bool updatePrefix( true );
 		switch (c) {
-
 			case ( ctrlChar('I') ): {
 				if ( !! _completionCallback && ( _completeOnEmpty || ( _pos > 0 ) ) ) {
 					_killRing.lastAction = KillRing::actionOther;
@@ -923,45 +935,6 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 				}
 			} break;
 
-			case ctrlChar('N'): // ctrl-N, recall next line in history
-			case ctrlChar('P'): // ctrl-P, recall previous line in history
-			case DOWN_ARROW_KEY:
-			case UP_ARROW_KEY:
-				_killRing.lastAction = KillRing::actionOther;
-				// if not already recalling, add the current line to the history list so
-				// we don't
-				// have to special case it
-				if ( _history.is_last() ) {
-					_utf8Buffer.assign( _data );
-					_history.update_last( _utf8Buffer.get() );
-				}
-				if ( ! _history.is_empty() ) {
-					if (c == UP_ARROW_KEY) {
-						c = ctrlChar('P');
-					}
-					if ( ! _history.move( c == ctrlChar('P') ) ) {
-						break;
-					}
-					_data.assign( _history.current() );
-					_pos = _data.length();
-					refreshLine();
-				}
-				break;
-			case CTRL + UP_ARROW_KEY:
-				if ( ! _noColor ) {
-					_killRing.lastAction = KillRing::actionOther;
-					-- _hintSelection;
-					refreshLine( HINT_ACTION::REPAINT );
-				}
-				break;
-			case CTRL + DOWN_ARROW_KEY:
-				if ( ! _noColor ) {
-					_killRing.lastAction = KillRing::actionOther;
-					++ _hintSelection;
-					refreshLine( HINT_ACTION::REPAINT );
-				}
-				break;
-
 			case META + 'p': // Alt-P, reverse history search for prefix
 			case META + 'P': // Alt-P, reverse history search for prefix
 			case META + 'n': // Alt-N, forward history search for prefix
@@ -972,37 +945,6 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 			case ctrlChar('R'): // ctrl-R, reverse history search
 			case ctrlChar('S'): // ctrl-S, forward history search
 				terminatingKeystroke = incrementalHistorySearch( c );
-				break;
-
-#ifndef _WIN32
-			case ctrlChar('Z'): // ctrl-Z, job control
-				disableRawMode(); // Returning to Linux (whatever) shell, leave raw mode
-				raise(SIGSTOP);   // Break out in mid-line
-				enableRawMode();  // Back from Linux shell, re-enter raw mode
-				// Redraw prompt
-				_prompt.write();
-				refreshLine();  // Refresh the line
-				break;
-#endif
-
-			case META + '<':    // meta-<, beginning of history
-			case PAGE_UP_KEY:   // Page Up, beginning of history
-			case META + '>':    // meta->, end of history
-			case PAGE_DOWN_KEY: // Page Down, end of history
-				_killRing.lastAction = KillRing::actionOther;
-				// if not already recalling, add the current line to the history list so
-				// we don't
-				// have to special case it
-				if ( _history.is_last() ) {
-					_utf8Buffer.assign( _data );
-					_history.update_last( _utf8Buffer.get() );
-				}
-				if ( ! _history.is_empty() ) {
-					_history.jump( (c == META + '<' || c == PAGE_UP_KEY) );
-					_data.assign( _history.current().c_str() );
-					_pos = _data.length();
-					refreshLine();
-				}
 				break;
 
 			// not one of our special characters, maybe insert it in the buffer
@@ -1375,6 +1317,101 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::commit_line( int ) {
 	_history.drop_last();
 	return ( NEXT::RETURN );
 }
+
+// ctrl-N, recall next line in history
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::history_next( int c ) {
+	return ( history_move( false, c ) );
+}
+
+// ctrl-P, recall previous line in history
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::history_previous( int c ) {
+	return ( history_move( true, c ) );
+}
+
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::history_move( bool previous_, int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	// if not already recalling, add the current line to the history list so
+	// we don't
+	// have to special case it
+	if ( _history.is_last() ) {
+		_utf8Buffer.assign( _data );
+		_history.update_last( _utf8Buffer.get() );
+	}
+	if ( _history.is_empty() ) {
+		return ( NEXT::CONTINUE );
+	}
+	if ( ! _history.move( previous_ ) ) {
+		return ( NEXT::CONTINUE );
+	}
+	_data.assign( _history.current() );
+	_pos = _data.length();
+	refreshLine();
+	return ( NEXT::CONTINUE );
+}
+
+// meta-<, beginning of history
+// Page Up, beginning of history
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::history_first( int c ) {
+	return ( history_jump( true, c ) );
+}
+
+// meta->, end of history
+// Page Down, end of history
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::history_last( int c ) {
+	return ( history_jump( false, c ) );
+}
+
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::history_jump( bool back_, int ) {
+	_killRing.lastAction = KillRing::actionOther;
+	// if not already recalling, add the current line to the history list so
+	// we don't
+	// have to special case it
+	if ( _history.is_last() ) {
+		_utf8Buffer.assign( _data );
+		_history.update_last( _utf8Buffer.get() );
+	}
+	if ( ! _history.is_empty() ) {
+		_history.jump( back_ );
+		_data.assign( _history.current().c_str() );
+		_pos = _data.length();
+		refreshLine();
+	}
+	return ( NEXT::CONTINUE );
+}
+
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::hint_next( int c ) {
+	return ( hint_move( false, c ) );
+}
+
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::hint_previous( int c ) {
+	return ( hint_move( true, c ) );
+}
+
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::hint_move( bool previous_, int ) {
+	if ( ! _noColor ) {
+		_killRing.lastAction = KillRing::actionOther;
+		if ( previous_ ) {
+			-- _hintSelection;
+		} else {
+			++ _hintSelection;
+		}
+		refreshLine( HINT_ACTION::REPAINT );
+	}
+	return ( NEXT::CONTINUE );
+}
+
+#ifndef _WIN32
+// ctrl-Z, job control
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::suspend( int ) {
+	disableRawMode(); // Returning to Linux (whatever) shell, leave raw mode
+	raise(SIGSTOP);   // Break out in mid-line
+	enableRawMode();  // Back from Linux shell, re-enter raw mode
+	// Redraw prompt
+	_prompt.write();
+	refreshLine();  // Refresh the line
+	return ( NEXT::CONTINUE );
+}
+#endif
 
 void Replxx::ReplxxImpl::commonPrefixSearch( int startChar ) {
 	_killRing.lastAction = KillRing::actionOther;

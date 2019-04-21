@@ -143,6 +143,18 @@ private:
 	NEXT backspace_character( int );
 	NEXT commit_line( int );
 	NEXT clear_screen( int );
+	NEXT history_next( int );
+	NEXT history_previous( int );
+	NEXT history_move( bool, int );
+	NEXT history_first( int );
+	NEXT history_last( int );
+	NEXT history_jump( bool, int );
+	NEXT hint_next( int );
+	NEXT hint_previous( int );
+	NEXT hint_move( bool, int );
+#ifndef _WIN32
+	NEXT suspend( int );
+#endif
 	char const* read_from_stdin( void );
 	int incrementalHistorySearch( int startChar );
 	void commonPrefixSearch( int startChar );
