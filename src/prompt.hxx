@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 #include "unicodestring.hxx"
+#include "io.hxx"
 
 namespace replxx {
 
@@ -18,11 +19,11 @@ public:
 	int _previousInputLen; // _characterCount of previous input line, for clearing
 	int _cursorRowOffset;  // where the cursor is relative to the start of the prompt
 	int _previousLen;      // help erasing
-
 private:
 	int _screenColumns;    // width of screen in columns [cache]
+	Terminal& _terminal;
 public:
-	Prompt( void );
+	Prompt( Terminal& );
 	void set_text( std::string const& textPtr );
 	void update_screen_columns( void );
 	int screen_columns() const {
@@ -39,7 +40,7 @@ struct DynamicPrompt : public Prompt {
 	UnicodeString _searchText; // text we are searching for
 	int _direction;            // current search _direction, 1=forward, -1=reverse
 
-	DynamicPrompt( int initialDirection );
+	DynamicPrompt( Terminal&, int initialDirection );
 	void updateSearchPrompt(void);
 };
 

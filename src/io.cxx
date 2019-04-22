@@ -18,7 +18,6 @@
 #else /* _WIN32 */
 
 #include <unistd.h>
-#include <termios.h>
 #include <sys/ioctl.h>
 
 #endif /* _WIN32 */
@@ -31,22 +30,6 @@
 using namespace std;
 
 namespace replxx {
-
-#ifdef _WIN32
-HANDLE console_out;
-static HANDLE console_in;
-static DWORD oldMode;
-static WORD oldDisplayAttribute;
-static UINT const inputCodePage( GetConsoleCP() );
-static UINT const outputCodePage( GetConsoleOutputCP() );
-#else
-static struct termios orig_termios; /* in order to restore at exit */
-#endif
-
-static int rawmode = 0; /* for atexit() function to check if restore is needed*/
-static int atexit_registered = 0; /* register atexit just 1 time */
-// At exit we'll try to fix the terminal to the initial conditions
-static void repl_at_exit(void) { disableRawMode(); }
 
 namespace tty {
 
@@ -76,7 +59,26 @@ bool out( is_a_tty( 1 ) );
 
 }
 
-void write32( char32_t const* text32, int len32 ) {
+Terminal::Terminal( void )
+#ifdef _WIN32
+	: _consoleOut()
+	, _consoleIn()
+	, _oldMode()
+	, _oldDisplayAttribute()
+	, _inputCodePage( GetConsoleCP() )
+	, _outputCodePage( GetConsoleOutputCP() )
+#else
+	: _rawMode( false )
+#endif
+{}
+
+Terminal::~Terminal( void ) {
+	if ( _rawMode ) {
+		disable_raw_mode();
+	}
+}
+
+void Terminal::write32( char32_t const* text32, int len32 ) {
 	int len8 = 4 * len32 + 1;
 	unique_ptr<char[]> text8(new char[len8]);
 	int count8 = 0;
@@ -94,33 +96,33 @@ void write32( char32_t const* text32, int len32 ) {
 	return;
 }
 
-void write8( void const* data_, int size_ ) {
+void Terminal::write8( void const* data_, int size_ ) {
 	if ( write( 1, data_, size_ ) != size_ ) {
 		throw std::runtime_error( "write failed" );
 	}
 	return;
 }
 
-int getScreenColumns(void) {
-	int cols;
+int Terminal::get_screen_columns( void ) {
+	int cols( 0 );
 #ifdef _WIN32
 	CONSOLE_SCREEN_BUFFER_INFO inf;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &inf);
+	GetConsoleScreenBufferInfo( _consoleOut, &inf );
 	cols = inf.dwSize.X;
 #else
 	struct winsize ws;
-	cols = (ioctl(1, TIOCGWINSZ, &ws) == -1) ? 80 : ws.ws_col;
+	cols = ( ioctl( 1, TIOCGWINSZ, &ws ) == -1 ) ? 80 : ws.ws_col;
 #endif
 	// cols is 0 in certain circumstances like inside debugger, which creates
 	// further issues
-	return (cols > 0) ? cols : 80;
+	return ( cols > 0 ) ? cols : 80;
 }
 
-int getScreenRows(void) {
+int Terminal::get_screen_rows( void ) {
 	int rows;
 #ifdef _WIN32
 	CONSOLE_SCREEN_BUFFER_INFO inf;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &inf);
+	GetConsoleScreenBufferInfo( _consoleOut, &inf );
 	rows = 1 + inf.srWindow.Bottom - inf.srWindow.Top;
 #else
 	struct winsize ws;
@@ -129,33 +131,37 @@ int getScreenRows(void) {
 	return (rows > 0) ? rows : 24;
 }
 
-int enableRawMode(void) {
+namespace {
+inline int notty( void ) {
+	errno = ENOTTY;
+	return ( -1 );
+}
+}
+
+int Terminal::enable_raw_mode(void) {
 #ifdef _WIN32
-	if ( ! console_in ) {
-		console_in = GetStdHandle( STD_INPUT_HANDLE );
-		console_out = GetStdHandle( STD_OUTPUT_HANDLE );
+	if ( ! _consoleIn ) {
+		_consoleIn = GetStdHandle( STD_INPUT_HANDLE );
+		_consoleOut = GetStdHandle( STD_OUTPUT_HANDLE );
 		SetConsoleCP( 65001 );
 		SetConsoleOutputCP( 65001 );
-		GetConsoleMode( console_in, &oldMode );
+		GetConsoleMode( _consoleIn, &_oldMode );
 		SetConsoleMode(
-			console_in,
-			oldMode & ~( ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT )
+			_consoleIn,
+			_oldMode & ~( ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT )
 		);
 	}
-	return 0;
 #else
 	struct termios raw;
 
 	if ( ! tty::in ) {
-		goto fatal;
+		return ( notty() );
 	}
-	if (!atexit_registered) {
-		atexit(repl_at_exit);
-		atexit_registered = 1;
+	if ( tcgetattr( 0, &_origTermios ) == -1 ) {
+		return ( notty() );
 	}
-	if (tcgetattr(0, &orig_termios) == -1) goto fatal;
 
-	raw = orig_termios; /* modify the original mode */
+	raw = _origTermios; /* modify the original mode */
 	/* input modes: no break, no CR to NL, no parity check, no strip char,
 	 * no start/stop output control. */
 	raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -174,28 +180,26 @@ int enableRawMode(void) {
 	raw.c_cc[VTIME] = 0; /* 1 byte, no timer */
 
 	/* put terminal in raw mode after flushing */
-	if (tcsetattr(0, TCSADRAIN, &raw) < 0) goto fatal;
-	rawmode = 1;
-	return 0;
-
-fatal:
-	errno = ENOTTY;
-	return -1;
+	if ( tcsetattr(0, TCSADRAIN, &raw) < 0 ) {
+		return ( notty() );
+	}
+	_rawMode = true;
 #endif
+	return 0;
 }
 
-void disableRawMode(void) {
+void Terminal::disable_raw_mode(void) {
 #ifdef _WIN32
-	if ( console_in ) {
-		SetConsoleMode(console_in, oldMode);
-		SetConsoleCP( inputCodePage );
-		SetConsoleOutputCP( outputCodePage );
-		console_in = 0;
-		console_out = 0;
+	if ( _consoleIn ) {
+		SetConsoleMode( _consoleIn, _oldMode );
+		SetConsoleCP( _inputCodePage );
+		SetConsoleOutputCP( _outputCodePage );
+		_consoleIn = 0;
+		_consoleOut = 0;
 	}
 #else
-	if ( rawmode && tcsetattr(0, TCSADRAIN, &orig_termios ) != -1 ) {
-		rawmode = 0;
+	if ( _rawMode && tcsetattr( 0, TCSADRAIN, &_origTermios ) != -1 ) {
+		_rawMode = false;
 	}
 #endif
 }
@@ -209,7 +213,7 @@ void disableRawMode(void) {
  *
  * @return	char32_t Unicode character
  */
-char32_t readUnicodeCharacter(void) {
+char32_t read_unicode_character(void) {
 	static char8_t utf8String[5];
 	static size_t utf8Count = 0;
 	while (true) {
@@ -257,16 +261,15 @@ void beep() {
 // A return value of zero means "no input available", and a return value of -1
 // means "invalid key".
 //
-char32_t read_char(void) {
+char32_t Terminal::read_char(void) {
 #ifdef _WIN32
-
 	INPUT_RECORD rec;
 	DWORD count;
 	int modifierKeys = 0;
 	bool escSeen = false;
 	int highSurrogate( 0 );
 	while (true) {
-		ReadConsoleInputW(console_in, &rec, 1, &count);
+		ReadConsoleInputW( _consoleIn, &rec, 1, &count );
 #if __REPLXX_DEBUG__	// helper for debugging keystrokes, display info in the debug "Output"
 			 // window in the debugger
 				{
@@ -378,7 +381,7 @@ char32_t read_char(void) {
 
 #else
 	char32_t c;
-	c = readUnicodeCharacter();
+	c = read_unicode_character();
 	if (c == 0) return 0;
 
 // If _DEBUG_LINUX_KEYBOARD is set, then ctrl-^ puts us into a keyboard
@@ -447,19 +450,18 @@ char32_t read_char(void) {
 /**
  * Clear the screen ONLY (no redisplay of anything)
  */
-void clear_screen( CLEAR_SCREEN clearScreen_ ) {
+void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 #ifdef _WIN32
 	COORD coord = {0, 0};
 	CONSOLE_SCREEN_BUFFER_INFO inf;
-	HANDLE screenHandle = GetStdHandle( STD_OUTPUT_HANDLE );
 	bool toEnd( clearScreen_ == CLEAR_SCREEN::TO_END );
-	GetConsoleScreenBufferInfo( screenHandle, &inf );
+	GetConsoleScreenBufferInfo( _consoleOut, &inf );
 	if ( ! toEnd ) {
-		SetConsoleCursorPosition( screenHandle, coord );
+		SetConsoleCursorPosition( _consoleOut, coord );
 	}
 	DWORD count;
 	FillConsoleOutputCharacterA(
-		screenHandle, ' ',
+		_consoleOut, ' ',
 		( inf.dwSize.Y - ( toEnd ? inf.dwCursorPosition.Y : 0 ) ) * inf.dwSize.X,
 		( toEnd ? inf.dwCursorPosition : coord ),
 		&count
@@ -474,6 +476,27 @@ void clear_screen( CLEAR_SCREEN clearScreen_ ) {
 	}
 #endif
 }
+
+#ifdef _WIN32
+void Terminal::jump_cursor( int xPos_, int yOffset_ ) {
+	CONSOLE_SCREEN_BUFFER_INFO inf;
+	GetConsoleScreenBufferInfo( _consoleOut, &inf );
+	inf.dwCursorPosition.X = xPos_;
+	inf.dwCursorPosition.Y += yOffset_;
+	SetConsoleCursorPosition( _consoleOut, inf.dwCursorPosition );
+}
+
+void Terminal::clear_section( int size_ ) {
+	CONSOLE_SCREEN_BUFFER_INFO inf;
+	GetConsoleScreenBufferInfo( _consoleOut, &inf );
+	DWORD count;
+	FillConsoleOutputCharacterA(
+		_consoleOut, ' ',
+		size_,
+		inf.dwCursorPosition, &count
+	);
+}
+#endif
 
 }
 

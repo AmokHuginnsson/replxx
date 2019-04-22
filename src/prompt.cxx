@@ -19,25 +19,25 @@
 
 #include "prompt.hxx"
 #include "util.hxx"
-#include "io.hxx"
 
 namespace replxx {
 
-Prompt::Prompt( void )
+Prompt::Prompt( Terminal& terminal_ )
 	: _extraLines( 0 )
 	, _lastLinePosition( 0 )
 	, _previousInputLen( 0 )
 	, _previousLen( 0 )
-	, _screenColumns( 0 ) {
+	, _screenColumns( 0 )
+	, _terminal( terminal_ ) {
 	update_screen_columns();
 }
 
 void Prompt::write() {
-	write32( _text.get(), _byteCount );
+	_terminal.write32( _text.get(), _byteCount );
 }
 
 void Prompt::update_screen_columns( void ) {
-	_screenColumns = getScreenColumns();
+	_screenColumns = _terminal.get_screen_columns();
 }
 
 void Prompt::set_text( std::string const& text_ ) {
@@ -117,8 +117,8 @@ const UnicodeString reverseSearchBasePrompt("(reverse-i-search)`");
 const UnicodeString endSearchBasePrompt("': ");
 UnicodeString previousSearchText;	// remembered across invocations of replxx_input()
 
-DynamicPrompt::DynamicPrompt( int initialDirection )
-	: Prompt()
+DynamicPrompt::DynamicPrompt( Terminal& terminal_, int initialDirection )
+	: Prompt( terminal_ )
 	, _searchText()
 	, _direction( initialDirection ) {
 	_cursorRowOffset = 0;

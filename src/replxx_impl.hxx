@@ -41,6 +41,7 @@
 #include "killring.hxx"
 #include "utf8string.hxx"
 #include "prompt.hxx"
+#include "io.hxx"
 
 namespace replxx {
 
@@ -83,6 +84,7 @@ private:
 	bool _beepOnAmbiguousCompletion;
 	bool _noColor;
 	key_press_handlers_t _keyPressHandlers;
+	Terminal _terminal;
 	Prompt _prompt;
 	Replxx::completion_callback_t _completionCallback;
 	Replxx::highlighter_callback_t _highlighterCallback;
@@ -113,6 +115,7 @@ public:
 	completions_t call_completer( std::string const& input, int& ) const;
 	hints_t call_hinter( std::string const& input, int&, Replxx::Color& color ) const;
 	int print( char const* , int );
+	NEXT clear_screen( int );
 private:
 	ReplxxImpl( ReplxxImpl const& ) = delete;
 	ReplxxImpl& operator = ( ReplxxImpl const& ) = delete;
@@ -142,7 +145,6 @@ private:
 	NEXT delete_character( int );
 	NEXT backspace_character( int );
 	NEXT commit_line( int );
-	NEXT clear_screen( int );
 	NEXT history_next( int );
 	NEXT history_previous( int );
 	NEXT history_move( bool, int );
@@ -156,16 +158,17 @@ private:
 	NEXT suspend( int );
 #endif
 	char const* read_from_stdin( void );
-	int incrementalHistorySearch( int startChar );
-	void commonPrefixSearch( int startChar );
-	int completeLine( void );
-	void refreshLine( HINT_ACTION = HINT_ACTION::REGENERATE );
+	int incremental_history_search( int startChar );
+	void common_prefix_search( int startChar );
+	int complete_line( void );
+	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
 	void highlight( int, bool );
 	int handle_hints( HINT_ACTION );
 	void setColor( Replxx::Color );
 	int context_length( void );
 	void clear();
 	bool is_word_break_character( char32_t ) const;
+	void dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos);
 };
 
 }

@@ -38,8 +38,6 @@ using namespace std;
 
 namespace replxx {
 
-void dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos);
-
 #ifndef _WIN32
 
 bool gotResize = false;
@@ -100,7 +98,8 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _beepOnAmbiguousCompletion( false )
 	, _noColor( false )
 	, _keyPressHandlers()
-	, _prompt()
+	, _terminal()
+	, _prompt( _terminal )
 	, _completionCallback( nullptr )
 	, _highlighterCallback( nullptr )
 	, _hintCallback( nullptr )
@@ -273,7 +272,7 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 			fflush(stdout);
 			return ( read_from_stdin() );
 		}
-		if (enableRawMode() == -1) {
+		if (_terminal.enable_raw_mode() == -1) {
 			return nullptr;
 		}
 		clear();
@@ -284,12 +283,12 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 		if ( getInputLine() == -1 ) {
 			return ( nullptr );
 		}
-		disableRawMode();
+		_terminal.disable_raw_mode();
 		printf("\n");
 		_utf8Buffer.assign( _data );
 		return ( _utf8Buffer.get() );
 	} catch ( std::exception const& ) {
-		disableRawMode();
+		_terminal.disable_raw_mode();
 		return ( nullptr );
 	}
 }
@@ -439,7 +438,7 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
  * @param pi	 Prompt struct holding information about the prompt and our
  * screen position
  */
-void Replxx::ReplxxImpl::refreshLine( HINT_ACTION hintAction_ ) {
+void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	// check for a matching brace/bracket/paren, remember its position if found
 	int highlightIdx = -1;
 	bool indicateError = false;
@@ -520,32 +519,31 @@ void Replxx::ReplxxImpl::refreshLine( HINT_ACTION hintAction_ ) {
 
 #ifdef _WIN32
 	// position at the end of the prompt, clear to end of previous input
-	CONSOLE_SCREEN_BUFFER_INFO inf;
-	GetConsoleScreenBufferInfo(console_out, &inf);
-	inf.dwCursorPosition.X = _prompt._indentation; // 0-based on Win32
-	inf.dwCursorPosition.Y -= _prompt._cursorRowOffset - _prompt._extraLines;
-	SetConsoleCursorPosition(console_out, inf.dwCursorPosition);
-	replxx::clear_screen( CLEAR_SCREEN::TO_END );
+	_terminal.jump_cursor(
+		_prompt._indentation, // 0-based on Win32
+		-( _prompt._cursorRowOffset - _prompt._extraLines )
+	);
+	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
 	_prompt._previousInputLen = _data.length();
 
 	// display the input line
 	if ( !_noColor ) {
-		write32( _display.data(), _display.size() );
+		_terminal.write32( _display.data(), _display.size() );
 	} else {
-		write32( _data.get(), _data.length() );
+		_terminal.write32( _data.get(), _data.length() );
 	}
 
 	// position the cursor
-	GetConsoleScreenBufferInfo(console_out, &inf);
-	inf.dwCursorPosition.X = xCursorPos; // 0-based on Win32
-	inf.dwCursorPosition.Y -= ( yEndOfInput - yCursorPos );
-	SetConsoleCursorPosition(console_out, inf.dwCursorPosition);
+	_terminal.jump_cursor(
+		xCursorPos, // 0-based on Win32
+		-( yEndOfInput - yCursorPos )
+	);
 #else // _WIN32
 	char seq[64];
 	int cursorRowMovement = _prompt._cursorRowOffset - _prompt._extraLines;
 	if (cursorRowMovement > 0) { // move the cursor up as required
 		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
-		write8( seq, strlen(seq) );
+		_terminal.write8( seq, strlen(seq) );
 	}
 	// position at the end of the prompt, clear to end of screen
 	snprintf(
@@ -553,28 +551,28 @@ void Replxx::ReplxxImpl::refreshLine( HINT_ACTION hintAction_ ) {
 		_prompt._indentation + 1, /* 1-based on VT100 */
 		'J'
 	);
-	write8( seq, strlen(seq) );
+	_terminal.write8( seq, strlen(seq) );
 
 	if ( !_noColor ) {
-		write32( _display.data(), _display.size() );
+		_terminal.write32( _display.data(), _display.size() );
 	} else { // highlightIdx the matching brace/bracket/parenthesis
-		write32( _data.get(), _data.length() );
+		_terminal.write32( _data.get(), _data.length() );
 	}
 
 	// we have to generate our own newline on line wrap
 	if (xEndOfInput == 0 && yEndOfInput > 0) {
-		write8( "\n", 1 );
+		_terminal.write8( "\n", 1 );
 	}
 
 	// position the cursor
 	cursorRowMovement = yEndOfInput - yCursorPos;
 	if (cursorRowMovement > 0) { // move the cursor up as required
 		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
-		write8( seq, strlen(seq) );
+		_terminal.write8( seq, strlen(seq) );
 	}
 	// position the cursor within the line
 	snprintf(seq, sizeof seq, "\x1b[%dG", xCursorPos + 1); // 1-based on VT100
-	write8( seq, strlen(seq) );
+	_terminal.write8( seq, strlen(seq) );
 #endif
 
 	_prompt._cursorRowOffset = _prompt._extraLines + yCursorPos; // remember row for next pass
@@ -628,7 +626,7 @@ int longest_common_prefix( Replxx::ReplxxImpl::completions_t const& completions 
  * @param pi - Prompt struct holding information about the prompt and our
  * screen position
  */
-int Replxx::ReplxxImpl::completeLine( void ) {
+int Replxx::ReplxxImpl::complete_line( void ) {
 	char32_t c = 0;
 
 	// completionCallback() expects a parsable entity, so find the previous break
@@ -670,14 +668,14 @@ int Replxx::ReplxxImpl::completeLine( void ) {
 		_data.erase( _pos, contextLen );
 		_data.insert( _pos, completions[selectedCompletion], 0, longestCommonPrefix );
 		_prefix = _pos = _pos + longestCommonPrefix;
-		refreshLine();
+		refresh_line();
 		return 0;
 	}
 
 	if ( _doubleTabCompletion ) {
 		// we can't complete any further, wait for second tab
 		do {
-			c = read_char();
+			c = _terminal.read_char();
 			c = cleanupCtrl(c);
 		} while (c == static_cast<char32_t>(-1));
 
@@ -693,7 +691,7 @@ int Replxx::ReplxxImpl::completeLine( void ) {
 	if ( static_cast<int>( completions.size() ) > _completionCountCutoff ) {
 		int savePos = _pos; // move cursor to EOL to avoid overwriting the command line
 		_pos = _data.length();
-		refreshLine();
+		refresh_line();
 		_pos = savePos;
 		printf("\nDisplay all %u possibilities? (y or n)",
 					 static_cast<unsigned int>(completions.size()));
@@ -701,7 +699,7 @@ int Replxx::ReplxxImpl::completeLine( void ) {
 		onNewLine = true;
 		while (c != 'y' && c != 'Y' && c != 'n' && c != 'N' && c != ctrlChar('C')) {
 			do {
-				c = read_char();
+				c = _terminal.read_char();
 				c = cleanupCtrl(c);
 			} while (c == static_cast<char32_t>(-1));
 		}
@@ -713,7 +711,7 @@ int Replxx::ReplxxImpl::completeLine( void ) {
 			case ctrlChar('C'):
 				showCompletions = false;
 				// Display the ^C we got
-				write8( "^C", 2 );
+				_terminal.write8( "^C", 2 );
 				c = 0;
 				break;
 		}
@@ -737,12 +735,12 @@ int Replxx::ReplxxImpl::completeLine( void ) {
 		if ( ! onNewLine ) {  // skip this if we showed "Display all %d possibilities?"
 			int savePos = _pos; // move cursor to EOL to avoid overwriting the command line
 			_pos = _data.length();
-			refreshLine( HINT_ACTION::SKIP );
+			refresh_line( HINT_ACTION::SKIP );
 			_pos = savePos;
 		} else {
-			replxx::clear_screen( CLEAR_SCREEN::TO_END );
+			_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
 		}
-		size_t pauseRow = getScreenRows() - 1;
+		size_t pauseRow = _terminal.get_screen_rows() - 1;
 		size_t rowCount = (completions.size() + columnCount - 1) / columnCount;
 		for (size_t row = 0; row < rowCount; ++row) {
 			if (row == pauseRow) {
@@ -758,7 +756,7 @@ int Replxx::ReplxxImpl::completeLine( void ) {
 					}
 					doBeep = true;
 					do {
-						c = read_char();
+						c = _terminal.read_char();
 						c = cleanupCtrl(c);
 					} while (c == static_cast<char32_t>(-1));
 				}
@@ -767,7 +765,7 @@ int Replxx::ReplxxImpl::completeLine( void ) {
 					case 'y':
 					case 'Y':
 						printf("\r				\r");
-						pauseRow += getScreenRows() - 1;
+						pauseRow += _terminal.get_screen_rows() - 1;
 						break;
 					case '\r':
 					case '\n':
@@ -783,7 +781,7 @@ int Replxx::ReplxxImpl::completeLine( void ) {
 						break;
 					case ctrlChar('C'):
 						// Display the ^C we got
-						write8( "^C", 2 );
+						_terminal.write8( "^C", 2 );
 						stopList = true;
 						break;
 				}
@@ -802,16 +800,16 @@ int Replxx::ReplxxImpl::completeLine( void ) {
 					if ( longestCommonPrefix > 0 ) {
 						static UnicodeString const col(ansi_color(Replxx::Color::BRIGHTMAGENTA));
 						if (!_noColor) {
-							write32(col.get(), col.length());
+							_terminal.write32(col.get(), col.length());
 						}
-						write32(&_data[_pos - contextLen], longestCommonPrefix);
+						_terminal.write32(&_data[_pos - contextLen], longestCommonPrefix);
 						static UnicodeString const res(ansi_color(Replxx::Color::DEFAULT));
 						if (!_noColor) {
-							write32(res.get(), res.length());
+							_terminal.write32(res.get(), res.length());
 						}
 					}
 
-					write32( completions[index].get() + longestCommonPrefix, itemLength - longestCommonPrefix );
+					_terminal.write32( completions[index].get() + longestCommonPrefix, itemLength - longestCommonPrefix );
 
 					if (((column + 1) * rowCount) + row < completions.size()) {
 						for ( int k( itemLength ); k < longestCompletion; ++k ) {
@@ -826,17 +824,17 @@ int Replxx::ReplxxImpl::completeLine( void ) {
 
 	// display the prompt on a new line, then redisplay the input buffer
 	if (!stopList || c == ctrlChar('C')) {
-		write8( "\n", 1 );
+		_terminal.write8( "\n", 1 );
 	}
 	_prompt.write();
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap on Linux
 	if (_prompt._indentation == 0 && _prompt._extraLines > 0) {
-		write8( "\n", 1 );
+		_terminal.write8( "\n", 1 );
 	}
 #endif
 	_prompt._cursorRowOffset = _prompt._extraLines;
-	refreshLine();
+	refresh_line();
 	return 0;
 }
 
@@ -856,7 +854,7 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap on Linux
 	if ( ( _prompt._indentation == 0 ) && ( _prompt._extraLines > 0 ) ) {
-		write8( "\n", 1 );
+		_terminal.write8( "\n", 1 );
 	}
 #endif
 
@@ -872,7 +870,7 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 
 	// if there is already text in the buffer, display it first
 	if (_data.length() > 0) {
-		refreshLine();
+		refresh_line();
 	}
 
 	// loop collecting characters, respond to line editing characters
@@ -880,7 +878,7 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 	while ( next == NEXT::CONTINUE ) {
 		int c;
 		if (terminatingKeystroke == -1) {
-			c = read_char(); // get a new keystroke
+			c = _terminal.read_char(); // get a new keystroke
 
 #ifndef _WIN32
 			if (c == 0 && gotResize) {
@@ -905,13 +903,13 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 		}
 
 		if (c == -1) {
-			refreshLine();
+			refresh_line();
 			continue;
 		}
 
 		if (c == -2) {
 			_prompt.write();
-			refreshLine();
+			refresh_line();
 			continue;
 		}
 
@@ -922,8 +920,8 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 					_killRing.lastAction = KillRing::actionOther;
 					_history.reset_recall_most_recent();
 
-					// completeLine does the actual completion and replacement
-					c = completeLine();
+					// complete_line does the actual completion and replacement
+					c = complete_line();
 
 					if ( c < 0 ) {
 						next = NEXT::BAIL;
@@ -939,12 +937,12 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 			case META + 'P': // Alt-P, reverse history search for prefix
 			case META + 'n': // Alt-N, forward history search for prefix
 			case META + 'N': // Alt-N, forward history search for prefix
-				commonPrefixSearch( c );
+				common_prefix_search( c );
 				updatePrefix = false;
 				break;
 			case ctrlChar('R'): // ctrl-R, reverse history search
 			case ctrlChar('S'): // ctrl-S, forward history search
-				terminatingKeystroke = incrementalHistorySearch( c );
+				terminatingKeystroke = incremental_history_search( c );
 				break;
 
 			// not one of our special characters, maybe insert it in the buffer
@@ -989,9 +987,9 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::insert_character( int c ) {
 		if (inputLen > _prompt._previousInputLen) {
 			_prompt._previousInputLen = inputLen;
 		}
-		write32(reinterpret_cast<char32_t*>(&c), 1);
+		_terminal.write32(reinterpret_cast<char32_t*>(&c), 1);
 	} else {
-		refreshLine();
+		refresh_line();
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1000,14 +998,14 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::insert_character( int c ) {
 Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::go_to_begining_of_line( int ) {
 	_killRing.lastAction = KillRing::actionOther;
 	_pos = 0;
-	refreshLine();
+	refresh_line();
 	return ( NEXT::CONTINUE );
 }
 
 Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::go_to_end_of_line( int ) {
 	_killRing.lastAction = KillRing::actionOther;
 	_pos = _data.length();
-	refreshLine();
+	refresh_line();
 	return ( NEXT::CONTINUE );
 }
 
@@ -1016,7 +1014,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::move_one_char_left( int ) {
 	_killRing.lastAction = KillRing::actionOther;
 	if (_pos > 0) {
 		--_pos;
-		refreshLine();
+		refresh_line();
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1026,7 +1024,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::move_one_char_right( int ) {
 	_killRing.lastAction = KillRing::actionOther;
 	if ( _pos < _data.length() ) {
 		++_pos;
-		refreshLine();
+		refresh_line();
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1041,7 +1039,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::move_one_word_left( int ) {
 		while (_pos > 0 && !is_word_break_character( _data[_pos - 1] ) ) {
 			--_pos;
 		}
-		refreshLine();
+		refresh_line();
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1056,7 +1054,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::move_one_word_right( int ) {
 		while ( _pos < _data.length() && !is_word_break_character( _data[_pos] ) ) {
 			++_pos;
 		}
-		refreshLine();
+		refresh_line();
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1074,7 +1072,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::kill_word_to_left( int ) {
 		}
 		_killRing.kill( _data.get() + _pos, startingPos - _pos, false);
 		_data.erase( _pos, startingPos - _pos );
-		refreshLine();
+		refresh_line();
 	}
 	_killRing.lastAction = KillRing::actionKill;
 	return ( NEXT::CONTINUE );
@@ -1093,7 +1091,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::kill_word_to_right( int ) {
 		}
 		_killRing.kill( _data.get() + _pos, endingPos - _pos, true );
 		_data.erase( _pos, endingPos - _pos );
-		refreshLine();
+		refresh_line();
 	}
 	_killRing.lastAction = KillRing::actionKill;
 	return ( NEXT::CONTINUE );
@@ -1112,7 +1110,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::kill_to_whitespace_to_left( int ) {
 		}
 		_killRing.kill( _data.get() + _pos, startingPos - _pos, false );
 		_data.erase( _pos, startingPos - _pos );
-		refreshLine();
+		refresh_line();
 	}
 	_killRing.lastAction = KillRing::actionKill;
 	return ( NEXT::CONTINUE );
@@ -1122,7 +1120,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::kill_to_whitespace_to_left( int ) {
 Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::kill_to_end_of_line( int ) {
 	_killRing.kill( _data.get() + _pos, _data.length() - _pos, true );
 	_data.erase( _pos, _data.length() - _pos );
-	refreshLine();
+	refresh_line();
 	_killRing.lastAction = KillRing::actionKill;
 	_history.reset_recall_most_recent();
 	return ( NEXT::CONTINUE );
@@ -1135,7 +1133,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::kill_to_begining_of_line( int ) {
 		_killRing.kill( _data.get(), _pos, false );
 		_data.erase( 0, _pos );
 		_pos = 0;
-		refreshLine();
+		refresh_line();
 	}
 	_killRing.lastAction = KillRing::actionKill;
 	return ( NEXT::CONTINUE );
@@ -1148,7 +1146,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::yank( int ) {
 	if ( restoredText ) {
 		_data.insert( _pos, *restoredText, 0, restoredText->length() );
 		_pos += restoredText->length();
-		refreshLine();
+		refresh_line();
 		_killRing.lastAction = KillRing::actionYank;
 		_killRing.lastYankSize = restoredText->length();
 	} else {
@@ -1174,7 +1172,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::yank_cycle( int ) {
 	_data.insert( _pos, *restoredText, 0, restoredText->length() );
 	_pos += restoredText->length();
 	_killRing.lastYankSize = restoredText->length();
-	refreshLine();
+	refresh_line();
 	return ( NEXT::CONTINUE );
 }
 
@@ -1198,7 +1196,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::capitalize_word( int ) {
 			}
 			++_pos;
 		}
-		refreshLine();
+		refresh_line();
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1217,7 +1215,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::lowercase_word( int ) {
 			}
 			++ _pos;
 		}
-		refreshLine();
+		refresh_line();
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1236,7 +1234,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::uppercase_word( int ) {
 			}
 			++ _pos;
 		}
-		refreshLine();
+		refresh_line();
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1253,7 +1251,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::transpose_characters( int ) {
 		if ( _pos != _data.length() ) {
 			++_pos;
 		}
-		refreshLine();
+		refresh_line();
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1267,8 +1265,8 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::abort_line( int ) {
 	// we need one last refresh with the cursor at the end of the line
 	// so we don't display the next prompt over the previous input line
 	_pos = _data.length(); // pass _data.length() as _pos for EOL
-	refreshLine( HINT_ACTION::SKIP );
-	write8( "^C\r\n", 4 );
+	refresh_line( HINT_ACTION::SKIP );
+	_terminal.write8( "^C\r\n", 4 );
 	return ( NEXT::BAIL );
 }
 
@@ -1278,7 +1276,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::delete_character( int ) {
 	if ( ( _data.length() > 0 ) && ( _pos < _data.length() ) ) {
 		_history.reset_recall_most_recent();
 		_data.erase( _pos );
-		refreshLine();
+		refresh_line();
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1300,7 +1298,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::backspace_character( int ) {
 		_history.reset_recall_most_recent();
 		-- _pos;
 		_data.erase( _pos );
-		refreshLine();
+		refresh_line();
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1312,7 +1310,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::commit_line( int ) {
 	// we need one last refresh with the cursor at the end of the line
 	// so we don't display the next prompt over the previous input line
 	_pos = _data.length(); // pass _data.length() as _pos for EOL
-	refreshLine( HINT_ACTION::SKIP );
+	refresh_line( HINT_ACTION::SKIP );
 	_history.commit_index();
 	_history.drop_last();
 	return ( NEXT::RETURN );
@@ -1345,7 +1343,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::history_move( bool previous_, int )
 	}
 	_data.assign( _history.current() );
 	_pos = _data.length();
-	refreshLine();
+	refresh_line();
 	return ( NEXT::CONTINUE );
 }
 
@@ -1374,7 +1372,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::history_jump( bool back_, int ) {
 		_history.jump( back_ );
 		_data.assign( _history.current().c_str() );
 		_pos = _data.length();
-		refreshLine();
+		refresh_line();
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1395,7 +1393,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::hint_move( bool previous_, int ) {
 		} else {
 			++ _hintSelection;
 		}
-		refreshLine( HINT_ACTION::REPAINT );
+		refresh_line( HINT_ACTION::REPAINT );
 	}
 	return ( NEXT::CONTINUE );
 }
@@ -1403,17 +1401,17 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::hint_move( bool previous_, int ) {
 #ifndef _WIN32
 // ctrl-Z, job control
 Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::suspend( int ) {
-	disableRawMode(); // Returning to Linux (whatever) shell, leave raw mode
+	_terminal.disable_raw_mode(); // Returning to Linux (whatever) shell, leave raw mode
 	raise(SIGSTOP);   // Break out in mid-line
-	enableRawMode();  // Back from Linux shell, re-enter raw mode
+	_terminal.enable_raw_mode();  // Back from Linux shell, re-enter raw mode
 	// Redraw prompt
 	_prompt.write();
-	refreshLine();  // Refresh the line
+	refresh_line();  // Refresh the line
 	return ( NEXT::CONTINUE );
 }
 #endif
 
-void Replxx::ReplxxImpl::commonPrefixSearch( int startChar ) {
+void Replxx::ReplxxImpl::common_prefix_search( int startChar ) {
 	_killRing.lastAction = KillRing::actionOther;
 	_utf8Buffer.assign( _data );
 	int prefixSize( calculateColumnPosition( _data.get(), _prefix ) );
@@ -1424,7 +1422,7 @@ void Replxx::ReplxxImpl::commonPrefixSearch( int startChar ) {
 	) {
 		_data.assign( _history.current() );
 		_pos = _data.length();
-		refreshLine();
+		refresh_line();
 	}
 }
 
@@ -1435,7 +1433,7 @@ void Replxx::ReplxxImpl::commonPrefixSearch( int startChar ) {
  * @param startChar - the character that began the search, used to set the initial
  * _direction
  */
-int Replxx::ReplxxImpl::incrementalHistorySearch( int startChar ) {
+int Replxx::ReplxxImpl::incremental_history_search( int startChar ) {
 
 	// if not already recalling, add the current line to the history list so we
 	// don't have to special case it
@@ -1446,10 +1444,10 @@ int Replxx::ReplxxImpl::incrementalHistorySearch( int startChar ) {
 	int historyLinePosition( _pos );
 	UnicodeString empty;
 	_data.swap( empty );
-	refreshLine(); // erase the old input first
+	refresh_line(); // erase the old input first
 	_data.swap( empty );
 
-	DynamicPrompt dp( (startChar == ctrlChar('R')) ? -1 : 1 );
+	DynamicPrompt dp( _terminal, (startChar == ctrlChar('R')) ? -1 : 1 );
 
 	dp._previousLen = _prompt._previousLen;
 	dp._previousInputLen = _prompt._previousInputLen;
@@ -1463,7 +1461,7 @@ int Replxx::ReplxxImpl::incrementalHistorySearch( int startChar ) {
 	bool searchAgain = false;
 	UnicodeString activeHistoryLine;
 	while ( keepLooping ) {
-		c = read_char();
+		c = _terminal.read_char();
 		c = cleanupCtrl(c); // convert CTRL + <char> into normal ctrl
 
 		switch (c) {
@@ -1540,9 +1538,9 @@ int Replxx::ReplxxImpl::incrementalHistorySearch( int startChar ) {
 // job control is its own thing
 #ifndef _WIN32
 			case ctrlChar('Z'): { // ctrl-Z, job control
-				disableRawMode(); // Returning to Linux (whatever) shell, leave raw mode
+				_terminal.disable_raw_mode(); // Returning to Linux (whatever) shell, leave raw mode
 				raise(SIGSTOP);   // Break out in mid-line
-				enableRawMode();  // Back from Linux shell, re-enter raw mode
+				_terminal.enable_raw_mode();  // Back from Linux shell, re-enter raw mode
 				dynamicRefresh(dp, activeHistoryLine.get(), activeHistoryLine.length(), historyLinePosition);
 				continue;
 			} break;
@@ -1614,7 +1612,7 @@ int Replxx::ReplxxImpl::incrementalHistorySearch( int startChar ) {
 
 	// leaving history search, restore previous prompt, maybe make searched line
 	// current
-	Prompt pb;
+	Prompt pb( _terminal );
 	pb._characterCount = _prompt._indentation;
 	pb._byteCount = _prompt._byteCount;
 	UnicodeString tempUnicode( &_prompt._text[_prompt._lastLinePosition], pb._byteCount - _prompt._lastLinePosition );
@@ -1639,17 +1637,19 @@ int Replxx::ReplxxImpl::incrementalHistorySearch( int startChar ) {
 }
 
 // ctrl-L, clear screen and redisplay line
-Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::clear_screen( int ) {
-	replxx::clear_screen( CLEAR_SCREEN::WHOLE );
-	_prompt.write();
+Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::clear_screen( int c ) {
+	_terminal.clear_screen( Terminal::CLEAR_SCREEN::WHOLE );
+	if ( c ) {
+		_prompt.write();
 #ifndef _WIN32
-	// we have to generate our own newline on line wrap on Linux
-	if (_prompt._indentation == 0 && _prompt._extraLines > 0) {
-		write8( "\n", 1 );
-	}
+		// we have to generate our own newline on line wrap on Linux
+		if (_prompt._indentation == 0 && _prompt._extraLines > 0) {
+			_terminal.write8( "\n", 1 );
+		}
 #endif
-	_prompt._cursorRowOffset = _prompt._extraLines;
-	refreshLine();
+		_prompt._cursorRowOffset = _prompt._extraLines;
+		refresh_line();
+	}
 	return ( NEXT::CONTINUE );
 }
 
@@ -1734,7 +1734,7 @@ void Replxx::ReplxxImpl::set_no_color( bool val ) {
  * @param len	count of characters in the buffer
  * @param pos	current cursor position within the buffer (0 <= pos <= len)
  */
-void dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos) {
+void Replxx::ReplxxImpl::dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos) {
 	// calculate the position of the end of the prompt
 	int xEndOfPrompt, yEndOfPrompt;
 	calculateScreenPosition(0, 0, pi.screen_columns(), pi._characterCount,
@@ -1743,29 +1743,27 @@ void dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos) {
 
 	// calculate the position of the end of the input line
 	int xEndOfInput, yEndOfInput;
-	calculateScreenPosition(xEndOfPrompt, yEndOfPrompt, pi.screen_columns(),
-													calculateColumnPosition(buf32, len), xEndOfInput,
-													yEndOfInput);
+	calculateScreenPosition(
+		xEndOfPrompt, yEndOfPrompt, pi.screen_columns(),
+		calculateColumnPosition(buf32, len), xEndOfInput,
+		yEndOfInput
+	);
 
 	// calculate the desired position of the cursor
 	int xCursorPos, yCursorPos;
-	calculateScreenPosition(xEndOfPrompt, yEndOfPrompt, pi.screen_columns(),
-													calculateColumnPosition(buf32, pos), xCursorPos,
-													yCursorPos);
+	calculateScreenPosition(
+		xEndOfPrompt, yEndOfPrompt, pi.screen_columns(),
+		calculateColumnPosition(buf32, pos), xCursorPos,
+		yCursorPos
+	);
 
 #ifdef _WIN32
 	// position at the start of the prompt, clear to end of previous input
-	CONSOLE_SCREEN_BUFFER_INFO inf;
-	GetConsoleScreenBufferInfo(console_out, &inf);
-	inf.dwCursorPosition.X = 0;
-	inf.dwCursorPosition.Y -= pi._cursorRowOffset /*- pi._extraLines*/;
-	SetConsoleCursorPosition(console_out, inf.dwCursorPosition);
-	DWORD count;
-	FillConsoleOutputCharacterA(
-		console_out, ' ',
-		pi._previousLen + pi._previousInputLen,
-		inf.dwCursorPosition, &count
+	_terminal.jump_cursor(
+		0,
+		-pi._cursorRowOffset /*- pi._extraLines*/
 	);
+	_terminal.clear_section( pi._previousLen + pi._previousInputLen );
 	pi._previousLen = pi._indentation;
 	pi._previousInputLen = len;
 
@@ -1773,44 +1771,44 @@ void dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos) {
 	pi.write();
 
 	// display the input line
-	write32( buf32, len );
+	_terminal.write32( buf32, len );
 
 	// position the cursor
-	GetConsoleScreenBufferInfo(console_out, &inf);
-	inf.dwCursorPosition.X = xCursorPos; // 0-based on Win32
-	inf.dwCursorPosition.Y -= yEndOfInput - yCursorPos;
-	SetConsoleCursorPosition(console_out, inf.dwCursorPosition);
+	_terminal.jump_cursor(
+		xCursorPos, // 0-based on Win32
+		-( yEndOfInput - yCursorPos )
+	);
 #else // _WIN32
 	char seq[64];
 	int cursorRowMovement = pi._cursorRowOffset - pi._extraLines;
 	if (cursorRowMovement > 0) { // move the cursor up as required
 		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
-		write8( seq, strlen( seq ) );
+		_terminal.write8( seq, strlen( seq ) );
 	}
 	// position at the start of the prompt, clear to end of screen
 	snprintf(seq, sizeof seq, "\x1b[1G\x1b[J"); // 1-based on VT100
-	write8( seq, strlen( seq ) );
+	_terminal.write8( seq, strlen( seq ) );
 
 	// display the prompt
 	pi.write();
 
 	// display the input line
-	write32( buf32, len );
+	_terminal.write32( buf32, len );
 
 	// we have to generate our own newline on line wrap
 	if (xEndOfInput == 0 && yEndOfInput > 0) {
-		write8( "\n", 1 );
+		_terminal.write8( "\n", 1 );
 	}
 
 	// position the cursor
 	cursorRowMovement = yEndOfInput - yCursorPos;
 	if (cursorRowMovement > 0) { // move the cursor up as required
 		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
-		write8( seq, strlen( seq ) );
+		_terminal.write8( seq, strlen( seq ) );
 	}
 	// position the cursor within the line
 	snprintf(seq, sizeof seq, "\x1b[%dG", xCursorPos + 1); // 1-based on VT100
-	write8( seq, strlen( seq ) );
+	_terminal.write8( seq, strlen( seq ) );
 #endif
 
 	pi._cursorRowOffset = pi._extraLines + yCursorPos; // remember row for next pass
