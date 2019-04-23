@@ -204,6 +204,12 @@ char const* replxx_input( Replxx*, const char* prompt );
  */
 int replxx_print( Replxx*, char const* fmt, ... );
 
+/*! \brief Schedule an emulated key press event.
+ *
+ * \param code - key press code to be emulated.
+ */
+void replxx_emulate_key_press( Replxx*, int unsigned code );
+
 void replxx_set_preload_buffer( Replxx*, const char* preloadText );
 
 void replxx_history_add( Replxx*, const char* line );

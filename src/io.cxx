@@ -68,8 +68,10 @@ Terminal::Terminal( void )
 	, _inputCodePage( GetConsoleCP() )
 	, _outputCodePage( GetConsoleOutputCP() )
 #else
-	: _rawMode( false )
+	: _origTermios()
 #endif
+	, _rawMode( false )
+	, _keyPresses()
 {}
 
 Terminal::~Terminal( void ) {
@@ -138,9 +140,9 @@ inline int notty( void ) {
 }
 }
 
-int Terminal::enable_raw_mode(void) {
+int Terminal::enable_raw_mode( void ) {
+	if ( ! _rawMode ) {
 #ifdef _WIN32
-	if ( ! _consoleIn ) {
 		_consoleIn = GetStdHandle( STD_INPUT_HANDLE );
 		_consoleOut = GetStdHandle( STD_OUTPUT_HANDLE );
 		SetConsoleCP( 65001 );
@@ -150,58 +152,59 @@ int Terminal::enable_raw_mode(void) {
 			_consoleIn,
 			_oldMode & ~( ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT )
 		);
-	}
 #else
-	struct termios raw;
+		struct termios raw;
 
-	if ( ! tty::in ) {
-		return ( notty() );
-	}
-	if ( tcgetattr( 0, &_origTermios ) == -1 ) {
-		return ( notty() );
-	}
+		if ( ! tty::in ) {
+			return ( notty() );
+		}
+		if ( tcgetattr( 0, &_origTermios ) == -1 ) {
+			return ( notty() );
+		}
 
-	raw = _origTermios; /* modify the original mode */
-	/* input modes: no break, no CR to NL, no parity check, no strip char,
-	 * no start/stop output control. */
-	raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-	/* output modes - disable post processing */
-	// this is wrong, we don't want raw output, it turns newlines into straight
-	// linefeeds
-	// raw.c_oflag &= ~(OPOST);
-	/* control modes - set 8 bit chars */
-	raw.c_cflag |= (CS8);
-	/* local modes - echoing off, canonical off, no extended functions,
-	 * no signal chars (^Z,^C) */
-	raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-	/* control chars - set return condition: min number of bytes and timer.
-	 * We want read to return every single byte, without timeout. */
-	raw.c_cc[VMIN] = 1;
-	raw.c_cc[VTIME] = 0; /* 1 byte, no timer */
+		raw = _origTermios; /* modify the original mode */
+		/* input modes: no break, no CR to NL, no parity check, no strip char,
+		 * no start/stop output control. */
+		raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+		/* output modes - disable post processing */
+		// this is wrong, we don't want raw output, it turns newlines into straight
+		// linefeeds
+		// raw.c_oflag &= ~(OPOST);
+		/* control modes - set 8 bit chars */
+		raw.c_cflag |= (CS8);
+		/* local modes - echoing off, canonical off, no extended functions,
+		 * no signal chars (^Z,^C) */
+		raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+		/* control chars - set return condition: min number of bytes and timer.
+		 * We want read to return every single byte, without timeout. */
+		raw.c_cc[VMIN] = 1;
+		raw.c_cc[VTIME] = 0; /* 1 byte, no timer */
 
-	/* put terminal in raw mode after flushing */
-	if ( tcsetattr(0, TCSADRAIN, &raw) < 0 ) {
-		return ( notty() );
-	}
-	_rawMode = true;
+		/* put terminal in raw mode after flushing */
+		if ( tcsetattr(0, TCSADRAIN, &raw) < 0 ) {
+			return ( notty() );
+		}
 #endif
+		_rawMode = true;
+	}
 	return 0;
 }
 
 void Terminal::disable_raw_mode(void) {
+	if ( _rawMode ) {
 #ifdef _WIN32
-	if ( _consoleIn ) {
 		SetConsoleMode( _consoleIn, _oldMode );
 		SetConsoleCP( _inputCodePage );
 		SetConsoleOutputCP( _outputCodePage );
 		_consoleIn = 0;
 		_consoleOut = 0;
-	}
 #else
-	if ( _rawMode && tcsetattr( 0, TCSADRAIN, &_origTermios ) != -1 ) {
+		if ( tcsetattr( 0, TCSADRAIN, &_origTermios ) == -1 ) {
+			return;
+		}
+#endif
 		_rawMode = false;
 	}
-#endif
 }
 
 #ifndef _WIN32
@@ -252,6 +255,10 @@ void beep() {
 	fflush(stderr);
 }
 
+void Terminal::emulate_key_press( char32_t keyCode_ ) {
+	_keyPresses.push_back( keyCode_ );
+}
+
 // replxx_read_char -- read a keystroke or keychord from the keyboard, and
 // translate it
 // into an encoded "keystroke".	When convenient, extended keys are translated
@@ -261,7 +268,12 @@ void beep() {
 // A return value of zero means "no input available", and a return value of -1
 // means "invalid key".
 //
-char32_t Terminal::read_char(void) {
+char32_t Terminal::read_char( void ) {
+	if ( !_keyPresses.empty() ) {
+		char32_t keyPress( _keyPresses.front() );
+		_keyPresses.pop_front();
+		return ( keyPress );
+	}
 #ifdef _WIN32
 	INPUT_RECORD rec;
 	DWORD count;
@@ -271,33 +283,29 @@ char32_t Terminal::read_char(void) {
 	while (true) {
 		ReadConsoleInputW( _consoleIn, &rec, 1, &count );
 #if __REPLXX_DEBUG__	// helper for debugging keystrokes, display info in the debug "Output"
-			 // window in the debugger
-				{
-						if ( rec.EventType == KEY_EVENT ) {
-								//if ( rec.Event.KeyEvent.uChar.UnicodeChar ) {
-										char buf[1024];
-										sprintf(
-														buf,
-														"Unicode character 0x%04X, repeat count %d, virtual keycode 0x%04X, "
-														"virtual scancode 0x%04X, key %s%s%s%s%s\n",
-														rec.Event.KeyEvent.uChar.UnicodeChar,
-														rec.Event.KeyEvent.wRepeatCount,
-														rec.Event.KeyEvent.wVirtualKeyCode,
-														rec.Event.KeyEvent.wVirtualScanCode,
-														rec.Event.KeyEvent.bKeyDown ? "down" : "up",
-																(rec.Event.KeyEvent.dwControlKeyState & LEFT_CTRL_PRESSED)	?
-																		" L-Ctrl" : "",
-																(rec.Event.KeyEvent.dwControlKeyState & RIGHT_CTRL_PRESSED) ?
-																		" R-Ctrl" : "",
-																(rec.Event.KeyEvent.dwControlKeyState & LEFT_ALT_PRESSED)	 ?
-																		" L-Alt"	: "",
-																(rec.Event.KeyEvent.dwControlKeyState & RIGHT_ALT_PRESSED)	?
-																		" R-Alt"	: ""
-													 );
-										OutputDebugStringA( buf );
-								//}
-						}
-				}
+		// window in the debugger
+		{
+			if ( rec.EventType == KEY_EVENT ) {
+				//if ( rec.Event.KeyEvent.uChar.UnicodeChar ) {
+				char buf[1024];
+				sprintf(
+					buf,
+					"Unicode character 0x%04X, repeat count %d, virtual keycode 0x%04X, "
+					"virtual scancode 0x%04X, key %s%s%s%s%s\n",
+					rec.Event.KeyEvent.uChar.UnicodeChar,
+					rec.Event.KeyEvent.wRepeatCount,
+					rec.Event.KeyEvent.wVirtualKeyCode,
+					rec.Event.KeyEvent.wVirtualScanCode,
+					rec.Event.KeyEvent.bKeyDown ? "down" : "up",
+					(rec.Event.KeyEvent.dwControlKeyState & LEFT_CTRL_PRESSED) ? " L-Ctrl" : "",
+					(rec.Event.KeyEvent.dwControlKeyState & RIGHT_CTRL_PRESSED) ? " R-Ctrl" : "",
+					(rec.Event.KeyEvent.dwControlKeyState & LEFT_ALT_PRESSED) ? " L-Alt" : "",
+					(rec.Event.KeyEvent.dwControlKeyState & RIGHT_ALT_PRESSED) ? " R-Alt" : ""
+				);
+				OutputDebugStringA( buf );
+				//}
+			}
+		}
 #endif
 		if (rec.EventType != KEY_EVENT) {
 			continue;

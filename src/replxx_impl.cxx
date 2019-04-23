@@ -252,6 +252,10 @@ char const* Replxx::ReplxxImpl::read_from_stdin( void ) {
 	return _utf8Buffer.get();
 }
 
+void Replxx::ReplxxImpl::emulate_key_press( char32_t keyPress_ ) {
+	_terminal.emulate_key_press( keyPress_ );
+}
+
 char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 #ifndef _WIN32
 	gotResize = false;

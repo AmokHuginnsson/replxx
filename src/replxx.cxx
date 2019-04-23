@@ -196,6 +196,10 @@ void Replxx::clear_screen( void ) {
 	_impl->clear_screen( 0 );
 }
 
+void Replxx::emulate_key_press( char32_t keyPress_ ) {
+	_impl->emulate_key_press( keyPress_ );
+}
+
 int Replxx::install_window_change_handler( void ) {
 	return ( _impl->install_window_change_handler() );
 }
@@ -226,6 +230,11 @@ void replxx_end( ::Replxx* replxx_ ) {
 void replxx_clear_screen( ::Replxx* replxx_ ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->clear_screen( 0 );
+}
+
+void replxx_emulate_key_press( ::Replxx* replxx_, int unsigned keyPress_ ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->emulate_key_press( keyPress_ );
 }
 
 /**

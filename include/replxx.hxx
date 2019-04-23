@@ -167,6 +167,12 @@ public:
 	 */
 	int print( char const* fmt, ... );
 
+	/*! \brief Schedule an emulated key press event.
+	 *
+	 * \param code - key press code to be emulated.
+	 */
+	void emulate_key_press( char32_t code );
+
 	void history_add( std::string const& line );
 	int history_save( std::string const& filename );
 	int history_load( std::string const& filename );

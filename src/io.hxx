@@ -1,6 +1,8 @@
 #ifndef REPLXX_IO_HXX_INCLUDED
 #define REPLXX_IO_HXX_INCLUDED 1
 
+#include <deque>
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -10,6 +12,9 @@
 namespace replxx {
 
 class Terminal {
+public:
+	typedef std::deque<char32_t> key_presses_t;
+private:
 #ifdef _WIN32
 	HANDLE _consoleOut;
 	HANDLE _consoleIn;
@@ -21,6 +26,7 @@ class Terminal {
 	struct termios _origTermios; /* in order to restore at exit */
 #endif
 	bool _rawMode; /* for destructor to check if restore is needed */
+	key_presses_t _keyPresses;
 public:
 	enum class CLEAR_SCREEN {
 		WHOLE,
@@ -37,6 +43,7 @@ public:
 	void disable_raw_mode(void);
 	char32_t read_char(void);
 	void clear_screen( CLEAR_SCREEN );
+	void emulate_key_press( char32_t );
 #ifdef _WIN32
 	void jump_cursor( int, int );
 	void clear_section( int );

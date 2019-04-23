@@ -116,6 +116,7 @@ public:
 	hints_t call_hinter( std::string const& input, int&, Replxx::Color& color ) const;
 	int print( char const* , int );
 	NEXT clear_screen( int );
+	void emulate_key_press( char32_t );
 private:
 	ReplxxImpl( ReplxxImpl const& ) = delete;
 	ReplxxImpl& operator = ( ReplxxImpl const& ) = delete;
