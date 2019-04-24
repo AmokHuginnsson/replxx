@@ -26,6 +26,7 @@
 #include "conversion.hxx"
 #include "escape.hxx"
 #include "keycodes.hxx"
+#include "util.hxx"
 
 using namespace std;
 
@@ -274,6 +275,7 @@ char32_t Terminal::read_char( void ) {
 		_keyPresses.pop_front();
 		return ( keyPress );
 	}
+	char32_t c( 0 );
 #ifdef _WIN32
 	INPUT_RECORD rec;
 	DWORD count;
@@ -383,14 +385,15 @@ char32_t Terminal::read_char( void ) {
 			}
 			key |= modifierKeys;
 			highSurrogate = 0;
-			return ( key );
+			c = key;
 		}
 	}
 
 #else
-	char32_t c;
 	c = read_unicode_character();
-	if (c == 0) return 0;
+	if (c == 0) {
+		return 0;
+	}
 
 // If _DEBUG_LINUX_KEYBOARD is set, then ctrl-^ puts us into a keyboard
 // debugging mode
@@ -451,8 +454,9 @@ char32_t Terminal::read_char( void ) {
 	}
 #endif	// __REPLXX_DEBUG__
 
-	return EscapeSequenceProcessing::doDispatch(c);
+	c = EscapeSequenceProcessing::doDispatch(c);
 #endif	// #_WIN32
+	return ( cleanupCtrl( c ) );
 }
 
 /**

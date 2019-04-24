@@ -158,10 +158,11 @@ private:
 #ifndef _WIN32
 	NEXT suspend( int );
 #endif
+	NEXT complete_line( int );
+	NEXT incremental_history_search( int startChar );
+	NEXT common_prefix_search( int startChar );
 	char const* read_from_stdin( void );
-	int incremental_history_search( int startChar );
-	void common_prefix_search( int startChar );
-	int complete_line( void );
+	int do_complete_line( void );
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
 	void highlight( int, bool );
 	int handle_hints( HINT_ACTION );
