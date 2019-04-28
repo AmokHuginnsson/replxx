@@ -386,6 +386,7 @@ char32_t Terminal::read_char( void ) {
 			key |= modifierKeys;
 			highSurrogate = 0;
 			c = key;
+			break;
 		}
 	}
 
