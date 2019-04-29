@@ -13,7 +13,10 @@ namespace replxx {
 
 class Terminal {
 public:
-	typedef std::deque<char32_t> key_presses_t;
+	enum class EVENT_TYPE {
+		KEY_PRESS,
+		MESSAGE
+	};
 private:
 #ifdef _WIN32
 	HANDLE _consoleOut;
@@ -24,9 +27,9 @@ private:
 	UINT const _outputCodePage;
 #else
 	struct termios _origTermios; /* in order to restore at exit */
+	int _interrupt[2];
 #endif
 	bool _rawMode; /* for destructor to check if restore is needed */
-	key_presses_t _keyPresses;
 public:
 	enum class CLEAR_SCREEN {
 		WHOLE,
@@ -43,7 +46,8 @@ public:
 	void disable_raw_mode(void);
 	char32_t read_char(void);
 	void clear_screen( CLEAR_SCREEN );
-	void emulate_key_press( char32_t );
+	EVENT_TYPE wait_for_input( void );
+	void notify_event( EVENT_TYPE );
 #ifdef _WIN32
 	void jump_cursor( int, int );
 	void clear_section( int );

@@ -70,10 +70,14 @@ Terminal::Terminal( void )
 	, _outputCodePage( GetConsoleOutputCP() )
 #else
 	: _origTermios()
+	, _interrupt()
 #endif
-	, _rawMode( false )
-	, _keyPresses()
-{}
+	, _rawMode( false ) {
+#ifdef _WIN32
+#else
+	::pipe( _interrupt );
+#endif
+}
 
 Terminal::~Terminal( void ) {
 	if ( _rawMode ) {
@@ -100,7 +104,12 @@ void Terminal::write32( char32_t const* text32, int len32 ) {
 }
 
 void Terminal::write8( void const* data_, int size_ ) {
-	if ( write( 1, data_, size_ ) != size_ ) {
+#ifdef _WIN32
+	int count( win_write( data_, size_ ) );
+#else
+	int count( write( 1, data_, size_ ) );
+#endif
+	if ( count != size_ ) {
 		throw std::runtime_error( "write failed" );
 	}
 	return;
@@ -256,10 +265,6 @@ void beep() {
 	fflush(stderr);
 }
 
-void Terminal::emulate_key_press( char32_t keyCode_ ) {
-	_keyPresses.push_back( keyCode_ );
-}
-
 // replxx_read_char -- read a keystroke or keychord from the keyboard, and
 // translate it
 // into an encoded "keystroke".	When convenient, extended keys are translated
@@ -270,11 +275,6 @@ void Terminal::emulate_key_press( char32_t keyCode_ ) {
 // means "invalid key".
 //
 char32_t Terminal::read_char( void ) {
-	if ( !_keyPresses.empty() ) {
-		char32_t keyPress( _keyPresses.front() );
-		_keyPresses.pop_front();
-		return ( keyPress );
-	}
 	char32_t c( 0 );
 #ifdef _WIN32
 	INPUT_RECORD rec;
@@ -458,6 +458,44 @@ char32_t Terminal::read_char( void ) {
 	c = EscapeSequenceProcessing::doDispatch(c);
 #endif	// #_WIN32
 	return ( cleanupCtrl( c ) );
+}
+
+Terminal::EVENT_TYPE Terminal::wait_for_input( void ) {
+#ifdef _WIN32
+#else
+	fd_set fdSet;
+	int nfds( max( _interrupt[0], _interrupt[1] ) + 1 );
+	while ( true ) {
+		FD_ZERO( &fdSet );
+		FD_SET( 0, &fdSet );
+		FD_SET( _interrupt[0], &fdSet );
+		int err( select( nfds, &fdSet, nullptr, nullptr, nullptr ) );
+		if ( ( err == -1 ) && ( errno == EINTR ) ) {
+			continue;
+		}
+		if ( FD_ISSET( _interrupt[0], &fdSet ) ) {
+			char data( 0 );
+			read( _interrupt[0], &data, 1 );
+			if ( data == 'k' ) {
+				return ( EVENT_TYPE::KEY_PRESS );
+			}
+			if ( data == 'm' ) {
+				return ( EVENT_TYPE::MESSAGE );
+			}
+		}
+		if ( FD_ISSET( 0, &fdSet ) ) {
+			return ( EVENT_TYPE::KEY_PRESS );
+		}
+	}
+#endif
+}
+
+void Terminal::notify_event( EVENT_TYPE eventType_ ) {
+#ifdef _WIN32
+#else
+	char data( eventType_ == EVENT_TYPE::KEY_PRESS ? 'k' : 'm' );
+	write( _interrupt[1], &data, 1 );
+#endif
 }
 
 /**

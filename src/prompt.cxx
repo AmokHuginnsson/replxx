@@ -40,19 +40,18 @@ void Prompt::update_screen_columns( void ) {
 	_screenColumns = _terminal.get_screen_columns();
 }
 
-void Prompt::set_text( std::string const& text_ ) {
-	UnicodeString tempUnicode( text_ );
-
+void Prompt::set_text( UnicodeString const& text_ ) {
 	// strip control characters from the prompt -- we do allow newline
-	UnicodeString::const_iterator in( tempUnicode.begin() );
-	UnicodeString::iterator out( tempUnicode.begin() );
+	_text = text_;
+	UnicodeString::const_iterator in( text_.begin() );
+	UnicodeString::iterator out( _text.begin() );
 
 	int len = 0;
 	int x = 0;
 
 	bool const strip = !tty::out;
 
-	while (in != tempUnicode.end()) {
+	while (in != text_.end()) {
 		char32_t c = *in;
 		if ('\n' == c || !isControlChar(c)) {
 			*out = c;
@@ -70,7 +69,7 @@ void Prompt::set_text( std::string const& text_ ) {
 				++in;
 				if (*in == '[') {
 					++in;
-					while ( ( in != tempUnicode.end() ) && ( ( *in == ';' ) || ( ( ( *in >= '0' ) && ( *in <= '9' ) ) ) ) ) {
+					while ( ( in != text_.end() ) && ( ( *in == ';' ) || ( ( ( *in >= '0' ) && ( *in <= '9' ) ) ) ) ) {
 						++in;
 					}
 					if (*in == 'm') {
@@ -86,7 +85,7 @@ void Prompt::set_text( std::string const& text_ ) {
 					*out = *in;
 					++out;
 					++in;
-					while ( ( in != tempUnicode.end() ) && ( ( *in == ';' ) || ( ( ( *in >= '0' ) && ( *in <= '9' ) ) ) ) ) {
+					while ( ( in != text_.end() ) && ( ( *in == ';' ) || ( ( ( *in >= '0' ) && ( *in <= '9' ) ) ) ) ) {
 						*out = *in;
 						++out;
 						++in;
@@ -103,8 +102,7 @@ void Prompt::set_text( std::string const& text_ ) {
 		}
 	}
 	_characterCount = len;
-	_byteCount = static_cast<int>(out - tempUnicode.begin());
-	_text = tempUnicode;
+	_byteCount = static_cast<int>(out - _text.begin());
 
 	_indentation = len - _lastLinePosition;
 	_cursorRowOffset = _extraLines;

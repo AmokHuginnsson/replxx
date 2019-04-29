@@ -99,12 +99,16 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _noColor( false )
 	, _keyPressHandlers()
 	, _terminal()
+	, _currentThread()
 	, _prompt( _terminal )
 	, _completionCallback( nullptr )
 	, _highlighterCallback( nullptr )
 	, _hintCallback( nullptr )
+	, _keyPresses()
+	, _messages()
 	, _preloadedBuffer()
-	, _errorMessage() {
+	, _errorMessage()
+	, _mutex() {
 	using namespace std::placeholders;
 	_keyPressHandlers.insert( make_pair( ctrlChar( 'A' ),        std::bind( &ReplxxImpl::go_to_begining_of_line,     this, _1 ) ) );
 	_keyPressHandlers.insert( make_pair( HOME_KEY,               std::bind( &ReplxxImpl::go_to_begining_of_line,     this, _1 ) ) );
@@ -166,6 +170,37 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	_keyPressHandlers.insert( make_pair( META + 'P',             std::bind( &ReplxxImpl::common_prefix_search,       this, _1 ) ) );
 	_keyPressHandlers.insert( make_pair( META + 'n',             std::bind( &ReplxxImpl::common_prefix_search,       this, _1 ) ) );
 	_keyPressHandlers.insert( make_pair( META + 'N',             std::bind( &ReplxxImpl::common_prefix_search,       this, _1 ) ) );
+}
+
+char32_t Replxx::ReplxxImpl::read_char( void ) {
+	/* try scheduled key presses */ {
+		std::lock_guard<std::mutex> l( _mutex );
+		if ( !_keyPresses.empty() ) {
+			char32_t keyPress( _keyPresses.front() );
+			_keyPresses.pop_front();
+			return ( keyPress );
+		}
+	}
+	while ( true ) {
+		Terminal::EVENT_TYPE eventType( _terminal.wait_for_input() );
+		if ( eventType == Terminal::EVENT_TYPE::KEY_PRESS ) {
+			break;
+		}
+		std::lock_guard<std::mutex> l( _mutex );
+		UnicodeString promptText( std::move( _prompt._text ) );
+		_prompt.set_text( UnicodeString() );
+		UnicodeString data( std::move( _data ) );
+		dynamicRefresh( _prompt, _data.get(), _data.length(), 0 );
+		_prompt.set_text( promptText );
+		_data.swap( data );
+		while ( ! _messages.empty() ) {
+			string const& message( _messages.front() );
+			_terminal.write8( message.data(), message.length() );
+			_messages.pop_front();
+		}
+		dynamicRefresh( _prompt, _data.get(), _data.length(), _pos );
+	}
+	return ( _terminal.read_char() );
 }
 
 void Replxx::ReplxxImpl::clear( void ) {
@@ -259,8 +294,12 @@ char const* Replxx::ReplxxImpl::read_from_stdin( void ) {
 	return _utf8Buffer.get();
 }
 
-void Replxx::ReplxxImpl::emulate_key_press( char32_t keyPress_ ) {
-	_terminal.emulate_key_press( keyPress_ );
+void Replxx::ReplxxImpl::emulate_key_press( char32_t keyCode_ ) {
+	std::lock_guard<std::mutex> l( _mutex );
+	_keyPresses.push_back( keyCode_ );
+	if ( ( _currentThread != std::thread::id() ) && ( _currentThread != std::this_thread::get_id() ) ) {
+		_terminal.notify_event( Terminal::EVENT_TYPE::KEY_PRESS );
+	}
 }
 
 char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
@@ -277,7 +316,7 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 			fflush(stdout);
 			_errorMessage.clear();
 		}
-		_prompt.set_text( prompt );
+		_prompt.set_text( UnicodeString( prompt ) );
 		if ( isUnsupportedTerm() ) {
 			_prompt.write();
 			fflush(stdout);
@@ -286,22 +325,27 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 		if (_terminal.enable_raw_mode() == -1) {
 			return nullptr;
 		}
+		_currentThread = std::this_thread::get_id();
 		clear();
 		if (!_preloadedBuffer.empty()) {
 			preloadBuffer(_preloadedBuffer.c_str());
 			_preloadedBuffer.clear();
 		}
 		if ( getInputLine() == -1 ) {
-			return ( nullptr );
+			return ( finalize_input( nullptr ) );
 		}
-		_terminal.disable_raw_mode();
 		printf("\n");
 		_utf8Buffer.assign( _data );
-		return ( _utf8Buffer.get() );
+		return ( finalize_input( _utf8Buffer.get() ) );
 	} catch ( std::exception const& ) {
-		_terminal.disable_raw_mode();
-		return ( nullptr );
+		return ( finalize_input( nullptr ) );
 	}
+}
+
+char const* Replxx::ReplxxImpl::finalize_input( char const* retVal_ ) {
+	_currentThread = std::thread::id();
+	_terminal.disable_raw_mode();
+	return ( retVal_ );
 }
 
 int Replxx::ReplxxImpl::install_window_change_handler( void ) {
@@ -318,13 +362,15 @@ int Replxx::ReplxxImpl::install_window_change_handler( void ) {
 	return 0;
 }
 
-int Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
-#ifdef _WIN32
-	int count( win_write( str_, size_ ) );
-#else
-	int count( write( 1, str_, size_ ) );
-#endif
-	return ( count );
+void Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
+	if ( ( _currentThread == std::thread::id() ) || ( _currentThread == std::this_thread::get_id() ) ) {
+		_terminal.write8( str_, size_ );
+	} else {
+		std::lock_guard<std::mutex> l( _mutex );
+		_messages.emplace_back( str_, size_ );
+		_terminal.notify_event( Terminal::EVENT_TYPE::MESSAGE );
+	}
+	return;
 }
 
 void Replxx::ReplxxImpl::preloadBuffer(const char* preloadText) {
@@ -686,7 +732,7 @@ int Replxx::ReplxxImpl::do_complete_line( void ) {
 	if ( _doubleTabCompletion ) {
 		// we can't complete any further, wait for second tab
 		do {
-			c = _terminal.read_char();
+			c = read_char();
 		} while (c == static_cast<char32_t>(-1));
 
 		// if any character other than tab, pass it to the main loop
@@ -709,7 +755,7 @@ int Replxx::ReplxxImpl::do_complete_line( void ) {
 		onNewLine = true;
 		while (c != 'y' && c != 'Y' && c != 'n' && c != 'N' && c != ctrlChar('C')) {
 			do {
-				c = _terminal.read_char();
+				c = read_char();
 			} while (c == static_cast<char32_t>(-1));
 		}
 		switch (c) {
@@ -765,7 +811,7 @@ int Replxx::ReplxxImpl::do_complete_line( void ) {
 					}
 					doBeep = true;
 					do {
-						c = _terminal.read_char();
+						c = read_char();
 					} while (c == static_cast<char32_t>(-1));
 				}
 				switch (c) {
@@ -880,7 +926,7 @@ int Replxx::ReplxxImpl::getInputLine( void ) {
 	// loop collecting characters, respond to line editing characters
 	NEXT next( NEXT::CONTINUE );
 	while ( next == NEXT::CONTINUE ) {
-		int c( _terminal.read_char() ); // get a new keystroke
+		int c( read_char() ); // get a new keystroke
 #ifndef _WIN32
 		if (c == 0 && gotResize) {
 			// caught a window resize event
@@ -1393,7 +1439,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::complete_line( int c ) {
 			return ( NEXT::BAIL );
 		}
 		if ( c != 0 ) {
-			_terminal.emulate_key_press( c );
+			emulate_key_press( c );
 		}
 	} else {
 		insert_character( c );
@@ -1458,7 +1504,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::incremental_history_search( int sta
 	bool searchAgain = false;
 	UnicodeString activeHistoryLine;
 	while ( keepLooping ) {
-		c = _terminal.read_char();
+		c = read_char();
 
 		switch (c) {
 			// these characters keep the selected text but do not execute it
@@ -1629,7 +1675,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::incremental_history_search( int sta
 	_prompt._previousInputLen = _data.length();
 	_prompt._cursorRowOffset = _prompt._extraLines + pb._cursorRowOffset;
 	previousSearchText = dp._searchText; // save search text for possible reuse on ctrl-R ctrl-R
-	_terminal.emulate_key_press( c ); // pass a character or -1 back to main loop
+	emulate_key_press( c ); // pass a character or -1 back to main loop
 	return ( NEXT::CONTINUE );
 }
 

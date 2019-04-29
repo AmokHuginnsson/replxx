@@ -2,14 +2,47 @@
 #include <string>
 #include <vector>
 #include <cctype>
+#include <cstdlib>
 #include <utility>
 #include <iomanip>
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 #include "replxx.hxx"
 #include "util.h"
 
 using Replxx = replxx::Replxx;
+
+class Tick {
+	std::thread _thread;
+	int _tick;
+	bool _alive;
+	Replxx& _replxx;
+public:
+	Tick( Replxx& replxx_ )
+		: _thread()
+		, _tick( 0 )
+		, _alive( false )
+		, _replxx( replxx_ ) {
+	}
+	void start() {
+		_alive = true;
+		_thread = std::thread( &Tick::run, this );
+	}
+	void stop() {
+		_alive = false;
+		_thread.join();
+	}
+	void run() {
+		std::string s;
+		while ( _alive ) {
+			_replxx.print( "%d\n", _tick );
+			++ _tick;
+			std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+		}
+	}
+};
 
 // prototypes
 Replxx::completions_t hook_completion(std::string const& context, int& contextLen, std::vector<std::string> const& user_data);
@@ -90,7 +123,7 @@ void hook_color(std::string const& context, Replxx::colors_t& colors, std::vecto
 	}
 }
 
-int main() {
+int main( int argc_, char** ) {
 	// words to be completed
 	std::vector<std::string> examples {
 		".help", ".history", ".quit", ".exit", ".clear", ".prompt ",
@@ -163,6 +196,7 @@ int main() {
 
 	// init the repl
 	Replxx rx;
+	Tick tick( rx );
 	rx.install_window_change_handler();
 
 	// the path to the history file
@@ -202,6 +236,9 @@ int main() {
 	std::string prompt {"\x1b[1;32mreplxx\x1b[0m> "};
 
 	// main repl loop
+	if ( argc_ > 1 ) {
+		tick.start();
+	}
 	for (;;) {
 		// display the prompt and retrieve input from the user
 		char const* cinput{ nullptr };
@@ -279,6 +316,9 @@ int main() {
 			rx.history_add( input );
 			continue;
 		}
+	}
+	if ( argc_ > 1 ) {
+		tick.stop();
 	}
 
 	// save the history

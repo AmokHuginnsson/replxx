@@ -204,7 +204,7 @@ int Replxx::install_window_change_handler( void ) {
 	return ( _impl->install_window_change_handler() );
 }
 
-int Replxx::print( char const* format_, ... ) {
+void Replxx::print( char const* format_, ... ) {
 	::std::va_list ap;
 	va_start( ap, format_ );
 	int size = static_cast<int>( vsnprintf( nullptr, 0, format_, ap ) );
@@ -275,7 +275,12 @@ int replxx_print( ::Replxx* replxx_, char const* format_, ... ) {
 	unique_ptr<char[]> buf( new char[size + 1] );
 	vsnprintf( buf.get(), static_cast<size_t>( size + 1 ), format_, ap );
 	va_end( ap );
-	return ( replxx->print( buf.get(), size ) );
+	try {
+		replxx->print( buf.get(), size );
+	} catch ( ... ) {
+		return ( -1 );
+	}
+	return ( size );
 }
 
 struct replxx_completions {

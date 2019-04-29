@@ -77,6 +77,8 @@ public:
 
 	explicit UnicodeString( UnicodeString const& ) = default;
 	UnicodeString& operator = ( UnicodeString const& ) = default;
+	UnicodeString( UnicodeString&& ) = default;
+	UnicodeString& operator = ( UnicodeString&& ) = default;
 
 	UnicodeString& append( UnicodeString const& other ) {
 		_data.insert( _data.end(), other._data.begin(), other._data.end() );

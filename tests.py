@@ -146,7 +146,8 @@ class ReplxxTests( unittest.TestCase ):
 		dimensions = ( 25, 80 ),
 		prompt = _prompt_,
 		end = _prompt_ + _end_,
-		encoding = "utf-8"
+		encoding = "utf-8",
+		pause = 0.25
 	):
 		with open( "replxx_history.txt", "wb" ) as f:
 			f.write( history.encode( encoding ) )
@@ -160,15 +161,22 @@ class ReplxxTests( unittest.TestCase ):
 		self_._replxx = pexpect.spawn( command, maxread = 1, encoding = encoding, dimensions = dimensions )
 		self_._replxx.expect( prompt )
 		self_.maxDiff = None
-		seqs = seq_.split( "<c-z>" )
-		for seq in seqs:
-			last = seq is seqs[-1]
-			if not last:
-				seq += "<c-z>"
-			self_._replxx.send( sym_to_raw( seq ) )
-			if not last:
-				time.sleep( 0.25 )
-				self_._replxx.kill( signal.SIGCONT )
+		if isinstance( seq_, str ):
+			seqs = seq_.split( "<c-z>" )
+			for seq in seqs:
+				last = seq is seqs[-1]
+				if not last:
+					seq += "<c-z>"
+				self_._replxx.send( sym_to_raw( seq ) )
+				if not last:
+					time.sleep( pause )
+					self_._replxx.kill( signal.SIGCONT )
+		else:
+			for seq in seq_:
+				last = seq is seq_[-1]
+				self_._replxx.send( sym_to_raw( seq ) )
+				if not last:
+					time.sleep( pause )
 		self_._replxx.expect( end )
 		self_.assertSequenceEqual( seq_to_sym( self_._replxx.before ), expected_ )
 	def test_unicode( self_ ):
@@ -1151,6 +1159,20 @@ class ReplxxTests( unittest.TestCase ):
 	def test_no_terminal( self_ ):
 		res = subprocess.run( [ ReplxxTests._cSample_, "q1" ], input = b"replxx FTW!\n", stdout = subprocess.PIPE, stderr = subprocess.PIPE )
 		self_.assertSequenceEqual( res.stdout, b"starting...\nreplxx FTW!\n\nExiting Replxx\n" )
+	def test_async_print( self_ ):
+		self_.check_scenario(
+			[ "a", "b", "c", "d", "e", "f<cr><c-d>" ],
+			"<c1><ceos><c1>0\r\n"
+			"<c1><ceos><brightgreen>replxx<rst>> "
+			"<c9><c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c1><ceos><c1>1\r\n"
+			"<c1><ceos><brightgreen>replxx<rst>> "
+			"ab<c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abcd<rst><gray><rst><c13><c1><ceos><c1>2\r\n"
+			"<c1><ceos><brightgreen>replxx<rst>> "
+			"abcd<c13><c9><ceos>abcde<rst><gray><rst><c14><c9><ceos>abcdef<rst><gray><rst><c15><c9><ceos>abcdef<rst><c15>\r\n"
+			"abcdef\r\n",
+			command = ReplxxTests._cxxSample_ + " a",
+			pause = 0.5
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity

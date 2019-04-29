@@ -32,9 +32,12 @@
 #define HAVE_REPLXX_REPLXX_IMPL_HXX_INCLUDED 1
 
 #include <vector>
+#include <deque>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <thread>
+#include <mutex>
 
 #include "replxx.hxx"
 #include "history.hxx"
@@ -53,6 +56,8 @@ public:
 	typedef std::unique_ptr<char32_t[]> input_buffer_t;
 	typedef std::vector<char> char_widths_t;
 	typedef std::vector<char32_t> display_t;
+	typedef std::deque<char32_t> key_presses_t;
+	typedef std::deque<std::string> messages_t;
 	enum class HINT_ACTION {
 		REGENERATE,
 		REPAINT,
@@ -85,12 +90,16 @@ private:
 	bool _noColor;
 	key_press_handlers_t _keyPressHandlers;
 	Terminal _terminal;
+	std::thread::id _currentThread;
 	Prompt _prompt;
 	Replxx::completion_callback_t _completionCallback;
 	Replxx::highlighter_callback_t _highlighterCallback;
 	Replxx::hint_callback_t _hintCallback;
+	key_presses_t _keyPresses;
+	messages_t _messages;
 	std::string _preloadedBuffer; // used with set_preload_buffer
 	std::string _errorMessage;
+	mutable std::mutex _mutex;
 public:
 	ReplxxImpl( FILE*, FILE*, FILE* );
 	void set_completion_callback( Replxx::completion_callback_t const& fn );
@@ -114,7 +123,7 @@ public:
 	int install_window_change_handler( void );
 	completions_t call_completer( std::string const& input, int& ) const;
 	hints_t call_hinter( std::string const& input, int&, Replxx::Color& color ) const;
-	int print( char const* , int );
+	void print( char const*, int );
 	NEXT clear_screen( int );
 	void emulate_key_press( char32_t );
 private:
@@ -161,6 +170,7 @@ private:
 	NEXT complete_line( int );
 	NEXT incremental_history_search( int startChar );
 	NEXT common_prefix_search( int startChar );
+	char32_t read_char( void );
 	char const* read_from_stdin( void );
 	int do_complete_line( void );
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
@@ -171,6 +181,7 @@ private:
 	void clear();
 	bool is_word_break_character( char32_t ) const;
 	void dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos);
+	char const* finalize_input( char const* );
 };
 
 }

@@ -24,7 +24,7 @@ private:
 	Terminal& _terminal;
 public:
 	Prompt( Terminal& );
-	void set_text( std::string const& textPtr );
+	void set_text( UnicodeString const& textPtr );
 	void update_screen_columns( void );
 	int screen_columns() const {
 		return ( _screenColumns );

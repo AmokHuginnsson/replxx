@@ -165,7 +165,7 @@ public:
 	 *
 	 * \param fmt - printf style format.
 	 */
-	int print( char const* fmt, ... );
+	void print( char const* fmt, ... );
 
 	/*! \brief Schedule an emulated key press event.
 	 *
