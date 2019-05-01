@@ -75,7 +75,7 @@ Terminal::Terminal( void )
 	, _rawMode( false ) {
 #ifdef _WIN32
 #else
-	::pipe( _interrupt );
+	static_cast<void>( ::pipe( _interrupt ) == 0 );
 #endif
 }
 
@@ -475,7 +475,7 @@ Terminal::EVENT_TYPE Terminal::wait_for_input( void ) {
 		}
 		if ( FD_ISSET( _interrupt[0], &fdSet ) ) {
 			char data( 0 );
-			read( _interrupt[0], &data, 1 );
+			static_cast<void>( read( _interrupt[0], &data, 1 ) == 1 );
 			if ( data == 'k' ) {
 				return ( EVENT_TYPE::KEY_PRESS );
 			}
@@ -494,7 +494,7 @@ void Terminal::notify_event( EVENT_TYPE eventType_ ) {
 #ifdef _WIN32
 #else
 	char data( eventType_ == EVENT_TYPE::KEY_PRESS ? 'k' : 'm' );
-	write( _interrupt[1], &data, 1 );
+	static_cast<void>( write( _interrupt[1], &data, 1 ) == 1 );
 #endif
 }
 
