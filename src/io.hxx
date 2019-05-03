@@ -25,6 +25,9 @@ private:
 	WORD _oldDisplayAttribute;
 	UINT const _inputCodePage;
 	UINT const _outputCodePage;
+	HANDLE _interrupt;
+	typedef std::deque<EVENT_TYPE> events_t;
+	events_t _events;
 #else
 	struct termios _origTermios; /* in order to restore at exit */
 	int _interrupt[2];
@@ -39,7 +42,7 @@ public:
 	Terminal( void );
 	~Terminal( void );
 	void write32( char32_t const*, int );
-	void write8( void const*, int );
+	void write8( char const*, int );
 	int get_screen_columns(void);
 	int get_screen_rows(void);
 	int enable_raw_mode(void);

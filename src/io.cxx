@@ -19,6 +19,7 @@
 
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/select.h>
 
 #endif /* _WIN32 */
 
@@ -68,12 +69,15 @@ Terminal::Terminal( void )
 	, _oldDisplayAttribute()
 	, _inputCodePage( GetConsoleCP() )
 	, _outputCodePage( GetConsoleOutputCP() )
+	, _interrupt( INVALID_HANDLE_VALUE )
+	, _events()
 #else
 	: _origTermios()
 	, _interrupt()
 #endif
 	, _rawMode( false ) {
 #ifdef _WIN32
+	_interrupt = CreateEvent( nullptr, true, false, TEXT( "replxx_interrupt_event" ) );
 #else
 	static_cast<void>( ::pipe( _interrupt ) == 0 );
 #endif
@@ -83,6 +87,12 @@ Terminal::~Terminal( void ) {
 	if ( _rawMode ) {
 		disable_raw_mode();
 	}
+#ifdef _WIN32
+	CloseHandle( _interrupt );
+#else
+	static_cast<void>( ::close( _interrupt[0] ) == 0 );
+	static_cast<void>( ::close( _interrupt[1] ) == 0 );
+#endif
 }
 
 void Terminal::write32( char32_t const* text32, int len32 ) {
@@ -103,7 +113,7 @@ void Terminal::write32( char32_t const* text32, int len32 ) {
 	return;
 }
 
-void Terminal::write8( void const* data_, int size_ ) {
+void Terminal::write8( char const* data_, int size_ ) {
 #ifdef _WIN32
 	int count( win_write( data_, size_ ) );
 #else
@@ -462,6 +472,22 @@ char32_t Terminal::read_char( void ) {
 
 Terminal::EVENT_TYPE Terminal::wait_for_input( void ) {
 #ifdef _WIN32
+	HANDLE handles[2] = { _consoleIn, _interrupt };
+	while ( true ) {
+		DWORD event( WaitForMultipleObjects( std::size( handles ), handles, false, INFINITE ) );
+		switch ( event ) {
+			case ( WAIT_OBJECT_0 + 0 ): return ( EVENT_TYPE::KEY_PRESS );
+			case ( WAIT_OBJECT_0 + 1 ): {
+				ResetEvent( _interrupt );
+				if ( _events.empty() ) {
+					continue;
+				}
+				EVENT_TYPE eventType( _events.front() );
+				_events.pop_front();
+				return ( eventType );
+			}
+		}
+	}
 #else
 	fd_set fdSet;
 	int nfds( max( _interrupt[0], _interrupt[1] ) + 1 );
@@ -492,6 +518,8 @@ Terminal::EVENT_TYPE Terminal::wait_for_input( void ) {
 
 void Terminal::notify_event( EVENT_TYPE eventType_ ) {
 #ifdef _WIN32
+	_events.push_back( eventType_ );
+	SetEvent( _interrupt );
 #else
 	char data( eventType_ == EVENT_TYPE::KEY_PRESS ? 'k' : 'm' );
 	static_cast<void>( write( _interrupt[1], &data, 1 ) == 1 );
