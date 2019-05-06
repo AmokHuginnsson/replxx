@@ -19,6 +19,7 @@
 
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/select.h>
 
 #endif /* _WIN32 */
 
