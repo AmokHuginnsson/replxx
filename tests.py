@@ -976,12 +976,21 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<cr><c-d>",
-			"<c9><ceos>Cat  eats  mice.\r\n"
-			"<rst><gray><rst><u1><c26><c9><ceos>Cat  eats  mice.\r\n"
-			"<rst><u1><c26>\r\n"
-			"Cat  eats  mice.\r\n"
+			"<c9><ceos>Cat  eats  mice. "
+			"<rst><gray><rst><c26><c9><ceos>Cat  eats  mice. "
+			"<rst><c26>\r\n"
+			"Cat  eats  mice. "
 			"\r\n",
 			command = ReplxxTests._cSample_ + " q1 'iCat\teats\tmice.\r\n'"
+		)
+		self_.check_scenario(
+			"<cr><c-d>",
+			"<c9><ceos>Cat  eats  mice. "
+			"<rst><gray><rst><c26><c9><ceos>Cat  eats  mice. "
+			"<rst><c26>\r\n"
+			"Cat  eats  mice. "
+			"\r\n",
+			command = ReplxxTests._cSample_ + " q1 'iCat\teats\tmice.\r\n\r\n\n\n'"
 		)
 		self_.check_scenario(
 			"<cr><c-d>",

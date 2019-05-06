@@ -11,9 +11,9 @@ inline bool isControlChar(char32_t testChar) {
 }
 int cleanupCtrl(int c);
 
-void recomputeCharacterWidths( char32_t const* text, char* widths, int charCount );
-void calculateScreenPosition( int x, int y, int screenColumns, int charCount, int& xOut, int& yOut );
-int calculateColumnPosition( char32_t* buf32, int len );
+void recompute_character_widths( char32_t const* text, char* widths, int charCount );
+void calculate_screen_position( int x, int y, int screenColumns, int charCount, int& xOut, int& yOut );
+int calculate_displayed_length( char32_t const* buf32, int size );
 char const* ansi_color( Replxx::Color );
 
 }

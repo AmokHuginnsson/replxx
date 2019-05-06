@@ -129,7 +129,7 @@ DynamicPrompt::DynamicPrompt( Terminal& terminal_, int initialDirection )
 	                                        // that the history prompt won't wrap (!)
 	_previousLen = _characterCount;
 	_text.assign( *basePrompt ).append( endSearchBasePrompt );
-	calculateScreenPosition(
+	calculate_screen_position(
 		0, 0, screen_columns(), _characterCount,
 		_indentation, _extraLines
 	);

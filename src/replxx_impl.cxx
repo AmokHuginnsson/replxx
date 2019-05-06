@@ -251,7 +251,7 @@ void Replxx::ReplxxImpl::set_preload_buffer( std::string const& preloadText ) {
 			_preloadedBuffer.erase( it, it + 1 );
 			continue;
 		}
-		if ( '\n' == c || '\t' == c ) { // note newline or tab
+		if ( ( '\n' == c ) || ( '\t' == c ) ) { // note newline or tab
 			++ whitespaceSeen;
 			++ it;
 			continue;
@@ -272,6 +272,13 @@ void Replxx::ReplxxImpl::set_preload_buffer( std::string const& preloadText ) {
 		}
 		whitespaceSeen = 0;
 		++ it;
+	}
+	if ( whitespaceSeen > 0 ) {
+		std::string::iterator it = _preloadedBuffer.end() - whitespaceSeen;
+		*it = ' ';
+		if ( whitespaceSeen > 1 ) {
+			_preloadedBuffer.erase( it + 1, _preloadedBuffer.end() );
+		}
 	}
 	_errorMessage.clear();
 	if ( controlsStripped ) {
@@ -376,7 +383,7 @@ void Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
 void Replxx::ReplxxImpl::preloadBuffer(const char* preloadText) {
 	_data.assign( preloadText );
 	_charWidths.resize( _data.length() );
-	recomputeCharacterWidths( _data.get(), _charWidths.data(), _data.length() );
+	recompute_character_widths( _data.get(), _charWidths.data(), _data.length() );
 	_prefix = _pos = _data.length();
 }
 
@@ -558,18 +565,18 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	int hintLen( handle_hints( hintAction_ ) );
 	// calculate the position of the end of the input line
 	int xEndOfInput( 0 ), yEndOfInput( 0 );
-	calculateScreenPosition(
+	calculate_screen_position(
 		_prompt._indentation, 0, _prompt.screen_columns(),
-		calculateColumnPosition( _data.get(), _data.length() ) + hintLen,
+		calculate_displayed_length( _data.get(), _data.length() ) + hintLen,
 		xEndOfInput, yEndOfInput
 	);
 	yEndOfInput += count( _display.begin(), _display.end(), '\n' );
 
 	// calculate the desired position of the cursor
 	int xCursorPos( 0 ), yCursorPos( 0 );
-	calculateScreenPosition(
+	calculate_screen_position(
 		_prompt._indentation, 0, _prompt.screen_columns(),
-		calculateColumnPosition(_data.get(), _pos),
+		calculate_displayed_length(_data.get(), _pos),
 		xCursorPos,
 		yCursorPos
 	);
@@ -978,7 +985,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::insert_character( int c ) {
 	_data.insert( _pos, c );
 	++ _pos;
 	_prefix = _pos;
-	int inputLen = calculateColumnPosition( _data.get(), _data.length() );
+	int inputLen = calculate_displayed_length( _data.get(), _data.length() );
 	if ( _noColor
 		|| ( ! ( !! _highlighterCallback || !! _hintCallback )
 			&& ( _prompt._indentation + inputLen < _prompt.screen_columns() )
@@ -1454,7 +1461,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::complete_line( int c ) {
 Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::common_prefix_search( int startChar ) {
 	_killRing.lastAction = KillRing::actionOther;
 	_utf8Buffer.assign( _data );
-	int prefixSize( calculateColumnPosition( _data.get(), _prefix ) );
+	int prefixSize( calculate_displayed_length( _data.get(), _prefix ) );
 	if (
 		_history.common_prefix_search(
 			_utf8Buffer.get(), prefixSize, ( startChar == ( META + 'p' ) ) || ( startChar == ( META + 'P' ) )
@@ -1780,23 +1787,23 @@ void Replxx::ReplxxImpl::set_no_color( bool val ) {
 void Replxx::ReplxxImpl::dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos) {
 	// calculate the position of the end of the prompt
 	int xEndOfPrompt, yEndOfPrompt;
-	calculateScreenPosition(0, 0, pi.screen_columns(), pi._characterCount,
+	calculate_screen_position(0, 0, pi.screen_columns(), pi._characterCount,
 													xEndOfPrompt, yEndOfPrompt);
 	pi._indentation = xEndOfPrompt;
 
 	// calculate the position of the end of the input line
 	int xEndOfInput, yEndOfInput;
-	calculateScreenPosition(
+	calculate_screen_position(
 		xEndOfPrompt, yEndOfPrompt, pi.screen_columns(),
-		calculateColumnPosition(buf32, len), xEndOfInput,
+		calculate_displayed_length(buf32, len), xEndOfInput,
 		yEndOfInput
 	);
 
 	// calculate the desired position of the cursor
 	int xCursorPos, yCursorPos;
-	calculateScreenPosition(
+	calculate_screen_position(
 		xEndOfPrompt, yEndOfPrompt, pi.screen_columns(),
-		calculateColumnPosition(buf32, pos), xCursorPos,
+		calculate_displayed_length(buf32, pos), xCursorPos,
 		yCursorPos
 	);
 
