@@ -115,11 +115,11 @@ void Terminal::write32( char32_t const* text32, int len32 ) {
 
 void Terminal::write8( char const* data_, int size_ ) {
 #ifdef _WIN32
-	int count( win_write( data_, size_ ) );
+	int nWritten( win_write( data_, size_ ) );
 #else
-	int count( write( 1, data_, size_ ) );
+	int nWritten( write( 1, data_, size_ ) );
 #endif
-	if ( count != size_ ) {
+	if ( nWritten != size_ ) {
 		throw std::runtime_error( "write failed" );
 	}
 	return;
@@ -531,20 +531,22 @@ void Terminal::notify_event( EVENT_TYPE eventType_ ) {
  */
 void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 #ifdef _WIN32
-	COORD coord = {0, 0};
+	COORD coord = { 0, 0 };
 	CONSOLE_SCREEN_BUFFER_INFO inf;
 	bool toEnd( clearScreen_ == CLEAR_SCREEN::TO_END );
 	GetConsoleScreenBufferInfo( _consoleOut, &inf );
 	if ( ! toEnd ) {
 		SetConsoleCursorPosition( _consoleOut, coord );
+	} else {
+		coord = inf.dwCursorPosition;
 	}
-	DWORD count;
-	FillConsoleOutputCharacterA(
-		_consoleOut, ' ',
-		( inf.dwSize.Y - ( toEnd ? inf.dwCursorPosition.Y : 0 ) ) * inf.dwSize.X,
-		( toEnd ? inf.dwCursorPosition : coord ),
-		&count
+	DWORD nWritten( 0 );
+	DWORD toWrite(
+		toEnd
+			? ( inf.dwSize.Y - inf.dwCursorPosition.Y ) * inf.dwSize.X - inf.dwCursorPosition.X
+			: inf.dwSize.X * inf.dwSize.Y
 	);
+	FillConsoleOutputCharacterA( _consoleOut, ' ', toWrite, coord, &nWritten );
 #else
 	if ( clearScreen_ == CLEAR_SCREEN::WHOLE ) {
 		char const clearCode[] = "\033c\033[H\033[2J\033[0m";
@@ -563,17 +565,6 @@ void Terminal::jump_cursor( int xPos_, int yOffset_ ) {
 	inf.dwCursorPosition.X = xPos_;
 	inf.dwCursorPosition.Y += yOffset_;
 	SetConsoleCursorPosition( _consoleOut, inf.dwCursorPosition );
-}
-
-void Terminal::clear_section( int size_ ) {
-	CONSOLE_SCREEN_BUFFER_INFO inf;
-	GetConsoleScreenBufferInfo( _consoleOut, &inf );
-	DWORD count;
-	FillConsoleOutputCharacterA(
-		_consoleOut, ' ',
-		size_,
-		inf.dwCursorPosition, &count
-	);
 }
 #endif
 

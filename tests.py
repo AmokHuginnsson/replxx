@@ -1171,13 +1171,13 @@ class ReplxxTests( unittest.TestCase ):
 	def test_async_print( self_ ):
 		self_.check_scenario(
 			[ "a", "b", "c", "d", "e", "f<cr><c-d>" ],
-			"<c1><ceos><c1>0\r\n"
-			"<c1><ceos><brightgreen>replxx<rst>> "
-			"<c9><c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c1><ceos><c1>1\r\n"
-			"<c1><ceos><brightgreen>replxx<rst>> "
-			"ab<c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abcd<rst><gray><rst><c13><c1><ceos><c1>2\r\n"
-			"<c1><ceos><brightgreen>replxx<rst>> "
-			"abcd<c13><c9><ceos>abcde<rst><gray><rst><c14><c9><ceos>abcdef<rst><gray><rst><c15><c9><ceos>abcdef<rst><c15>\r\n"
+			"<c1><ceos>0\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos><rst><gray><rst><c9><c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c1><ceos>1\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abcd<rst><gray><rst><c13><c1><ceos>2\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos>abcd<rst><gray><rst><c13><c9><ceos>abcde<rst><gray><rst><c14><c9><ceos>abcdef<rst><gray><rst><c15><c9><ceos>abcdef<rst><c15>\r\n"
 			"abcdef\r\n",
 			command = ReplxxTests._cxxSample_ + " a",
 			pause = 0.5

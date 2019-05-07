@@ -53,7 +53,6 @@ public:
 	void notify_event( EVENT_TYPE );
 #ifdef _WIN32
 	void jump_cursor( int, int );
-	void clear_section( int );
 #endif
 private:
 	Terminal( Terminal const& ) = delete;

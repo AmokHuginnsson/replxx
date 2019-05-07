@@ -187,18 +187,14 @@ char32_t Replxx::ReplxxImpl::read_char( void ) {
 			break;
 		}
 		std::lock_guard<std::mutex> l( _mutex );
-		UnicodeString promptText( std::move( _prompt._text ) );
-		_prompt.set_text( UnicodeString() );
-		UnicodeString data( std::move( _data ) );
-		dynamicRefresh( _prompt, _data.get(), _data.length(), 0 );
-		_prompt.set_text( promptText );
-		_data.swap( data );
+		clear_self_to_end_of_screen();
 		while ( ! _messages.empty() ) {
 			string const& message( _messages.front() );
 			_terminal.write8( message.data(), message.length() );
 			_messages.pop_front();
 		}
-		dynamicRefresh( _prompt, _data.get(), _data.length(), _pos );
+		_prompt.write();
+		refresh_line();
 	}
 	return ( _terminal.read_char() );
 }
@@ -1775,20 +1771,44 @@ void Replxx::ReplxxImpl::set_no_color( bool val ) {
 	_noColor = val;
 }
 
+void Replxx::ReplxxImpl::clear_self_to_end_of_screen( void ) {
+#ifdef _WIN32
+	// position at the start of the prompt, clear to end of previous input
+	_terminal.jump_cursor(
+		0,
+		-_prompt._cursorRowOffset /*- _prompt._extraLines*/
+	);
+#else
+	char seq[64];
+	int cursorRowMovement = _prompt._cursorRowOffset - _prompt._extraLines;
+	if ( cursorRowMovement > 0 ) {
+		snprintf(seq, sizeof seq, "\033[%dA\033[1G", cursorRowMovement);
+	} else {
+		snprintf(seq, sizeof seq, "\033[1G");
+	}
+	_terminal.write8( seq, strlen( seq ) );
+#endif
+	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
+	return;
+}
+
 /**
  * Display the dynamic incremental search prompt and the current user input
  * line.
- * @param pi	 Prompt struct holding information about the prompt and our
+ * @param pi    Prompt struct holding information about the prompt and our
  * screen position
- * @param buf32	input buffer to be displayed
- * @param len	count of characters in the buffer
- * @param pos	current cursor position within the buffer (0 <= pos <= len)
+ * @param buf32 input buffer to be displayed
+ * @param len   count of characters in the buffer
+ * @param pos   current cursor position within the buffer (0 <= pos <= len)
  */
 void Replxx::ReplxxImpl::dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos) {
+	clear_self_to_end_of_screen();
 	// calculate the position of the end of the prompt
 	int xEndOfPrompt, yEndOfPrompt;
-	calculate_screen_position(0, 0, pi.screen_columns(), pi._characterCount,
-													xEndOfPrompt, yEndOfPrompt);
+	calculate_screen_position(
+		0, 0, pi.screen_columns(), pi._characterCount,
+		xEndOfPrompt, yEndOfPrompt
+	);
 	pi._indentation = xEndOfPrompt;
 
 	// calculate the position of the end of the input line
@@ -1808,12 +1828,6 @@ void Replxx::ReplxxImpl::dynamicRefresh(Prompt& pi, char32_t* buf32, int len, in
 	);
 
 #ifdef _WIN32
-	// position at the start of the prompt, clear to end of previous input
-	_terminal.jump_cursor(
-		0,
-		-pi._cursorRowOffset /*- pi._extraLines*/
-	);
-	_terminal.clear_section( pi._previousLen + pi._previousInputLen );
 	pi._previousLen = pi._indentation;
 	pi._previousInputLen = len;
 
@@ -1829,16 +1843,6 @@ void Replxx::ReplxxImpl::dynamicRefresh(Prompt& pi, char32_t* buf32, int len, in
 		-( yEndOfInput - yCursorPos )
 	);
 #else // _WIN32
-	char seq[64];
-	int cursorRowMovement = pi._cursorRowOffset - pi._extraLines;
-	if (cursorRowMovement > 0) { // move the cursor up as required
-		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
-		_terminal.write8( seq, strlen( seq ) );
-	}
-	// position at the start of the prompt, clear to end of screen
-	snprintf(seq, sizeof seq, "\x1b[1G\x1b[J"); // 1-based on VT100
-	_terminal.write8( seq, strlen( seq ) );
-
 	// display the prompt
 	pi.write();
 
@@ -1851,7 +1855,8 @@ void Replxx::ReplxxImpl::dynamicRefresh(Prompt& pi, char32_t* buf32, int len, in
 	}
 
 	// position the cursor
-	cursorRowMovement = yEndOfInput - yCursorPos;
+	char seq[64];
+	int cursorRowMovement = yEndOfInput - yCursorPos;
 	if (cursorRowMovement > 0) { // move the cursor up as required
 		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
 		_terminal.write8( seq, strlen( seq ) );
