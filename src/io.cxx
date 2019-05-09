@@ -1,6 +1,7 @@
 #include <memory>
 #include <cerrno>
 #include <cstdlib>
+#include <cstring>
 
 #ifdef _WIN32
 
@@ -558,15 +559,27 @@ void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 #endif
 }
 
-#ifdef _WIN32
 void Terminal::jump_cursor( int xPos_, int yOffset_ ) {
+#ifdef _WIN32
 	CONSOLE_SCREEN_BUFFER_INFO inf;
 	GetConsoleScreenBufferInfo( _consoleOut, &inf );
 	inf.dwCursorPosition.X = xPos_;
 	inf.dwCursorPosition.Y += yOffset_;
 	SetConsoleCursorPosition( _consoleOut, inf.dwCursorPosition );
-}
+#else
+	char seq[64];
+	if ( yOffset_ != 0 ) { // move the cursor up as required
+		snprintf( seq, sizeof seq, "\033[%d%c", abs( yOffset_ ), yOffset_ > 0 ? 'B' : 'A' );
+		write8( seq, strlen( seq ) );
+	}
+	// position at the end of the prompt, clear to end of screen
+	snprintf(
+		seq, sizeof seq, "\033[%dG",
+		xPos_ + 1 /* 1-based on VT100 */
+	);
+	write8( seq, strlen( seq ) );
 #endif
+}
 
 }
 

@@ -51,9 +51,7 @@ public:
 	void clear_screen( CLEAR_SCREEN );
 	EVENT_TYPE wait_for_input( void );
 	void notify_event( EVENT_TYPE );
-#ifdef _WIN32
 	void jump_cursor( int, int );
-#endif
 private:
 	Terminal( Terminal const& ) = delete;
 	Terminal& operator = ( Terminal const& ) = delete;

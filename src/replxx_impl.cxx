@@ -436,13 +436,15 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 	Replxx::ReplxxImpl::hints_t hints( call_hinter( _utf8Buffer.get(), contextLen, c ) );
 	int hintCount( hints.size() );
 	if ( hintCount == 1 ) {
-		setColor( c );
 		_hint = hints.front();
-		len = _hint.length();
-		for ( int i( contextLen ); i < len; ++ i ) {
-			_display.push_back( _hint[i] );
+		len = _hint.length() - contextLen;
+		if ( len > 0 ) {
+			setColor( c );
+			for ( int i( contextLen ); i < len; ++ i ) {
+				_display.push_back( _hint[i + contextLen] );
+			}
+			setColor( Replxx::Color::DEFAULT );
 		}
-		setColor( Replxx::Color::DEFAULT );
 	} else if ( _maxHintRows > 0 ) {
 		int startCol( _prompt._indentation + _pos - contextLen );
 		int maxCol( _prompt.screen_columns() );
@@ -489,7 +491,7 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 			setColor( Replxx::Color::DEFAULT );
 		}
 	}
-	return ( len - contextLen );
+	return ( len );
 }
 
 /**
@@ -577,7 +579,6 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 		yCursorPos
 	);
 
-#ifdef _WIN32
 	// position at the end of the prompt, clear to end of previous input
 	_terminal.jump_cursor(
 		_prompt._indentation, // 0-based on Win32
@@ -585,56 +586,23 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	);
 	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
 	_prompt._previousInputLen = _data.length();
-
 	// display the input line
 	if ( !_noColor ) {
 		_terminal.write32( _display.data(), _display.size() );
 	} else {
 		_terminal.write32( _data.get(), _data.length() );
 	}
-
-	// position the cursor
-	_terminal.jump_cursor(
-		xCursorPos, // 0-based on Win32
-		-( yEndOfInput - yCursorPos )
-	);
-#else // _WIN32
-	char seq[64];
-	int cursorRowMovement = _prompt._cursorRowOffset - _prompt._extraLines;
-	if (cursorRowMovement > 0) { // move the cursor up as required
-		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
-		_terminal.write8( seq, strlen(seq) );
-	}
-	// position at the end of the prompt, clear to end of screen
-	snprintf(
-		seq, sizeof seq, "\x1b[%dG\x1b[%c",
-		_prompt._indentation + 1, /* 1-based on VT100 */
-		'J'
-	);
-	_terminal.write8( seq, strlen(seq) );
-
-	if ( !_noColor ) {
-		_terminal.write32( _display.data(), _display.size() );
-	} else { // highlightIdx the matching brace/bracket/parenthesis
-		_terminal.write32( _data.get(), _data.length() );
-	}
-
+#ifndef _WIN32
 	// we have to generate our own newline on line wrap
 	if (xEndOfInput == 0 && yEndOfInput > 0) {
 		_terminal.write8( "\n", 1 );
 	}
-
-	// position the cursor
-	cursorRowMovement = yEndOfInput - yCursorPos;
-	if (cursorRowMovement > 0) { // move the cursor up as required
-		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
-		_terminal.write8( seq, strlen(seq) );
-	}
-	// position the cursor within the line
-	snprintf(seq, sizeof seq, "\x1b[%dG", xCursorPos + 1); // 1-based on VT100
-	_terminal.write8( seq, strlen(seq) );
 #endif
-
+	// position the cursor
+	_terminal.jump_cursor(
+		xCursorPos,
+		-( yEndOfInput - yCursorPos )
+	);
 	_prompt._cursorRowOffset = _prompt._extraLines + yCursorPos; // remember row for next pass
 }
 
@@ -1772,22 +1740,11 @@ void Replxx::ReplxxImpl::set_no_color( bool val ) {
 }
 
 void Replxx::ReplxxImpl::clear_self_to_end_of_screen( void ) {
-#ifdef _WIN32
 	// position at the start of the prompt, clear to end of previous input
 	_terminal.jump_cursor(
 		0,
-		-_prompt._cursorRowOffset /*- _prompt._extraLines*/
+		-( _prompt._cursorRowOffset - _prompt._extraLines )
 	);
-#else
-	char seq[64];
-	int cursorRowMovement = _prompt._cursorRowOffset - _prompt._extraLines;
-	if ( cursorRowMovement > 0 ) {
-		snprintf(seq, sizeof seq, "\033[%dA\033[1G", cursorRowMovement);
-	} else {
-		snprintf(seq, sizeof seq, "\033[1G");
-	}
-	_terminal.write8( seq, strlen( seq ) );
-#endif
 	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
 	return;
 }

@@ -95,6 +95,7 @@ termseq = {
 }
 colRe = re.compile( "\\x1b\\[(\\d+)G" )
 upRe = re.compile( "\\x1b\\[(\\d+)A" )
+downRe = re.compile( "\\x1b\\[(\\d+)B" )
 
 def sym_to_raw( str_ ):
 	for sym, seq in keytab.items():
@@ -106,6 +107,7 @@ def seq_to_sym( str_ ):
 		str_ = str_.replace( seq, sym )
 	str_ = colRe.sub( "<c\\1>", str_ )
 	str_ = upRe.sub( "<u\\1>", str_ )
+	str_ = downRe.sub( "<d\\1>", str_ )
 	return str_
 
 _words_ = [
@@ -347,7 +349,7 @@ class ReplxxTests( unittest.TestCase ):
 		self_.check_scenario(
 			"<up><cr><c-d>",
 			"<c9><ceos>zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz "
-			"<brightgreen>color_brightgreen<rst><green><rst><c15><u3><c9><ceos>zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz "
+			"<brightgreen>color_brightgreen<rst><c15><u3><c9><ceos>zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz "
 			"<brightgreen>color_brightgreen<rst><c15>\r\n"
 			"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz color_brightgreen\r\n",
 			"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz color_brightgreen\n",
@@ -368,7 +370,7 @@ class ReplxxTests( unittest.TestCase ):
 			"        <gray>color_green<rst>\r\n"
 			"        <gray>color_brown<rst>\r\n"
 			"        "
-			"<gray>color_blue<rst><u3><c11><c9><ceos><red>color_red<rst><green><rst><c18><c9><ceos><red>color_red<rst><c18>\r\n"
+			"<gray>color_blue<rst><u3><c11><c9><ceos><red>color_red<rst><c18><c9><ceos><red>color_red<rst><c18>\r\n"
 			"color_red\r\n"
 		)
 	def test_hint_scroll_up( self_ ):
@@ -386,7 +388,7 @@ class ReplxxTests( unittest.TestCase ):
 			"        <gray>color_normal<rst>\r\n"
 			"        <gray>co\r\n"
 			"        "
-			"<gray>color_black<rst><u3><c11><c9><ceos><white>color_white<rst><green><rst><c20><c9><ceos><white>color_white<rst><c20>\r\n"
+			"<gray>color_black<rst><u3><c11><c9><ceos><white>color_white<rst><c20><c9><ceos><white>color_white<rst><c20>\r\n"
 			"color_white\r\n"
 		)
 	def test_history( self_ ):
@@ -451,7 +453,7 @@ class ReplxxTests( unittest.TestCase ):
 			"        <gray>color_brightred<rst>\r\n"
 			"        <gray>color_brightgreen<rst>\r\n"
 			"        "
-			"<gray>color_brightblue<rst><u3><c21><c9><ceos>color_brightb<rst><green>lue<rst><c22><c9><ceos><brightblue>color_brightblue<rst><green><rst><c25><c9><ceos><brightblue>color_brightblue<rst><c25>\r\n"
+			"<gray>color_brightblue<rst><u3><c21><c9><ceos>color_brightb<rst><green><rst><c22><c9><ceos><brightblue>color_brightblue<rst><c25><c9><ceos><brightblue>color_brightblue<rst><c25>\r\n"
 			"color_brightblue\r\n"
 		)
 		self_.check_scenario(
@@ -586,7 +588,7 @@ class ReplxxTests( unittest.TestCase ):
 			"        <gray>fortran<rst><u2><c11><c9><ceos>fort<rst><gray><rst>\r\n"
 			"        <gray>forth<rst>\r\n"
 			"        "
-			"<gray>fortran<rst><u2><c13><c9><ceos>fortr<rst><gray>an<rst><c14><c9><ceos>fortran<rst><gray><rst><c16><c9><ceos>fortran<rst><c16>\r\n"
+			"<gray>fortran<rst><u2><c13><c9><ceos>fortr<rst><gray><rst><c14><c9><ceos>fortran<rst><c16><c9><ceos>fortran<rst><c16>\r\n"
 			"fortran\r\n",
 			command = cmd
 		)
@@ -602,7 +604,7 @@ class ReplxxTests( unittest.TestCase ):
 			"        <gray>fortran<rst><u2><c11><bell><c9><ceos>fort<rst><gray><rst>\r\n"
 			"        <gray>forth<rst>\r\n"
 			"        "
-			"<gray>fortran<rst><u2><c13><bell><c9><ceos>fortr<rst><gray>an<rst><c14><c9><ceos>fortran<rst><gray><rst><c16><c9><ceos>fortran<rst><c16>\r\n"
+			"<gray>fortran<rst><u2><c13><bell><c9><ceos>fortr<rst><gray><rst><c14><c9><ceos>fortran<rst><c16><c9><ceos>fortran<rst><c16>\r\n"
 			"fortran\r\n",
 			command = cmd
 		)
@@ -1079,7 +1081,7 @@ class ReplxxTests( unittest.TestCase ):
 			"<brightred>color_brightred<rst> <brightgreen>color_brightgreen<rst> "
 			"<yellow>color_yellow<rst> <brightblue>color_brightblue<rst> "
 			"<brightmagenta>color_brightmagenta<rst> <brightcyan>color_brightcyan<rst> "
-			"<white>color_white<rst><green><rst><c70><u2><c9><ceos><black>color_black<rst> "
+			"<white>color_white<rst><c70><u2><c9><ceos><black>color_black<rst> "
 			"<red>color_red<rst> <green>color_green<rst> <brown>color_brown<rst> "
 			"<blue>color_blue<rst> <magenta>color_magenta<rst> <cyan>color_cyan<rst> "
 			"<lightgray>color_lightgray<rst> <gray>color_gray<rst> "
