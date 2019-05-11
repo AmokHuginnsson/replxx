@@ -184,20 +184,20 @@ class ReplxxTests( unittest.TestCase ):
 	def test_unicode( self_ ):
 		self_.check_scenario(
 			"<up><cr><c-d>",
-			"<c9><ceos>aóą Ϩ 𓢀  󃔀  <rst><gray><rst><c21>"
+			"<c9><ceos>aóą Ϩ 𓢀  󃔀  <rst><c21>"
 			"<c9><ceos>aóą Ϩ 𓢀  󃔀  <rst><c21>\r\n"
 			"aóą Ϩ 𓢀  󃔀  \r\n",
 			"aóą Ϩ 𓢀  󃔀  \n"
 		)
 		self_.check_scenario(
 			"aóą Ϩ 𓢀  󃔀  <cr><c-d>",
-			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>aó<rst><gray><rst><c11><c9><ceos>aóą<rst><gray><rst><c12><c9><ceos>aóą "
-			"<rst><gray><rst><c13><c9><ceos>aóą Ϩ<rst><gray><rst><c14><c9><ceos>aóą Ϩ "
-			"<rst><gray><rst><c15><c9><ceos>aóą Ϩ 𓢀<rst><gray><rst><c16><c9><ceos>aóą Ϩ 𓢀 "
-			"<rst><gray><rst><c17><c9><ceos>aóą Ϩ 𓢀  "
-			"<rst><gray><rst><c18><c9><ceos>aóą Ϩ 𓢀  󃔀<rst><gray><rst><c19><c9><ceos>aóą Ϩ 𓢀  󃔀 "
-			"<rst><gray><rst><c20><c9><ceos>aóą Ϩ 𓢀  󃔀  "
-			"<rst><gray><rst><c21><c9><ceos>aóą Ϩ 𓢀  󃔀  <rst><c21>\r\n"
+			"<c9><ceos>a<rst><c10><c9><ceos>aó<rst><c11><c9><ceos>aóą<rst><c12><c9><ceos>aóą "
+			"<rst><c13><c9><ceos>aóą Ϩ<rst><c14><c9><ceos>aóą Ϩ "
+			"<rst><c15><c9><ceos>aóą Ϩ 𓢀<rst><c16><c9><ceos>aóą Ϩ 𓢀 "
+			"<rst><c17><c9><ceos>aóą Ϩ 𓢀  "
+			"<rst><c18><c9><ceos>aóą Ϩ 𓢀  󃔀<rst><c19><c9><ceos>aóą Ϩ 𓢀  󃔀 "
+			"<rst><c20><c9><ceos>aóą Ϩ 𓢀  󃔀  "
+			"<rst><c21><c9><ceos>aóą Ϩ 𓢀  󃔀  <rst><c21>\r\n"
 			"aóą Ϩ 𓢀  󃔀  \r\n"
 		)
 	@unittest.skipIf( skip( "8bit_encoding" ), "broken platform" )
@@ -210,7 +210,7 @@ class ReplxxTests( unittest.TestCase ):
 		os.environ[LC_CTYPE] = "pl_PL.ISO-8859-2"
 		self_.check_scenario(
 			"<aup><cr><c-d>",
-			"<c9><ceos>text ~ó~<rst><gray><rst><c17><c9><ceos>text ~ó~<rst><c17>\r\ntext ~ó~\r\n",
+			"<c9><ceos>text ~ó~<rst><c17><c9><ceos>text ~ó~<rst><c17>\r\ntext ~ó~\r\n",
 			"text ~ó~\n",
 			encoding = "iso-8859-2"
 		)
@@ -227,19 +227,19 @@ class ReplxxTests( unittest.TestCase ):
 	def test_ctrl_c( self_ ):
 		self_.check_scenario(
 			"abc<c-c><c-d>",
-			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc<rst><c12>^C\r"
+			"<c9><ceos>a<rst><c10><c9><ceos>ab<rst><c11><c9><ceos>abc<rst><c12><c9><ceos>abc<rst><c12>^C\r"
 			"\r\n"
 		)
 	def test_ctrl_z( self_ ):
 		self_.check_scenario(
 			"<up><c-z><cr><c-d>",
-			"<c9><ceos>three<rst><gray><rst><c14><brightgreen>replxx<rst>> "
-			"<c9><ceos>three<rst><gray><rst><c14><c9><ceos>three<rst><c14>\r\n"
+			"<c9><ceos>three<rst><c14><brightgreen>replxx<rst>> "
+			"<c9><ceos>three<rst><c14><c9><ceos>three<rst><c14>\r\n"
 			"three\r\n"
 		)
 		self_.check_scenario(
 			"<c-r>w<c-z><cr><c-d>",
-			"<c9><ceos><rst><gray><rst><c9><c1><ceos>(reverse-i-search)`': "
+			"<c9><ceos><rst><c9><c1><ceos>(reverse-i-search)`': "
 			"<c23><c1><ceos>(reverse-i-search)`w': "
 			"two<c25><c1><ceos>(reverse-i-search)`w': "
 			"two<c25><c1><ceos><brightgreen>replxx<rst>> "
@@ -253,14 +253,14 @@ class ReplxxTests( unittest.TestCase ):
 			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
 			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
 			"<brightgreen>replxx<rst>> <RIS><mvhm><clr><rst><brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><gray><rst><c9>",
+			"<c9><ceos><rst><c9>",
 			end = "\r\nExiting Replxx\r\n"
 		)
 		self_.check_scenario(
 			"<cr><up><c-left><c-l><cr><c-d>",
 			"<c9><ceos><rst><c9>\r\n"
 			"<brightgreen>replxx<rst>> <c9><ceos>first "
-			"second<rst><gray><rst><c21><c9><ceos>first "
+			"second<rst><c21><c9><ceos>first "
 			"second<rst><c15><RIS><mvhm><clr><rst><brightgreen>replxx<rst>> "
 			"<c9><ceos>first second<rst><c15><c9><ceos>first second<rst><c21>\r\n"
 			"first second\r\n",
@@ -269,7 +269,7 @@ class ReplxxTests( unittest.TestCase ):
 	def test_backspace( self_ ):
 		self_.check_scenario(
 			"<up><c-a><m-f><c-right><backspace><backspace><backspace><backspace><cr><c-d>",
-			"<c9><ceos>one two three<rst><gray><rst><c22><c9><ceos>one two "
+			"<c9><ceos>one two three<rst><c22><c9><ceos>one two "
 			"three<rst><c9><c9><ceos>one two three<rst><c12><c9><ceos>one two "
 			"three<rst><c16><c9><ceos>one tw three<rst><c15><c9><ceos>one t "
 			"three<rst><c14><c9><ceos>one  three<rst><c13><c9><ceos>one "
@@ -280,7 +280,7 @@ class ReplxxTests( unittest.TestCase ):
 	def test_delete( self_ ):
 		self_.check_scenario(
 			"<up><m-b><c-left><del><c-d><del><c-d><cr><c-d>",
-			"<c9><ceos>one two three<rst><gray><rst><c22><c9><ceos>one two "
+			"<c9><ceos>one two three<rst><c22><c9><ceos>one two "
 			"three<rst><c17><c9><ceos>one two three<rst><c13><c9><ceos>one wo "
 			"three<rst><c13><c9><ceos>one o three<rst><c13><c9><ceos>one  "
 			"three<rst><c13><c9><ceos>one three<rst><c13><c9><ceos>one three<rst><c18>\r\n"
@@ -290,36 +290,36 @@ class ReplxxTests( unittest.TestCase ):
 	def test_home_key( self_ ):
 		self_.check_scenario(
 			"abc<home>z<cr><c-d>",
-			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc<rst><c9><c9><ceos>zabc<rst><c10><c9><ceos>zabc<rst><c13>\r\n"
+			"<c9><ceos>a<rst><c10><c9><ceos>ab<rst><c11><c9><ceos>abc<rst><c12><c9><ceos>abc<rst><c9><c9><ceos>zabc<rst><c10><c9><ceos>zabc<rst><c13>\r\n"
 			"zabc\r\n"
 		)
 	def test_end_key( self_ ):
 		self_.check_scenario(
 			"abc<home>z<end>q<cr><c-d>",
-			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc<rst><c9><c9><ceos>zabc<rst><c10><c9><ceos>zabc<rst><gray><rst><c13><c9><ceos>zabcq<rst><gray><rst><c14><c9><ceos>zabcq<rst><c14>\r\n"
+			"<c9><ceos>a<rst><c10><c9><ceos>ab<rst><c11><c9><ceos>abc<rst><c12><c9><ceos>abc<rst><c9><c9><ceos>zabc<rst><c10><c9><ceos>zabc<rst><c13><c9><ceos>zabcq<rst><c14><c9><ceos>zabcq<rst><c14>\r\n"
 			"zabcq\r\n"
 		)
 	def test_left_key( self_ ):
 		self_.check_scenario(
 			"abc<left>x<aleft><left>y<cr><c-d>",
-			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc<rst><c11><c9><ceos>abxc<rst><c12><c9><ceos>abxc<rst><c11><c9><ceos>abxc<rst><c10><c9><ceos>aybxc<rst><c11><c9><ceos>aybxc<rst><c14>\r\n"
+			"<c9><ceos>a<rst><c10><c9><ceos>ab<rst><c11><c9><ceos>abc<rst><c12><c9><ceos>abc<rst><c11><c9><ceos>abxc<rst><c12><c9><ceos>abxc<rst><c11><c9><ceos>abxc<rst><c10><c9><ceos>aybxc<rst><c11><c9><ceos>aybxc<rst><c14>\r\n"
 			"aybxc\r\n"
 		)
 	def test_right_key( self_ ):
 		self_.check_scenario(
 			"abc<home><right>x<aright>y<cr><c-d>",
-			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc<rst><c9><c9><ceos>abc<rst><c10><c9><ceos>axbc<rst><c11><c9><ceos>axbc<rst><c12><c9><ceos>axbyc<rst><c13><c9><ceos>axbyc<rst><c14>\r\n"
+			"<c9><ceos>a<rst><c10><c9><ceos>ab<rst><c11><c9><ceos>abc<rst><c12><c9><ceos>abc<rst><c9><c9><ceos>abc<rst><c10><c9><ceos>axbc<rst><c11><c9><ceos>axbc<rst><c12><c9><ceos>axbyc<rst><c13><c9><ceos>axbyc<rst><c14>\r\n"
 			"axbyc\r\n"
 		)
 	def test_prev_word_key( self_ ):
 		self_.check_scenario(
 			"abc def ghi<c-left><m-left>x<cr><c-d>",
-			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc "
-			"<rst><gray><rst><c13><c9><ceos>abc d<rst><gray><rst><c14><c9><ceos>abc "
-			"de<rst><gray><rst><c15><c9><ceos>abc def<rst><gray><rst><c16><c9><ceos>abc "
-			"def <rst><gray><rst><c17><c9><ceos>abc def "
-			"g<rst><gray><rst><c18><c9><ceos>abc def gh<rst><gray><rst><c19><c9><ceos>abc "
-			"def ghi<rst><gray><rst><c20><c9><ceos>abc def ghi<rst><c17><c9><ceos>abc def "
+			"<c9><ceos>a<rst><c10><c9><ceos>ab<rst><c11><c9><ceos>abc<rst><c12><c9><ceos>abc "
+			"<rst><c13><c9><ceos>abc d<rst><c14><c9><ceos>abc "
+			"de<rst><c15><c9><ceos>abc def<rst><c16><c9><ceos>abc "
+			"def <rst><c17><c9><ceos>abc def "
+			"g<rst><c18><c9><ceos>abc def gh<rst><c19><c9><ceos>abc "
+			"def ghi<rst><c20><c9><ceos>abc def ghi<rst><c17><c9><ceos>abc def "
 			"ghi<rst><c13><c9><ceos>abc xdef ghi<rst><c14><c9><ceos>abc xdef "
 			"ghi<rst><c21>\r\n"
 			"abc xdef ghi\r\n"
@@ -327,12 +327,12 @@ class ReplxxTests( unittest.TestCase ):
 	def test_next_word_key( self_ ):
 		self_.check_scenario(
 			"abc def ghi<home><c-right><m-right>x<cr><c-d>",
-			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abc "
-			"<rst><gray><rst><c13><c9><ceos>abc d<rst><gray><rst><c14><c9><ceos>abc "
-			"de<rst><gray><rst><c15><c9><ceos>abc def<rst><gray><rst><c16><c9><ceos>abc "
-			"def <rst><gray><rst><c17><c9><ceos>abc def "
-			"g<rst><gray><rst><c18><c9><ceos>abc def gh<rst><gray><rst><c19><c9><ceos>abc "
-			"def ghi<rst><gray><rst><c20><c9><ceos>abc def ghi<rst><c9><c9><ceos>abc def "
+			"<c9><ceos>a<rst><c10><c9><ceos>ab<rst><c11><c9><ceos>abc<rst><c12><c9><ceos>abc "
+			"<rst><c13><c9><ceos>abc d<rst><c14><c9><ceos>abc "
+			"de<rst><c15><c9><ceos>abc def<rst><c16><c9><ceos>abc "
+			"def <rst><c17><c9><ceos>abc def "
+			"g<rst><c18><c9><ceos>abc def gh<rst><c19><c9><ceos>abc "
+			"def ghi<rst><c20><c9><ceos>abc def ghi<rst><c9><c9><ceos>abc def "
 			"ghi<rst><c12><c9><ceos>abc def ghi<rst><c16><c9><ceos>abc defx "
 			"ghi<rst><c17><c9><ceos>abc defx ghi<rst><c21>\r\n"
 			"abc defx ghi\r\n"
@@ -340,7 +340,7 @@ class ReplxxTests( unittest.TestCase ):
 	def test_hint_show( self_ ):
 		self_.check_scenario(
 			"co\r<c-d>",
-			"<c9><ceos>c<rst><gray><rst><c10><c9><ceos>co<rst><gray><rst>\r\n"
+			"<c9><ceos>c<rst><c10><c9><ceos>co<rst>\r\n"
 			"        <gray>color_black<rst>\r\n"
 			"        <gray>color_red<rst>\r\n"
 			"        <gray>color_green<rst><u3><c11><c9><ceos>co<rst><c11>\r\n"
@@ -358,7 +358,7 @@ class ReplxxTests( unittest.TestCase ):
 	def test_hint_scroll_down( self_ ):
 		self_.check_scenario(
 			"co<c-down><c-down><tab><cr><c-d>",
-			"<c9><ceos>c<rst><gray><rst><c10><c9><ceos>co<rst><gray><rst>\r\n"
+			"<c9><ceos>c<rst><c10><c9><ceos>co<rst>\r\n"
 			"        <gray>color_black<rst>\r\n"
 			"        <gray>color_red<rst>\r\n"
 			"        "
@@ -376,7 +376,7 @@ class ReplxxTests( unittest.TestCase ):
 	def test_hint_scroll_up( self_ ):
 		self_.check_scenario(
 			"co<c-up><c-up><tab><cr><c-d>",
-			"<c9><ceos>c<rst><gray><rst><c10><c9><ceos>co<rst><gray><rst>\r\n"
+			"<c9><ceos>c<rst><c10><c9><ceos>co<rst>\r\n"
 			"        <gray>color_black<rst>\r\n"
 			"        <gray>color_red<rst>\r\n"
 			"        "
@@ -394,7 +394,7 @@ class ReplxxTests( unittest.TestCase ):
 	def test_history( self_ ):
 		self_.check_scenario(
 			"<up><up><up><up><down><down><down><down>four<cr><c-d>",
-			"<c9><ceos>three<rst><gray><rst><c14><c9><ceos>two<rst><gray><rst><c12><c9><ceos>one<rst><gray><rst><c12><c9><ceos>two<rst><gray><rst><c12><c9><ceos>three<rst><gray><rst><c14><c9><ceos><rst><gray><rst><c9><c9><ceos>f<rst><gray><rst><c10><c9><ceos>fo<rst><gray><rst><c11><c9><ceos>fou<rst><gray><rst><c12><c9><ceos>four<rst><gray><rst><c13><c9><ceos>four<rst><c13>\r\n"
+			"<c9><ceos>three<rst><c14><c9><ceos>two<rst><c12><c9><ceos>one<rst><c12><c9><ceos>two<rst><c12><c9><ceos>three<rst><c14><c9><ceos><rst><c9><c9><ceos>f<rst><c10><c9><ceos>fo<rst><c11><c9><ceos>fou<rst><c12><c9><ceos>four<rst><c13><c9><ceos>four<rst><c13>\r\n"
 			"four\r\n"
 		)
 		with open( "replxx_history.txt", "rb" ) as f:
@@ -402,22 +402,22 @@ class ReplxxTests( unittest.TestCase ):
 	def test_paren_matching( self_ ):
 		self_.check_scenario(
 			"ab(cd)ef<left><left><left><left><left><left><left><cr><c-d>",
-			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c9><ceos>ab<brightmagenta>(<rst><gray><rst><c12><c9><ceos>ab<brightmagenta>(<rst>c<rst><gray><rst><c13><c9><ceos>ab<brightmagenta>(<rst>cd<rst><gray><rst><c14><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst><gray><rst><c15><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>e<rst><gray><rst><c16><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><gray><rst><c17><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c16><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c15><c9><ceos>ab<brightred>(<rst>cd<brightmagenta>)<rst>ef<rst><c14><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c13><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c12><c9><ceos>ab<brightmagenta>(<rst>cd<brightred>)<rst>ef<rst><c11><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c10><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c17>\r\n"
+			"<c9><ceos>a<rst><c10><c9><ceos>ab<rst><c11><c9><ceos>ab<brightmagenta>(<rst><c12><c9><ceos>ab<brightmagenta>(<rst>c<rst><c13><c9><ceos>ab<brightmagenta>(<rst>cd<rst><c14><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst><c15><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>e<rst><c16><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c17><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c16><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c15><c9><ceos>ab<brightred>(<rst>cd<brightmagenta>)<rst>ef<rst><c14><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c13><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c12><c9><ceos>ab<brightmagenta>(<rst>cd<brightred>)<rst>ef<rst><c11><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c10><c9><ceos>ab<brightmagenta>(<rst>cd<brightmagenta>)<rst>ef<rst><c17>\r\n"
 			"ab(cd)ef\r\n"
 		)
 	def test_paren_not_matched( self_ ):
 		self_.check_scenario(
 			"a(b[c)d<left><left><left><left><left><left><left><cr><c-d>",
-			"<c9><ceos>a<rst><gray><rst><c10><c9><ceos>a<brightmagenta>(<rst><gray><rst><c11><c9><ceos>a<brightmagenta>(<rst>b<rst><gray><rst><c12><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst><gray><rst><c13><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<rst><gray><rst><c14><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst><gray><rst><c15><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><gray><rst><c16><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c15><c9><ceos>a<err>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c14><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c13><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c12><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c11><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<err>)<rst>d<rst><c10><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c9><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c16>\r\n"
+			"<c9><ceos>a<rst><c10><c9><ceos>a<brightmagenta>(<rst><c11><c9><ceos>a<brightmagenta>(<rst>b<rst><c12><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst><c13><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<rst><c14><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst><c15><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c16><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c15><c9><ceos>a<err>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c14><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c13><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c12><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c11><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<err>)<rst>d<rst><c10><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c9><c9><ceos>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><c16>\r\n"
 			"a(b[c)d\r\n"
 		)
 	def test_tab_completion( self_ ):
 		self_.check_scenario(
 			"co<tab><tab>bri<tab>b<tab><cr><c-d>",
-			"<c9><ceos>c<rst><gray><rst><c10><c9><ceos>co<rst><gray><rst>\r\n"
+			"<c9><ceos>c<rst><c10><c9><ceos>co<rst>\r\n"
 			"        <gray>color_black<rst>\r\n"
 			"        <gray>color_red<rst>\r\n"
-			"        <gray>color_green<rst><u3><c11><c9><ceos>color_<rst><gray><rst>\r\n"
+			"        <gray>color_green<rst><u3><c11><c9><ceos>color_<rst>\r\n"
 			"        <gray>color_black<rst>\r\n"
 			"        <gray>color_red<rst>\r\n"
 			"        <gray>color_green<rst><u3><c15><c9><ceos>color_<rst><c15>\r\n"
@@ -435,30 +435,30 @@ class ReplxxTests( unittest.TestCase ):
 			"<brightmagenta>color_<rst>blue           "
 			"<brightmagenta>color_<rst>brightgreen    <brightmagenta>color_<rst>normal\r\n"
 			"<brightmagenta>color_<rst>magenta        <brightmagenta>color_<rst>yellow\r\n"
-			"<brightgreen>replxx<rst>> <c9><ceos>color_<rst><gray><rst>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos>color_<rst>\r\n"
 			"        <gray>color_black<rst>\r\n"
 			"        <gray>color_red<rst>\r\n"
-			"        <gray>color_green<rst><u3><c15><c9><ceos>color_b<rst><gray><rst>\r\n"
+			"        <gray>color_green<rst><u3><c15><c9><ceos>color_b<rst>\r\n"
 			"        <gray>color_black<rst>\r\n"
 			"        <gray>color_brown<rst>\r\n"
-			"        <gray>color_blue<rst><u3><c16><c9><ceos>color_br<rst><gray><rst>\r\n"
+			"        <gray>color_blue<rst><u3><c16><c9><ceos>color_br<rst>\r\n"
 			"        <gray>color_brown<rst>\r\n"
 			"        <gray>color_brightred<rst>\r\n"
 			"        "
-			"<gray>color_brightgreen<rst><u3><c17><c9><ceos>color_bri<rst><gray><rst>\r\n"
+			"<gray>color_brightgreen<rst><u3><c17><c9><ceos>color_bri<rst>\r\n"
 			"        <gray>color_brightred<rst>\r\n"
 			"        <gray>color_brightgreen<rst>\r\n"
 			"        "
-			"<gray>color_brightblue<rst><u3><c18><c9><ceos>color_bright<rst><gray><rst>\r\n"
+			"<gray>color_brightblue<rst><u3><c18><c9><ceos>color_bright<rst>\r\n"
 			"        <gray>color_brightred<rst>\r\n"
 			"        <gray>color_brightgreen<rst>\r\n"
 			"        "
-			"<gray>color_brightblue<rst><u3><c21><c9><ceos>color_brightb<rst><green><rst><c22><c9><ceos><brightblue>color_brightblue<rst><c25><c9><ceos><brightblue>color_brightblue<rst><c25>\r\n"
+			"<gray>color_brightblue<rst><u3><c21><c9><ceos>color_brightb<rst><c22><c9><ceos><brightblue>color_brightblue<rst><c25><c9><ceos><brightblue>color_brightblue<rst><c25>\r\n"
 			"color_brightblue\r\n"
 		)
 		self_.check_scenario(
 			"<tab><tab>n<cr><c-d>",
-			"<bell><bell><c9><ceos>n<rst><gray><rst><c10><c9><ceos>n<rst><c10>\r\nn\r\n",
+			"<bell><bell><c9><ceos>n<rst><c10><c9><ceos>n<rst><c10>\r\nn\r\n",
 			dimensions = ( 4, 32 ),
 			command = ReplxxTests._cSample_ + " q1 e0"
 		)
@@ -471,13 +471,13 @@ class ReplxxTests( unittest.TestCase ):
 			"--More--<bell>\r"
 			"\t\t\t\t\r"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			"<c9><ceos><rst><c9><c9><ceos><rst><c9>\r\n",
 			dimensions = ( 4, 24 ),
 			command = ReplxxTests._cSample_ + " q1 e1"
 		)
 		self_.check_scenario(
 			"<up><home>co<tab><cr><c-d>",
-			"<c9><ceos>abcd<brightmagenta>()<rst><gray><rst><c15>"
+			"<c9><ceos>abcd<brightmagenta>()<rst><c15>"
 			"<c9><ceos>abcd<brightmagenta>()<rst><c9>"
 			"<c9><ceos>cabcd<brightmagenta>()<rst><c10>"
 			"<c9><ceos>coabcd<brightmagenta>()<rst><c11>"
@@ -489,7 +489,7 @@ class ReplxxTests( unittest.TestCase ):
 	def test_completion_shorter_result( self_ ):
 		self_.check_scenario(
 			"<up><tab><cr><c-d>",
-			"<c9><ceos>\\pi<rst><gray><rst><c12><c9><ceos>π<rst><gray><rst><c10><c9><ceos>π<rst><c10>\r\n"
+			"<c9><ceos>\\pi<rst><c12><c9><ceos>π<rst><c10><c9><ceos>π<rst><c10>\r\n"
 			"π\r\n",
 			"\\pi\n"
 		)
@@ -513,7 +513,7 @@ class ReplxxTests( unittest.TestCase ):
 			"fsharp      nemerle     swift\r\n"
 			"go          ocaml       typescript\r\n"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			"<c9><ceos><rst><c9><c9><ceos><rst><c9>\r\n",
 			dimensions = ( 10, 40 ),
 			command = cmd
 		)
@@ -539,7 +539,7 @@ class ReplxxTests( unittest.TestCase ):
 			"\t\t\t\t\r"
 			"go          ocaml       typescript\r\n"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			"<c9><ceos><rst><c9><c9><ceos><rst><c9>\r\n",
 			dimensions = ( 10, 40 ),
 			command = cmd
 		)
@@ -555,7 +555,7 @@ class ReplxxTests( unittest.TestCase ):
 			"eiffel      perl\r\n"
 			"--More--^C\r\n"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			"<c9><ceos><rst><c9><c9><ceos><rst><c9>\r\n",
 			dimensions = ( 8, 32 ),
 			command = cmd
 		)
@@ -572,7 +572,7 @@ class ReplxxTests( unittest.TestCase ):
 			"--More--\r"
 			"\t\t\t\t\r"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			"<c9><ceos><rst><c9><c9><ceos><rst><c9>\r\n",
 			dimensions = ( 8, 32 ),
 			command = cmd
 		)
@@ -580,15 +580,15 @@ class ReplxxTests( unittest.TestCase ):
 		cmd = ReplxxTests._cSample_ + " d1 q1 x" + ",".join( _words_ )
 		self_.check_scenario(
 			"fo<tab><tab>r<tab><cr><c-d>",
-			"<c9><ceos>f<rst><gray><rst>\r\n"
+			"<c9><ceos>f<rst>\r\n"
 			"        <gray>forth<rst>\r\n"
 			"        <gray>fortran<rst>\r\n"
-			"        <gray>fsharp<rst><u3><c10><c9><ceos>fo<rst><gray><rst>\r\n"
+			"        <gray>fsharp<rst><u3><c10><c9><ceos>fo<rst>\r\n"
 			"        <gray>forth<rst>\r\n"
-			"        <gray>fortran<rst><u2><c11><c9><ceos>fort<rst><gray><rst>\r\n"
+			"        <gray>fortran<rst><u2><c11><c9><ceos>fort<rst>\r\n"
 			"        <gray>forth<rst>\r\n"
 			"        "
-			"<gray>fortran<rst><u2><c13><c9><ceos>fortr<rst><gray><rst><c14><c9><ceos>fortran<rst><c16><c9><ceos>fortran<rst><c16>\r\n"
+			"<gray>fortran<rst><u2><c13><c9><ceos>fortr<rst><c14><c9><ceos>fortran<rst><c16><c9><ceos>fortran<rst><c16>\r\n"
 			"fortran\r\n",
 			command = cmd
 		)
@@ -596,22 +596,22 @@ class ReplxxTests( unittest.TestCase ):
 		cmd = ReplxxTests._cSample_ + " b1 d1 q1 x" + ",".join( _words_ )
 		self_.check_scenario(
 			"fo<tab><tab>r<tab><cr><c-d>",
-			"<c9><ceos>f<rst><gray><rst>\r\n"
+			"<c9><ceos>f<rst>\r\n"
 			"        <gray>forth<rst>\r\n"
 			"        <gray>fortran<rst>\r\n"
-			"        <gray>fsharp<rst><u3><c10><c9><ceos>fo<rst><gray><rst>\r\n"
+			"        <gray>fsharp<rst><u3><c10><c9><ceos>fo<rst>\r\n"
 			"        <gray>forth<rst>\r\n"
-			"        <gray>fortran<rst><u2><c11><bell><c9><ceos>fort<rst><gray><rst>\r\n"
+			"        <gray>fortran<rst><u2><c11><bell><c9><ceos>fort<rst>\r\n"
 			"        <gray>forth<rst>\r\n"
 			"        "
-			"<gray>fortran<rst><u2><c13><bell><c9><ceos>fortr<rst><gray><rst><c14><c9><ceos>fortran<rst><c16><c9><ceos>fortran<rst><c16>\r\n"
+			"<gray>fortran<rst><u2><c13><bell><c9><ceos>fortr<rst><c14><c9><ceos>fortran<rst><c16><c9><ceos>fortran<rst><c16>\r\n"
 			"fortran\r\n",
 			command = cmd
 		)
 	def test_history_search_backward( self_ ):
 		self_.check_scenario(
 			"<c-r>repl<c-r><cr><c-d>",
-			"<c9><ceos><rst><gray><rst><c9><c1><ceos>(reverse-i-search)`': "
+			"<c9><ceos><rst><c9><c1><ceos>(reverse-i-search)`': "
 			"<c23><c1><ceos>(reverse-i-search)`r': echo repl "
 			"golf<c29><c1><ceos>(reverse-i-search)`re': echo repl "
 			"golf<c30><c1><ceos>(reverse-i-search)`rep': echo repl "
@@ -630,7 +630,7 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<c-r>for<backspace><backspace>s<cr><c-d>",
-			"<c9><ceos><rst><gray><rst><c9><c1><ceos>(reverse-i-search)`': "
+			"<c9><ceos><rst><c9><c1><ceos>(reverse-i-search)`': "
 			"<c23><c1><ceos>(reverse-i-search)`f': "
 			"swift<c27><c1><ceos>(reverse-i-search)`fo': "
 			"fortran<c25><c1><ceos>(reverse-i-search)`for': "
@@ -644,21 +644,21 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<c-r>mod<c-l><cr><c-d>",
-			"<c9><ceos><rst><gray><rst><c9><c1><ceos>(reverse-i-search)`': "
+			"<c9><ceos><rst><c9><c1><ceos>(reverse-i-search)`': "
 			"<c23><c1><ceos>(reverse-i-search)`m': "
 			"scheme<c28><c1><ceos>(reverse-i-search)`mo': "
 			"modula<c25><c1><ceos>(reverse-i-search)`mod': "
 			"modula<c26><c1><ceos><brightgreen>replxx<rst>> "
 			"<c9><RIS><mvhm><clr><rst><brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			"<c9><ceos><rst><c9><c9><ceos><rst><c9>\r\n",
 			"\n".join( _words_ ) + "\n"
 		)
 	def test_history_prefix_search_backward( self_ ):
 		self_.check_scenario(
 			"repl<m-p><m-p><cr><c-d>",
-			"<c9><ceos>r<rst><gray><rst><c10><c9><ceos>re<rst><gray><rst><c11><c9><ceos>rep<rst><gray><rst><c12><c9><ceos>repl<rst><gray><rst><c13><c9><ceos>repl_echo "
-			"golf<rst><gray><rst><c23><c9><ceos>repl_charlie "
-			"delta<rst><gray><rst><c27><c9><ceos>repl_charlie delta<rst><c27>\r\n"
+			"<c9><ceos>r<rst><c10><c9><ceos>re<rst><c11><c9><ceos>rep<rst><c12><c9><ceos>repl<rst><c13><c9><ceos>repl_echo "
+			"golf<rst><c23><c9><ceos>repl_charlie "
+			"delta<rst><c27><c9><ceos>repl_charlie delta<rst><c27>\r\n"
 			"repl_charlie delta\r\n",
 			"some command\n"
 			"repl_alfa bravo\n"
@@ -671,16 +671,16 @@ class ReplxxTests( unittest.TestCase ):
 	def test_history_browse( self_ ):
 		self_.check_scenario(
 			"<up><aup><pgup><down><up><up><adown><pgdown><up><down><down><up><cr><c-d>",
-			"<c9><ceos>twelve<rst><gray><rst><c15>"
-			"<c9><ceos>eleven<rst><gray><rst><c15>"
-			"<c9><ceos>one<rst><gray><rst><c12>"
-			"<c9><ceos>two<rst><gray><rst><c12>"
-			"<c9><ceos>one<rst><gray><rst><c12>"
-			"<c9><ceos>two<rst><gray><rst><c12>"
-			"<c9><ceos><rst><gray><rst><c9>"
-			"<c9><ceos>twelve<rst><gray><rst><c15>"
-			"<c9><ceos><rst><gray><rst><c9>"
-			"<c9><ceos>twelve<rst><gray><rst><c15>"
+			"<c9><ceos>twelve<rst><c15>"
+			"<c9><ceos>eleven<rst><c15>"
+			"<c9><ceos>one<rst><c12>"
+			"<c9><ceos>two<rst><c12>"
+			"<c9><ceos>one<rst><c12>"
+			"<c9><ceos>two<rst><c12>"
+			"<c9><ceos><rst><c9>"
+			"<c9><ceos>twelve<rst><c15>"
+			"<c9><ceos><rst><c9>"
+			"<c9><ceos>twelve<rst><c15>"
 			"<c9><ceos>twelve<rst><c15>\r\n"
 			"twelve\r\n",
 			"one\n"
@@ -699,10 +699,10 @@ class ReplxxTests( unittest.TestCase ):
 	def test_history_max_size( self_ ):
 		self_.check_scenario(
 			"<pgup><pgdown>a<cr><pgup><cr><c-d>",
-			"<c9><ceos>three<rst><gray><rst><c14><c9><ceos><rst><gray><rst><c9><c9><ceos>a<rst><gray><rst><c10><c9><ceos>a<rst><c10>\r\n"
+			"<c9><ceos>three<rst><c14><c9><ceos><rst><c9><c9><ceos>a<rst><c10><c9><ceos>a<rst><c10>\r\n"
 			"a\r\n"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos>four<rst><gray><rst><c13><c9><ceos>four<rst><c13>\r\n"
+			"<c9><ceos>four<rst><c13><c9><ceos>four<rst><c13>\r\n"
 			"four\r\n",
 			"one\n"
 			"two\n"
@@ -714,19 +714,19 @@ class ReplxxTests( unittest.TestCase ):
 	def test_capitalize( self_ ):
 		self_.check_scenario(
 			"<up><home><right><m-c><m-c><right><right><m-c><m-c><m-c><cr><c-d>",
-			"<c9><ceos>abc defg ijklmn zzxq<rst><gray><rst><c29><c9><ceos>abc defg ijklmn "
+			"<c9><ceos>abc defg ijklmn zzxq<rst><c29><c9><ceos>abc defg ijklmn "
 			"zzxq<rst><c9><c9><ceos>abc defg ijklmn zzxq<rst><c10><c9><ceos>aBc defg "
 			"ijklmn zzxq<rst><c12><c9><ceos>aBc Defg ijklmn zzxq<rst><c17><c9><ceos>aBc "
 			"Defg ijklmn zzxq<rst><c18><c9><ceos>aBc Defg ijklmn "
 			"zzxq<rst><c19><c9><ceos>aBc Defg iJklmn zzxq<rst><c24><c9><ceos>aBc Defg "
-			"iJklmn Zzxq<rst><gray><rst><c29><c9><ceos>aBc Defg iJklmn Zzxq<rst><c29>\r\n"
+			"iJklmn Zzxq<rst><c29><c9><ceos>aBc Defg iJklmn Zzxq<rst><c29>\r\n"
 			"aBc Defg iJklmn Zzxq\r\n",
 			"abc defg ijklmn zzxq\n"
 		)
 	def test_make_upper_case( self_ ):
 		self_.check_scenario(
 			"<up><home><right><right><right><m-u><m-u><right><m-u><cr><c-d>",
-			"<c9><ceos>abcdefg hijklmno pqrstuvw<rst><gray><rst><c34><c9><ceos>abcdefg "
+			"<c9><ceos>abcdefg hijklmno pqrstuvw<rst><c34><c9><ceos>abcdefg "
 			"hijklmno pqrstuvw<rst><c9><c9><ceos>abcdefg hijklmno "
 			"pqrstuvw<rst><c10><c9><ceos>abcdefg hijklmno "
 			"pqrstuvw<rst><c11><c9><ceos>abcdefg hijklmno "
@@ -734,7 +734,7 @@ class ReplxxTests( unittest.TestCase ):
 			"pqrstuvw<rst><c16><c9><ceos>abcDEFG HIJKLMNO "
 			"pqrstuvw<rst><c25><c9><ceos>abcDEFG HIJKLMNO "
 			"pqrstuvw<rst><c26><c9><ceos>abcDEFG HIJKLMNO "
-			"PQRSTUVW<rst><gray><rst><c34><c9><ceos>abcDEFG HIJKLMNO "
+			"PQRSTUVW<rst><c34><c9><ceos>abcDEFG HIJKLMNO "
 			"PQRSTUVW<rst><c34>\r\n"
 			"abcDEFG HIJKLMNO PQRSTUVW\r\n",
 			"abcdefg hijklmno pqrstuvw\n"
@@ -742,7 +742,7 @@ class ReplxxTests( unittest.TestCase ):
 	def test_make_lower_case( self_ ):
 		self_.check_scenario(
 			"<up><home><right><right><right><m-l><m-l><right><m-l><cr><c-d>",
-			"<c9><ceos>ABCDEFG HIJKLMNO PQRSTUVW<rst><gray><rst><c34><c9><ceos>ABCDEFG "
+			"<c9><ceos>ABCDEFG HIJKLMNO PQRSTUVW<rst><c34><c9><ceos>ABCDEFG "
 			"HIJKLMNO PQRSTUVW<rst><c9><c9><ceos>ABCDEFG HIJKLMNO "
 			"PQRSTUVW<rst><c10><c9><ceos>ABCDEFG HIJKLMNO "
 			"PQRSTUVW<rst><c11><c9><ceos>ABCDEFG HIJKLMNO "
@@ -750,7 +750,7 @@ class ReplxxTests( unittest.TestCase ):
 			"PQRSTUVW<rst><c16><c9><ceos>ABCdefg hijklmno "
 			"PQRSTUVW<rst><c25><c9><ceos>ABCdefg hijklmno "
 			"PQRSTUVW<rst><c26><c9><ceos>ABCdefg hijklmno "
-			"pqrstuvw<rst><gray><rst><c34><c9><ceos>ABCdefg hijklmno "
+			"pqrstuvw<rst><c34><c9><ceos>ABCdefg hijklmno "
 			"pqrstuvw<rst><c34>\r\n"
 			"ABCdefg hijklmno pqrstuvw\r\n",
 			"ABCDEFG HIJKLMNO PQRSTUVW\n"
@@ -758,14 +758,14 @@ class ReplxxTests( unittest.TestCase ):
 	def test_transpose( self_ ):
 		self_.check_scenario(
 			"<up><home><c-t><right><c-t><c-t><c-t><c-t><c-t><cr><c-d>",
-			"<c9><ceos>abcd<rst><gray><rst><c13>"
+			"<c9><ceos>abcd<rst><c13>"
 			"<c9><ceos>abcd<rst><c9>"
 			"<c9><ceos>abcd<rst><c10>"
 			"<c9><ceos>bacd<rst><c11>"
 			"<c9><ceos>bcad<rst><c12>"
-			"<c9><ceos>bcda<rst><gray><rst><c13>"
-			"<c9><ceos>bcad<rst><gray><rst><c13>"
-			"<c9><ceos>bcda<rst><gray><rst><c13>"
+			"<c9><ceos>bcda<rst><c13>"
+			"<c9><ceos>bcad<rst><c13>"
+			"<c9><ceos>bcda<rst><c13>"
 			"<c9><ceos>bcda<rst><c13>\r\n"
 			"bcda\r\n",
 			"abcd\n"
@@ -774,7 +774,7 @@ class ReplxxTests( unittest.TestCase ):
 		self_.check_scenario(
 			"<up><home><c-right><c-right><right><c-u><end><c-y><cr><c-d>",
 			"<c9><ceos><brightblue>+<rst>abc defg<brightblue>--<rst>ijklmn "
-			"zzxq<brightblue>+<rst><gray><rst><c32><c9><ceos><brightblue>+<rst>abc "
+			"zzxq<brightblue>+<rst><c32><c9><ceos><brightblue>+<rst>abc "
 			"defg<brightblue>--<rst>ijklmn "
 			"zzxq<brightblue>+<rst><c9><c9><ceos><brightblue>+<rst>abc "
 			"defg<brightblue>--<rst>ijklmn "
@@ -784,9 +784,9 @@ class ReplxxTests( unittest.TestCase ):
 			"defg<brightblue>--<rst>ijklmn "
 			"zzxq<brightblue>+<rst><c19><c9><ceos><brightblue>-<rst>ijklmn "
 			"zzxq<brightblue>+<rst><c9><c9><ceos><brightblue>-<rst>ijklmn "
-			"zzxq<brightblue>+<rst><gray><rst><c22><c9><ceos><brightblue>-<rst>ijklmn "
+			"zzxq<brightblue>+<rst><c22><c9><ceos><brightblue>-<rst>ijklmn "
 			"zzxq<brightblue>++<rst>abc "
-			"defg<brightblue>-<rst><gray><rst><c32><c9><ceos><brightblue>-<rst>ijklmn "
+			"defg<brightblue>-<rst><c32><c9><ceos><brightblue>-<rst>ijklmn "
 			"zzxq<brightblue>++<rst>abc defg<brightblue>-<rst><c32>\r\n"
 			"-ijklmn zzxq++abc defg-\r\n",
 			"+abc defg--ijklmn zzxq+\n"
@@ -795,7 +795,7 @@ class ReplxxTests( unittest.TestCase ):
 		self_.check_scenario(
 			"<up><home><c-right><c-right><right><c-k><home><c-y><cr><c-d>",
 			"<c9><ceos><brightblue>+<rst>abc defg<brightblue>--<rst>ijklmn "
-			"zzxq<brightblue>+<rst><gray><rst><c32><c9><ceos><brightblue>+<rst>abc "
+			"zzxq<brightblue>+<rst><c32><c9><ceos><brightblue>+<rst>abc "
 			"defg<brightblue>--<rst>ijklmn "
 			"zzxq<brightblue>+<rst><c9><c9><ceos><brightblue>+<rst>abc "
 			"defg<brightblue>--<rst>ijklmn "
@@ -804,7 +804,7 @@ class ReplxxTests( unittest.TestCase ):
 			"zzxq<brightblue>+<rst><c18><c9><ceos><brightblue>+<rst>abc "
 			"defg<brightblue>--<rst>ijklmn "
 			"zzxq<brightblue>+<rst><c19><c9><ceos><brightblue>+<rst>abc "
-			"defg<brightblue>-<rst><gray><rst><c19><c9><ceos><brightblue>+<rst>abc "
+			"defg<brightblue>-<rst><c19><c9><ceos><brightblue>+<rst>abc "
 			"defg<brightblue>-<rst><c9><c9><ceos><brightblue>-<rst>ijklmn "
 			"zzxq<brightblue>++<rst>abc "
 			"defg<brightblue>-<rst><c22><c9><ceos><brightblue>-<rst>ijklmn "
@@ -815,7 +815,7 @@ class ReplxxTests( unittest.TestCase ):
 	def test_kill_next_word( self_ ):
 		self_.check_scenario(
 			"<up><home><c-right><m-d><c-right><c-y><cr><c-d>",
-			"<c9><ceos>alpha charlie bravo delta<rst><gray><rst><c34><c9><ceos>alpha "
+			"<c9><ceos>alpha charlie bravo delta<rst><c34><c9><ceos>alpha "
 			"charlie bravo delta<rst><c9><c9><ceos>alpha charlie bravo "
 			"delta<rst><c14><c9><ceos>alpha bravo delta<rst><c14><c9><ceos>alpha bravo "
 			"delta<rst><c20><c9><ceos>alpha bravo charlie delta<rst><c28><c9><ceos>alpha "
@@ -826,7 +826,7 @@ class ReplxxTests( unittest.TestCase ):
 	def test_kill_prev_word_to_white_space( self_ ):
 		self_.check_scenario(
 			"<up><c-left><c-w><c-left><c-y><cr><c-d>",
-			"<c9><ceos>alpha charlie bravo delta<rst><gray><rst><c34><c9><ceos>alpha "
+			"<c9><ceos>alpha charlie bravo delta<rst><c34><c9><ceos>alpha "
 			"charlie bravo delta<rst><c29><c9><ceos>alpha charlie "
 			"delta<rst><c23><c9><ceos>alpha charlie delta<rst><c15><c9><ceos>alpha bravo "
 			"charlie delta<rst><c21><c9><ceos>alpha bravo charlie delta<rst><c34>\r\n"
@@ -837,7 +837,7 @@ class ReplxxTests( unittest.TestCase ):
 		self_.check_scenario(
 			"<up><c-left><m-backspace><c-left><c-y><cr><c-d>",
 			"<c9><ceos>alpha<brightmagenta>.<rst>charlie "
-			"bravo<brightmagenta>.<rst>delta<rst><gray><rst><c34><c9><ceos>alpha<brightmagenta>.<rst>charlie "
+			"bravo<brightmagenta>.<rst>delta<rst><c34><c9><ceos>alpha<brightmagenta>.<rst>charlie "
 			"bravo<brightmagenta>.<rst>delta<rst><c29><c9><ceos>alpha<brightmagenta>.<rst>charlie "
 			"delta<rst><c23><c9><ceos>alpha<brightmagenta>.<rst>charlie "
 			"delta<rst><c15><c9><ceos>alpha<brightmagenta>.<rst>bravo<brightmagenta>.<rst>charlie "
@@ -849,43 +849,43 @@ class ReplxxTests( unittest.TestCase ):
 	def test_kill_ring( self_ ):
 		self_.check_scenario(
 			"<up><c-w><backspace><c-w><backspace><c-w><backspace><c-u><c-y><m-y><m-y><m-y> <c-y><m-y><m-y><m-y> <c-y><m-y><m-y><m-y> <c-y><m-y><m-y><m-y><cr><c-d>",
-			"<c9><ceos>delta charlie bravo alpha<rst><gray><rst><c34><c9><ceos>delta "
-			"charlie bravo <rst><gray><rst><c29><c9><ceos>delta charlie "
-			"bravo<rst><gray><rst><c28><c9><ceos>delta charlie "
-			"<rst><gray><rst><c23><c9><ceos>delta "
-			"charlie<rst><gray><rst><c22><c9><ceos>delta "
-			"<rst><gray><rst><c15>"
-			"<c9><ceos>delta<rst><gray><rst><c14>"
-			"<c9><ceos><rst><gray><rst><c9>"
-			"<c9><ceos>delta<rst><gray><rst><c14>"
-			"<c9><ceos>charlie<rst><gray><rst><c16>"
-			"<c9><ceos>bravo<rst><gray><rst><c14>"
-			"<c9><ceos>alpha<rst><gray><rst><c14>"
+			"<c9><ceos>delta charlie bravo alpha<rst><c34><c9><ceos>delta "
+			"charlie bravo <rst><c29><c9><ceos>delta charlie "
+			"bravo<rst><c28><c9><ceos>delta charlie "
+			"<rst><c23><c9><ceos>delta "
+			"charlie<rst><c22><c9><ceos>delta "
+			"<rst><c15>"
+			"<c9><ceos>delta<rst><c14>"
+			"<c9><ceos><rst><c9>"
+			"<c9><ceos>delta<rst><c14>"
+			"<c9><ceos>charlie<rst><c16>"
+			"<c9><ceos>bravo<rst><c14>"
+			"<c9><ceos>alpha<rst><c14>"
 			"<c9><ceos>alpha "
-			"<rst><gray><rst><c15><c9><ceos>alpha "
-			"alpha<rst><gray><rst><c20><c9><ceos>alpha "
-			"delta<rst><gray><rst><c20><c9><ceos>alpha "
-			"charlie<rst><gray><rst><c22><c9><ceos>alpha "
-			"bravo<rst><gray><rst><c20><c9><ceos>alpha bravo "
-			"<rst><gray><rst><c21><c9><ceos>alpha bravo "
-			"bravo<rst><gray><rst><c26><c9><ceos>alpha bravo "
-			"alpha<rst><gray><rst><c26><c9><ceos>alpha bravo "
-			"delta<rst><gray><rst><c26><c9><ceos>alpha bravo "
-			"charlie<rst><gray><rst><c28><c9><ceos>alpha bravo charlie "
-			"<rst><gray><rst><c29><c9><ceos>alpha bravo charlie "
-			"charlie<rst><gray><rst><c36><c9><ceos>alpha bravo charlie "
-			"bravo<rst><gray><rst><c34><c9><ceos>alpha bravo charlie "
-			"alpha<rst><gray><rst><c34><c9><ceos>alpha bravo charlie "
-			"delta<rst><gray><rst><c34><c9><ceos>alpha bravo charlie delta<rst><c34>\r\n"
+			"<rst><c15><c9><ceos>alpha "
+			"alpha<rst><c20><c9><ceos>alpha "
+			"delta<rst><c20><c9><ceos>alpha "
+			"charlie<rst><c22><c9><ceos>alpha "
+			"bravo<rst><c20><c9><ceos>alpha bravo "
+			"<rst><c21><c9><ceos>alpha bravo "
+			"bravo<rst><c26><c9><ceos>alpha bravo "
+			"alpha<rst><c26><c9><ceos>alpha bravo "
+			"delta<rst><c26><c9><ceos>alpha bravo "
+			"charlie<rst><c28><c9><ceos>alpha bravo charlie "
+			"<rst><c29><c9><ceos>alpha bravo charlie "
+			"charlie<rst><c36><c9><ceos>alpha bravo charlie "
+			"bravo<rst><c34><c9><ceos>alpha bravo charlie "
+			"alpha<rst><c34><c9><ceos>alpha bravo charlie "
+			"delta<rst><c34><c9><ceos>alpha bravo charlie delta<rst><c34>\r\n"
 			"alpha bravo charlie delta\r\n",
 			"delta charlie bravo alpha\n"
 		)
 		self_.check_scenario(
 			"<up><c-w><c-w><backspace><c-a><c-y> <cr><c-d>",
-			"<c9><ceos>charlie delta alpha bravo<rst><gray><rst><c34><c9><ceos>charlie "
-			"delta alpha <rst><gray><rst><c29><c9><ceos>charlie delta "
-			"<rst><gray><rst><c23><c9><ceos>charlie "
-			"delta<rst><gray><rst><c22><c9><ceos>charlie delta<rst><c9><c9><ceos>alpha "
+			"<c9><ceos>charlie delta alpha bravo<rst><c34><c9><ceos>charlie "
+			"delta alpha <rst><c29><c9><ceos>charlie delta "
+			"<rst><c23><c9><ceos>charlie "
+			"delta<rst><c22><c9><ceos>charlie delta<rst><c9><c9><ceos>alpha "
 			"bravocharlie delta<rst><c20><c9><ceos>alpha bravo charlie "
 			"delta<rst><c21><c9><ceos>alpha bravo charlie delta<rst><c34>\r\n"
 			"alpha bravo charlie delta\r\n",
@@ -893,12 +893,12 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<up><home><m-d><m-d><del><c-e> <c-y><cr><c-d>",
-			"<c9><ceos>charlie delta alpha bravo<rst><gray><rst><c34><c9><ceos>charlie "
+			"<c9><ceos>charlie delta alpha bravo<rst><c34><c9><ceos>charlie "
 			"delta alpha bravo<rst><c9><c9><ceos> delta alpha bravo<rst><c9><c9><ceos> "
 			"alpha bravo<rst><c9><c9><ceos>alpha bravo<rst><c9><c9><ceos>alpha "
-			"bravo<rst><gray><rst><c20><c9><ceos>alpha bravo "
-			"<rst><gray><rst><c21><c9><ceos>alpha bravo charlie "
-			"delta<rst><gray><rst><c34><c9><ceos>alpha bravo charlie delta<rst><c34>\r\n"
+			"bravo<rst><c20><c9><ceos>alpha bravo "
+			"<rst><c21><c9><ceos>alpha bravo charlie "
+			"delta<rst><c34><c9><ceos>alpha bravo charlie delta<rst><c34>\r\n"
 			"alpha bravo charlie delta\r\n",
 			"charlie delta alpha bravo\n"
 		)
@@ -906,34 +906,34 @@ class ReplxxTests( unittest.TestCase ):
 			"<up><c-w><backspace><c-w><backspace><c-w><backspace><c-w><backspace><c-w><backspace>"
 			"<c-w><backspace><c-w><backspace><c-w><backspace><c-w><backspace><c-w><backspace>"
 			"<c-w><c-y><m-y><m-y><m-y><m-y><m-y><m-y><m-y><m-y><m-y><m-y><cr><c-d>",
-			"<c9><ceos>a b c d e f g h i j k<rst><gray><rst><c30><c9><ceos>a b c d e f g "
-			"h i j <rst><gray><rst><c29><c9><ceos>a b c d e f g h i "
-			"j<rst><gray><rst><c28><c9><ceos>a b c d e f g h i "
-			"<rst><gray><rst><c27><c9><ceos>a b c d e f g h "
-			"i<rst><gray><rst><c26><c9><ceos>a b c d e f g h "
-			"<rst><gray><rst><c25><c9><ceos>a b c d e f g "
-			"h<rst><gray><rst><c24><c9><ceos>a b c d e f g "
-			"<rst><gray><rst><c23><c9><ceos>a b c d e f g<rst><gray><rst><c22><c9><ceos>a "
-			"b c d e f <rst><gray><rst><c21><c9><ceos>a b c d e "
-			"f<rst><gray><rst><c20><c9><ceos>a b c d e <rst><gray><rst><c19><c9><ceos>a b "
-			"c d e<rst><gray><rst><c18><c9><ceos>a b c d <rst><gray><rst><c17><c9><ceos>a "
-			"b c d<rst><gray><rst><c16><c9><ceos>a b c <rst><gray><rst><c15><c9><ceos>a b "
-			"c<rst><gray><rst><c14><c9><ceos>a b <rst><gray><rst><c13><c9><ceos>a "
-			"b<rst><gray><rst><c12><c9><ceos>a "
-			"<rst><gray><rst><c11>"
-			"<c9><ceos>a<rst><gray><rst><c10>"
-			"<c9><ceos><rst><gray><rst><c9>"
-			"<c9><ceos>a<rst><gray><rst><c10>"
-			"<c9><ceos>b<rst><gray><rst><c10>"
-			"<c9><ceos>c<rst><gray><rst><c10>"
-			"<c9><ceos>d<rst><gray><rst><c10>"
-			"<c9><ceos>e<rst><gray><rst><c10>"
-			"<c9><ceos>f<rst><gray><rst><c10>"
-			"<c9><ceos>g<rst><gray><rst><c10>"
-			"<c9><ceos>h<rst><gray><rst><c10>"
-			"<c9><ceos>i<rst><gray><rst><c10>"
-			"<c9><ceos>j<rst><gray><rst><c10>"
-			"<c9><ceos>a<rst><gray><rst><c10>"
+			"<c9><ceos>a b c d e f g h i j k<rst><c30><c9><ceos>a b c d e f g "
+			"h i j <rst><c29><c9><ceos>a b c d e f g h i "
+			"j<rst><c28><c9><ceos>a b c d e f g h i "
+			"<rst><c27><c9><ceos>a b c d e f g h "
+			"i<rst><c26><c9><ceos>a b c d e f g h "
+			"<rst><c25><c9><ceos>a b c d e f g "
+			"h<rst><c24><c9><ceos>a b c d e f g "
+			"<rst><c23><c9><ceos>a b c d e f g<rst><c22><c9><ceos>a "
+			"b c d e f <rst><c21><c9><ceos>a b c d e "
+			"f<rst><c20><c9><ceos>a b c d e <rst><c19><c9><ceos>a b "
+			"c d e<rst><c18><c9><ceos>a b c d <rst><c17><c9><ceos>a "
+			"b c d<rst><c16><c9><ceos>a b c <rst><c15><c9><ceos>a b "
+			"c<rst><c14><c9><ceos>a b <rst><c13><c9><ceos>a "
+			"b<rst><c12><c9><ceos>a "
+			"<rst><c11>"
+			"<c9><ceos>a<rst><c10>"
+			"<c9><ceos><rst><c9>"
+			"<c9><ceos>a<rst><c10>"
+			"<c9><ceos>b<rst><c10>"
+			"<c9><ceos>c<rst><c10>"
+			"<c9><ceos>d<rst><c10>"
+			"<c9><ceos>e<rst><c10>"
+			"<c9><ceos>f<rst><c10>"
+			"<c9><ceos>g<rst><c10>"
+			"<c9><ceos>h<rst><c10>"
+			"<c9><ceos>i<rst><c10>"
+			"<c9><ceos>j<rst><c10>"
+			"<c9><ceos>a<rst><c10>"
 			"<c9><ceos>a<rst><c10>\r\n"
 			"a\r\n",
 			"a b c d e f g h i j k\n"
@@ -941,37 +941,37 @@ class ReplxxTests( unittest.TestCase ):
 	def test_tab_completion_cutoff( self_ ):
 		self_.check_scenario(
 			"<tab>n<tab>y<cr><c-d>",
-			"<c9><ceos><rst><gray><rst><c9>\r\n"
+			"<c9><ceos><rst><c9>\r\n"
 			"Display all 9 possibilities? (y or n)\r\n"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><gray><rst><c9>\r\n"
+			"<c9><ceos><rst><c9><c9><ceos><rst><c9>\r\n"
 			"Display all 9 possibilities? (y or n)<ceos>\r\n"
 			"db            hallo         hansekogge    quetzalcoatl  power\r\n"
 			"hello         hans          seamann       quit\r\n"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			"<c9><ceos><rst><c9><c9><ceos><rst><c9>\r\n",
 			command = ReplxxTests._cSample_ + " q1 c3"
 		)
 		self_.check_scenario(
 			"<tab>n<cr><c-d>",
-			"<c9><ceos><rst><gray><rst><c9>\r\n"
+			"<c9><ceos><rst><c9>\r\n"
 			"Display all 9 possibilities? (y or n)\r\n"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			"<c9><ceos><rst><c9><c9><ceos><rst><c9>\r\n",
 			command = ReplxxTests._cSample_ + " q1 c3"
 		)
 		self_.check_scenario(
 			"<tab><c-c><cr><c-d>",
-			"<c9><ceos><rst><gray><rst><c9>\r\n"
+			"<c9><ceos><rst><c9>\r\n"
 			"Display all 9 possibilities? (y or n)^C\r\n"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><gray><rst><c9><c9><ceos><rst><c9>\r\n",
+			"<c9><ceos><rst><c9><c9><ceos><rst><c9>\r\n",
 			command = ReplxxTests._cSample_ + " q1 c3"
 		)
 	def test_preload( self_ ):
 		self_.check_scenario(
 			"<cr><c-d>",
-			"<c9><ceos>Alice has a cat.<rst><gray><rst><c25>"
+			"<c9><ceos>Alice has a cat.<rst><c25>"
 			"<c9><ceos>Alice has a cat.<rst><c25>\r\n"
 			"Alice has a cat.\r\n",
 			command = ReplxxTests._cSample_ + " q1 'iAlice has a cat.'"
@@ -979,7 +979,7 @@ class ReplxxTests( unittest.TestCase ):
 		self_.check_scenario(
 			"<cr><c-d>",
 			"<c9><ceos>Cat  eats  mice. "
-			"<rst><gray><rst><c26><c9><ceos>Cat  eats  mice. "
+			"<rst><c26><c9><ceos>Cat  eats  mice. "
 			"<rst><c26>\r\n"
 			"Cat  eats  mice. "
 			"\r\n",
@@ -988,7 +988,7 @@ class ReplxxTests( unittest.TestCase ):
 		self_.check_scenario(
 			"<cr><c-d>",
 			"<c9><ceos>Cat  eats  mice. "
-			"<rst><gray><rst><c26><c9><ceos>Cat  eats  mice. "
+			"<rst><c26><c9><ceos>Cat  eats  mice. "
 			"<rst><c26>\r\n"
 			"Cat  eats  mice. "
 			"\r\n",
@@ -996,14 +996,14 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<cr><c-d>",
-			"<c9><ceos>M Alice has a cat.<rst><gray><rst><c27>"
+			"<c9><ceos>M Alice has a cat.<rst><c27>"
 			"<c9><ceos>M Alice has a cat.<rst><c27>\r\n"
 			"M Alice has a cat.\r\n",
 			command = ReplxxTests._cSample_ + " q1 'iMAlice has a cat.'"
 		)
 		self_.check_scenario(
 			"<cr><c-d>",
-			"<c9><ceos>M  Alice has a cat.<rst><gray><rst><c28>"
+			"<c9><ceos>M  Alice has a cat.<rst><c28>"
 			"<c9><ceos>M  Alice has a cat.<rst><c28>\r\n"
 			"M  Alice has a cat.\r\n",
 			command = ReplxxTests._cSample_ + " q1 'iM\t\t\t\tAlice has a cat.'"
@@ -1012,11 +1012,11 @@ class ReplxxTests( unittest.TestCase ):
 		prompt = "date: now\nrepl> "
 		self_.check_scenario(
 			"<up><cr><up><up><cr><c-d>",
-			"<c7><ceos>three<rst><gray><rst><c12><c7><ceos>three<rst><c12>\r\n"
+			"<c7><ceos>three<rst><c12><c7><ceos>three<rst><c12>\r\n"
 			"three\r\n"
 			"date: now\r\n"
 			"repl> "
-			"<c7><ceos>three<rst><gray><rst><c12><c7><ceos>two<rst><gray><rst><c10><c7><ceos>two<rst><c10>\r\n"
+			"<c7><ceos>three<rst><c12><c7><ceos>two<rst><c10><c7><ceos>two<rst><c10>\r\n"
 			"two\r\n",
 			command = ReplxxTests._cSample_ + " q1 'p{}'".format( prompt ),
 			prompt = prompt,
@@ -1026,7 +1026,7 @@ class ReplxxTests( unittest.TestCase ):
 		self_.check_scenario(
 			"<up><c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left><cr><c-d>",
 			"<c9><ceos>ada clojure eiffel fortran groovy java kotlin modula perl python "
-			"rust sql<rst><gray><rst><c2><u2><c9><ceos>ada clojure eiffel fortran groovy "
+			"rust sql<rst><c2><u2><c9><ceos>ada clojure eiffel fortran groovy "
 			"java kotlin modula perl python rust sql<rst><u1><c39><u1><c9><ceos>ada "
 			"clojure eiffel fortran groovy java kotlin modula perl python rust "
 			"~sql<rst><u1><c40><u1><c9><ceos>ada clojure eiffel fortran groovy java "
@@ -1100,7 +1100,7 @@ class ReplxxTests( unittest.TestCase ):
 		self_.check_scenario(
 			"<up><c-left>x<c-left><c-left>x<c-left><c-left>x<c-left><c-left>x<c-left><c-left>x<c-left><c-left>x<cr><c-d>",
 			"<c9><ceos>one_two three-four five_six "
-			"seven-eight<rst><gray><rst><c48><c9><ceos>one_two three-four five_six "
+			"seven-eight<rst><c48><c9><ceos>one_two three-four five_six "
 			"seven-eight<rst><c43><c9><ceos>one_two three-four five_six "
 			"seven-xeight<rst><c44><c9><ceos>one_two three-four five_six "
 			"seven-xeight<rst><c43><c9><ceos>one_two three-four five_six "
@@ -1126,7 +1126,7 @@ class ReplxxTests( unittest.TestCase ):
 		self_.check_scenario(
 			"<up><c-left>x<c-left><c-left>x<c-left><c-left>x<c-left><c-left>x<c-left><c-left>x<c-left><c-left>x<cr><c-d>",
 			"<c9><ceos>one_two three-four five_six "
-			"seven-eight<rst><gray><rst><c48><c9><ceos>one_two three-four five_six "
+			"seven-eight<rst><c48><c9><ceos>one_two three-four five_six "
 			"seven-eight<rst><c37><c9><ceos>one_two three-four five_six "
 			"xseven-eight<rst><c38><c9><ceos>one_two three-four five_six "
 			"xseven-eight<rst><c37><c9><ceos>one_two three-four five_six "
@@ -1175,11 +1175,11 @@ class ReplxxTests( unittest.TestCase ):
 			[ "a", "b", "c", "d", "e", "f<cr><c-d>" ],
 			"<c1><ceos>0\r\n"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><gray><rst><c9><c9><ceos>a<rst><gray><rst><c10><c9><ceos>ab<rst><gray><rst><c11><c1><ceos>1\r\n"
+			"<c9><ceos><rst><c9><c9><ceos>a<rst><c10><c9><ceos>ab<rst><c11><c1><ceos>1\r\n"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos>ab<rst><gray><rst><c11><c9><ceos>abc<rst><gray><rst><c12><c9><ceos>abcd<rst><gray><rst><c13><c1><ceos>2\r\n"
+			"<c9><ceos>ab<rst><c11><c9><ceos>abc<rst><c12><c9><ceos>abcd<rst><c13><c1><ceos>2\r\n"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos>abcd<rst><gray><rst><c13><c9><ceos>abcde<rst><gray><rst><c14><c9><ceos>abcdef<rst><gray><rst><c15><c9><ceos>abcdef<rst><c15>\r\n"
+			"<c9><ceos>abcd<rst><c13><c9><ceos>abcde<rst><c14><c9><ceos>abcdef<rst><c15><c9><ceos>abcdef<rst><c15>\r\n"
 			"abcdef\r\n",
 			command = ReplxxTests._cxxSample_ + " a",
 			pause = 0.5
