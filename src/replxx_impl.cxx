@@ -1786,7 +1786,6 @@ void Replxx::ReplxxImpl::dynamicRefresh(Prompt& pi, char32_t* buf32, int len, in
 		yCursorPos
 	);
 
-#ifdef _WIN32
 	pi._previousLen = pi._indentation;
 	pi._previousInputLen = len;
 
@@ -1796,35 +1795,17 @@ void Replxx::ReplxxImpl::dynamicRefresh(Prompt& pi, char32_t* buf32, int len, in
 	// display the input line
 	_terminal.write32( buf32, len );
 
+#ifndef _WIN32
+	// we have to generate our own newline on line wrap
+	if (xEndOfInput == 0 && yEndOfInput > 0) {
+		_terminal.write8( "\n", 1 );
+	}
+#endif
 	// position the cursor
 	_terminal.jump_cursor(
 		xCursorPos, // 0-based on Win32
 		-( yEndOfInput - yCursorPos )
 	);
-#else // _WIN32
-	// display the prompt
-	pi.write();
-
-	// display the input line
-	_terminal.write32( buf32, len );
-
-	// we have to generate our own newline on line wrap
-	if (xEndOfInput == 0 && yEndOfInput > 0) {
-		_terminal.write8( "\n", 1 );
-	}
-
-	// position the cursor
-	char seq[64];
-	int cursorRowMovement = yEndOfInput - yCursorPos;
-	if (cursorRowMovement > 0) { // move the cursor up as required
-		snprintf(seq, sizeof seq, "\x1b[%dA", cursorRowMovement);
-		_terminal.write8( seq, strlen( seq ) );
-	}
-	// position the cursor within the line
-	snprintf(seq, sizeof seq, "\x1b[%dG", xCursorPos + 1); // 1-based on VT100
-	_terminal.write8( seq, strlen( seq ) );
-#endif
-
 	pi._cursorRowOffset = pi._extraLines + yCursorPos; // remember row for next pass
 }
 
