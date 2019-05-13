@@ -1167,6 +1167,39 @@ class ReplxxTests( unittest.TestCase ):
 			" color_gray color_brightred color_brightgreen color_yellow color_brightblue color_brightmagenta color_brightcyan color_white\n",
 			command = ReplxxTests._cSample_ + " q1 m1"
 		)
+	def test_backspace_long_line_on_small_term( self_ ):
+		self_.check_scenario(
+			"<cr><cr><cr><up><backspace><backspace><backspace><backspace><backspace><backspace><backspace><backspace><cr><c-d>",
+			"<c9><ceos><rst><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c14><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c13><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c12><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c11><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c10><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c9><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c8><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c7><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c6><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c6>\r\n"
+			"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n",
+			"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n",
+			dimensions = ( 10, 40 )
+		)
+		self_.check_scenario(
+			"<cr><cr><cr><up><backspace><backspace><backspace><backspace><backspace><backspace><cr><c-d>",
+			"<c9><ceos><rst><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos>a qu ite lo ng li ne of sh ort wo rds wi "
+			"ll te st cu rs or mo ve me nt<rst><c39><u1><c9><ceos>a qu ite lo "
+			"ng li ne of sh ort wo rds wi ll te st cu rs or mo ve me "
+			"n<rst><c38><u1><c9><ceos>a qu ite lo ng li ne of sh ort wo rds wi "
+			"ll te st cu rs or mo ve me <rst><c37><u1><c9><ceos>a qu ite lo ng "
+			"li ne of sh ort wo rds wi ll te st cu rs or mo ve "
+			"me<rst><c36><u1><c9><ceos>a qu ite lo ng li ne of sh ort wo rds "
+			"wi ll te st cu rs or mo ve m<rst><c35><u1><c9><ceos>a qu ite lo "
+			"ng li ne of sh ort wo rds wi ll te st cu rs or mo ve "
+			"<rst><c34><u1><c9><ceos>a qu ite lo ng li ne of sh ort wo rds wi "
+			"ll te st cu rs or mo ve<rst><c33><u1><c9><ceos>a qu ite lo ng li "
+			"ne of sh ort wo rds wi ll te st cu rs or mo ve<rst><c33>\r\n"
+			"a qu ite lo ng li ne of sh ort wo rds wi ll te st cu rs or mo ve\r\n",
+			"a qu ite lo ng li ne of sh ort wo rds wi ll te st cu rs or mo ve me nt\n",
+			dimensions = ( 10, 40 )
+		)
 	def test_no_terminal( self_ ):
 		res = subprocess.run( [ ReplxxTests._cSample_, "q1" ], input = b"replxx FTW!\n", stdout = subprocess.PIPE, stderr = subprocess.PIPE )
 		self_.assertSequenceEqual( res.stdout, b"starting...\nreplxx FTW!\n\nExiting Replxx\n" )
