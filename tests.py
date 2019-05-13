@@ -239,7 +239,7 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<c-r>w<c-z><cr><c-d>",
-			"<c9><ceos><rst><c9><c1><ceos>(reverse-i-search)`': "
+			"<c1><ceos><c1><ceos>(reverse-i-search)`': "
 			"<c23><c1><ceos>(reverse-i-search)`w': "
 			"two<c25><c1><ceos>(reverse-i-search)`w': "
 			"two<c25><c1><ceos><brightgreen>replxx<rst>> "
@@ -453,7 +453,7 @@ class ReplxxTests( unittest.TestCase ):
 			"        <gray>color_brightred<rst>\r\n"
 			"        <gray>color_brightgreen<rst>\r\n"
 			"        "
-			"<gray>color_brightblue<rst><u3><c21><c9><ceos>color_brightb<rst><c22><c9><ceos><brightblue>color_brightblue<rst><c25><c9><ceos><brightblue>color_brightblue<rst><c25>\r\n"
+			"<gray>color_brightblue<rst><u3><c21><c9><ceos>color_brightb<rst><green>lue<rst><c22><c9><ceos><brightblue>color_brightblue<rst><c25><c9><ceos><brightblue>color_brightblue<rst><c25>\r\n"
 			"color_brightblue\r\n"
 		)
 		self_.check_scenario(
@@ -588,7 +588,7 @@ class ReplxxTests( unittest.TestCase ):
 			"        <gray>fortran<rst><u2><c11><c9><ceos>fort<rst>\r\n"
 			"        <gray>forth<rst>\r\n"
 			"        "
-			"<gray>fortran<rst><u2><c13><c9><ceos>fortr<rst><c14><c9><ceos>fortran<rst><c16><c9><ceos>fortran<rst><c16>\r\n"
+			"<gray>fortran<rst><u2><c13><c9><ceos>fortr<rst><gray>an<rst><c14><c9><ceos>fortran<rst><c16><c9><ceos>fortran<rst><c16>\r\n"
 			"fortran\r\n",
 			command = cmd
 		)
@@ -604,14 +604,14 @@ class ReplxxTests( unittest.TestCase ):
 			"        <gray>fortran<rst><u2><c11><bell><c9><ceos>fort<rst>\r\n"
 			"        <gray>forth<rst>\r\n"
 			"        "
-			"<gray>fortran<rst><u2><c13><bell><c9><ceos>fortr<rst><c14><c9><ceos>fortran<rst><c16><c9><ceos>fortran<rst><c16>\r\n"
+			"<gray>fortran<rst><u2><c13><bell><c9><ceos>fortr<rst><gray>an<rst><c14><c9><ceos>fortran<rst><c16><c9><ceos>fortran<rst><c16>\r\n"
 			"fortran\r\n",
 			command = cmd
 		)
 	def test_history_search_backward( self_ ):
 		self_.check_scenario(
 			"<c-r>repl<c-r><cr><c-d>",
-			"<c9><ceos><rst><c9><c1><ceos>(reverse-i-search)`': "
+			"<c1><ceos><c1><ceos>(reverse-i-search)`': "
 			"<c23><c1><ceos>(reverse-i-search)`r': echo repl "
 			"golf<c29><c1><ceos>(reverse-i-search)`re': echo repl "
 			"golf<c30><c1><ceos>(reverse-i-search)`rep': echo repl "
@@ -630,7 +630,7 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<c-r>for<backspace><backspace>s<cr><c-d>",
-			"<c9><ceos><rst><c9><c1><ceos>(reverse-i-search)`': "
+			"<c1><ceos><c1><ceos>(reverse-i-search)`': "
 			"<c23><c1><ceos>(reverse-i-search)`f': "
 			"swift<c27><c1><ceos>(reverse-i-search)`fo': "
 			"fortran<c25><c1><ceos>(reverse-i-search)`for': "
@@ -644,7 +644,7 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<c-r>mod<c-l><cr><c-d>",
-			"<c9><ceos><rst><c9><c1><ceos>(reverse-i-search)`': "
+			"<c1><ceos><c1><ceos>(reverse-i-search)`': "
 			"<c23><c1><ceos>(reverse-i-search)`m': "
 			"scheme<c28><c1><ceos>(reverse-i-search)`mo': "
 			"modula<c25><c1><ceos>(reverse-i-search)`mod': "
@@ -1200,6 +1200,15 @@ class ReplxxTests( unittest.TestCase ):
 			"a qu ite lo ng li ne of sh ort wo rds wi ll te st cu rs or mo ve me nt\n",
 			dimensions = ( 10, 40 )
 		)
+	def test_reverse_history_search_on_max_match( self_ ):
+		self_.check_scenario(
+			"<up><c-r><cr><c-d>",
+			"<c9><ceos>aaaaaaaaaaaaaaaaaaaaa<rst><c30><c1><ceos><c1><ceos>(reverse-i-search)`': "
+			"aaaaaaaaaaaaaaaaaaaaa<c44><c1><ceos><brightgreen>replxx<rst>> "
+			"aaaaaaaaaaaaaaaaaaaaa<c30><c9><ceos>aaaaaaaaaaaaaaaaaaaaa<rst><c30>\r\n"
+			"aaaaaaaaaaaaaaaaaaaaa\r\n",
+			"aaaaaaaaaaaaaaaaaaaaa\n"
+		)
 	def test_no_terminal( self_ ):
 		res = subprocess.run( [ ReplxxTests._cSample_, "q1" ], input = b"replxx FTW!\n", stdout = subprocess.PIPE, stderr = subprocess.PIPE )
 		self_.assertSequenceEqual( res.stdout, b"starting...\nreplxx FTW!\n\nExiting Replxx\n" )
@@ -1215,6 +1224,41 @@ class ReplxxTests( unittest.TestCase ):
 			"<c9><ceos>abcd<rst><c13><c9><ceos>abcde<rst><c14><c9><ceos>abcdef<rst><c15><c9><ceos>abcdef<rst><c15>\r\n"
 			"abcdef\r\n",
 			command = ReplxxTests._cxxSample_ + " a",
+			pause = 0.5
+		)
+		self_.check_scenario(
+			[ "<up>", "a", "b", "c", "d", "e", "f<cr><c-d>" ],
+			"<c1><ceos>0\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9><c9><ceos>a very long line of "
+			"user input, wider then current terminal, the line is wrapped: "
+			"<rst><c11><u2><c9><ceos>a very long line of user input, wider then current "
+			"terminal, the line is wrapped: a<rst><c12><u2><c1><ceos>1\r\n"
+			"<brightgreen>replxx<rst>> \r\n"
+			"\r\n"
+			"<u2><c9><ceos>a very long line of user input, wider then current terminal, "
+			"the line is wrapped: a<rst><c12><u2><c9><ceos>a very long line of user "
+			"input, wider then current terminal, the line is wrapped: "
+			"ab<rst><c13><u2><c9><ceos>a very long line of user input, wider then current "
+			"terminal, the line is wrapped: abc<rst><c14><u2><c1><ceos>2\r\n"
+			"<brightgreen>replxx<rst>> \r\n"
+			"\r\n"
+			"<u2><c9><ceos>a very long line of user input, wider then current terminal, "
+			"the line is wrapped: abc<rst><c14><u2><c9><ceos>a very long line of user "
+			"input, wider then current terminal, the line is wrapped: "
+			"abcd<rst><c15><u2><c9><ceos>a very long line of user input, wider then "
+			"current terminal, the line is wrapped: abcde<rst><c16><u2><c1><ceos>3\r\n"
+			"<brightgreen>replxx<rst>> \r\n"
+			"\r\n"
+			"<u2><c9><ceos>a very long line of user input, wider then current terminal, "
+			"the line is wrapped: abcde<rst><c16><u2><c9><ceos>a very long line of user "
+			"input, wider then current terminal, the line is wrapped: "
+			"abcdef<rst><c17><u2><c9><ceos>a very long line of user input, wider then "
+			"current terminal, the line is wrapped: abcdef<rst><c17>\r\n"
+			"a very long line of user input, wider then current terminal, the line is "
+			"wrapped: abcdef\r\n",
+			"a very long line of user input, wider then current terminal, the line is wrapped: \n",
+			command = ReplxxTests._cxxSample_ + " a",
+			dimensions = ( 10, 40 ),
 			pause = 0.5
 		)
 

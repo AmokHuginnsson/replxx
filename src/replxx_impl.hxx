@@ -183,6 +183,11 @@ private:
 	void dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos);
 	char const* finalize_input( char const* );
 	void clear_self_to_end_of_screen( void );
+	typedef struct {
+		int index;
+		bool error;
+	} paren_info_t;
+	paren_info_t matching_paren( void );
 };
 
 }

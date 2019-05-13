@@ -194,6 +194,9 @@ char32_t Replxx::ReplxxImpl::read_char( void ) {
 			_messages.pop_front();
 		}
 		_prompt.write();
+		for ( int i( _prompt._extraLines ); i < _prompt._cursorRowOffset; ++ i ) {
+			_terminal.write8( "\n", 1 );
+		}
 		refresh_line();
 	}
 	return ( _terminal.read_char() );
@@ -438,9 +441,9 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 	if ( hintCount == 1 ) {
 		_hint = hints.front();
 		len = _hint.length() - contextLen;
-		if ( contextLen < len ) {
+		if ( len > 0 ) {
 			setColor( c );
-			for ( int i( contextLen ); i < len; ++ i ) {
+			for ( int i( 0 ); i < len; ++ i ) {
 				_display.push_back( _hint[i + contextLen] );
 			}
 			setColor( Replxx::Color::DEFAULT );
@@ -496,6 +499,66 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 	return ( len );
 }
 
+Replxx::ReplxxImpl::paren_info_t Replxx::ReplxxImpl::matching_paren( void ) {
+	if (_pos >= _data.length()) {
+		return ( paren_info_t{ -1, false } );
+	}
+	/* this scans for a brace matching _data[_pos] to highlight */
+	unsigned char part1, part2;
+	int scanDirection = 0;
+	if ( strchr("}])", _data[_pos]) ) {
+		scanDirection = -1; /* backwards */
+		if (_data[_pos] == '}') {
+			part1 = '}'; part2 = '{';
+		} else if (_data[_pos] == ']') {
+			part1 = ']'; part2 = '[';
+		} else {
+			part1 = ')'; part2 = '(';
+		}
+	} else if ( strchr("{[(", _data[_pos]) ) {
+		scanDirection = 1; /* forwards */
+		if (_data[_pos] == '{') {
+			//part1 = '{'; part2 = '}';
+			part1 = '}'; part2 = '{';
+		} else if (_data[_pos] == '[') {
+			//part1 = '['; part2 = ']';
+			part1 = ']'; part2 = '[';
+		} else {
+			//part1 = '('; part2 = ')';
+			part1 = ')'; part2 = '(';
+		}
+	} else {
+		return ( paren_info_t{ -1, false } );
+	}
+	int highlightIdx = -1;
+	bool indicateError = false;
+	int unmatched = scanDirection;
+	int unmatchedOther = 0;
+	for (int i = _pos + scanDirection; i >= 0 && i < _data.length(); i += scanDirection) {
+		/* TODO: the right thing when inside a string */
+		if (strchr("}])", _data[i])) {
+			if (_data[i] == part1) {
+				--unmatched;
+			} else {
+				--unmatchedOther;
+			}
+		} else if (strchr("{[(", _data[i])) {
+			if (_data[i] == part2) {
+				++unmatched;
+			} else {
+				++unmatchedOther;
+			}
+		}
+
+		if (unmatched == 0) {
+			highlightIdx = i;
+			indicateError = (unmatchedOther != 0);
+			break;
+		}
+	}
+	return ( paren_info_t{ highlightIdx, indicateError } );
+}
+
 /**
  * Refresh the user's input line: the prompt is already onscreen and is not
  * redrawn here
@@ -504,64 +567,8 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
  */
 void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	// check for a matching brace/bracket/paren, remember its position if found
-	int highlightIdx = -1;
-	bool indicateError = false;
-	if (_pos < _data.length()) {
-		/* this scans for a brace matching _data[_pos] to highlight */
-		unsigned char part1, part2;
-		int scanDirection = 0;
-		if (strchr("}])", _data[_pos])) {
-			scanDirection = -1; /* backwards */
-			if (_data[_pos] == '}') {
-				part1 = '}'; part2 = '{';
-			} else if (_data[_pos] == ']') {
-				part1 = ']'; part2 = '[';
-			} else {
-				part1 = ')'; part2 = '(';
-			}
-		} else if (strchr("{[(", _data[_pos])) {
-			scanDirection = 1; /* forwards */
-			if (_data[_pos] == '{') {
-				//part1 = '{'; part2 = '}';
-				part1 = '}'; part2 = '{';
-			} else if (_data[_pos] == '[') {
-				//part1 = '['; part2 = ']';
-				part1 = ']'; part2 = '[';
-			} else {
-				//part1 = '('; part2 = ')';
-				part1 = ')'; part2 = '(';
-			}
-		}
-
-		if (scanDirection) {
-			int unmatched = scanDirection;
-			int unmatchedOther = 0;
-			for (int i = _pos + scanDirection; i >= 0 && i < _data.length(); i += scanDirection) {
-				/* TODO: the right thing when inside a string */
-				if (strchr("}])", _data[i])) {
-					if (_data[i] == part1) {
-						--unmatched;
-					} else {
-						--unmatchedOther;
-					}
-				} else if (strchr("{[(", _data[i])) {
-					if (_data[i] == part2) {
-						++unmatched;
-					} else {
-						++unmatchedOther;
-					}
-				}
-
-				if (unmatched == 0) {
-					highlightIdx = i;
-					indicateError = (unmatchedOther != 0);
-					break;
-				}
-			}
-		}
-	}
-
-	highlight( highlightIdx, indicateError );
+	paren_info_t pi( matching_paren() );
+	highlight( pi.index, pi.error );
 	int hintLen( handle_hints( hintAction_ ) );
 	// calculate the position of the end of the input line
 	int xEndOfInput( 0 ), yEndOfInput( 0 );
@@ -576,9 +583,8 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	int xCursorPos( 0 ), yCursorPos( 0 );
 	calculate_screen_position(
 		_prompt._indentation, 0, _prompt.screen_columns(),
-		calculate_displayed_length(_data.get(), _pos),
-		xCursorPos,
-		yCursorPos
+		calculate_displayed_length( _data.get(), _pos ),
+		xCursorPos, yCursorPos
 	);
 
 	// position at the end of the prompt, clear to end of previous input
@@ -596,15 +602,12 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	}
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap
-	if (xEndOfInput == 0 && yEndOfInput > 0) {
+	if ( ( xEndOfInput == 0 ) && ( yEndOfInput > 0 ) ) {
 		_terminal.write8( "\n", 1 );
 	}
 #endif
 	// position the cursor
-	_terminal.jump_cursor(
-		xCursorPos,
-		-( yEndOfInput - yCursorPos )
-	);
+	_terminal.jump_cursor( xCursorPos, -( yEndOfInput - yCursorPos ) );
 	_prompt._cursorRowOffset = _prompt._extraLines + yCursorPos; // remember row for next pass
 }
 
@@ -1458,10 +1461,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::incremental_history_search( int sta
 		_history.update_last( _utf8Buffer.get() );
 	}
 	int historyLinePosition( _pos );
-	UnicodeString empty;
-	_data.swap( empty );
-	refresh_line(); // erase the old input first
-	_data.swap( empty );
+	clear_self_to_end_of_screen();
 
 	DynamicPrompt dp( _terminal, (startChar == ctrlChar('R')) ? -1 : 1 );
 
@@ -1743,10 +1743,7 @@ void Replxx::ReplxxImpl::set_no_color( bool val ) {
 
 void Replxx::ReplxxImpl::clear_self_to_end_of_screen( void ) {
 	// position at the start of the prompt, clear to end of previous input
-	_terminal.jump_cursor(
-		0,
-		-( _prompt._cursorRowOffset - _prompt._extraLines )
-	);
+	_terminal.jump_cursor( 0, -_prompt._cursorRowOffset );
 	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
 	return;
 }
