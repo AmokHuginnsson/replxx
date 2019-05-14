@@ -1,6 +1,6 @@
 #include "escape.hxx"
 #include "io.hxx"
-#include "keycodes.hxx"
+#include "replxx.hxx"
 
 #ifndef _WIN32
 
@@ -62,42 +62,42 @@ char32_t doDispatch(char32_t c, CharacterDispatch& dispatchTable) {
 //
 static char32_t normalKeyRoutine(char32_t c) { return thisKeyMetaCtrl | c; }
 static char32_t upArrowKeyRoutine(char32_t) {
-	return thisKeyMetaCtrl | UP_ARROW_KEY;
+	return thisKeyMetaCtrl | Replxx::KEY::UP;;
 }
 static char32_t downArrowKeyRoutine(char32_t) {
-	return thisKeyMetaCtrl | DOWN_ARROW_KEY;
+	return thisKeyMetaCtrl | Replxx::KEY::DOWN;
 }
 static char32_t rightArrowKeyRoutine(char32_t) {
-	return thisKeyMetaCtrl | RIGHT_ARROW_KEY;
+	return thisKeyMetaCtrl | Replxx::KEY::RIGHT;
 }
 static char32_t leftArrowKeyRoutine(char32_t) {
-	return thisKeyMetaCtrl | LEFT_ARROW_KEY;
+	return thisKeyMetaCtrl | Replxx::KEY::LEFT;
 }
-static char32_t homeKeyRoutine(char32_t) { return thisKeyMetaCtrl | HOME_KEY; }
-static char32_t endKeyRoutine(char32_t) { return thisKeyMetaCtrl | END_KEY; }
+static char32_t homeKeyRoutine(char32_t) { return thisKeyMetaCtrl | Replxx::KEY::HOME; }
+static char32_t endKeyRoutine(char32_t) { return thisKeyMetaCtrl | Replxx::KEY::END; }
 static char32_t pageUpKeyRoutine(char32_t) {
-	return thisKeyMetaCtrl | PAGE_UP_KEY;
+	return thisKeyMetaCtrl | Replxx::KEY::PAGE_UP;
 }
 static char32_t pageDownKeyRoutine(char32_t) {
-	return thisKeyMetaCtrl | PAGE_DOWN_KEY;
+	return thisKeyMetaCtrl | Replxx::KEY::PAGE_DOWN;
 }
 static char32_t deleteCharRoutine(char32_t) {
-	return thisKeyMetaCtrl | ctrlChar('H');
+	return thisKeyMetaCtrl | Replxx::KEY::BACKSPACE;
 }	// key labeled Backspace
 static char32_t deleteKeyRoutine(char32_t) {
-	return thisKeyMetaCtrl | DELETE_KEY;
+	return thisKeyMetaCtrl | Replxx::KEY::DELETE;
 }	// key labeled Delete
 static char32_t ctrlUpArrowKeyRoutine(char32_t) {
-	return thisKeyMetaCtrl | CTRL | UP_ARROW_KEY;
+	return thisKeyMetaCtrl | Replxx::KEY::BASE_CONTROL | Replxx::KEY::UP;
 }
 static char32_t ctrlDownArrowKeyRoutine(char32_t) {
-	return thisKeyMetaCtrl | CTRL | DOWN_ARROW_KEY;
+	return thisKeyMetaCtrl | Replxx::KEY::BASE_CONTROL | Replxx::KEY::DOWN;
 }
 static char32_t ctrlRightArrowKeyRoutine(char32_t) {
-	return thisKeyMetaCtrl | CTRL | RIGHT_ARROW_KEY;
+	return thisKeyMetaCtrl | Replxx::KEY::BASE_CONTROL | Replxx::KEY::RIGHT;
 }
 static char32_t ctrlLeftArrowKeyRoutine(char32_t) {
-	return thisKeyMetaCtrl | CTRL | LEFT_ARROW_KEY;
+	return thisKeyMetaCtrl | Replxx::KEY::BASE_CONTROL | Replxx::KEY::LEFT;
 }
 static char32_t escFailureRoutine(char32_t) {
 	beep();
@@ -117,13 +117,13 @@ static CharacterDispatch escLeftBracket1Semicolon3or5Dispatch = {
 static char32_t escLeftBracket1Semicolon3Routine(char32_t c) {
 	c = read_unicode_character();
 	if (c == 0) return 0;
-	thisKeyMetaCtrl |= META;
+	thisKeyMetaCtrl |= Replxx::KEY::BASE_META;
 	return doDispatch(c, escLeftBracket1Semicolon3or5Dispatch);
 }
 static char32_t escLeftBracket1Semicolon5Routine(char32_t c) {
 	c = read_unicode_character();
 	if (c == 0) return 0;
-	thisKeyMetaCtrl |= CTRL;
+	thisKeyMetaCtrl |= Replxx::KEY::BASE_CONTROL;
 	return doDispatch(c, escLeftBracket1Semicolon3or5Dispatch);
 }
 static CharacterDispatchRoutine escLeftBracket1SemicolonRoutines[] = {
@@ -287,7 +287,7 @@ static CharacterDispatch initialDispatch = {2, "\x1B\x7F", initialRoutines};
 // Special handling for the ESC key because it does double duty
 //
 static char32_t setMetaRoutine(char32_t c) {
-	thisKeyMetaCtrl = META;
+	thisKeyMetaCtrl = Replxx::KEY::BASE_META;
 	if (c == 0x1B) {	// another ESC, stay in ESC processing mode
 		c = read_unicode_character();
 		if (c == 0) return 0;

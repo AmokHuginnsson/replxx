@@ -47,27 +47,76 @@ extern "C" {
 /*! \brief Color definitions to use in highlighter callbacks.
  */
 typedef enum {
-	BLACK         = 0,
-	RED           = 1,
-	GREEN         = 2,
-	BROWN         = 3,
-	BLUE          = 4,
-	MAGENTA       = 5,
-	CYAN          = 6,
-	LIGHTGRAY     = 7,
-	GRAY          = 8,
-	BRIGHTRED     = 9,
-	BRIGHTGREEN   = 10,
-	YELLOW        = 11,
-	BRIGHTBLUE    = 12,
-	BRIGHTMAGENTA = 13,
-	BRIGHTCYAN    = 14,
-	WHITE         = 15,
-	NORMAL        = LIGHTGRAY,
-	DEFAULT       = -1,
+	REPLXX_COLOR_BLACK         = 0,
+	REPLXX_COLOR_RED           = 1,
+	REPLXX_COLOR_GREEN         = 2,
+	REPLXX_COLOR_BROWN         = 3,
+	REPLXX_COLOR_BLUE          = 4,
+	REPLXX_COLOR_MAGENTA       = 5,
+	REPLXX_COLOR_CYAN          = 6,
+	REPLXX_COLOR_LIGHTGRAY     = 7,
+	REPLXX_COLOR_GRAY          = 8,
+	REPLXX_COLOR_BRIGHTRED     = 9,
+	REPLXX_COLOR_BRIGHTGREEN   = 10,
+	REPLXX_COLOR_YELLOW        = 11,
+	REPLXX_COLOR_BRIGHTBLUE    = 12,
+	REPLXX_COLOR_BRIGHTMAGENTA = 13,
+	REPLXX_COLOR_BRIGHTCYAN    = 14,
+	REPLXX_COLOR_WHITE         = 15,
+	REPLXX_COLOR_NORMAL        = REPLXX_COLOR_LIGHTGRAY,
+	REPLXX_COLOR_DEFAULT       = -1,
 #undef ERROR
-	ERROR         = -2
+	REPLXX_COLOR_ERROR         = -2
 } ReplxxColor;
+
+enum { REPLXX_KEY_BASE         = 0x0010ffff + 1 };
+enum { REPLXX_KEY_BASE_SHIFT   = 0x01000000 };
+enum { REPLXX_KEY_BASE_CONTROL = 0x02000000 };
+enum { REPLXX_KEY_BASE_META    = 0x04000000 };
+enum { REPLXX_KEY_ESCAPE       = 27 };
+enum { REPLXX_KEY_PAGE_UP      = REPLXX_KEY_BASE      + 1 };
+enum { REPLXX_KEY_PAGE_DOWN    = REPLXX_KEY_PAGE_UP   + 1 };
+enum { REPLXX_KEY_DOWN         = REPLXX_KEY_PAGE_DOWN + 1 };
+enum { REPLXX_KEY_UP           = REPLXX_KEY_DOWN      + 1 };
+enum { REPLXX_KEY_LEFT         = REPLXX_KEY_UP        + 1 };
+enum { REPLXX_KEY_RIGHT        = REPLXX_KEY_LEFT      + 1 };
+enum { REPLXX_KEY_HOME         = REPLXX_KEY_RIGHT     + 1 };
+enum { REPLXX_KEY_END          = REPLXX_KEY_HOME      + 1 };
+enum { REPLXX_KEY_DELETE       = REPLXX_KEY_END       + 1 };
+enum { REPLXX_KEY_INSERT       = REPLXX_KEY_DELETE    + 1 };
+enum { REPLXX_KEY_BACKSPACE    = REPLXX_KEY_INSERT    + 1 };
+enum { REPLXX_KEY_F1           = REPLXX_KEY_BACKSPACE + 1 };
+enum { REPLXX_KEY_F2           = REPLXX_KEY_F1        + 1 };
+enum { REPLXX_KEY_F3           = REPLXX_KEY_F2        + 1 };
+enum { REPLXX_KEY_F4           = REPLXX_KEY_F3        + 1 };
+enum { REPLXX_KEY_F5           = REPLXX_KEY_F4        + 1 };
+enum { REPLXX_KEY_F6           = REPLXX_KEY_F5        + 1 };
+enum { REPLXX_KEY_F7           = REPLXX_KEY_F6        + 1 };
+enum { REPLXX_KEY_F8           = REPLXX_KEY_F7        + 1 };
+enum { REPLXX_KEY_F9           = REPLXX_KEY_F8        + 1 };
+enum { REPLXX_KEY_F10          = REPLXX_KEY_F9        + 1 };
+enum { REPLXX_KEY_F11          = REPLXX_KEY_F10       + 1 };
+enum { REPLXX_KEY_F12          = REPLXX_KEY_F11       + 1 };
+enum { REPLXX_KEY_F13          = REPLXX_KEY_F12       + 1 };
+enum { REPLXX_KEY_F14          = REPLXX_KEY_F13       + 1 };
+enum { REPLXX_KEY_F15          = REPLXX_KEY_F14       + 1 };
+enum { REPLXX_KEY_F16          = REPLXX_KEY_F15       + 1 };
+enum { REPLXX_KEY_F17          = REPLXX_KEY_F16       + 1 };
+enum { REPLXX_KEY_F18          = REPLXX_KEY_F17       + 1 };
+enum { REPLXX_KEY_F19          = REPLXX_KEY_F18       + 1 };
+enum { REPLXX_KEY_F20          = REPLXX_KEY_F19       + 1 };
+enum { REPLXX_KEY_F21          = REPLXX_KEY_F20       + 1 };
+enum { REPLXX_KEY_F22          = REPLXX_KEY_F21       + 1 };
+enum { REPLXX_KEY_F23          = REPLXX_KEY_F22       + 1 };
+enum { REPLXX_KEY_F24          = REPLXX_KEY_F23       + 1 };
+enum { REPLXX_KEY_MOUSE        = REPLXX_KEY_F24       + 1 };
+
+#define REPLXX_KEY_SHIFT( key )   ( ( key ) | REPLXX_KEY_BASE_SHIFT )
+#define REPLXX_KEY_CONTROL( key ) ( ( key ) | REPLXX_KEY_BASE_CONTROL )
+#define REPLXX_KEY_META( key )    ( ( key ) | REPLXX_KEY_BASE_META )
+
+enum { REPLXX_KEY_TAB          = REPLXX_KEY_CONTROL( 'I' ) };
+enum { REPLXX_KEY_ENTER        = REPLXX_KEY_CONTROL( 'M' ) };
 
 typedef struct Replxx Replxx;
 

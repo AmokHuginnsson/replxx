@@ -62,6 +62,61 @@ public:
 #undef ERROR
 		ERROR         = -2
 	};
+	struct KEY {
+		static char32_t const BASE         = 0x0010ffff + 1;
+		static char32_t const BASE_SHIFT   = 0x01000000;
+		static char32_t const BASE_CONTROL = 0x02000000;
+		static char32_t const BASE_META    = 0x04000000;
+		static char32_t const ESCAPE       = 27;
+		static char32_t const PAGE_UP      = BASE      + 1;
+		static char32_t const PAGE_DOWN    = PAGE_UP   + 1;
+		static char32_t const DOWN         = PAGE_DOWN + 1;
+		static char32_t const UP           = DOWN      + 1;
+		static char32_t const LEFT         = UP        + 1;
+		static char32_t const RIGHT        = LEFT      + 1;
+		static char32_t const HOME         = RIGHT     + 1;
+		static char32_t const END          = HOME      + 1;
+#undef DELETE
+		static char32_t const DELETE       = END       + 1;
+		static char32_t const INSERT       = DELETE    + 1;
+		static char32_t const BACKSPACE    = INSERT    + 1;
+		static char32_t const F1           = BACKSPACE + 1;
+		static char32_t const F2           = F1        + 1;
+		static char32_t const F3           = F2        + 1;
+		static char32_t const F4           = F3        + 1;
+		static char32_t const F5           = F4        + 1;
+		static char32_t const F6           = F5        + 1;
+		static char32_t const F7           = F6        + 1;
+		static char32_t const F8           = F7        + 1;
+		static char32_t const F9           = F8        + 1;
+		static char32_t const F10          = F9        + 1;
+		static char32_t const F11          = F10       + 1;
+		static char32_t const F12          = F11       + 1;
+		static char32_t const F13          = F12       + 1;
+		static char32_t const F14          = F13       + 1;
+		static char32_t const F15          = F14       + 1;
+		static char32_t const F16          = F15       + 1;
+		static char32_t const F17          = F16       + 1;
+		static char32_t const F18          = F17       + 1;
+		static char32_t const F19          = F18       + 1;
+		static char32_t const F20          = F19       + 1;
+		static char32_t const F21          = F20       + 1;
+		static char32_t const F22          = F21       + 1;
+		static char32_t const F23          = F22       + 1;
+		static char32_t const F24          = F23       + 1;
+		static char32_t const MOUSE        = F24       + 1;
+		static constexpr char32_t shift( char32_t key_ ) {
+			return ( key_ | BASE_SHIFT );
+		}
+		static constexpr char32_t control( char32_t key_ ) {
+			return ( key_ | BASE_CONTROL );
+		}
+		static constexpr char32_t meta( char32_t key_ ) {
+			return ( key_ | BASE_META );
+		}
+		static char32_t const TAB          = 'I' | BASE_CONTROL;
+		static char32_t const ENTER        = 'M' | BASE_CONTROL;
+	};
 	typedef std::vector<Color> colors_t;
 	typedef std::vector<std::string> completions_t;
 	typedef std::vector<std::string> hints_t;

@@ -30,7 +30,6 @@
 #include "prompt.hxx"
 #include "util.hxx"
 #include "io.hxx"
-#include "keycodes.hxx"
 #include "history.hxx"
 #include "replxx.hxx"
 
@@ -110,66 +109,66 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _errorMessage()
 	, _mutex() {
 	using namespace std::placeholders;
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'A' ),        std::bind( &ReplxxImpl::go_to_begining_of_line,     this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( HOME_KEY,               std::bind( &ReplxxImpl::go_to_begining_of_line,     this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'E' ),        std::bind( &ReplxxImpl::go_to_end_of_line,          this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( END_KEY,                std::bind( &ReplxxImpl::go_to_end_of_line,          this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'B' ),        std::bind( &ReplxxImpl::move_one_char_left,         this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( LEFT_ARROW_KEY,         std::bind( &ReplxxImpl::move_one_char_left,         this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'F' ),        std::bind( &ReplxxImpl::move_one_char_right,        this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( RIGHT_ARROW_KEY,        std::bind( &ReplxxImpl::move_one_char_right,        this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'b',             std::bind( &ReplxxImpl::move_one_word_left,         this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'B',             std::bind( &ReplxxImpl::move_one_word_left,         this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( CTRL + LEFT_ARROW_KEY,  std::bind( &ReplxxImpl::move_one_word_left,         this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + LEFT_ARROW_KEY,  std::bind( &ReplxxImpl::move_one_word_left,         this, _1 ) ) ); // Emacs allows Meta, bash & readline don't
-	_keyPressHandlers.insert( make_pair( META + 'f',             std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'F',             std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( CTRL + RIGHT_ARROW_KEY, std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + RIGHT_ARROW_KEY, std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ) ); // Emacs allows Meta, bash & readline don't
-	_keyPressHandlers.insert( make_pair( META + ctrlChar( 'H' ), std::bind( &ReplxxImpl::kill_word_to_left,          this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'd',             std::bind( &ReplxxImpl::kill_word_to_right,         this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'D',             std::bind( &ReplxxImpl::kill_word_to_right,         this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'W' ),        std::bind( &ReplxxImpl::kill_to_whitespace_to_left, this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'U' ),        std::bind( &ReplxxImpl::kill_to_begining_of_line,   this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'K' ),        std::bind( &ReplxxImpl::kill_to_end_of_line,        this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'Y' ),        std::bind( &ReplxxImpl::yank,                       this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'y',             std::bind( &ReplxxImpl::yank_cycle,                 this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'Y',             std::bind( &ReplxxImpl::yank_cycle,                 this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'c',             std::bind( &ReplxxImpl::capitalize_word,            this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'C',             std::bind( &ReplxxImpl::capitalize_word,            this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'l',             std::bind( &ReplxxImpl::lowercase_word,             this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'L',             std::bind( &ReplxxImpl::lowercase_word,             this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'u',             std::bind( &ReplxxImpl::uppercase_word,             this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'U',             std::bind( &ReplxxImpl::uppercase_word,             this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'T' ),        std::bind( &ReplxxImpl::transpose_characters,       this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'C' ),        std::bind( &ReplxxImpl::abort_line,                 this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'D' ),        std::bind( &ReplxxImpl::send_eof,                   this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( 127,                    std::bind( &ReplxxImpl::delete_character,           this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( DELETE_KEY,             std::bind( &ReplxxImpl::delete_character,           this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'H' ),        std::bind( &ReplxxImpl::backspace_character,        this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'J' ),        std::bind( &ReplxxImpl::commit_line,                this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'M' ),        std::bind( &ReplxxImpl::commit_line,                this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'L' ),        std::bind( &ReplxxImpl::clear_screen,               this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'N' ),        std::bind( &ReplxxImpl::history_next,               this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'P' ),        std::bind( &ReplxxImpl::history_previous,           this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( DOWN_ARROW_KEY,         std::bind( &ReplxxImpl::history_next,               this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( UP_ARROW_KEY,           std::bind( &ReplxxImpl::history_previous,           this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + '>',             std::bind( &ReplxxImpl::history_last,               this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + '<',             std::bind( &ReplxxImpl::history_first,              this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( PAGE_DOWN_KEY,          std::bind( &ReplxxImpl::history_last,               this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( PAGE_UP_KEY,            std::bind( &ReplxxImpl::history_first,              this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( CTRL + UP_ARROW_KEY,    std::bind( &ReplxxImpl::hint_previous,              this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( CTRL + DOWN_ARROW_KEY,  std::bind( &ReplxxImpl::hint_next,                  this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'A' ),                 std::bind( &ReplxxImpl::go_to_begining_of_line,     this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::HOME + 0,                       std::bind( &ReplxxImpl::go_to_begining_of_line,     this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'E' ),                 std::bind( &ReplxxImpl::go_to_end_of_line,          this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::END + 0,                        std::bind( &ReplxxImpl::go_to_end_of_line,          this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'B' ),                 std::bind( &ReplxxImpl::move_one_char_left,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::LEFT + 0,                       std::bind( &ReplxxImpl::move_one_char_left,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'F' ),                 std::bind( &ReplxxImpl::move_one_char_right,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::RIGHT + 0,                      std::bind( &ReplxxImpl::move_one_char_right,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'b' ),                    std::bind( &ReplxxImpl::move_one_word_left,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'B' ),                    std::bind( &ReplxxImpl::move_one_word_left,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( Replxx::KEY::LEFT ),   std::bind( &ReplxxImpl::move_one_word_left,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( Replxx::KEY::LEFT ),      std::bind( &ReplxxImpl::move_one_word_left,         this, _1 ) ) ); // Emacs allows Meta, readline don't
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'f' ),                    std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'F' ),                    std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( Replxx::KEY::RIGHT ),  std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( Replxx::KEY::RIGHT ),     std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ) ); // Emacs allows Meta, readline don't
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( Replxx::KEY::BACKSPACE ), std::bind( &ReplxxImpl::kill_word_to_left,          this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'd' ),                    std::bind( &ReplxxImpl::kill_word_to_right,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'D' ),                    std::bind( &ReplxxImpl::kill_word_to_right,         this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'W' ),                 std::bind( &ReplxxImpl::kill_to_whitespace_to_left, this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'U' ),                 std::bind( &ReplxxImpl::kill_to_begining_of_line,   this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'K' ),                 std::bind( &ReplxxImpl::kill_to_end_of_line,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'Y' ),                 std::bind( &ReplxxImpl::yank,                       this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'y' ),                    std::bind( &ReplxxImpl::yank_cycle,                 this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'Y' ),                    std::bind( &ReplxxImpl::yank_cycle,                 this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'c' ),                    std::bind( &ReplxxImpl::capitalize_word,            this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'C' ),                    std::bind( &ReplxxImpl::capitalize_word,            this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'l' ),                    std::bind( &ReplxxImpl::lowercase_word,             this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'L' ),                    std::bind( &ReplxxImpl::lowercase_word,             this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'u' ),                    std::bind( &ReplxxImpl::uppercase_word,             this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'U' ),                    std::bind( &ReplxxImpl::uppercase_word,             this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'T' ),                 std::bind( &ReplxxImpl::transpose_characters,       this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'C' ),                 std::bind( &ReplxxImpl::abort_line,                 this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'D' ),                 std::bind( &ReplxxImpl::send_eof,                   this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( 127,                                         std::bind( &ReplxxImpl::delete_character,           this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::DELETE + 0,                     std::bind( &ReplxxImpl::delete_character,           this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::BACKSPACE + 0,                  std::bind( &ReplxxImpl::backspace_character,        this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'J' ),                 std::bind( &ReplxxImpl::commit_line,                this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::ENTER + 0,                      std::bind( &ReplxxImpl::commit_line,                this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'L' ),                 std::bind( &ReplxxImpl::clear_screen,               this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'N' ),                 std::bind( &ReplxxImpl::history_next,               this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'P' ),                 std::bind( &ReplxxImpl::history_previous,           this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::DOWN + 0,                       std::bind( &ReplxxImpl::history_next,               this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::UP + 0,                         std::bind( &ReplxxImpl::history_previous,           this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( '>' ),                    std::bind( &ReplxxImpl::history_last,               this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( '<' ),                    std::bind( &ReplxxImpl::history_first,              this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::PAGE_DOWN + 0,                  std::bind( &ReplxxImpl::history_last,               this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::PAGE_UP + 0,                    std::bind( &ReplxxImpl::history_first,              this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( Replxx::KEY::UP ),     std::bind( &ReplxxImpl::hint_previous,              this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( Replxx::KEY::DOWN ),   std::bind( &ReplxxImpl::hint_next,                  this, _1 ) ) );
 #ifndef _WIN32
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'Z' ),        std::bind( &ReplxxImpl::suspend,                    this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'Z' ),                 std::bind( &ReplxxImpl::suspend,                    this, _1 ) ) );
 #endif
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'I' ),        std::bind( &ReplxxImpl::complete_line,              this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'R' ),        std::bind( &ReplxxImpl::incremental_history_search, this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( ctrlChar( 'S' ),        std::bind( &ReplxxImpl::incremental_history_search, this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'p',             std::bind( &ReplxxImpl::common_prefix_search,       this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'P',             std::bind( &ReplxxImpl::common_prefix_search,       this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'n',             std::bind( &ReplxxImpl::common_prefix_search,       this, _1 ) ) );
-	_keyPressHandlers.insert( make_pair( META + 'N',             std::bind( &ReplxxImpl::common_prefix_search,       this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::TAB + 0,                        std::bind( &ReplxxImpl::complete_line,              this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'R' ),                 std::bind( &ReplxxImpl::incremental_history_search, this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::control( 'S' ),                 std::bind( &ReplxxImpl::incremental_history_search, this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'p' ),                    std::bind( &ReplxxImpl::common_prefix_search,       this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'P' ),                    std::bind( &ReplxxImpl::common_prefix_search,       this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'n' ),                    std::bind( &ReplxxImpl::common_prefix_search,       this, _1 ) ) );
+	_keyPressHandlers.insert( make_pair( Replxx::KEY::meta( 'N' ),                    std::bind( &ReplxxImpl::common_prefix_search,       this, _1 ) ) );
 }
 
 char32_t Replxx::ReplxxImpl::read_char( void ) {
@@ -260,7 +259,7 @@ void Replxx::ReplxxImpl::set_preload_buffer( std::string const& preloadText ) {
 			*it = ' ';
 			_preloadedBuffer.erase( it + 1, it + whitespaceSeen - 1 );
 		}
-		if ( isControlChar( c ) ) { // remove other control characters, flag for message
+		if ( is_control_code( c ) ) { // remove other control characters, flag for message
 			controlsStripped = true;
 			if ( whitespaceSeen > 0 ) {
 				_preloadedBuffer.erase( it, it + 1 );
@@ -712,7 +711,7 @@ int Replxx::ReplxxImpl::do_complete_line( void ) {
 		} while (c == static_cast<char32_t>(-1));
 
 		// if any character other than tab, pass it to the main loop
-		if (c != ctrlChar('I')) {
+		if ( c != Replxx::KEY::TAB ) {
 			return c;
 		}
 	}
@@ -729,7 +728,7 @@ int Replxx::ReplxxImpl::do_complete_line( void ) {
 					 static_cast<unsigned int>(completions.size()));
 		fflush(stdout);
 		onNewLine = true;
-		while (c != 'y' && c != 'Y' && c != 'n' && c != 'N' && c != ctrlChar('C')) {
+		while (c != 'y' && c != 'Y' && c != 'n' && c != 'N' && c != Replxx::KEY::control('C')) {
 			do {
 				c = read_char();
 			} while (c == static_cast<char32_t>(-1));
@@ -739,7 +738,7 @@ int Replxx::ReplxxImpl::do_complete_line( void ) {
 			case 'N':
 				showCompletions = false;
 				break;
-			case ctrlChar('C'):
+			case Replxx::KEY::control('C'):
 				showCompletions = false;
 				// Display the ^C we got
 				_terminal.write8( "^C", 2 );
@@ -779,9 +778,9 @@ int Replxx::ReplxxImpl::do_complete_line( void ) {
 				fflush(stdout);
 				c = 0;
 				bool doBeep = false;
-				while (c != ' ' && c != '\r' && c != '\n' && c != 'y' && c != 'Y' &&
+				while (c != ' ' && c != Replxx::KEY::ENTER && c != 'y' && c != 'Y' &&
 							 c != 'n' && c != 'N' && c != 'q' && c != 'Q' &&
-							 c != ctrlChar('C')) {
+							 c != Replxx::KEY::control('C')) {
 					if (doBeep) {
 						beep();
 					}
@@ -797,8 +796,7 @@ int Replxx::ReplxxImpl::do_complete_line( void ) {
 						printf("\r				\r");
 						pauseRow += _terminal.get_screen_rows() - 1;
 						break;
-					case '\r':
-					case '\n':
+					case Replxx::KEY::ENTER:
 						printf("\r				\r");
 						++pauseRow;
 						break;
@@ -809,7 +807,7 @@ int Replxx::ReplxxImpl::do_complete_line( void ) {
 						printf("\r				\r");
 						stopList = true;
 						break;
-					case ctrlChar('C'):
+					case Replxx::KEY::control('C'):
 						// Display the ^C we got
 						_terminal.write8( "^C", 2 );
 						stopList = true;
@@ -853,7 +851,7 @@ int Replxx::ReplxxImpl::do_complete_line( void ) {
 	}
 
 	// display the prompt on a new line, then redisplay the input buffer
-	if (!stopList || c == ctrlChar('C')) {
+	if (!stopList || c == Replxx::KEY::control('C')) {
 		_terminal.write8( "\n", 1 );
 	}
 	_prompt.write();
@@ -947,7 +945,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::insert_character( int c ) {
 	 * beep on unknown Ctrl and/or Meta keys
 	 * don't insert control characters
 	 */
-	if ( ( c & ( META | CTRL ) ) || isControlChar( c ) ) {
+	if ( ( c >= static_cast<int>( Replxx::KEY::BASE ) ) || is_control_code( c ) ) {
 		beep();
 		return ( NEXT::CONTINUE );
 	}
@@ -1433,7 +1431,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::common_prefix_search( int startChar
 	int prefixSize( calculate_displayed_length( _data.get(), _prefix ) );
 	if (
 		_history.common_prefix_search(
-			_utf8Buffer.get(), prefixSize, ( startChar == ( META + 'p' ) ) || ( startChar == ( META + 'P' ) )
+			_utf8Buffer.get(), prefixSize, ( startChar == ( Replxx::KEY::meta( 'p' ) ) ) || ( startChar == ( Replxx::KEY::meta( 'P' ) ) )
 		)
 	) {
 		_data.assign( _history.current() );
@@ -1463,7 +1461,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::incremental_history_search( int sta
 	int historyLinePosition( _pos );
 	clear_self_to_end_of_screen();
 
-	DynamicPrompt dp( _terminal, (startChar == ctrlChar('R')) ? -1 : 1 );
+	DynamicPrompt dp( _terminal, (startChar == Replxx::KEY::control('R')) ? -1 : 1 );
 
 	dp._previousLen = _prompt._previousLen;
 	dp._previousInputLen = _prompt._previousInputLen;
@@ -1481,68 +1479,68 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::incremental_history_search( int sta
 
 		switch (c) {
 			// these characters keep the selected text but do not execute it
-			case ctrlChar('A'): // ctrl-A, move cursor to start of line
-			case HOME_KEY:
-			case ctrlChar('B'): // ctrl-B, move cursor left by one character
-			case LEFT_ARROW_KEY:
-			case META + 'b': // meta-B, move cursor left by one word
-			case META + 'B':
-			case CTRL + LEFT_ARROW_KEY:
-			case META + LEFT_ARROW_KEY: // Emacs allows Meta, bash & readline don't
-			case ctrlChar('D'):
-			case META + 'd': // meta-D, kill word to right of cursor
-			case META + 'D':
-			case ctrlChar('E'): // ctrl-E, move cursor to end of line
-			case END_KEY:
-			case ctrlChar('F'): // ctrl-F, move cursor right by one character
-			case RIGHT_ARROW_KEY:
-			case META + 'f': // meta-F, move cursor right by one word
-			case META + 'F':
-			case CTRL + RIGHT_ARROW_KEY:
-			case META + RIGHT_ARROW_KEY: // Emacs allows Meta, bash & readline don't
-			case META + ctrlChar('H'):
-			case ctrlChar('J'):
-			case ctrlChar('K'): // ctrl-K, kill from cursor to end of line
-			case ctrlChar('M'):
-			case ctrlChar('N'): // ctrl-N, recall next line in history
-			case ctrlChar('P'): // ctrl-P, recall previous line in history
-			case DOWN_ARROW_KEY:
-			case UP_ARROW_KEY:
-			case ctrlChar('T'): // ctrl-T, transpose characters
-			case ctrlChar('U'): // ctrl-U, kill all characters to the left of the cursor
-			case ctrlChar('W'):
-			case META + 'y': // meta-Y, "yank-pop", rotate popped text
-			case META + 'Y':
+			case Replxx::KEY::control('A'): // ctrl-A, move cursor to start of line
+			case Replxx::KEY::HOME:
+			case Replxx::KEY::control('B'): // ctrl-B, move cursor left by one character
+			case Replxx::KEY::LEFT:
+			case Replxx::KEY::meta( 'b' ): // meta-B, move cursor left by one word
+			case Replxx::KEY::meta( 'B' ):
+			case Replxx::KEY::control( Replxx::KEY::LEFT ):
+			case Replxx::KEY::meta( Replxx::KEY::LEFT ): // Emacs allows Meta, bash & readline don't
+			case Replxx::KEY::control('D'):
+			case Replxx::KEY::meta( 'd' ): // meta-D, kill word to right of cursor
+			case Replxx::KEY::meta( 'D' ):
+			case Replxx::KEY::control('E'): // ctrl-E, move cursor to end of line
+			case Replxx::KEY::END:
+			case Replxx::KEY::control('F'): // ctrl-F, move cursor right by one character
+			case Replxx::KEY::RIGHT:
+			case Replxx::KEY::meta( 'f' ): // meta-F, move cursor right by one word
+			case Replxx::KEY::meta( 'F' ):
+			case Replxx::KEY::control( Replxx::KEY::RIGHT ):
+			case Replxx::KEY::meta( Replxx::KEY::RIGHT ): // Emacs allows Meta, bash & readline don't
+			case Replxx::KEY::meta( Replxx::KEY::BACKSPACE ):
+			case Replxx::KEY::control('J'):
+			case Replxx::KEY::control('K'): // ctrl-K, kill from cursor to end of line
+			case Replxx::KEY::ENTER:
+			case Replxx::KEY::control('N'): // ctrl-N, recall next line in history
+			case Replxx::KEY::control('P'): // ctrl-P, recall previous line in history
+			case Replxx::KEY::DOWN:
+			case Replxx::KEY::UP:
+			case Replxx::KEY::control('T'): // ctrl-T, transpose characters
+			case Replxx::KEY::control('U'): // ctrl-U, kill all characters to the left of the cursor
+			case Replxx::KEY::control('W'):
+			case Replxx::KEY::meta( 'y' ): // meta-Y, "yank-pop", rotate popped text
+			case Replxx::KEY::meta( 'Y' ):
 			case 127:
-			case DELETE_KEY:
-			case META + '<': // start of history
-			case PAGE_UP_KEY:
-			case META + '>': // end of history
-			case PAGE_DOWN_KEY:
+			case Replxx::KEY::DELETE:
+			case Replxx::KEY::meta( '<' ): // start of history
+			case Replxx::KEY::PAGE_UP:
+			case Replxx::KEY::meta( '>' ): // end of history
+			case Replxx::KEY::PAGE_DOWN:
 				keepLooping = false;
 				break;
 
 			// these characters revert the input line to its previous state
-			case ctrlChar('C'): // ctrl-C, abort this line
-			case ctrlChar('G'):
-			case ctrlChar('L'): // ctrl-L, clear screen and redisplay line
+			case Replxx::KEY::control('C'): // ctrl-C, abort this line
+			case Replxx::KEY::control('G'):
+			case Replxx::KEY::control('L'): // ctrl-L, clear screen and redisplay line
 				keepLooping = false;
 				useSearchedLine = false;
-				if (c != ctrlChar('L')) {
+				if (c != Replxx::KEY::control('L')) {
 					c = -1; // ctrl-C and ctrl-G just abort the search and do nothing else
 				}
 				break;
 
 			// these characters stay in search mode and assign the display
-			case ctrlChar('S'):
-			case ctrlChar('R'):
+			case Replxx::KEY::control('S'):
+			case Replxx::KEY::control('R'):
 				if ( dp._searchText.length() == 0 ) { // if no current search text, recall previous text
 					if ( previousSearchText.length() > 0 ) {
 						dp._searchText = previousSearchText;
 					}
 				}
-				if ((dp._direction == 1 && c == ctrlChar('R')) ||
-						(dp._direction == -1 && c == ctrlChar('S'))) {
+				if ((dp._direction == 1 && c == Replxx::KEY::control('R')) ||
+						(dp._direction == -1 && c == Replxx::KEY::control('S'))) {
 					dp._direction = 0 - dp._direction; // reverse _direction
 					dp.updateSearchPrompt();         // change the prompt
 				} else {
@@ -1552,7 +1550,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::incremental_history_search( int sta
 
 // job control is its own thing
 #ifndef _WIN32
-			case ctrlChar('Z'): { // ctrl-Z, job control
+			case Replxx::KEY::control('Z'): { // ctrl-Z, job control
 				_terminal.disable_raw_mode(); // Returning to Linux (whatever) shell, leave raw mode
 				raise(SIGSTOP);   // Break out in mid-line
 				_terminal.enable_raw_mode();  // Back from Linux shell, re-enter raw mode
@@ -1563,7 +1561,7 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::incremental_history_search( int sta
 
 			// these characters assign the search string, and hence the selected input
 			// line
-			case ctrlChar('H'): // backspace/ctrl-H, delete char to left of cursor
+			case Replxx::KEY::BACKSPACE: // backspace/ctrl-H, delete char to left of cursor
 				if ( dp._searchText.length() > 0 ) {
 					dp._searchText.erase( dp._searchText.length() - 1 );
 					dp.updateSearchPrompt();
@@ -1573,11 +1571,11 @@ Replxx::ReplxxImpl::NEXT Replxx::ReplxxImpl::incremental_history_search( int sta
 				}
 				break;
 
-			case ctrlChar('Y'): // ctrl-Y, yank killed text
+			case Replxx::KEY::control('Y'): // ctrl-Y, yank killed text
 				break;
 
 			default: {
-				if (!isControlChar(c) && c <= 0x0010FFFF) { // not an action character
+				if ( ! is_control_code( c ) && ( c < static_cast<int>( Replxx::KEY::BASE ) ) ) { // not an action character
 					dp._searchText.insert( dp._searchText.length(), c );
 					dp.updateSearchPrompt();
 				} else {

@@ -3,33 +3,8 @@
 #include <wctype.h>
 
 #include "util.hxx"
-#include "keycodes.hxx"
 
 namespace replxx {
-
-/**
- * convert {CTRL + 'A'}, {CTRL + 'a'} and {CTRL + ctrlChar( 'A' )} into
- * ctrlChar( 'A' )
- * leave META alone
- *
- * @param c character to clean up
- * @return cleaned-up character
- */
-int cleanupCtrl(int c) {
-	if (c & CTRL) {
-		int d = c & 0x1FF;
-		if (d >= 'a' && d <= 'z') {
-			c = (c + ('a' - ctrlChar('A'))) & ~CTRL;
-		}
-		if (d >= 'A' && d <= 'Z') {
-			c = (c + ('A' - ctrlChar('A'))) & ~CTRL;
-		}
-		if (d >= ctrlChar('A') && d <= ctrlChar('Z')) {
-			c = c & ~CTRL;
-		}
-	}
-	return c;
-}
 
 int mk_wcwidth( char32_t );
 

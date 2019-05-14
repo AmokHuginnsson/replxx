@@ -53,7 +53,7 @@ void Prompt::set_text( UnicodeString const& text_ ) {
 
 	while (in != text_.end()) {
 		char32_t c = *in;
-		if ('\n' == c || !isControlChar(c)) {
+		if ('\n' == c || !is_control_code(c)) {
 			*out = c;
 			++out;
 			++in;

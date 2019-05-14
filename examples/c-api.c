@@ -40,8 +40,12 @@ void colorHook( char const* str_, ReplxxColor* colors_, int size_, void* ud ) {
 	int i = 0;
 	for ( ; i < size_; ++ i ) {
 		if ( isdigit( str_[i] ) ) {
-			colors_[i] = BRIGHTMAGENTA;
+			colors_[i] = REPLXX_COLOR_BRIGHTMAGENTA;
 		}
+	}
+	if ( ( size_ > 0 ) && ( str_[size_ - 1] == '(' ) ) {
+		replxx_emulate_key_press( ud, ')' );
+		replxx_emulate_key_press( ud, REPLXX_KEY_LEFT );
 	}
 }
 
@@ -114,7 +118,7 @@ int main( int argc, char** argv ) {
 
 	replxx_history_load( replxx, file );
 	replxx_set_completion_callback( replxx, completionHook, examples );
-	replxx_set_highlighter_callback( replxx, colorHook, NULL );
+	replxx_set_highlighter_callback( replxx, colorHook, replxx );
 	replxx_set_hint_callback( replxx, hintHook, examples );
 
 	printf("starting...\n");

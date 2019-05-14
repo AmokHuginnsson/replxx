@@ -27,7 +27,7 @@
 #include "io.hxx"
 #include "conversion.hxx"
 #include "escape.hxx"
-#include "keycodes.hxx"
+#include "replxx.hxx"
 #include "util.hxx"
 
 using namespace std;
@@ -290,7 +290,7 @@ char32_t Terminal::read_char( void ) {
 #ifdef _WIN32
 	INPUT_RECORD rec;
 	DWORD count;
-	int modifierKeys = 0;
+	char32_t modifierKeys = 0;
 	bool escSeen = false;
 	int highSurrogate( 0 );
 	while (true) {
@@ -348,40 +348,40 @@ char32_t Terminal::read_char( void ) {
 		}
 		if (rec.Event.KeyEvent.dwControlKeyState &
 				(RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED)) {
-			modifierKeys |= CTRL;
+			modifierKeys |= Replxx::KEY::BASE_CONTROL;
 		}
 		if (rec.Event.KeyEvent.dwControlKeyState &
 				(RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) {
-			modifierKeys |= META;
+			modifierKeys |= Replxx::KEY::BASE_META;
 		}
 		if (escSeen) {
-			modifierKeys |= META;
+			modifierKeys |= Replxx::KEY::BASE_META;
 		}
 		int key( rec.Event.KeyEvent.uChar.UnicodeChar );
 		if ( key == 0 ) {
 			switch (rec.Event.KeyEvent.wVirtualKeyCode) {
 				case VK_LEFT:
-					return modifierKeys | LEFT_ARROW_KEY;
+					return modifierKeys | Replxx::KEY::LEFT;
 				case VK_RIGHT:
-					return modifierKeys | RIGHT_ARROW_KEY;
+					return modifierKeys | Replxx::KEY::RIGHT;
 				case VK_UP:
-					return modifierKeys | UP_ARROW_KEY;
+					return modifierKeys | Replxx::KEY::UP;
 				case VK_DOWN:
-					return modifierKeys | DOWN_ARROW_KEY;
+					return modifierKeys | Replxx::KEY::DOWN;
 				case VK_DELETE:
-					return modifierKeys | DELETE_KEY;
+					return modifierKeys | Replxx::KEY::DELETE;
 				case VK_HOME:
-					return modifierKeys | HOME_KEY;
+					return modifierKeys | Replxx::KEY::HOME;
 				case VK_END:
-					return modifierKeys | END_KEY;
+					return modifierKeys | Replxx::KEY::END;
 				case VK_PRIOR:
-					return modifierKeys | PAGE_UP_KEY;
+					return modifierKeys | Replxx::KEY::PAGE_UP;
 				case VK_NEXT:
-					return modifierKeys | PAGE_DOWN_KEY;
+					return modifierKeys | Replxx::KEY::PAGE_DOWN;
 				default:
-					continue;	// in raw mode, ReadConsoleInput shows shift, ctrl ...
-			}							//	... ignore them
-		} else if ( key == ctrlChar('[') ) { // ESC, set flag for later
+					continue; // in raw mode, ReadConsoleInput shows shift, ctrl - ignore them
+			}
+		} else if ( key == Replxx::KEY::ESCAPE ) { // ESC, set flag for later
 			escSeen = true;
 			continue;
 		} else if ( ( key >= 0xD800 ) && ( key <= 0xDBFF ) ) {
@@ -468,7 +468,10 @@ char32_t Terminal::read_char( void ) {
 
 	c = EscapeSequenceProcessing::doDispatch(c);
 #endif	// #_WIN32
-	return ( cleanupCtrl( c ) );
+	if ( is_control_code( c ) ) {
+		c = Replxx::KEY::control( c + 0x40 );
+	}
+	return ( c );
 }
 
 Terminal::EVENT_TYPE Terminal::wait_for_input( void ) {
