@@ -79,8 +79,7 @@ public:
 #undef DELETE
 		static char32_t const DELETE       = END       + 1;
 		static char32_t const INSERT       = DELETE    + 1;
-		static char32_t const BACKSPACE    = INSERT    + 1;
-		static char32_t const F1           = BACKSPACE + 1;
+		static char32_t const F1           = INSERT    + 1;
 		static char32_t const F2           = F1        + 1;
 		static char32_t const F3           = F2        + 1;
 		static char32_t const F4           = F3        + 1;
@@ -114,6 +113,7 @@ public:
 		static constexpr char32_t meta( char32_t key_ ) {
 			return ( key_ | BASE_META );
 		}
+		static char32_t const BACKSPACE    = 'H' | BASE_CONTROL;
 		static char32_t const TAB          = 'I' | BASE_CONTROL;
 		static char32_t const ENTER        = 'M' | BASE_CONTROL;
 	};

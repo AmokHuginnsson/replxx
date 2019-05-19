@@ -84,8 +84,7 @@ enum { REPLXX_KEY_HOME         = REPLXX_KEY_RIGHT     + 1 };
 enum { REPLXX_KEY_END          = REPLXX_KEY_HOME      + 1 };
 enum { REPLXX_KEY_DELETE       = REPLXX_KEY_END       + 1 };
 enum { REPLXX_KEY_INSERT       = REPLXX_KEY_DELETE    + 1 };
-enum { REPLXX_KEY_BACKSPACE    = REPLXX_KEY_INSERT    + 1 };
-enum { REPLXX_KEY_F1           = REPLXX_KEY_BACKSPACE + 1 };
+enum { REPLXX_KEY_F1           = REPLXX_KEY_INSERT    + 1 };
 enum { REPLXX_KEY_F2           = REPLXX_KEY_F1        + 1 };
 enum { REPLXX_KEY_F3           = REPLXX_KEY_F2        + 1 };
 enum { REPLXX_KEY_F4           = REPLXX_KEY_F3        + 1 };
@@ -115,6 +114,7 @@ enum { REPLXX_KEY_MOUSE        = REPLXX_KEY_F24       + 1 };
 #define REPLXX_KEY_CONTROL( key ) ( ( key ) | REPLXX_KEY_BASE_CONTROL )
 #define REPLXX_KEY_META( key )    ( ( key ) | REPLXX_KEY_BASE_META )
 
+enum { REPLXX_KEY_BACKSPACE    = REPLXX_KEY_CONTROL( 'H' ) };
 enum { REPLXX_KEY_TAB          = REPLXX_KEY_CONTROL( 'I' ) };
 enum { REPLXX_KEY_ENTER        = REPLXX_KEY_CONTROL( 'M' ) };
 

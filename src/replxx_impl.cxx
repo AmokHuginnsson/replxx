@@ -321,15 +321,15 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 			fflush(stdout);
 			_errorMessage.clear();
 		}
-		_prompt.set_text( UnicodeString( prompt ) );
 		if ( isUnsupportedTerm() ) {
-			_prompt.write();
+			cout << prompt << flush;
 			fflush(stdout);
 			return ( read_from_stdin() );
 		}
 		if (_terminal.enable_raw_mode() == -1) {
 			return nullptr;
 		}
+		_prompt.set_text( UnicodeString( prompt ) );
 		_currentThread = std::this_thread::get_id();
 		clear();
 		if (!_preloadedBuffer.empty()) {

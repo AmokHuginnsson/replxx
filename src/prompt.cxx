@@ -29,7 +29,6 @@ Prompt::Prompt( Terminal& terminal_ )
 	, _previousLen( 0 )
 	, _screenColumns( 0 )
 	, _terminal( terminal_ ) {
-	update_screen_columns();
 }
 
 void Prompt::write() {
@@ -41,6 +40,7 @@ void Prompt::update_screen_columns( void ) {
 }
 
 void Prompt::set_text( UnicodeString const& text_ ) {
+	update_screen_columns();
 	// strip control characters from the prompt -- we do allow newline
 	_text = text_;
 	UnicodeString::const_iterator in( text_.begin() );
@@ -119,6 +119,7 @@ DynamicPrompt::DynamicPrompt( Terminal& terminal_, int initialDirection )
 	: Prompt( terminal_ )
 	, _searchText()
 	, _direction( initialDirection ) {
+	update_screen_columns();
 	_cursorRowOffset = 0;
 	const UnicodeString* basePrompt =
 			(_direction > 0) ? &forwardSearchBasePrompt : &reverseSearchBasePrompt;

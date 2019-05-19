@@ -346,12 +346,10 @@ char32_t Terminal::read_char( void ) {
 			rec.Event.KeyEvent.dwControlKeyState &=
 					~(LEFT_CTRL_PRESSED | RIGHT_ALT_PRESSED);
 		}
-		if (rec.Event.KeyEvent.dwControlKeyState &
-				(RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED)) {
+		if ( rec.Event.KeyEvent.dwControlKeyState & ( RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED ) ) {
 			modifierKeys |= Replxx::KEY::BASE_CONTROL;
 		}
-		if (rec.Event.KeyEvent.dwControlKeyState &
-				(RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) {
+		if ( rec.Event.KeyEvent.dwControlKeyState & ( RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED ) ) {
 			modifierKeys |= Replxx::KEY::BASE_META;
 		}
 		if (escSeen) {
@@ -393,6 +391,10 @@ char32_t Terminal::read_char( void ) {
 				key -= 0xDC00;
 				key |= ( highSurrogate << 10 );
 				key += 0x10000;
+			}
+			if ( is_control_code( key ) ) {
+				key += 0x40;
+				modifierKeys |= Replxx::KEY::BASE_CONTROL;
 			}
 			key |= modifierKeys;
 			highSurrogate = 0;
@@ -464,13 +466,13 @@ char32_t Terminal::read_char( void ) {
 			}
 		}
 	}
-#endif	// __REPLXX_DEBUG__
+#endif // __REPLXX_DEBUG__
 
 	c = EscapeSequenceProcessing::doDispatch(c);
-#endif	// #_WIN32
 	if ( is_control_code( c ) ) {
 		c = Replxx::KEY::control( c + 0x40 );
 	}
+#endif // #_WIN32
 	return ( c );
 }
 
