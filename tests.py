@@ -155,12 +155,16 @@ class ReplxxTests( unittest.TestCase ):
 			f.write( history.encode( encoding ) )
 			f.close()
 		os.environ["TERM"] = term
-		command = command.replace( "\n", "~" )
+		if isinstance( command, str ):
+			command = command.replace( "\n", "~" )
 		if verbosity >= 2:
 			print( "\nTERM: {}, SIZE: {}, CMD: {}".format( term, dimensions, command ) )
 		prompt = prompt.replace( "\n", "\r\n" ).replace( "\r\r", "\r" )
 		end = end.replace( "\n", "\r\n" ).replace( "\r\r", "\r" )
-		self_._replxx = pexpect.spawn( command, maxread = 1, encoding = encoding, dimensions = dimensions )
+		if isinstance( command, str ):
+			self_._replxx = pexpect.spawn( command, maxread = 1, encoding = encoding, dimensions = dimensions )
+		else:
+			self_._replxx = pexpect.spawn( command[0], args = command[1:], maxread = 1, encoding = encoding, dimensions = dimensions )
 		self_._replxx.expect( prompt )
 		self_.maxDiff = None
 		if isinstance( seq_, str ):
@@ -460,7 +464,7 @@ class ReplxxTests( unittest.TestCase ):
 			"<tab><tab>n<cr><c-d>",
 			"<bell><bell><c9><ceos>n<rst><c10><c9><ceos>n<rst><c10>\r\nn\r\n",
 			dimensions = ( 4, 32 ),
-			command = ReplxxTests._cSample_ + " q1 e0"
+			command = [ ReplxxTests._cSample_, "q1", "e0" ]
 		)
 		self_.check_scenario(
 			"<tab><tab>n<cr><c-d>",
@@ -1223,7 +1227,7 @@ class ReplxxTests( unittest.TestCase ):
 			"<brightgreen>replxx<rst>> "
 			"<c9><ceos>abcd<rst><c13><c9><ceos>abcde<rst><c14><c9><ceos>abcdef<rst><c15><c9><ceos>abcdef<rst><c15>\r\n"
 			"abcdef\r\n",
-			command = ReplxxTests._cxxSample_ + " a",
+			command = [ ReplxxTests._cxxSample_, "" ],
 			pause = 0.5
 		)
 		self_.check_scenario(
@@ -1257,8 +1261,23 @@ class ReplxxTests( unittest.TestCase ):
 			"a very long line of user input, wider then current terminal, the line is "
 			"wrapped: abcdef\r\n",
 			"a very long line of user input, wider then current terminal, the line is wrapped: \n",
-			command = ReplxxTests._cxxSample_ + " a",
+			command = [ ReplxxTests._cxxSample_, "" ],
 			dimensions = ( 10, 40 ),
+			pause = 0.5
+		)
+	def test_async_emulate_key_press( self_ ):
+		self_.check_scenario(
+			[ "a", "b", "c", "d", "e", "f<cr><c-d>" ],
+			"<c9><ceos><yellow>1<rst><c10><c9><ceos><yellow>1<rst>a"
+			"<rst><c11><c9><ceos><yellow>1<rst>ab<rst><c12><c9><ceos><yellow>1<rst>ab"
+			"<yellow>2<rst><c13><c9><ceos><yellow>1<rst>ab<yellow>2"
+			"<rst>c<rst><c14><c9><ceos><yellow>1<rst>ab<yellow>2"
+			"<rst>cd<rst><c15><c9><ceos><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3"
+			"<rst><c16><c9><ceos><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>e"
+			"<rst><c17><c9><ceos><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef"
+			"<rst><c18><c9><ceos><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<rst><c18>\r\n"
+			"1ab2cd3ef\r\n",
+			command = [ ReplxxTests._cxxSample_, "123456" ],
 			pause = 0.5
 		)
 

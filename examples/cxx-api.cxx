@@ -15,15 +15,18 @@
 using Replxx = replxx::Replxx;
 
 class Tick {
+	typedef std::vector<char32_t> keys_t;
 	std::thread _thread;
 	int _tick;
 	bool _alive;
+	keys_t _keys;
 	Replxx& _replxx;
 public:
-	Tick( Replxx& replxx_ )
+	Tick( Replxx& replxx_, std::string const& keys_ = {} )
 		: _thread()
 		, _tick( 0 )
 		, _alive( false )
+		, _keys( keys_.begin(), keys_.end() )
 		, _replxx( replxx_ ) {
 	}
 	void start() {
@@ -37,7 +40,13 @@ public:
 	void run() {
 		std::string s;
 		while ( _alive ) {
-			_replxx.print( "%d\n", _tick );
+			if ( _keys.empty() ) {
+				_replxx.print( "%d\n", _tick );
+			} else if ( _tick < static_cast<int>( _keys.size() ) ) {
+				_replxx.emulate_key_press( _keys[_tick] );
+			} else {
+				break;
+			}
 			++ _tick;
 			std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 		}
@@ -123,7 +132,7 @@ void hook_color(std::string const& context, Replxx::colors_t& colors, std::vecto
 	}
 }
 
-int main( int argc_, char** ) {
+int main( int argc_, char** argv_ ) {
 	// words to be completed
 	std::vector<std::string> examples {
 		".help", ".history", ".quit", ".exit", ".clear", ".prompt ",
@@ -196,7 +205,7 @@ int main( int argc_, char** ) {
 
 	// init the repl
 	Replxx rx;
-	Tick tick( rx );
+	Tick tick( rx, argc_ > 1 ? argv_[1] : "" );
 	rx.install_window_change_handler();
 
 	// the path to the history file

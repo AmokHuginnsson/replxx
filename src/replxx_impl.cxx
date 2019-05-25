@@ -198,6 +198,14 @@ char32_t Replxx::ReplxxImpl::read_char( void ) {
 		}
 		refresh_line();
 	}
+	/* try scheduled key presses */ {
+		std::lock_guard<std::mutex> l( _mutex );
+		if ( !_keyPresses.empty() ) {
+			char32_t keyPress( _keyPresses.front() );
+			_keyPresses.pop_front();
+			return ( keyPress );
+		}
+	}
 	return ( _terminal.read_char() );
 }
 
