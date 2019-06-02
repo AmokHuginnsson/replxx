@@ -49,6 +49,11 @@ void colorHook( char const* str_, ReplxxColor* colors_, int size_, void* ud ) {
 	}
 }
 
+ReplxxActionResult word_eater( int ignored, void* ud ) {
+	Replxx* replxx = (Replxx*)ud;
+	return ( replxx_invoke( replxx, REPLXX_ACTION_KILL_TO_BEGINING_OF_WORD, 0 ) );
+}
+
 char const* recode( char* s ) {
 	char const* r = s;
 	while ( *s ) {
@@ -120,6 +125,7 @@ int main( int argc, char** argv ) {
 	replxx_set_completion_callback( replxx, completionHook, examples );
 	replxx_set_highlighter_callback( replxx, colorHook, replxx );
 	replxx_set_hint_callback( replxx, hintHook, examples );
+	replxx_bind_key( replxx, '.', word_eater, replxx );
 
 	printf("starting...\n");
 

@@ -118,6 +118,55 @@ enum { REPLXX_KEY_BACKSPACE    = REPLXX_KEY_CONTROL( 'H' ) };
 enum { REPLXX_KEY_TAB          = REPLXX_KEY_CONTROL( 'I' ) };
 enum { REPLXX_KEY_ENTER        = REPLXX_KEY_CONTROL( 'M' ) };
 
+/*! \brief List of built-in actions that act upon user input.
+ */
+typedef enum {
+	REPLXX_ACTION_INSERT_CHARACTER,
+	REPLXX_ACTION_DELETE_CHARACTER_UNDER_CURSOR,
+	REPLXX_ACTION_DELETE_CHARACTER_LEFT_OF_CURSOR,
+	REPLXX_ACTION_KILL_TO_END_OF_LINE,
+	REPLXX_ACTION_KILL_TO_BEGINING_OF_LINE,
+	REPLXX_ACTION_KILL_TO_END_OF_WORD,
+	REPLXX_ACTION_KILL_TO_BEGINING_OF_WORD,
+	REPLXX_ACTION_KILL_TO_WHITESPACE_ON_LEFT,
+	REPLXX_ACTION_YANK,
+	REPLXX_ACTION_YANK_CYCLE,
+	REPLXX_ACTION_MOVE_CURSOR_TO_BEGINING_OF_LINE,
+	REPLXX_ACTION_MOVE_CURSOR_TO_END_OF_LINE,
+	REPLXX_ACTION_MOVE_CURSOR_ONE_WORD_LEFT,
+	REPLXX_ACTION_MOVE_CURSOR_ONE_WORD_RIGHT,
+	REPLXX_ACTION_MOVE_CURSOR_LEFT,
+	REPLXX_ACTION_MOVE_CURSOR_RIGHT,
+	REPLXX_ACTION_HISTORY_NEXT,
+	REPLXX_ACTION_HISTORY_PREVIOUS,
+	REPLXX_ACTION_HISTORY_FIRST,
+	REPLXX_ACTION_HISTORY_LAST,
+	REPLXX_ACTION_HISTORY_INCREMENTAL_SEARCH,
+	REPLXX_ACTION_HISTORY_COMMON_PREFIX_SEARCH,
+	REPLXX_ACTION_HINT_NEXT,
+	REPLXX_ACTION_HINT_PREVIOUS,
+	REPLXX_ACTION_CAPITALIZE_WORD,
+	REPLXX_ACTION_LOWERCASE_WORD,
+	REPLXX_ACTION_UPPERCASE_WORD,
+	REPLXX_ACTION_TRANSPOSE_CHARACTERS,
+#ifndef _WIN32
+	REPLXX_ACTION_SUSPEND,
+#endif
+	REPLXX_ACTION_CLEAR_SCREEN,
+	REPLXX_ACTION_COMPLETE_LINE,
+	REPLXX_ACTION_COMMIT_LINE,
+	REPLXX_ACTION_ABORT_LINE,
+	REPLXX_ACTION_SEND_EOF
+} ReplxxAction;
+
+/*! \brief Possible results of key-press handler actions.
+ */
+typedef enum {
+	REPLXX_ACTION_RESULT_CONTINUE, /*!< Continue processing user input. */
+	REPLXX_ACTION_RESULT_RETURN,   /*!< Return user input entered so far. */
+	REPLXX_ACTION_RESULT_BAIL      /*!< Stop processing user input, returns nullptr from the \e input() call. */
+} ReplxxActionResult;
+
 typedef struct Replxx Replxx;
 
 /*! \brief Create Replxx library resouce holder.
@@ -229,6 +278,13 @@ typedef void(replxx_hint_callback_t)(const char* input, replxx_hints* hints, int
  */
 void replxx_set_hint_callback( Replxx*, replxx_hint_callback_t* fn, void* userData );
 
+/*! \brief Key press handler type definition.
+ *
+ * \param code - the key code replxx got from terminal.
+ * \return Decition on how should input() behave after this key handler returns.
+ */
+typedef ReplxxActionResult (key_press_handler_t)( int code, void* userData );
+
 /*! \brief Add another possible hint for current user input.
  *
  * \param hints - pointer to opaque list of hints.
@@ -258,6 +314,24 @@ int replxx_print( Replxx*, char const* fmt, ... );
  * \param code - key press code to be emulated.
  */
 void replxx_emulate_key_press( Replxx*, int unsigned code );
+
+/*! \brief Invoke built-in action handler.
+ *
+ * \pre This function can be called only from key-press handler.
+ *
+ * \param action - a built-in action to invoke.
+ * \param code - a supplementary key-code to consume by built-in action handler.
+ * \return The action result informing the replxx what shall happen next.
+ */
+ReplxxActionResult replxx_invoke( Replxx*, ReplxxAction action, int unsigned code );
+
+/*! \brief Bind user defined action to handle given key-press event.
+ *
+ * \param code - handle this key-press event with following handler.
+ * \param handle - use this handler to handle key-press event.
+ * \param userData - supplementary user data passed to invoked handlers.
+ */
+void replxx_bind_key( Replxx*, int code, key_press_handler_t handler, void* userData );
 
 void replxx_set_preload_buffer( Replxx*, const char* preloadText );
 

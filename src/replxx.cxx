@@ -200,6 +200,14 @@ void Replxx::emulate_key_press( char32_t keyPress_ ) {
 	_impl->emulate_key_press( keyPress_ );
 }
 
+Replxx::ACTION_RESULT Replxx::invoke( ACTION action_, char32_t keyPress_ ) {
+	return ( _impl->invoke( action_, keyPress_ ) );
+}
+
+void Replxx::bind_key( char32_t keyPress_, key_press_handler_t handler_ ) {
+	_impl->bind_key( keyPress_, handler_ );
+}
+
 int Replxx::install_window_change_handler( void ) {
 	return ( _impl->install_window_change_handler() );
 }
@@ -235,6 +243,20 @@ void replxx_clear_screen( ::Replxx* replxx_ ) {
 void replxx_emulate_key_press( ::Replxx* replxx_, int unsigned keyPress_ ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->emulate_key_press( keyPress_ );
+}
+
+ReplxxActionResult replxx_invoke( ::Replxx* replxx_, ReplxxAction action_, int unsigned keyPress_ ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	return ( static_cast<ReplxxActionResult>( replxx->invoke( static_cast<replxx::Replxx::ACTION>( action_ ), keyPress_ ) ) );
+}
+
+replxx::Replxx::ACTION_RESULT key_press_handler_forwarder( key_press_handler_t handler_, char32_t code_, void* userData_ ) {
+	return ( static_cast<replxx::Replxx::ACTION_RESULT>( handler_( code_, userData_ ) ) );
+}
+
+void replxx_bind_key( ::Replxx* replxx_, int code_, key_press_handler_t handler_, void* userData_ ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->bind_key( code_, std::bind( key_press_handler_forwarder, handler_, _1, userData_ ) );
 }
 
 /**

@@ -117,6 +117,53 @@ public:
 		static char32_t const TAB          = 'I' | BASE_CONTROL;
 		static char32_t const ENTER        = 'M' | BASE_CONTROL;
 	};
+	/*! \brief List of built-in actions that act upon user input.
+	 */
+	enum class ACTION {
+		INSERT_CHARACTER,
+		DELETE_CHARACTER_UNDER_CURSOR,
+		DELETE_CHARACTER_LEFT_OF_CURSOR,
+		KILL_TO_END_OF_LINE,
+		KILL_TO_BEGINING_OF_LINE,
+		KILL_TO_END_OF_WORD,
+		KILL_TO_BEGINING_OF_WORD,
+		KILL_TO_WHITESPACE_ON_LEFT,
+		YANK,
+		YANK_CYCLE,
+		MOVE_CURSOR_TO_BEGINING_OF_LINE,
+		MOVE_CURSOR_TO_END_OF_LINE,
+		MOVE_CURSOR_ONE_WORD_LEFT,
+		MOVE_CURSOR_ONE_WORD_RIGHT,
+		MOVE_CURSOR_LEFT,
+		MOVE_CURSOR_RIGHT,
+		HISTORY_NEXT,
+		HISTORY_PREVIOUS,
+		HISTORY_FIRST,
+		HISTORY_LAST,
+		HISTORY_INCREMENTAL_SEARCH,
+		HISTORY_COMMON_PREFIX_SEARCH,
+		HINT_NEXT,
+		HINT_PREVIOUS,
+		CAPITALIZE_WORD,
+		LOWERCASE_WORD,
+		UPPERCASE_WORD,
+		TRANSPOSE_CHARACTERS,
+#ifndef _WIN32
+		SUSPEND,
+#endif
+		CLEAR_SCREEN,
+		COMPLETE_LINE,
+		COMMIT_LINE,
+		ABORT_LINE,
+		SEND_EOF
+	};
+	/*! \brief Possible results of key-press handler actions.
+	 */
+	enum class ACTION_RESULT {
+		CONTINUE, /*!< Continue processing user input. */
+		RETURN,   /*!< Return user input entered so far. */
+		BAIL      /*!< Stop processing user input, returns nullptr from the \e input() call. */
+	};
 	typedef std::vector<Color> colors_t;
 	typedef std::vector<std::string> completions_t;
 	typedef std::vector<std::string> hints_t;
@@ -177,6 +224,13 @@ public:
 	 */
 	typedef std::function<hints_t ( std::string const& input, int& contextLen, Color& color )> hint_callback_t;
 
+	/*! \brief Key press handler type definition.
+	 *
+	 * \param code - the key code replxx got from terminal.
+	 * \return Decition on how should input() behave after this key handler returns.
+	 */
+	typedef std::function<ACTION_RESULT ( char32_t code )> key_press_handler_t;
+
 	class ReplxxImpl;
 private:
 	typedef std::unique_ptr<ReplxxImpl, void (*)( ReplxxImpl* )> impl_t;
@@ -227,6 +281,23 @@ public:
 	 * \param code - key press code to be emulated.
 	 */
 	void emulate_key_press( char32_t code );
+
+	/*! \brief Invoke built-in action handler.
+	 *
+	 * \pre This method can be called only from key-press handler.
+	 *
+	 * \param action - a built-in action to invoke.
+	 * \param code - a supplementary key-code to consume by built-in action handler.
+	 * \return The action result informing the replxx what shall happen next.
+	 */
+	ACTION_RESULT invoke( ACTION action, char32_t code );
+
+	/*! \brief Bind user defined action to handle given key-press event.
+	 *
+	 * \param code - handle this key-press event with following handler.
+	 * \param handle - use this handler to handle key-press event.
+	 */
+	void bind_key( char32_t code, key_press_handler_t handler );
 
 	void history_add( std::string const& line );
 	int history_save( std::string const& filename );

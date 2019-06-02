@@ -63,13 +63,7 @@ public:
 		REPAINT,
 		SKIP
 	};
-	enum class NEXT {
-		CONTINUE,
-		RETURN,
-		BAIL
-	};
-	typedef std::function<NEXT ( int )> key_press_handler_t;
-	typedef std::unordered_map<int, key_press_handler_t> key_press_handlers_t;
+	typedef std::unordered_map<int, Replxx::key_press_handler_t> key_press_handlers_t;
 private:
 	Utf8String     _utf8Buffer;
 	UnicodeString  _data;
@@ -124,55 +118,57 @@ public:
 	completions_t call_completer( std::string const& input, int& ) const;
 	hints_t call_hinter( std::string const& input, int&, Replxx::Color& color ) const;
 	void print( char const*, int );
-	NEXT clear_screen( int );
+	Replxx::ACTION_RESULT clear_screen( char32_t );
 	void emulate_key_press( char32_t );
+	Replxx::ACTION_RESULT invoke( Replxx::ACTION, char32_t );
+	void bind_key( char32_t, Replxx::key_press_handler_t );
 private:
 	ReplxxImpl( ReplxxImpl const& ) = delete;
 	ReplxxImpl& operator = ( ReplxxImpl const& ) = delete;
 private:
 	void preloadBuffer( char const* preloadText );
 	int getInputLine( void );
-	NEXT insert_character( int );
-	NEXT go_to_begining_of_line( int );
-	NEXT go_to_end_of_line( int );
-	NEXT move_one_char_left( int );
-	NEXT move_one_char_right( int );
-	NEXT move_one_word_left( int );
-	NEXT move_one_word_right( int );
-	NEXT kill_word_to_left( int );
-	NEXT kill_word_to_right( int );
-	NEXT kill_to_whitespace_to_left( int );
-	NEXT kill_to_begining_of_line( int );
-	NEXT kill_to_end_of_line( int );
-	NEXT yank( int );
-	NEXT yank_cycle( int );
-	NEXT capitalize_word( int );
-	NEXT lowercase_word( int );
-	NEXT uppercase_word( int );
-	NEXT transpose_characters( int );
-	NEXT abort_line( int );
-	NEXT send_eof( int );
-	NEXT delete_character( int );
-	NEXT backspace_character( int );
-	NEXT commit_line( int );
-	NEXT history_next( int );
-	NEXT history_previous( int );
-	NEXT history_move( bool, int );
-	NEXT history_first( int );
-	NEXT history_last( int );
-	NEXT history_jump( bool, int );
-	NEXT hint_next( int );
-	NEXT hint_previous( int );
-	NEXT hint_move( bool, int );
+	Replxx::ACTION_RESULT insert_character( char32_t );
+	Replxx::ACTION_RESULT go_to_begining_of_line( char32_t );
+	Replxx::ACTION_RESULT go_to_end_of_line( char32_t );
+	Replxx::ACTION_RESULT move_one_char_left( char32_t );
+	Replxx::ACTION_RESULT move_one_char_right( char32_t );
+	Replxx::ACTION_RESULT move_one_word_left( char32_t );
+	Replxx::ACTION_RESULT move_one_word_right( char32_t );
+	Replxx::ACTION_RESULT kill_word_to_left( char32_t );
+	Replxx::ACTION_RESULT kill_word_to_right( char32_t );
+	Replxx::ACTION_RESULT kill_to_whitespace_to_left( char32_t );
+	Replxx::ACTION_RESULT kill_to_begining_of_line( char32_t );
+	Replxx::ACTION_RESULT kill_to_end_of_line( char32_t );
+	Replxx::ACTION_RESULT yank( char32_t );
+	Replxx::ACTION_RESULT yank_cycle( char32_t );
+	Replxx::ACTION_RESULT capitalize_word( char32_t );
+	Replxx::ACTION_RESULT lowercase_word( char32_t );
+	Replxx::ACTION_RESULT uppercase_word( char32_t );
+	Replxx::ACTION_RESULT transpose_characters( char32_t );
+	Replxx::ACTION_RESULT abort_line( char32_t );
+	Replxx::ACTION_RESULT send_eof( char32_t );
+	Replxx::ACTION_RESULT delete_character( char32_t );
+	Replxx::ACTION_RESULT backspace_character( char32_t );
+	Replxx::ACTION_RESULT commit_line( char32_t );
+	Replxx::ACTION_RESULT history_next( char32_t );
+	Replxx::ACTION_RESULT history_previous( char32_t );
+	Replxx::ACTION_RESULT history_move( bool );
+	Replxx::ACTION_RESULT history_first( char32_t );
+	Replxx::ACTION_RESULT history_last( char32_t );
+	Replxx::ACTION_RESULT history_jump( bool );
+	Replxx::ACTION_RESULT hint_next( char32_t );
+	Replxx::ACTION_RESULT hint_previous( char32_t );
+	Replxx::ACTION_RESULT hint_move( bool );
 #ifndef _WIN32
-	NEXT suspend( int );
+	Replxx::ACTION_RESULT suspend( char32_t );
 #endif
-	NEXT complete_line( int );
-	NEXT incremental_history_search( int startChar );
-	NEXT common_prefix_search( int startChar );
+	Replxx::ACTION_RESULT complete_line( char32_t );
+	Replxx::ACTION_RESULT incremental_history_search( char32_t startChar );
+	Replxx::ACTION_RESULT common_prefix_search( char32_t startChar );
 	char32_t read_char( void );
 	char const* read_from_stdin( void );
-	int do_complete_line( void );
+	char32_t do_complete_line( void );
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
 	void highlight( int, bool );
 	int handle_hints( HINT_ACTION );

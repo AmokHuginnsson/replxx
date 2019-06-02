@@ -276,10 +276,8 @@ void beep() {
 	fflush(stderr);
 }
 
-// replxx_read_char -- read a keystroke or keychord from the keyboard, and
-// translate it
-// into an encoded "keystroke".	When convenient, extended keys are translated
-// into their
+// replxx_read_char -- read a keystroke or keychord from the keyboard, and translate it
+// into an encoded "keystroke".	When convenient, extended keys are translated into their
 // simpler Emacs keystrokes, so an unmodified "left arrow" becomes Ctrl-B.
 //
 // A return value of zero means "no input available", and a return value of -1

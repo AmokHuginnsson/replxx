@@ -234,6 +234,45 @@ int main( int argc_, char** argv_ ) {
 	rx.set_beep_on_ambiguous_completion( false );
 	rx.set_no_color( false );
 
+	// showcase key bindings
+	rx.bind_key( Replxx::KEY::BACKSPACE, std::bind( &Replxx::invoke, &rx, Replxx::ACTION::DELETE_CHARACTER_LEFT_OF_CURSOR, _1 ) );
+	rx.bind_key( Replxx::KEY::DELETE, std::bind( &Replxx::invoke, &rx, Replxx::ACTION::DELETE_CHARACTER_UNDER_CURSOR, _1 ) );
+	rx.bind_key( Replxx::KEY::LEFT, std::bind( &Replxx::invoke, &rx, Replxx::ACTION::MOVE_CURSOR_LEFT, _1 ) );
+	rx.bind_key( Replxx::KEY::RIGHT, std::bind( &Replxx::invoke, &rx, Replxx::ACTION::MOVE_CURSOR_RIGHT, _1 ) );
+	rx.bind_key( Replxx::KEY::UP, std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HISTORY_PREVIOUS, _1 ) );
+	rx.bind_key( Replxx::KEY::DOWN, std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HISTORY_NEXT, _1 ) );
+	rx.bind_key( Replxx::KEY::PAGE_UP, std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HISTORY_FIRST, _1 ) );
+	rx.bind_key( Replxx::KEY::PAGE_DOWN, std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HISTORY_LAST, _1 ) );
+	rx.bind_key( Replxx::KEY::HOME, std::bind( &Replxx::invoke, &rx, Replxx::ACTION::MOVE_CURSOR_TO_BEGINING_OF_LINE, _1 ) );
+	rx.bind_key( Replxx::KEY::END, std::bind( &Replxx::invoke, &rx, Replxx::ACTION::MOVE_CURSOR_TO_END_OF_LINE, _1 ) );
+	rx.bind_key( Replxx::KEY::TAB, std::bind( &Replxx::invoke, &rx, Replxx::ACTION::COMPLETE_LINE, _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::LEFT ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::MOVE_CURSOR_ONE_WORD_LEFT, _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::RIGHT ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::MOVE_CURSOR_ONE_WORD_RIGHT, _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::UP ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HINT_PREVIOUS, _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::DOWN ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HINT_NEXT, _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::ENTER ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::COMMIT_LINE, _1 ) );
+	rx.bind_key( Replxx::KEY::control( 'R' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HISTORY_INCREMENTAL_SEARCH, _1 ) );
+	rx.bind_key( Replxx::KEY::control( 'W' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_WHITESPACE_ON_LEFT, _1 ) );
+	rx.bind_key( Replxx::KEY::control( 'U' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_BEGINING_OF_LINE, _1 ) );
+	rx.bind_key( Replxx::KEY::control( 'K' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_END_OF_LINE, _1 ) );
+	rx.bind_key( Replxx::KEY::control( 'Y' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::YANK, _1 ) );
+	rx.bind_key( Replxx::KEY::control( 'L' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::CLEAR_SCREEN, _1 ) );
+	rx.bind_key( Replxx::KEY::control( 'D' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::SEND_EOF, _1 ) );
+	rx.bind_key( Replxx::KEY::control( 'C' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::ABORT_LINE, _1 ) );
+	rx.bind_key( Replxx::KEY::control( 'T' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::TRANSPOSE_CHARACTERS, _1 ) );
+#ifndef _WIN32
+	rx.bind_key( Replxx::KEY::control( 'Z' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::SUSPEND, _1 ) );
+#endif
+	rx.bind_key( Replxx::KEY::meta( Replxx::KEY::BACKSPACE ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_BEGINING_OF_WORD, _1 ) );
+	rx.bind_key( Replxx::KEY::meta( 'p' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH, _1 ) );
+	rx.bind_key( Replxx::KEY::meta( 'n' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH, _1 ) );
+	rx.bind_key( Replxx::KEY::meta( 'd' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_END_OF_WORD, _1 ) );
+	rx.bind_key( Replxx::KEY::meta( 'y' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::YANK_CYCLE, _1 ) );
+	rx.bind_key( Replxx::KEY::meta( 'u' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::UPPERCASE_WORD, _1 ) );
+	rx.bind_key( Replxx::KEY::meta( 'l' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::LOWERCASE_WORD, _1 ) );
+	rx.bind_key( Replxx::KEY::meta( 'c' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::CAPITALIZE_WORD, _1 ) );
+	rx.bind_key( 'a', std::bind( &Replxx::invoke, &rx, Replxx::ACTION::INSERT_CHARACTER, _1 ) );
+
 	// display initial welcome message
 	std::cout
 		<< "Welcome to Replxx\n"
