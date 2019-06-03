@@ -480,7 +480,23 @@ Terminal::EVENT_TYPE Terminal::wait_for_input( void ) {
 	while ( true ) {
 		DWORD event( WaitForMultipleObjects( std::size( handles ), handles, false, INFINITE ) );
 		switch ( event ) {
-			case ( WAIT_OBJECT_0 + 0 ): return ( EVENT_TYPE::KEY_PRESS );
+			case ( WAIT_OBJECT_0 + 0 ): {
+				// peek events that will be skipped
+				INPUT_RECORD rec;
+				DWORD count;
+				PeekConsoleInputW( _consoleIn, &rec, 1, &count );
+
+				if (
+					( rec.EventType != KEY_EVENT )
+					|| ( !rec.Event.KeyEvent.bKeyDown && ( rec.Event.KeyEvent.wVirtualKeyCode != VK_MENU ) )
+				) {
+					// read the event to unsignal the handle
+					ReadConsoleInputW( _consoleIn, &rec, 1, &count );
+					continue;
+				}
+
+				return ( EVENT_TYPE::KEY_PRESS );
+			}
 			case ( WAIT_OBJECT_0 + 1 ): {
 				ResetEvent( _interrupt );
 				if ( _events.empty() ) {
