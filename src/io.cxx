@@ -374,6 +374,30 @@ char32_t Terminal::read_char( void ) {
 					return modifierKeys | Replxx::KEY::PAGE_UP;
 				case VK_NEXT:
 					return modifierKeys | Replxx::KEY::PAGE_DOWN;
+				case VK_F1:
+					return modifierKeys | Replxx::KEY::F1;
+				case VK_F2:
+					return modifierKeys | Replxx::KEY::F2;
+				case VK_F3:
+					return modifierKeys | Replxx::KEY::F3;
+				case VK_F4:
+					return modifierKeys | Replxx::KEY::F4;
+				case VK_F5:
+					return modifierKeys | Replxx::KEY::F5;
+				case VK_F6:
+					return modifierKeys | Replxx::KEY::F6;
+				case VK_F7:
+					return modifierKeys | Replxx::KEY::F7;
+				case VK_F8:
+					return modifierKeys | Replxx::KEY::F8;
+				case VK_F9:
+					return modifierKeys | Replxx::KEY::F9;
+				case VK_F10:
+					return modifierKeys | Replxx::KEY::F10;
+				case VK_F11:
+					return modifierKeys | Replxx::KEY::F11;
+				case VK_F12:
+					return modifierKeys | Replxx::KEY::F12;
 				default:
 					continue; // in raw mode, ReadConsoleInput shows shift, ctrl - ignore them
 			}

@@ -132,6 +132,11 @@ void hook_color(std::string const& context, Replxx::colors_t& colors, std::vecto
 	}
 }
 
+Replxx::ACTION_RESULT message( Replxx& replxx, std::string s, char32_t ) {
+	replxx.print( "%s\n", s.c_str() );
+	return ( Replxx::ACTION_RESULT::CONTINUE );
+}
+
 int main( int argc_, char** argv_ ) {
 	// words to be completed
 	std::vector<std::string> examples {
@@ -272,6 +277,43 @@ int main( int argc_, char** argv_ ) {
 	rx.bind_key( Replxx::KEY::meta( 'l' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::LOWERCASE_WORD, _1 ) );
 	rx.bind_key( Replxx::KEY::meta( 'c' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::CAPITALIZE_WORD, _1 ) );
 	rx.bind_key( 'a', std::bind( &Replxx::invoke, &rx, Replxx::ACTION::INSERT_CHARACTER, _1 ) );
+	rx.bind_key( Replxx::KEY::INSERT, std::bind( &message, std::ref( rx ), "<Insert>", _1 ) );
+	rx.bind_key( Replxx::KEY::F1, std::bind( &message, std::ref( rx ), "<F1>", _1 ) );
+	rx.bind_key( Replxx::KEY::F2, std::bind( &message, std::ref( rx ), "<F2>", _1 ) );
+	rx.bind_key( Replxx::KEY::F3, std::bind( &message, std::ref( rx ), "<F3>", _1 ) );
+	rx.bind_key( Replxx::KEY::F4, std::bind( &message, std::ref( rx ), "<F4>", _1 ) );
+	rx.bind_key( Replxx::KEY::F5, std::bind( &message, std::ref( rx ), "<F5>", _1 ) );
+	rx.bind_key( Replxx::KEY::F6, std::bind( &message, std::ref( rx ), "<F6>", _1 ) );
+	rx.bind_key( Replxx::KEY::F7, std::bind( &message, std::ref( rx ), "<F7>", _1 ) );
+	rx.bind_key( Replxx::KEY::F8, std::bind( &message, std::ref( rx ), "<F8>", _1 ) );
+	rx.bind_key( Replxx::KEY::F9, std::bind( &message, std::ref( rx ), "<F9>", _1 ) );
+	rx.bind_key( Replxx::KEY::F10, std::bind( &message, std::ref( rx ), "<F10>", _1 ) );
+	rx.bind_key( Replxx::KEY::F11, std::bind( &message, std::ref( rx ), "<F11>", _1 ) );
+	rx.bind_key( Replxx::KEY::F12, std::bind( &message, std::ref( rx ), "<F12>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::F1 ), std::bind( &message, std::ref( rx ), "<S-F1>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::F2 ), std::bind( &message, std::ref( rx ), "<S-F2>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::F3 ), std::bind( &message, std::ref( rx ), "<S-F3>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::F4 ), std::bind( &message, std::ref( rx ), "<S-F4>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::F5 ), std::bind( &message, std::ref( rx ), "<S-F5>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::F6 ), std::bind( &message, std::ref( rx ), "<S-F6>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::F7 ), std::bind( &message, std::ref( rx ), "<S-F7>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::F8 ), std::bind( &message, std::ref( rx ), "<S-F8>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::F9 ), std::bind( &message, std::ref( rx ), "<S-F9>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::F10 ), std::bind( &message, std::ref( rx ), "<S-F10>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::F11 ), std::bind( &message, std::ref( rx ), "<S-F11>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::F12 ), std::bind( &message, std::ref( rx ), "<S-F12>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F1 ), std::bind( &message, std::ref( rx ), "<C-F1>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F2 ), std::bind( &message, std::ref( rx ), "<C-F2>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F3 ), std::bind( &message, std::ref( rx ), "<C-F3>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F4 ), std::bind( &message, std::ref( rx ), "<C-F4>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F5 ), std::bind( &message, std::ref( rx ), "<C-F5>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F6 ), std::bind( &message, std::ref( rx ), "<C-F6>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F7 ), std::bind( &message, std::ref( rx ), "<C-F7>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F8 ), std::bind( &message, std::ref( rx ), "<C-F8>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F9 ), std::bind( &message, std::ref( rx ), "<C-F9>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F10 ), std::bind( &message, std::ref( rx ), "<C-F10>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F11 ), std::bind( &message, std::ref( rx ), "<C-F11>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F12 ), std::bind( &message, std::ref( rx ), "<C-F12>", _1 ) );
 
 	// display initial welcome message
 	std::cout
