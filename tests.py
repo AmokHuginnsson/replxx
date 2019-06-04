@@ -269,22 +269,22 @@ class ReplxxTests( unittest.TestCase ):
 			"<c23><c1><ceos>(reverse-i-search)`w': "
 			"two<c25><c1><ceos>(reverse-i-search)`w': "
 			"two<c25><c1><ceos><brightgreen>replxx<rst>> "
-			"two<c10><c9><ceos>two<rst><c12>\r\n"
+			"two<c10><c9><ceos><c12>\r\n"
 			"two\r\n"
 		)
 	def test_ctrl_l( self_ ):
 		self_.check_scenario(
 			"<cr><cr><cr><c-l><c-d>",
-			"<c9><ceos><rst><c9>\r\n"
-			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
-			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
+			"<c9><ceos><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9>\r\n"
 			"<brightgreen>replxx<rst>> <RIS><mvhm><clr><rst><brightgreen>replxx<rst>> "
 			"<c9><ceos><rst><c9>",
 			end = "\r\nExiting Replxx\r\n"
 		)
 		self_.check_scenario(
 			"<cr><up><c-left><c-l><cr><c-d>",
-			"<c9><ceos><rst><c9>\r\n"
+			"<c9><ceos><c9>\r\n"
 			"<brightgreen>replxx<rst>> <c9><ceos>first "
 			"second<rst><c21><c9><ceos>first "
 			"second<rst><c15><RIS><mvhm><clr><rst><brightgreen>replxx<rst>> "
@@ -490,7 +490,7 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<tab><tab>n<cr><c-d>",
-			"<c9><ceos><rst><c9>\r\n"
+			"<c9><ceos><c9>\r\n"
 			"db\r\n"
 			"hello\r\n"
 			"hallo\r\n"
@@ -523,7 +523,7 @@ class ReplxxTests( unittest.TestCase ):
 		cmd = ReplxxTests._cSample_ + " q1 x" + ",".join( _words_ )
 		self_.check_scenario(
 			"<tab>py<cr><c-d>",
-			"<c9><ceos><rst><c9>\r\n"
+			"<c9><ceos><c9>\r\n"
 			"ada         groovy      perl\r\n"
 			"algolbash   haskell     php\r\n"
 			"basic       huginn      prolog\r\n"
@@ -545,7 +545,7 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<tab><cr><cr><cr><cr><c-d>",
-			"<c9><ceos><rst><c9>\r\n"
+			"<c9><ceos><c9>\r\n"
 			"ada         groovy      perl\r\n"
 			"algolbash   haskell     php\r\n"
 			"basic       huginn      prolog\r\n"
@@ -571,7 +571,7 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<tab><c-c><cr><c-d>",
-			"<c9><ceos><rst><c9>\r\n"
+			"<c9><ceos><c9>\r\n"
 			"ada         kotlin\r\n"
 			"algolbash   lisp\r\n"
 			"basic       lua\r\n"
@@ -587,7 +587,7 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<tab>q<cr><c-d>",
-			"<c9><ceos><rst><c9>\r\n"
+			"<c9><ceos><c9>\r\n"
 			"ada         kotlin\r\n"
 			"algolbash   lisp\r\n"
 			"basic       lua\r\n"
@@ -644,7 +644,7 @@ class ReplxxTests( unittest.TestCase ):
 			"golf<c31><c1><ceos>(reverse-i-search)`repl': echo repl "
 			"golf<c32><c1><ceos>(reverse-i-search)`repl': charlie repl "
 			"delta<c35><c1><ceos><brightgreen>replxx<rst>> charlie repl "
-			"delta<c17><c9><ceos>charlie repl delta<rst><c27>\r\n"
+			"delta<c17><c9><ceos><c27>\r\n"
 			"charlie repl delta\r\n",
 			"some command\n"
 			"alfa repl bravo\n"
@@ -664,7 +664,7 @@ class ReplxxTests( unittest.TestCase ):
 			"fortran<c25><c1><ceos>(reverse-i-search)`f': "
 			"swift<c27><c1><ceos>(reverse-i-search)`fs': "
 			"fsharp<c25><c1><ceos><brightgreen>replxx<rst>> "
-			"fsharp<c9><c9><ceos>fsharp<rst><c15>\r\n"
+			"fsharp<c9><c9><ceos><c15>\r\n"
 			"fsharp\r\n",
 			"\n".join( _words_ ) + "\n"
 		)
@@ -1196,9 +1196,9 @@ class ReplxxTests( unittest.TestCase ):
 	def test_backspace_long_line_on_small_term( self_ ):
 		self_.check_scenario(
 			"<cr><cr><cr><up><backspace><backspace><backspace><backspace><backspace><backspace><backspace><backspace><cr><c-d>",
-			"<c9><ceos><rst><c9>\r\n"
-			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
-			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
+			"<c9><ceos><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9>\r\n"
 			"<brightgreen>replxx<rst>> "
 			"<c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c14><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c13><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c12><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c11><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c10><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c9><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c8><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c7><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c6><u1><c9><ceos>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<rst><c6>\r\n"
 			"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n",
@@ -1207,9 +1207,9 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<cr><cr><cr><up><backspace><backspace><backspace><backspace><backspace><backspace><cr><c-d>",
-			"<c9><ceos><rst><c9>\r\n"
-			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
-			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9>\r\n"
+			"<c9><ceos><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9>\r\n"
 			"<brightgreen>replxx<rst>> <c9><ceos>a qu ite lo ng li ne of sh ort wo rds wi "
 			"ll te st cu rs or mo ve me nt<rst><c39><u1><c9><ceos>a qu ite lo "
 			"ng li ne of sh ort wo rds wi ll te st cu rs or mo ve me "
@@ -1243,7 +1243,7 @@ class ReplxxTests( unittest.TestCase ):
 			[ "a", "b", "c", "d", "e", "f<cr><c-d>" ],
 			"<c1><ceos>0\r\n"
 			"<brightgreen>replxx<rst>> "
-			"<c9><ceos><rst><c9><c9><ceos>a<rst><c10><c9><ceos>ab<rst><c11><c1><ceos>1\r\n"
+			"<c9><ceos><c9><c9><ceos>a<rst><c10><c9><ceos>ab<rst><c11><c1><ceos>1\r\n"
 			"<brightgreen>replxx<rst>> "
 			"<c9><ceos>ab<rst><c11><c9><ceos>abc<rst><c12><c9><ceos>abcd<rst><c13><c1><ceos>2\r\n"
 			"<brightgreen>replxx<rst>> "
@@ -1255,7 +1255,7 @@ class ReplxxTests( unittest.TestCase ):
 		self_.check_scenario(
 			[ "<up>", "a", "b", "c", "d", "e", "f<cr><c-d>" ],
 			"<c1><ceos>0\r\n"
-			"<brightgreen>replxx<rst>> <c9><ceos><rst><c9><c9><ceos>a very long line of "
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c9><ceos>a very long line of "
 			"user input, wider then current terminal, the line is wrapped: "
 			"<rst><c11><u2><c9><ceos>a very long line of user input, wider then current "
 			"terminal, the line is wrapped: a<rst><c12><u2><c1><ceos>1\r\n"

@@ -69,6 +69,7 @@ private:
 	UnicodeString  _data;
 	char_widths_t  _charWidths; // character widths from mk_wcwidth()
 	display_t      _display;
+	int _displayInputLength;
 	UnicodeString  _hint;
 	int _pos;    // character position in buffer ( 0 <= _pos <= _len )
 	int _prefix; // prefix length used in common prefix search
@@ -126,8 +127,8 @@ private:
 	ReplxxImpl( ReplxxImpl const& ) = delete;
 	ReplxxImpl& operator = ( ReplxxImpl const& ) = delete;
 private:
-	void preloadBuffer( char const* preloadText );
-	int getInputLine( void );
+	void preload_puffer( char const* preloadText );
+	int get_input_line( void );
 	Replxx::ACTION_RESULT insert_character( char32_t );
 	Replxx::ACTION_RESULT go_to_begining_of_line( char32_t );
 	Replxx::ACTION_RESULT go_to_end_of_line( char32_t );
@@ -172,7 +173,7 @@ private:
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
 	void highlight( int, bool );
 	int handle_hints( HINT_ACTION );
-	void setColor( Replxx::Color );
+	void set_color( Replxx::Color );
 	int context_length( void );
 	void clear();
 	bool is_word_break_character( char32_t ) const;
