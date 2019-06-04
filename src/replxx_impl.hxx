@@ -61,6 +61,7 @@ public:
 	enum class HINT_ACTION {
 		REGENERATE,
 		REPAINT,
+		TRIM,
 		SKIP
 	};
 	typedef std::unordered_map<int, Replxx::key_press_handler_t> key_press_handlers_t;
@@ -171,7 +172,7 @@ private:
 	char const* read_from_stdin( void );
 	char32_t do_complete_line( void );
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
-	void highlight( int, bool );
+	void highlight( HINT_ACTION );
 	int handle_hints( HINT_ACTION );
 	void set_color( Replxx::Color );
 	int context_length( void );

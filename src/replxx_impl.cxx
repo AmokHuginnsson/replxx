@@ -449,14 +449,25 @@ void Replxx::ReplxxImpl::set_color( Replxx::Color color_ ) {
 	}
 }
 
-void Replxx::ReplxxImpl::highlight( int highlightIdx, bool error_ ) {
+void Replxx::ReplxxImpl::highlight( HINT_ACTION hintAction_ ) {
+	if ( hintAction_ == HINT_ACTION::TRIM ) {
+		_display.erase( _display.begin() + _displayInputLength, _display.end() );
+		return;
+	}
+	if ( _noColor ) {
+		return;
+	}
+	if ( hintAction_ == HINT_ACTION::SKIP ) {
+		return;
+	}
 	Replxx::colors_t colors( _data.length(), Replxx::Color::DEFAULT );
 	_utf8Buffer.assign( _data );
 	if ( !! _highlighterCallback ) {
 		_highlighterCallback( _utf8Buffer.get(), colors );
 	}
-	if ( highlightIdx != -1 ) {
-		colors[highlightIdx] = error_ ? Replxx::Color::ERROR : Replxx::Color::BRIGHTRED;
+	paren_info_t pi( matching_paren() );
+	if ( pi.index != -1 ) {
+		colors[pi.index] = pi.error ? Replxx::Color::ERROR : Replxx::Color::BRIGHTRED;
 	}
 	_display.clear();
 	Replxx::Color c( Replxx::Color::DEFAULT );
@@ -479,7 +490,7 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 	if ( ! _hintCallback ) {
 		return ( 0 );
 	}
-	if ( hintAction_ == HINT_ACTION::SKIP ) {
+	if ( ( hintAction_ == HINT_ACTION::SKIP ) || ( hintAction_ == HINT_ACTION::TRIM ) ) {
 		return ( 0 );
 	}
 	if ( _pos != _data.length() ) {
@@ -622,12 +633,7 @@ Replxx::ReplxxImpl::paren_info_t Replxx::ReplxxImpl::matching_paren( void ) {
  */
 void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	// check for a matching brace/bracket/paren, remember its position if found
-	if ( hintAction_ == HINT_ACTION::SKIP ) {
-		_display.erase( _display.begin() + _displayInputLength, _display.end() );
-	} else {
-		paren_info_t pi( matching_paren() );
-		highlight( pi.index, pi.error );
-	}
+	highlight( hintAction_ );
 	int hintLen( handle_hints( hintAction_ ) );
 	// calculate the position of the end of the input line
 	int xEndOfInput( 0 ), yEndOfInput( 0 );
@@ -636,7 +642,11 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 		calculate_displayed_length( _data.get(), _data.length() ) + hintLen,
 		xEndOfInput, yEndOfInput
 	);
-	yEndOfInput += count( _display.begin(), _display.end(), '\n' );
+	if ( _noColor ) {
+		yEndOfInput += count( _data.begin(), _data.end(), '\n' );
+	} else {
+		yEndOfInput += count( _display.begin(), _display.end(), '\n' );
+	}
 
 	// calculate the desired position of the cursor
 	int xCursorPos( 0 ), yCursorPos( 0 );
@@ -825,7 +835,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 		if ( ! onNewLine ) {  // skip this if we showed "Display all %d possibilities?"
 			int savePos = _pos; // move cursor to EOL to avoid overwriting the command line
 			_pos = _data.length();
-			refresh_line( HINT_ACTION::SKIP );
+			refresh_line( HINT_ACTION::TRIM );
 			_pos = savePos;
 		} else {
 			_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
@@ -1314,7 +1324,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::abort_line( char32_t ) {
 	// we need one last refresh with the cursor at the end of the line
 	// so we don't display the next prompt over the previous input line
 	_prefix = _pos = _data.length(); // pass _data.length() as _pos for EOL
-	refresh_line( HINT_ACTION::SKIP );
+	refresh_line( HINT_ACTION::TRIM );
 	_terminal.write8( "^C\r\n", 4 );
 	return ( Replxx::ACTION_RESULT::BAIL );
 }
@@ -1360,7 +1370,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::commit_line( char32_t ) {
 	// we need one last refresh with the cursor at the end of the line
 	// so we don't display the next prompt over the previous input line
 	_prefix = _pos = _data.length(); // pass _data.length() as _pos for EOL
-	refresh_line( HINT_ACTION::SKIP );
+	refresh_line( HINT_ACTION::TRIM );
 	_history.commit_index();
 	_history.drop_last();
 	return ( Replxx::ACTION_RESULT::RETURN );
