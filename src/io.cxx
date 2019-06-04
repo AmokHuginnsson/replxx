@@ -517,6 +517,25 @@ Terminal::EVENT_TYPE Terminal::wait_for_input( void ) {
 					// read the event to unsignal the handle
 					ReadConsoleInputW( _consoleIn, &rec, 1, &count );
 					continue;
+				} else if (rec.EventType == KEY_EVENT) {
+					int key(rec.Event.KeyEvent.uChar.UnicodeChar);
+					if (key == 0) {
+						switch (rec.Event.KeyEvent.wVirtualKeyCode) {
+						case VK_LEFT:
+						case VK_RIGHT:
+						case VK_UP:
+						case VK_DOWN:
+						case VK_DELETE:
+						case VK_HOME:
+						case VK_END:
+						case VK_PRIOR:
+						case VK_NEXT:
+							break;
+						default:
+							ReadConsoleInputW(_consoleIn, &rec, 1, &count);
+							continue; // in raw mode, ReadConsoleInput shows shift, ctrl - ignore them
+						}
+					}
 				}
 
 				return ( EVENT_TYPE::KEY_PRESS );
