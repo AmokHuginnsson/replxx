@@ -2,6 +2,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <array>
 
 #ifdef _WIN32
 
@@ -500,9 +501,9 @@ char32_t Terminal::read_char( void ) {
 
 Terminal::EVENT_TYPE Terminal::wait_for_input( void ) {
 #ifdef _WIN32
-	HANDLE handles[2] = { _consoleIn, _interrupt };
+	std::array<HANDLE,2> handles = { _consoleIn, _interrupt };
 	while ( true ) {
-		DWORD event( WaitForMultipleObjects( std::size( handles ), handles, false, INFINITE ) );
+		DWORD event( WaitForMultipleObjects( handles.size (), handles.data(), false, INFINITE ) );
 		switch ( event ) {
 			case ( WAIT_OBJECT_0 + 0 ): {
 				// peek events that will be skipped
