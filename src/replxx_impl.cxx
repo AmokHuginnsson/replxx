@@ -206,6 +206,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action, char32_
 		case ( Replxx::ACTION::SUSPEND ):                         return ( suspend( code ) );
 #endif
 		case ( Replxx::ACTION::CLEAR_SCREEN ):                    return ( clear_screen( code ) );
+		case ( Replxx::ACTION::CLEAR_SELF ): clear_self_to_end_of_screen(); return ( Replxx::ACTION_RESULT::CONTINUE );
+		case ( Replxx::ACTION::REPAINT ):    repaint();           return ( Replxx::ACTION_RESULT::CONTINUE );
 		case ( Replxx::ACTION::COMPLETE_LINE ):                   return ( complete_line( code ) );
 		case ( Replxx::ACTION::COMMIT_LINE ):                     return ( commit_line( code ) );
 		case ( Replxx::ACTION::ABORT_LINE ):                      return ( abort_line( code ) );
@@ -239,11 +241,7 @@ char32_t Replxx::ReplxxImpl::read_char( void ) {
 			_terminal.write8( message.data(), message.length() );
 			_messages.pop_front();
 		}
-		_prompt.write();
-		for ( int i( _prompt._extraLines ); i < _prompt._cursorRowOffset; ++ i ) {
-			_terminal.write8( "\n", 1 );
-		}
-		refresh_line( HINT_ACTION::SKIP );
+		repaint();
 	}
 	/* try scheduled key presses */ {
 		std::lock_guard<std::mutex> l( _mutex );
@@ -689,6 +687,21 @@ int Replxx::ReplxxImpl::context_length() {
 		-- prefixLength;
 	}
 	return ( _pos - prefixLength );
+}
+
+void Replxx::ReplxxImpl::repaint( void ) {
+	_prompt.write();
+	for ( int i( _prompt._extraLines ); i < _prompt._cursorRowOffset; ++ i ) {
+		_terminal.write8( "\n", 1 );
+	}
+	refresh_line( HINT_ACTION::SKIP );
+}
+
+void Replxx::ReplxxImpl::clear_self_to_end_of_screen( void ) {
+	// position at the start of the prompt, clear to end of previous input
+	_terminal.jump_cursor( 0, -_prompt._cursorRowOffset );
+	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
+	return;
 }
 
 namespace {
@@ -1807,13 +1820,6 @@ void Replxx::ReplxxImpl::set_beep_on_ambiguous_completion( bool val ) {
 
 void Replxx::ReplxxImpl::set_no_color( bool val ) {
 	_noColor = val;
-}
-
-void Replxx::ReplxxImpl::clear_self_to_end_of_screen( void ) {
-	// position at the start of the prompt, clear to end of previous input
-	_terminal.jump_cursor( 0, -_prompt._cursorRowOffset );
-	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
-	return;
 }
 
 /**

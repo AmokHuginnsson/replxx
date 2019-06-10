@@ -133,7 +133,9 @@ void hook_color(std::string const& context, Replxx::colors_t& colors, std::vecto
 }
 
 Replxx::ACTION_RESULT message( Replxx& replxx, std::string s, char32_t ) {
+	replxx.invoke( Replxx::ACTION::CLEAR_SELF, 0 );
 	replxx.print( "%s\n", s.c_str() );
+	replxx.invoke( Replxx::ACTION::REPAINT, 0 );
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
 
