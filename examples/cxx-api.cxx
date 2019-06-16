@@ -259,7 +259,7 @@ int main( int argc_, char** argv_ ) {
 	rx.bind_key( Replxx::KEY::control( Replxx::KEY::DOWN ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HINT_NEXT, _1 ) );
 	rx.bind_key( Replxx::KEY::control( Replxx::KEY::ENTER ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::COMMIT_LINE, _1 ) );
 	rx.bind_key( Replxx::KEY::control( 'R' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HISTORY_INCREMENTAL_SEARCH, _1 ) );
-	rx.bind_key( Replxx::KEY::control( 'W' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_WHITESPACE_ON_LEFT, _1 ) );
+	rx.bind_key( Replxx::KEY::control( 'W' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_BEGINING_OF_WORD, _1 ) );
 	rx.bind_key( Replxx::KEY::control( 'U' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_BEGINING_OF_LINE, _1 ) );
 	rx.bind_key( Replxx::KEY::control( 'K' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_END_OF_LINE, _1 ) );
 	rx.bind_key( Replxx::KEY::control( 'Y' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::YANK, _1 ) );
@@ -270,7 +270,7 @@ int main( int argc_, char** argv_ ) {
 #ifndef _WIN32
 	rx.bind_key( Replxx::KEY::control( 'Z' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::SUSPEND, _1 ) );
 #endif
-	rx.bind_key( Replxx::KEY::meta( Replxx::KEY::BACKSPACE ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_BEGINING_OF_WORD, _1 ) );
+	rx.bind_key( Replxx::KEY::meta( Replxx::KEY::BACKSPACE ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_WHITESPACE_ON_LEFT, _1 ) );
 	rx.bind_key( Replxx::KEY::meta( 'p' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH, _1 ) );
 	rx.bind_key( Replxx::KEY::meta( 'n' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH, _1 ) );
 	rx.bind_key( Replxx::KEY::meta( 'd' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_END_OF_WORD, _1 ) );

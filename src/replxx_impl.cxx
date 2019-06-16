@@ -126,10 +126,10 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	bind_key( Replxx::KEY::meta( 'F' ),                    std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) );
 	bind_key( Replxx::KEY::control( Replxx::KEY::RIGHT ),  std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) );
 	bind_key( Replxx::KEY::meta( Replxx::KEY::RIGHT ),     std::bind( &ReplxxImpl::move_one_word_right,        this, _1 ) ); // Emacs allows Meta, readline don't
-	bind_key( Replxx::KEY::meta( Replxx::KEY::BACKSPACE ), std::bind( &ReplxxImpl::kill_word_to_left,          this, _1 ) );
+	bind_key( Replxx::KEY::meta( Replxx::KEY::BACKSPACE ), std::bind( &ReplxxImpl::kill_to_whitespace_to_left, this, _1 ) );
 	bind_key( Replxx::KEY::meta( 'd' ),                    std::bind( &ReplxxImpl::kill_word_to_right,         this, _1 ) );
 	bind_key( Replxx::KEY::meta( 'D' ),                    std::bind( &ReplxxImpl::kill_word_to_right,         this, _1 ) );
-	bind_key( Replxx::KEY::control( 'W' ),                 std::bind( &ReplxxImpl::kill_to_whitespace_to_left, this, _1 ) );
+	bind_key( Replxx::KEY::control( 'W' ),                 std::bind( &ReplxxImpl::kill_word_to_left,          this, _1 ) );
 	bind_key( Replxx::KEY::control( 'U' ),                 std::bind( &ReplxxImpl::kill_to_begining_of_line,   this, _1 ) );
 	bind_key( Replxx::KEY::control( 'K' ),                 std::bind( &ReplxxImpl::kill_to_end_of_line,        this, _1 ) );
 	bind_key( Replxx::KEY::control( 'Y' ),                 std::bind( &ReplxxImpl::yank,                       this, _1 ) );
