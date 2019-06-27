@@ -367,8 +367,12 @@ void replxx_add_hint(replxx_hints* lh, const char* str) {
 	lh->data.emplace_back(str);
 }
 
-void replxx_add_completion(replxx_completions* lc, const char* str) {
-	lc->data.emplace_back(str);
+void replxx_add_completion( replxx_completions* lc, const char* str ) {
+	lc->data.emplace_back( str );
+}
+
+void replxx_add_completion( replxx_completions* lc, const char* str, ReplxxColor color ) {
+	lc->data.emplace_back( str, static_cast<replxx::Replxx::Color>( color ) );
 }
 
 void replxx_history_add( ::Replxx* replxx_, const char* line ) {

@@ -74,7 +74,13 @@ Replxx::completions_t hook_completion(std::string const& context, int& contextLe
 	} else {
 		for (auto const& e : examples) {
 			if (e.compare(0, prefix.size(), prefix) == 0) {
-				completions.emplace_back(e.c_str());
+				Replxx::Color c( Replxx::Color::DEFAULT );
+				if ( e.find( "brightred" ) != std::string::npos ) {
+					c = Replxx::Color::BRIGHTRED;
+				} else if ( e.find( "red" ) != std::string::npos ) {
+					c = Replxx::Color::RED;
+				}
+				completions.emplace_back(e.c_str(), c);
 			}
 		}
 	}

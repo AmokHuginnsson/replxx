@@ -249,6 +249,14 @@ void replxx_set_completion_callback( Replxx*, replxx_completion_callback_t* fn, 
  */
 void replxx_add_completion( replxx_completions* completions, const char* str );
 
+/*! \brief Add another possible completion for current user input.
+ *
+ * \param completions - pointer to opaque list of user completions.
+ * \param str - UTF-8 encoded completion string.
+ * \param color - a color for the completion.
+ */
+void replxx_add_color_completion( replxx_completions* completions, const char* str, ReplxxColor color );
+
 typedef struct replxx_hints replxx_hints;
 
 /*! \brief Hints callback type definition.

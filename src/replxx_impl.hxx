@@ -50,7 +50,30 @@ namespace replxx {
 
 class Replxx::ReplxxImpl {
 public:
-	typedef std::vector<UnicodeString> completions_t;
+	class Completion {
+		UnicodeString _text;
+		Replxx::Color _color;
+	public:
+		Completion( UnicodeString const& text_, Replxx::Color color_ )
+			: _text( text_ )
+			, _color( color_ ) {
+		}
+		Completion( Replxx::Completion const& completion_ )
+			: _text( completion_.text() )
+			, _color( completion_.color() ) {
+		}
+		Completion( Completion const& ) = default;
+		Completion& operator = ( Completion const& ) = default;
+		Completion( Completion&& ) = default;
+		Completion& operator = ( Completion&& ) = default;
+		UnicodeString const& text( void ) const {
+			return ( _text );
+		}
+		Replxx::Color color( void ) const {
+			return ( _color );
+		}
+	};
+	typedef std::vector<Completion> completions_t;
 	typedef std::vector<UnicodeString> hints_t;
 	typedef std::unique_ptr<char[]> utf8_buffer_t;
 	typedef std::unique_ptr<char32_t[]> input_buffer_t;

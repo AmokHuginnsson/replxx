@@ -167,7 +167,30 @@ public:
 		BAIL      /*!< Stop processing user input, returns nullptr from the \e input() call. */
 	};
 	typedef std::vector<Color> colors_t;
-	typedef std::vector<std::string> completions_t;
+	class Completion {
+		std::string _text;
+		Color _color;
+	public:
+		Completion( char const* text_ )
+			: _text( text_ )
+			, _color( Color::DEFAULT ) {
+		}
+		Completion( std::string const& text_ )
+			: _text( text_ )
+			, _color( Color::DEFAULT ) {
+		}
+		Completion( std::string const& text_, Color color_ )
+			: _text( text_ )
+			, _color( color_ ) {
+		}
+		std::string const& text( void ) const {
+			return ( _text );
+		}
+		Color color( void ) const {
+			return ( _color );
+		}
+	};
+	typedef std::vector<Completion> completions_t;
 	typedef std::vector<std::string> hints_t;
 
 	/*! \brief Completions callback type definition.

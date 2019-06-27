@@ -272,8 +272,8 @@ Replxx::ReplxxImpl::completions_t Replxx::ReplxxImpl::call_completer( std::strin
 	);
 	completions_t completions;
 	completions.reserve( completionsIntermediary.size() );
-	for ( std::string const& c : completionsIntermediary ) {
-		completions.emplace_back( c.c_str() );
+	for ( Replxx::Completion const& c : completionsIntermediary ) {
+		completions.emplace_back( c );
 	}
 	return ( completions );
 }
@@ -711,14 +711,14 @@ int longest_common_prefix( Replxx::ReplxxImpl::completions_t const& completions 
 		return ( 0 );
 	}
 	int longestCommonPrefix( 0 );
-	UnicodeString const& sample( completions.front() );
+	UnicodeString const& sample( completions.front().text() );
 	while ( true ) {
 		if ( longestCommonPrefix >= sample.length() ) {
 			return ( longestCommonPrefix );
 		}
 		char32_t sc( sample[longestCommonPrefix] );
 		for ( int i( 1 ); i < completionsCount; ++ i ) {
-			UnicodeString const& candidate( completions[i] );
+			UnicodeString const& candidate( completions[i].text() );
 			if ( longestCommonPrefix >= candidate.length() ) {
 				return ( longestCommonPrefix );
 			}
@@ -769,7 +769,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 		completionsCount = 1;
 	}
 	if ( completionsCount == 1 ) {
-		longestCommonPrefix = static_cast<int>(completions[selectedCompletion].length());
+		longestCommonPrefix = static_cast<int>(completions[selectedCompletion].text().length());
 	} else {
 		longestCommonPrefix = longest_common_prefix( completions );
 	}
@@ -781,7 +781,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 	if ( ( longestCommonPrefix > contextLen ) || ( completionsCount == 1 ) ) {
 		_pos -= contextLen;
 		_data.erase( _pos, contextLen );
-		_data.insert( _pos, completions[selectedCompletion], 0, longestCommonPrefix );
+		_data.insert( _pos, completions[selectedCompletion].text(), 0, longestCommonPrefix );
 		_prefix = _pos = _pos + longestCommonPrefix;
 		refresh_line();
 		return 0;
@@ -835,7 +835,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 	if ( showCompletions ) {
 		int longestCompletion( 0 );
 		for ( size_t j( 0 ); j < completions.size(); ++ j ) {
-			int itemLength( static_cast<int>( completions[j].length() ) );
+			int itemLength( static_cast<int>( completions[j].text().length() ) );
 			if ( itemLength > longestCompletion ) {
 				longestCompletion = itemLength;
 			}
@@ -902,10 +902,12 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 			if (stopList) {
 				break;
 			}
+			static UnicodeString const res( ansi_color( Replxx::Color::DEFAULT ) );
 			for (int column = 0; column < columnCount; ++column) {
 				size_t index = (column * rowCount) + row;
 				if (index < completions.size()) {
-					int itemLength = static_cast<int>(completions[index].length());
+					Completion const& c( completions[index] );
+					int itemLength = static_cast<int>(c.text().length());
 					fflush(stdout);
 
 					if ( longestCommonPrefix > 0 ) {
@@ -914,13 +916,19 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 							_terminal.write32(col.get(), col.length());
 						}
 						_terminal.write32(&_data[_pos - contextLen], longestCommonPrefix);
-						static UnicodeString const res(ansi_color(Replxx::Color::DEFAULT));
 						if (!_noColor) {
 							_terminal.write32(res.get(), res.length());
 						}
 					}
 
-					_terminal.write32( completions[index].get() + longestCommonPrefix, itemLength - longestCommonPrefix );
+					if ( !_noColor && ( c.color() != Replxx::Color::DEFAULT ) ) {
+						UnicodeString ac( ansi_color( c.color() ) );
+						_terminal.write32( ac.get(), ac.length() );
+					}
+					_terminal.write32( c.text().get() + longestCommonPrefix, itemLength - longestCommonPrefix );
+					if ( !_noColor && ( c.color() != Replxx::Color::DEFAULT ) ) {
+						_terminal.write32( res.get(), res.length() );
+					}
 
 					if (((column + 1) * rowCount) + row < completions.size()) {
 						for ( int k( itemLength ); k < longestCompletion; ++k ) {
