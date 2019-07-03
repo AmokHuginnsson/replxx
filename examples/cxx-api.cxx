@@ -322,6 +322,17 @@ int main( int argc_, char** argv_ ) {
 	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F10 ), std::bind( &message, std::ref( rx ), "<C-F10>", _1 ) );
 	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F11 ), std::bind( &message, std::ref( rx ), "<C-F11>", _1 ) );
 	rx.bind_key( Replxx::KEY::control( Replxx::KEY::F12 ), std::bind( &message, std::ref( rx ), "<C-F12>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::TAB ), std::bind( &message, std::ref( rx ), "<S-Tab>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::HOME ), std::bind( &message, std::ref( rx ), "<C-Home>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::HOME ), std::bind( &message, std::ref( rx ), "<S-Home>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::END ), std::bind( &message, std::ref( rx ), "<C-End>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::END ), std::bind( &message, std::ref( rx ), "<S-End>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::PAGE_UP ), std::bind( &message, std::ref( rx ), "<C-PgUp>", _1 ) );
+	rx.bind_key( Replxx::KEY::control( Replxx::KEY::PAGE_DOWN ), std::bind( &message, std::ref( rx ), "<C-PgDn>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::LEFT ), std::bind( &message, std::ref( rx ), "<S-Left>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::RIGHT ), std::bind( &message, std::ref( rx ), "<S-Right>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::UP ), std::bind( &message, std::ref( rx ), "<S-Up>", _1 ) );
+	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::DOWN ), std::bind( &message, std::ref( rx ), "<S-Down>", _1 ) );
 
 	// display initial welcome message
 	std::cout

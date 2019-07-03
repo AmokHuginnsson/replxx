@@ -10,22 +10,36 @@ import time
 
 keytab = {
 	"<home>": "\033[1~",
+	"<s-home>": "\033[1;2H",
+	"<c-home>": "\033[1;5H",
 	"<end>": "\033[4~",
+	"<s-end>": "\033[1;2F",
+	"<c-end>": "\033[1;5F",
 	"<ins>": "\033[2~",
+	"<s-ins>": "\033[2;2~",
+	"<c-ins>": "\033[2;5~",
 	"<del>": "\033[3~",
+	"<s-del>": "\033[3;2~",
+	"<c-del>": "\033[3;5~",
 	"<pgup>": "\033[5~",
+	"<c-pgup>": "\033[5;5~",
 	"<pgdown>": "\033[6~",
+	"<c-pgdown>": "\033[6;5~",
 	"<backspace>": "",
 	"<tab>": "\t",
 	"<cr>": "\r",
 	"<lf>": "\n",
 	"<left>": "\033[D",
+	"<s-left>": "\033[1;2D",
 	"<aleft>": "\033OD",
 	"<right>": "\033[C",
+	"<s-right>": "\033[1;2C",
 	"<aright>": "\033OC",
 	"<up>": "\033[A",
+	"<s-up>": "\033[1;2A",
 	"<aup>": "\033OA",
 	"<down>": "\033[B",
+	"<s-down>": "\033[1;2B",
 	"<adown>": "\033OB",
 	"<c-left>": "\033[1;5D",
 	"<c-right>": "\033[1;5C",
@@ -87,6 +101,19 @@ keytab = {
 	"<s-f10>": "\033[21;2~",
 	"<s-f11>": "\033[23;2~",
 	"<s-f12>": "\033[24;2~",
+	"<c-f1>": "\033[1;5P",
+	"<c-f2>": "\033[1;5Q",
+	"<c-f3>": "\033[1;5R",
+	"<c-f4>": "\033[1;5S",
+	"<c-f5>": "\033[15;5~",
+	"<c-f6>": "\033[17;5~",
+	"<c-f7>": "\033[18;5~",
+	"<c-f8>": "\033[19;5~",
+	"<c-f9>": "\033[20;5~",
+	"<c-f10>": "\033[21;5~",
+	"<c-f11>": "\033[23;5~",
+	"<c-f12>": "\033[24;5~",
+	"<s-tab>": "\033[Z",
 }
 
 termseq = {
@@ -1306,6 +1333,9 @@ class ReplxxTests( unittest.TestCase ):
 		self_.check_scenario(
 			"<f1><f2><f3><f4><f5><f6><f7><f8><f9><f10><f11><f12>"
 			"<s-f1><s-f2><s-f3><s-f4><s-f5><s-f6><s-f7><s-f8><s-f9><s-f10><s-f11><s-f12>"
+			"<c-f1><c-f2><c-f3><c-f4><c-f5><c-f6><c-f7><c-f8><c-f9><c-f10><c-f11><c-f12>"
+			"<s-tab><s-left><s-right><s-up><s-down>"
+			"<s-home><s-end><c-home><c-end><c-pgup><c-pgdown>"
 			"<cr><c-d>",
 			"<c1><ceos><F1>\r\n"
 			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><F2>\r\n"
@@ -1331,6 +1361,29 @@ class ReplxxTests( unittest.TestCase ):
 			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><S-F10>\r\n"
 			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><S-F11>\r\n"
 			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><S-F12>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-F1>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-F2>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-F3>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-F4>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-F5>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-F6>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-F7>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-F8>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-F9>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-F10>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-F11>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-F12>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><S-Tab>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><S-Left>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><S-Right>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><S-Up>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><S-Down>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><S-Home>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><S-End>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-Home>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-End>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-PgUp>\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-PgDn>\r\n"
 			"<brightgreen>replxx<rst>> <c9><ceos><c9><c9><ceos><c9>\r\n"
 	)
 

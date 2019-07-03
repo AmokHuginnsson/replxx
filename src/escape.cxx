@@ -75,6 +75,7 @@ static char32_t leftArrowKeyRoutine(char32_t) {
 }
 static char32_t homeKeyRoutine(char32_t) { return thisKeyMetaCtrl | Replxx::KEY::HOME; }
 static char32_t endKeyRoutine(char32_t) { return thisKeyMetaCtrl | Replxx::KEY::END; }
+static char32_t shiftTabRoutine(char32_t) { return Replxx::KEY::BASE_SHIFT | Replxx::KEY::TAB; }
 static char32_t f1KeyRoutine(char32_t) { return thisKeyMetaCtrl | Replxx::KEY::F1; }
 static char32_t f2KeyRoutine(char32_t) { return thisKeyMetaCtrl | Replxx::KEY::F2; }
 static char32_t f3KeyRoutine(char32_t) { return thisKeyMetaCtrl | Replxx::KEY::F3; }
@@ -126,6 +127,8 @@ static CharacterDispatchRoutine escLeftBracket1Semicolon2or3or5Routines[] = {
 	downArrowKeyRoutine,
 	rightArrowKeyRoutine,
 	leftArrowKeyRoutine,
+	homeKeyRoutine,
+	endKeyRoutine,
 	f1KeyRoutine,
 	f2KeyRoutine,
 	f3KeyRoutine,
@@ -133,7 +136,7 @@ static CharacterDispatchRoutine escLeftBracket1Semicolon2or3or5Routines[] = {
 	escFailureRoutine
 };
 static CharacterDispatch escLeftBracket1Semicolon2or3or5Dispatch = {
-		8, "ABCDPQRS", escLeftBracket1Semicolon2or3or5Routines
+		10, "ABCDHFPQRS", escLeftBracket1Semicolon2or3or5Routines
 };
 
 // Handle ESC [ 1 ; <more stuff> escape sequences
@@ -174,7 +177,6 @@ static char32_t escLeftBracket1SemicolonRoutine(char32_t c) {
 	return doDispatch(c, escLeftBracket1SemicolonDispatch);
 }
 
-
 // (S)-F5
 static CharacterDispatchRoutine escLeftBracket15Semicolon2Routines[] = {
 	f5KeyRoutine, escFailureRoutine
@@ -189,11 +191,25 @@ static char32_t escLeftBracket15Semicolon2Routine(char32_t c) {
 	return doDispatch(c, escLeftBracket15Semicolon2Dispatch);
 }
 
+// (C)-F5
+static CharacterDispatchRoutine escLeftBracket15Semicolon5Routines[] = {
+	f5KeyRoutine, escFailureRoutine
+};
+static CharacterDispatch escLeftBracket15Semicolon5Dispatch = {
+	1, "~", escLeftBracket15Semicolon5Routines
+};
+static char32_t escLeftBracket15Semicolon5Routine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	thisKeyMetaCtrl |= Replxx::KEY::BASE_CONTROL;
+	return doDispatch(c, escLeftBracket15Semicolon5Dispatch);
+}
+
 static CharacterDispatchRoutine escLeftBracket15SemicolonRoutines[] = {
-	escLeftBracket15Semicolon2Routine, escFailureRoutine
+	escLeftBracket15Semicolon2Routine, escLeftBracket15Semicolon5Routine, escFailureRoutine
 };
 static CharacterDispatch escLeftBracket15SemicolonDispatch = {
-	1, "2", escLeftBracket15SemicolonRoutines
+	2, "25", escLeftBracket15SemicolonRoutines
 };
 static char32_t escLeftBracket15SemicolonRoutine(char32_t c) {
 	c = read_unicode_character();
@@ -227,11 +243,25 @@ static char32_t escLeftBracket17Semicolon2Routine(char32_t c) {
 	return doDispatch(c, escLeftBracket17Semicolon2Dispatch);
 }
 
+// (C)-F6
+static CharacterDispatchRoutine escLeftBracket17Semicolon5Routines[] = {
+	f6KeyRoutine, escFailureRoutine
+};
+static CharacterDispatch escLeftBracket17Semicolon5Dispatch = {
+	1, "~", escLeftBracket17Semicolon5Routines
+};
+static char32_t escLeftBracket17Semicolon5Routine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	thisKeyMetaCtrl |= Replxx::KEY::BASE_CONTROL;
+	return doDispatch(c, escLeftBracket17Semicolon5Dispatch);
+}
+
 static CharacterDispatchRoutine escLeftBracket17SemicolonRoutines[] = {
-	escLeftBracket17Semicolon2Routine, escFailureRoutine
+	escLeftBracket17Semicolon2Routine, escLeftBracket17Semicolon5Routine, escFailureRoutine
 };
 static CharacterDispatch escLeftBracket17SemicolonDispatch = {
-	1, "2", escLeftBracket17SemicolonRoutines
+	2, "25", escLeftBracket17SemicolonRoutines
 };
 static char32_t escLeftBracket17SemicolonRoutine(char32_t c) {
 	c = read_unicode_character();
@@ -265,11 +295,25 @@ static char32_t escLeftBracket18Semicolon2Routine(char32_t c) {
 	return doDispatch(c, escLeftBracket18Semicolon2Dispatch);
 }
 
+// (C)-F7
+static CharacterDispatchRoutine escLeftBracket18Semicolon5Routines[] = {
+	f7KeyRoutine, escFailureRoutine
+};
+static CharacterDispatch escLeftBracket18Semicolon5Dispatch = {
+	1, "~", escLeftBracket18Semicolon5Routines
+};
+static char32_t escLeftBracket18Semicolon5Routine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	thisKeyMetaCtrl |= Replxx::KEY::BASE_CONTROL;
+	return doDispatch(c, escLeftBracket18Semicolon5Dispatch);
+}
+
 static CharacterDispatchRoutine escLeftBracket18SemicolonRoutines[] = {
-	escLeftBracket18Semicolon2Routine, escFailureRoutine
+	escLeftBracket18Semicolon2Routine, escLeftBracket18Semicolon5Routine, escFailureRoutine
 };
 static CharacterDispatch escLeftBracket18SemicolonDispatch = {
-	1, "2", escLeftBracket18SemicolonRoutines
+	2, "25", escLeftBracket18SemicolonRoutines
 };
 static char32_t escLeftBracket18SemicolonRoutine(char32_t c) {
 	c = read_unicode_character();
@@ -303,11 +347,25 @@ static char32_t escLeftBracket19Semicolon2Routine(char32_t c) {
 	return doDispatch(c, escLeftBracket19Semicolon2Dispatch);
 }
 
+// (C)-F8
+static CharacterDispatchRoutine escLeftBracket19Semicolon5Routines[] = {
+	f8KeyRoutine, escFailureRoutine
+};
+static CharacterDispatch escLeftBracket19Semicolon5Dispatch = {
+	1, "~", escLeftBracket19Semicolon5Routines
+};
+static char32_t escLeftBracket19Semicolon5Routine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	thisKeyMetaCtrl |= Replxx::KEY::BASE_CONTROL;
+	return doDispatch(c, escLeftBracket19Semicolon5Dispatch);
+}
+
 static CharacterDispatchRoutine escLeftBracket19SemicolonRoutines[] = {
-	escLeftBracket19Semicolon2Routine, escFailureRoutine
+	escLeftBracket19Semicolon2Routine, escLeftBracket19Semicolon5Routine, escFailureRoutine
 };
 static CharacterDispatch escLeftBracket19SemicolonDispatch = {
-	1, "2", escLeftBracket19SemicolonRoutines
+	2, "25", escLeftBracket19SemicolonRoutines
 };
 static char32_t escLeftBracket19SemicolonRoutine(char32_t c) {
 	c = read_unicode_character();
@@ -358,11 +416,25 @@ static char32_t escLeftBracket20Semicolon2Routine(char32_t c) {
 	return doDispatch(c, escLeftBracket20Semicolon2Dispatch);
 }
 
+// (C)-F9
+static CharacterDispatchRoutine escLeftBracket20Semicolon5Routines[] = {
+	f9KeyRoutine, escFailureRoutine
+};
+static CharacterDispatch escLeftBracket20Semicolon5Dispatch = {
+	1, "~", escLeftBracket20Semicolon5Routines
+};
+static char32_t escLeftBracket20Semicolon5Routine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	thisKeyMetaCtrl |= Replxx::KEY::BASE_CONTROL;
+	return doDispatch(c, escLeftBracket20Semicolon5Dispatch);
+}
+
 static CharacterDispatchRoutine escLeftBracket20SemicolonRoutines[] = {
-	escLeftBracket20Semicolon2Routine, escFailureRoutine
+	escLeftBracket20Semicolon2Routine, escLeftBracket20Semicolon5Routine, escFailureRoutine
 };
 static CharacterDispatch escLeftBracket20SemicolonDispatch = {
-	1, "2", escLeftBracket20SemicolonRoutines
+	2, "25", escLeftBracket20SemicolonRoutines
 };
 static char32_t escLeftBracket20SemicolonRoutine(char32_t c) {
 	c = read_unicode_character();
@@ -396,11 +468,25 @@ static char32_t escLeftBracket21Semicolon2Routine(char32_t c) {
 	return doDispatch(c, escLeftBracket21Semicolon2Dispatch);
 }
 
+// (C)-F10
+static CharacterDispatchRoutine escLeftBracket21Semicolon5Routines[] = {
+	f10KeyRoutine, escFailureRoutine
+};
+static CharacterDispatch escLeftBracket21Semicolon5Dispatch = {
+	1, "~", escLeftBracket21Semicolon5Routines
+};
+static char32_t escLeftBracket21Semicolon5Routine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	thisKeyMetaCtrl |= Replxx::KEY::BASE_CONTROL;
+	return doDispatch(c, escLeftBracket21Semicolon5Dispatch);
+}
+
 static CharacterDispatchRoutine escLeftBracket21SemicolonRoutines[] = {
-	escLeftBracket21Semicolon2Routine, escFailureRoutine
+	escLeftBracket21Semicolon2Routine, escLeftBracket21Semicolon5Routine, escFailureRoutine
 };
 static CharacterDispatch escLeftBracket21SemicolonDispatch = {
-	1, "2", escLeftBracket21SemicolonRoutines
+	2, "25", escLeftBracket21SemicolonRoutines
 };
 static char32_t escLeftBracket21SemicolonRoutine(char32_t c) {
 	c = read_unicode_character();
@@ -434,11 +520,25 @@ static char32_t escLeftBracket23Semicolon2Routine(char32_t c) {
 	return doDispatch(c, escLeftBracket23Semicolon2Dispatch);
 }
 
+// (C)-F11
+static CharacterDispatchRoutine escLeftBracket23Semicolon5Routines[] = {
+	f11KeyRoutine, escFailureRoutine
+};
+static CharacterDispatch escLeftBracket23Semicolon5Dispatch = {
+	1, "~", escLeftBracket23Semicolon5Routines
+};
+static char32_t escLeftBracket23Semicolon5Routine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	thisKeyMetaCtrl |= Replxx::KEY::BASE_CONTROL;
+	return doDispatch(c, escLeftBracket23Semicolon5Dispatch);
+}
+
 static CharacterDispatchRoutine escLeftBracket23SemicolonRoutines[] = {
-	escLeftBracket23Semicolon2Routine, escFailureRoutine
+	escLeftBracket23Semicolon2Routine, escLeftBracket23Semicolon5Routine, escFailureRoutine
 };
 static CharacterDispatch escLeftBracket23SemicolonDispatch = {
-	1, "2", escLeftBracket23SemicolonRoutines
+	2, "25", escLeftBracket23SemicolonRoutines
 };
 static char32_t escLeftBracket23SemicolonRoutine(char32_t c) {
 	c = read_unicode_character();
@@ -472,11 +572,25 @@ static char32_t escLeftBracket24Semicolon2Routine(char32_t c) {
 	return doDispatch(c, escLeftBracket24Semicolon2Dispatch);
 }
 
+// (C)-F12
+static CharacterDispatchRoutine escLeftBracket24Semicolon5Routines[] = {
+	f12KeyRoutine, escFailureRoutine
+};
+static CharacterDispatch escLeftBracket24Semicolon5Dispatch = {
+	1, "~", escLeftBracket24Semicolon5Routines
+};
+static char32_t escLeftBracket24Semicolon5Routine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	thisKeyMetaCtrl |= Replxx::KEY::BASE_CONTROL;
+	return doDispatch(c, escLeftBracket24Semicolon5Dispatch);
+}
+
 static CharacterDispatchRoutine escLeftBracket24SemicolonRoutines[] = {
-	escLeftBracket24Semicolon2Routine, escFailureRoutine
+	escLeftBracket24Semicolon2Routine, escLeftBracket24Semicolon5Routine, escFailureRoutine
 };
 static CharacterDispatch escLeftBracket24SemicolonDispatch = {
-	1, "2", escLeftBracket24SemicolonRoutines
+	2, "25", escLeftBracket24SemicolonRoutines
 };
 static char32_t escLeftBracket24SemicolonRoutine(char32_t c) {
 	c = read_unicode_character();
@@ -531,20 +645,70 @@ static CharacterDispatch escLeftBracket4Dispatch = {
 
 // Handle ESC [ 5 <more stuff> escape sequences
 //
-static CharacterDispatchRoutine escLeftBracket5Routines[] = {
+static CharacterDispatchRoutine escLeftBracket5Semicolon5Routines[] = {
 	pageUpKeyRoutine, escFailureRoutine
 };
+static CharacterDispatch escLeftBracket5Semicolon5Dispatch = {
+	1, "~", escLeftBracket5Semicolon5Routines
+};
+static char32_t escLeftBracket5Semicolon5Routine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	thisKeyMetaCtrl |= Replxx::KEY::BASE_CONTROL;
+	return doDispatch(c, escLeftBracket5Semicolon5Dispatch);
+}
+static CharacterDispatchRoutine escLeftBracket5SemicolonRoutines[] = {
+	escLeftBracket5Semicolon5Routine,
+	escFailureRoutine
+};
+static CharacterDispatch escLeftBracket5SemicolonDispatch = {
+	1, "5", escLeftBracket5SemicolonRoutines
+};
+static char32_t escLeftBracket5SemicolonRoutine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	return doDispatch(c, escLeftBracket5SemicolonDispatch);
+}
+
+static CharacterDispatchRoutine escLeftBracket5Routines[] = {
+	pageUpKeyRoutine, escLeftBracket5SemicolonRoutine, escFailureRoutine
+};
 static CharacterDispatch escLeftBracket5Dispatch = {
-	1, "~", escLeftBracket5Routines
+	2, "~;", escLeftBracket5Routines
 };
 
 // Handle ESC [ 6 <more stuff> escape sequences
 //
-static CharacterDispatchRoutine escLeftBracket6Routines[] = {
+static CharacterDispatchRoutine escLeftBracket6Semicolon5Routines[] = {
 	pageDownKeyRoutine, escFailureRoutine
 };
+static CharacterDispatch escLeftBracket6Semicolon5Dispatch = {
+	1, "~", escLeftBracket6Semicolon5Routines
+};
+static char32_t escLeftBracket6Semicolon5Routine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	thisKeyMetaCtrl |= Replxx::KEY::BASE_CONTROL;
+	return doDispatch(c, escLeftBracket6Semicolon5Dispatch);
+}
+static CharacterDispatchRoutine escLeftBracket6SemicolonRoutines[] = {
+	escLeftBracket6Semicolon5Routine,
+	escFailureRoutine
+};
+static CharacterDispatch escLeftBracket6SemicolonDispatch = {
+	1, "5", escLeftBracket6SemicolonRoutines
+};
+static char32_t escLeftBracket6SemicolonRoutine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	return doDispatch(c, escLeftBracket6SemicolonDispatch);
+}
+
+static CharacterDispatchRoutine escLeftBracket6Routines[] = {
+	pageDownKeyRoutine, escLeftBracket6SemicolonRoutine, escFailureRoutine
+};
 static CharacterDispatch escLeftBracket6Dispatch = {
-	1, "~", escLeftBracket6Routines
+	2, "~;", escLeftBracket6Routines
 };
 
 // Handle ESC [ 7 <more stuff> escape sequences
@@ -619,12 +783,13 @@ static char32_t escLeftBracket9Routine(char32_t c) {
 static CharacterDispatchRoutine escLeftBracketRoutines[] = {
 	upArrowKeyRoutine,      downArrowKeyRoutine,    rightArrowKeyRoutine,
 	leftArrowKeyRoutine,    homeKeyRoutine,         endKeyRoutine,
+	shiftTabRoutine,
 	escLeftBracket0Routine, escLeftBracket1Routine, escLeftBracket2Routine,
 	escLeftBracket3Routine, escLeftBracket4Routine, escLeftBracket5Routine,
 	escLeftBracket6Routine, escLeftBracket7Routine, escLeftBracket8Routine,
 	escLeftBracket9Routine, escFailureRoutine
 };
-static CharacterDispatch escLeftBracketDispatch = {16, "ABCDHF0123456789",
+static CharacterDispatch escLeftBracketDispatch = {17, "ABCDHFZ0123456789",
 																									 escLeftBracketRoutines};
 
 // Handle ESC O <char> escape sequences
