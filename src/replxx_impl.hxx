@@ -101,6 +101,7 @@ private:
 	History _history;
 	KillRing _killRing;
 	int _maxHintRows;
+	int _hintDelay;
 	char const* _breakChars;
 	int _completionCountCutoff;
 	bool _doubleTabCompletion;
@@ -133,6 +134,7 @@ public:
 	void set_preload_buffer(std::string const& preloadText);
 	void set_word_break_characters( char const* wordBreakers );
 	void set_max_hint_rows( int count );
+	void set_hint_delay( int milliseconds );
 	void set_double_tab_completion( bool val );
 	void set_complete_on_empty( bool val );
 	void set_beep_on_ambiguous_completion( bool val );

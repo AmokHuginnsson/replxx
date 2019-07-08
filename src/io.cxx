@@ -499,11 +499,11 @@ char32_t Terminal::read_char( void ) {
 	return ( c );
 }
 
-Terminal::EVENT_TYPE Terminal::wait_for_input( void ) {
+Terminal::EVENT_TYPE Terminal::wait_for_input( int long timeout_ ) {
 #ifdef _WIN32
 	std::array<HANDLE,2> handles = { _consoleIn, _interrupt };
 	while ( true ) {
-		DWORD event( WaitForMultipleObjects( handles.size (), handles.data(), false, INFINITE ) );
+		DWORD event( WaitForMultipleObjects( handles.size (), handles.data(), false, timeout_ > 0 ? timeout_ : INFINITE ) );
 		switch ( event ) {
 			case ( WAIT_OBJECT_0 + 0 ): {
 				// peek events that will be skipped
@@ -550,6 +550,9 @@ Terminal::EVENT_TYPE Terminal::wait_for_input( void ) {
 				_events.pop_front();
 				return ( eventType );
 			}
+			case ( WAIT_TIMEOUT ): {
+				return ( EVENT_TYPE::TIMEOUT );
+			}
 		}
 	}
 #else
@@ -559,9 +562,13 @@ Terminal::EVENT_TYPE Terminal::wait_for_input( void ) {
 		FD_ZERO( &fdSet );
 		FD_SET( 0, &fdSet );
 		FD_SET( _interrupt[0], &fdSet );
-		int err( select( nfds, &fdSet, nullptr, nullptr, nullptr ) );
+		timeval tv{ timeout_ / 1000, ( timeout_ % 1000 ) * 1000 };
+		int err( select( nfds, &fdSet, nullptr, nullptr, timeout_ > 0 ? &tv : nullptr ) );
 		if ( ( err == -1 ) && ( errno == EINTR ) ) {
 			continue;
+		}
+		if ( err == 0 ) {
+			return ( EVENT_TYPE::TIMEOUT );
 		}
 		if ( FD_ISSET( _interrupt[0], &fdSet ) ) {
 			char data( 0 );

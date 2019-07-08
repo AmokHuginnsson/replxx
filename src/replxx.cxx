@@ -168,6 +168,10 @@ void Replxx::set_max_hint_rows( int count ) {
 	_impl->set_max_hint_rows( count );
 }
 
+void Replxx::set_hint_delay( int milliseconds ) {
+	_impl->set_hint_delay( milliseconds );
+}
+
 void Replxx::set_completion_count_cutoff( int count ) {
 	_impl->set_completion_count_cutoff( count );
 }
@@ -388,6 +392,11 @@ void replxx_set_max_history_size( ::Replxx* replxx_, int len ) {
 void replxx_set_max_hint_rows( ::Replxx* replxx_, int count ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->set_max_hint_rows( count );
+}
+
+void replxx_set_hint_delay( ::Replxx* replxx_, int milliseconds ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->set_hint_delay( milliseconds );
 }
 
 void replxx_set_completion_count_cutoff( ::Replxx* replxx_, int count ) {

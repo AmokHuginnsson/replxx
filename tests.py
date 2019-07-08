@@ -1385,7 +1385,16 @@ class ReplxxTests( unittest.TestCase ):
 			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-PgUp>\r\n"
 			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-PgDn>\r\n"
 			"<brightgreen>replxx<rst>> <c9><ceos><c9><c9><ceos><c9>\r\n"
-	)
+		)
+	def test_hint_delay( self_ ):
+		self_.check_scenario(
+			["han", "<cr><c-d>"],
+			"<c9><ceos>h<rst><c10><c9><ceos>ha<rst><c11><c9><ceos>han<rst><c12><c9><ceos>han<rst>\r\n"
+			"        <gray>hans<rst>\r\n"
+			"        <gray>hansekogge<rst><u2><c12><c9><ceos>han<rst><c12>\r\n"
+			"han\r\n",
+			command = [ ReplxxTests._cSample_, "q1", "H200" ]
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity

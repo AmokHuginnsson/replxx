@@ -364,6 +364,12 @@ void replxx_set_completion_count_cutoff( Replxx*, int count );
  */
 void replxx_set_max_hint_rows( Replxx*, int count );
 
+/*! \brief Set a delay before hint are shown after user stopped typing..
+ *
+ * \param milliseconds - a number of milliseconds to wait before showing hints.
+ */
+void replxx_set_hint_delay( Replxx*, int milliseconds );
+
 /*! \brief Set tab completion behavior.
  *
  * \param val - use double tab to invoke completions (if != 0).

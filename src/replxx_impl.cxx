@@ -91,6 +91,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _history()
 	, _killRing()
 	, _maxHintRows( REPLXX_MAX_HINT_ROWS )
+	, _hintDelay( 0 )
 	, _breakChars( defaultBreakChars )
 	, _completionCountCutoff( 100 )
 	, _doubleTabCompletion( false )
@@ -229,8 +230,14 @@ char32_t Replxx::ReplxxImpl::read_char( void ) {
 			return ( keyPress );
 		}
 	}
+	int hintDelay( _hintDelay );
 	while ( true ) {
-		Terminal::EVENT_TYPE eventType( _terminal.wait_for_input() );
+		Terminal::EVENT_TYPE eventType( _terminal.wait_for_input( hintDelay ) );
+		if ( eventType == Terminal::EVENT_TYPE::TIMEOUT ) {
+			refresh_line( HINT_ACTION::REPAINT );
+			hintDelay = 0;
+			continue;
+		}
 		if ( eventType == Terminal::EVENT_TYPE::KEY_PRESS ) {
 			break;
 		}
@@ -486,6 +493,10 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 		return ( 0 );
 	}
 	if ( ! _hintCallback ) {
+		return ( 0 );
+	}
+	if ( ( _hintDelay > 0 ) && ( hintAction_ != HINT_ACTION::REPAINT ) ) {
+		_hintSelection = -1;
 		return ( 0 );
 	}
 	if ( ( hintAction_ == HINT_ACTION::SKIP ) || ( hintAction_ == HINT_ACTION::TRIM ) ) {
@@ -1808,6 +1819,10 @@ void Replxx::ReplxxImpl::set_completion_count_cutoff( int count ) {
 
 void Replxx::ReplxxImpl::set_max_hint_rows( int count ) {
 	_maxHintRows = count;
+}
+
+void Replxx::ReplxxImpl::set_hint_delay( int hintDelay_ ) {
+	_hintDelay = hintDelay_;
 }
 
 void Replxx::ReplxxImpl::set_word_break_characters( char const* wordBreakers ) {

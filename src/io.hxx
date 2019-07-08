@@ -15,7 +15,8 @@ class Terminal {
 public:
 	enum class EVENT_TYPE {
 		KEY_PRESS,
-		MESSAGE
+		MESSAGE,
+		TIMEOUT
 	};
 private:
 #ifdef _WIN32
@@ -49,7 +50,7 @@ public:
 	void disable_raw_mode(void);
 	char32_t read_char(void);
 	void clear_screen( CLEAR_SCREEN );
-	EVENT_TYPE wait_for_input( void );
+	EVENT_TYPE wait_for_input( int long = 0 );
 	void notify_event( EVENT_TYPE );
 	void jump_cursor( int, int );
 private:

@@ -108,6 +108,7 @@ int main( int argc, char** argv ) {
 			case 'e': replxx_set_complete_on_empty( replxx, (*argv)[1] - '0' );            break;
 			case 'd': replxx_set_double_tab_completion( replxx, (*argv)[1] - '0' );        break;
 			case 'h': replxx_set_max_hint_rows( replxx, atoi( (*argv) + 1 ) );             break;
+			case 'H': replxx_set_hint_delay( replxx, atoi( (*argv) + 1 ) );                break;
 			case 's': replxx_set_max_history_size( replxx, atoi( (*argv) + 1 ) );          break;
 			case 'i': replxx_set_preload_buffer( replxx, recode( (*argv) + 1 ) );          break;
 			case 'w': replxx_set_word_break_characters( replxx, (*argv) + 1 );             break;

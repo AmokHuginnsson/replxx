@@ -348,6 +348,12 @@ public:
 	 */
 	void set_max_hint_rows( int count );
 
+	/*! \brief Set a delay before hint are shown after user stopped typing..
+	 *
+	 * \param milliseconds - a number of milliseconds to wait before showing hints.
+	 */
+	void set_hint_delay( int milliseconds );
+
 	/*! \brief Set tab completion behavior.
 	 *
 	 * \param val - use double tab to invoke completions.
