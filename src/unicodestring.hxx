@@ -79,6 +79,13 @@ public:
 	UnicodeString& operator = ( UnicodeString const& ) = default;
 	UnicodeString( UnicodeString&& ) = default;
 	UnicodeString& operator = ( UnicodeString&& ) = default;
+	bool operator == ( UnicodeString const& other_ ) const {
+		return ( _data == other_._data );
+	}
+
+	bool operator != ( UnicodeString const& other_ ) const {
+		return ( _data != other_._data );
+	}
 
 	UnicodeString& append( UnicodeString const& other ) {
 		_data.insert( _data.end(), other._data.begin(), other._data.end() );
@@ -132,6 +139,17 @@ public:
 
 	char32_t& operator[]( size_t pos ) {
 		return _data[pos];
+	}
+
+	bool starts_with( data_buffer_t::const_iterator first_, data_buffer_t::const_iterator last_ ) const {
+		return (
+			( std::distance( first_, last_ ) <= length() )
+			&& ( std::equal( first_, last_, _data.begin() ) )
+		);
+	}
+
+	bool is_empty( void ) const {
+		return ( _data.size() == 0 );
 	}
 
 	void swap( UnicodeString& other_ ) {

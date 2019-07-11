@@ -971,10 +971,9 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 int Replxx::ReplxxImpl::get_input_line( void ) {
 	// The latest history entry is always our current buffer
 	if ( _data.length() > 0 ) {
-		_utf8Buffer.assign( _data );
-		history_add( _utf8Buffer.get() );
+		_history.add( _data );
 	} else {
-		history_add( "" );
+		_history.add( UnicodeString() );
 	}
 	_history.reset_pos();
 
@@ -1424,8 +1423,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_move( bool previous_ ) {
 	// we don't
 	// have to special case it
 	if ( _history.is_last() ) {
-		_utf8Buffer.assign( _data );
-		_history.update_last( _utf8Buffer.get() );
+		_history.update_last( _data );
 	}
 	if ( _history.is_empty() ) {
 		return ( Replxx::ACTION_RESULT::CONTINUE );
@@ -1457,12 +1455,11 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_jump( bool back_ ) {
 	// we don't
 	// have to special case it
 	if ( _history.is_last() ) {
-		_utf8Buffer.assign( _data );
-		_history.update_last( _utf8Buffer.get() );
+		_history.update_last( _data );
 	}
 	if ( ! _history.is_empty() ) {
 		_history.jump( back_ );
-		_data.assign( _history.current().c_str() );
+		_data.assign( _history.current() );
 		_prefix = _pos = _data.length();
 		refresh_line();
 	}
@@ -1529,11 +1526,10 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete_line( char32_t c ) {
 // Alt-N, forward history search for prefix
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::common_prefix_search( char32_t startChar ) {
 	_killRing.lastAction = KillRing::actionOther;
-	_utf8Buffer.assign( _data );
 	int prefixSize( calculate_displayed_length( _data.get(), _prefix ) );
 	if (
 		_history.common_prefix_search(
-			_utf8Buffer.get(), prefixSize, ( startChar == ( Replxx::KEY::meta( 'p' ) ) ) || ( startChar == ( Replxx::KEY::meta( 'P' ) ) )
+			_data, prefixSize, ( startChar == ( Replxx::KEY::meta( 'p' ) ) ) || ( startChar == ( Replxx::KEY::meta( 'P' ) ) )
 		)
 	) {
 		_data.assign( _history.current() );
@@ -1557,8 +1553,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 	// if not already recalling, add the current line to the history list so we
 	// don't have to special case it
 	if ( _history.is_last() ) {
-		_utf8Buffer.assign( _data );
-		_history.update_last( _utf8Buffer.get() );
+		_history.update_last( _data );
 	}
 	int historyLinePosition( _pos );
 	clear_self_to_end_of_screen();
@@ -1778,7 +1773,7 @@ bool Replxx::ReplxxImpl::is_word_break_character( char32_t char_ ) const {
 }
 
 void Replxx::ReplxxImpl::history_add( std::string const& line ) {
-	_history.add( line );
+	_history.add( UnicodeString( line ) );
 }
 
 int Replxx::ReplxxImpl::history_save( std::string const& filename ) {
@@ -1793,8 +1788,9 @@ int Replxx::ReplxxImpl::history_size( void ) const {
 	return ( _history.size() );
 }
 
-std::string const& Replxx::ReplxxImpl::history_line( int index ) {
-	return ( _history[index] );
+std::string Replxx::ReplxxImpl::history_line( int index ) {
+	_utf8Buffer.assign( _history[index] );
+	return ( _utf8Buffer.get() );
 }
 
 void Replxx::ReplxxImpl::set_completion_callback( Replxx::completion_callback_t const& fn ) {

@@ -9,6 +9,7 @@
 #endif /* _WIN32 */
 
 #include "history.hxx"
+#include "utf8string.hxx"
 
 using namespace std;
 
@@ -25,7 +26,7 @@ History::History( void )
 	, _recallMostRecent( false ) {
 }
 
-void History::add( std::string const& line ) {
+void History::add( UnicodeString const& line ) {
 	if ( ( _maxSize > 0 ) && ( _data.empty() || ( line != _data.back() ) ) ) {
 		if ( size() > _maxSize ) {
 			_data.erase( _data.begin() );
@@ -52,9 +53,11 @@ int History::save( std::string const& filename ) {
 	umask( old_umask );
 	chmod( filename.c_str(), S_IRUSR | S_IWUSR );
 #endif
-	for ( string const& h : _data ) {
-		if ( ! h.empty() ) {
-			histFile << h << endl;
+	Utf8String utf8;
+	for ( UnicodeString const& h : _data ) {
+		if ( ! h.is_empty() ) {
+			utf8.assign( h );
+			histFile << utf8.get() << endl;
 		}
 	}
 	return ( 0 );
@@ -72,7 +75,7 @@ int History::load( std::string const& filename ) {
 			line.erase( eol );
 		}
 		if ( ! line.empty() ) {
-			add( line );
+			add( UnicodeString( line ) );
 		}
 	}
 	return 0;
@@ -121,12 +124,11 @@ void History::jump( bool start_ ) {
 	_recallMostRecent = true;
 }
 
-bool History::common_prefix_search( std::string const& prefix_, int prefixSize_, bool back_ ) {
+bool History::common_prefix_search( UnicodeString const& prefix_, int prefixSize_, bool back_ ) {
 	int direct( size() + ( back_ ? -1 : 1 ) );
 	int i( ( _index + direct ) % _data.size() );
 	while ( i != _index ) {
-		if ( ( strncmp( prefix_.c_str(), _data[i].c_str(), prefixSize_ ) == 0 )
-			&& ( strcmp( prefix_.c_str(), _data[i].c_str() ) != 0 ) ) {
+		if ( _data[i].starts_with( prefix_.begin(), prefix_.begin() + prefixSize_ ) ) {
 			_index = i;
 			_previousIndex = -2;
 			_recallMostRecent = true;
@@ -138,7 +140,7 @@ bool History::common_prefix_search( std::string const& prefix_, int prefixSize_,
 	return ( false );
 }
 
-std::string const& History::operator[] ( int idx_ ) const {
+UnicodeString const& History::operator[] ( int idx_ ) const {
 	return ( _data[ idx_ ] );
 }
 

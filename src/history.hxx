@@ -2,15 +2,15 @@
 #define REPLXX_HISTORY_HXX_INCLUDED 1
 
 #include <vector>
-#include <string>
 
+#include "unicodestring.hxx"
 #include "conversion.hxx"
 
 namespace replxx {
 
 class History {
 public:
-	typedef std::vector<std::string> lines_t;
+	typedef std::vector<UnicodeString> lines_t;
 private:
 	lines_t _data;
 	int _maxSize;
@@ -20,12 +20,12 @@ private:
 	bool _recallMostRecent;
 public:
 	History( void );
-	void add( std::string const& line );
+	void add( UnicodeString const& line );
 	int save( std::string const& filename );
 	int load( std::string const& filename );
 	void set_max_size( int len );
 	void reset_pos( int = -1 );
-	std::string const& operator[] ( int ) const;
+	UnicodeString const& operator[] ( int ) const;
 	void set_recall_most_recent( void ) {
 		_recallMostRecent = true;
 	}
@@ -47,15 +47,15 @@ public:
 	bool is_empty( void ) const {
 		return ( _data.empty() );
 	}
-	void update_last( std::string const& line_ ) {
+	void update_last( UnicodeString const& line_ ) {
 		_data.back() = line_;
 	}
 	bool move( bool );
-	std::string const& current( void ) const {
+	UnicodeString const& current( void ) const {
 		return ( _data[_index] );
 	}
 	void jump( bool );
-	bool common_prefix_search( std::string const&, int, bool );
+	bool common_prefix_search( UnicodeString const&, int, bool );
 	int size( void ) const {
 		return ( static_cast<int>( _data.size() ) );
 	}

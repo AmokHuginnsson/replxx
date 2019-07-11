@@ -328,7 +328,7 @@ public:
 	int history_save( std::string const& filename );
 	int history_load( std::string const& filename );
 	int history_size( void ) const;
-	std::string const& history_line( int index );
+	std::string history_line( int index );
 
 	void set_preload_buffer( std::string const& preloadText );
 

@@ -129,7 +129,7 @@ public:
 	void history_add( std::string const& line );
 	int history_save( std::string const& filename );
 	int history_load( std::string const& filename );
-	std::string const& history_line( int index );
+	std::string history_line( int index );
 	int history_size( void ) const;
 	void set_preload_buffer(std::string const& preloadText);
 	void set_word_break_characters( char const* wordBreakers );
