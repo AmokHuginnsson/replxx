@@ -1386,6 +1386,19 @@ class ReplxxTests( unittest.TestCase ):
 			"<brightgreen>replxx<rst>> <c9><ceos><c9><c1><ceos><C-PgDn>\r\n"
 			"<brightgreen>replxx<rst>> <c9><ceos><c9><c9><ceos><c9>\r\n"
 		)
+	def test_overwrite_mode( self_ ):
+		self_.check_scenario(
+			"<up><home><right><right>XYZ<ins>012<ins>345<cr><c-d>",
+			"<c9><ceos>abcdefgh<rst><c17><c9><ceos>abcdefgh<rst><c9>"
+			"<c9><ceos>abcdefgh<rst><c10><c9><ceos>abcdefgh<rst><c11>"
+			"<c9><ceos>abXcdefgh<rst><c12><c9><ceos>abXYcdefgh<rst><c13>"
+			"<c9><ceos>abXYZcdefgh<rst><c14><c9><ceos>abXYZ<yellow>0<rst>defgh<rst><c15>"
+			"<c9><ceos>abXYZ<yellow>01<rst>efgh<rst><c16><c9><ceos>abXYZ<yellow>012<rst>fgh<rst><c17>"
+			"<c9><ceos>abXYZ<yellow>0123<rst>fgh<rst><c18><c9><ceos>abXYZ<yellow>01234<rst>fgh<rst><c19>"
+			"<c9><ceos>abXYZ<yellow>012345<rst>fgh<rst><c20><c9><ceos>abXYZ<yellow>012345<rst>fgh<rst><c23>\r\n"
+			"abXYZ012345fgh\r\n",
+			"abcdefgh\n"
+		)
 	def test_hint_delay( self_ ):
 		self_.check_scenario(
 			["han", "<cr><c-d>"],

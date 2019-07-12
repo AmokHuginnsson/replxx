@@ -285,7 +285,7 @@ int main( int argc_, char** argv_ ) {
 	rx.bind_key( Replxx::KEY::meta( 'l' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::LOWERCASE_WORD, _1 ) );
 	rx.bind_key( Replxx::KEY::meta( 'c' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::CAPITALIZE_WORD, _1 ) );
 	rx.bind_key( 'a', std::bind( &Replxx::invoke, &rx, Replxx::ACTION::INSERT_CHARACTER, _1 ) );
-	rx.bind_key( Replxx::KEY::INSERT, std::bind( &message, std::ref( rx ), "<Insert>", _1 ) );
+	rx.bind_key( Replxx::KEY::INSERT, std::bind( &Replxx::invoke, &rx, Replxx::ACTION::TOGGLE_OVERWRITE_MODE, _1 ) );
 	rx.bind_key( Replxx::KEY::F1, std::bind( &message, std::ref( rx ), "<F1>", _1 ) );
 	rx.bind_key( Replxx::KEY::F2, std::bind( &message, std::ref( rx ), "<F2>", _1 ) );
 	rx.bind_key( Replxx::KEY::F3, std::bind( &message, std::ref( rx ), "<F3>", _1 ) );

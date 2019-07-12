@@ -104,6 +104,7 @@ private:
 	int _hintDelay;
 	char const* _breakChars;
 	int _completionCountCutoff;
+	bool _overwrite;
 	bool _doubleTabCompletion;
 	bool _completeOnEmpty;
 	bool _beepOnAmbiguousCompletion;
@@ -187,6 +188,7 @@ private:
 	Replxx::ACTION_RESULT hint_next( char32_t );
 	Replxx::ACTION_RESULT hint_previous( char32_t );
 	Replxx::ACTION_RESULT hint_move( bool );
+	Replxx::ACTION_RESULT toggle_overwrite_mode( char32_t );
 #ifndef _WIN32
 	Replxx::ACTION_RESULT suspend( char32_t );
 #endif

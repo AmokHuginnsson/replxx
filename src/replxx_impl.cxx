@@ -94,6 +94,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _hintDelay( 0 )
 	, _breakChars( defaultBreakChars )
 	, _completionCountCutoff( 100 )
+	, _overwrite( false )
 	, _doubleTabCompletion( false )
 	, _completeOnEmpty( true )
 	, _beepOnAmbiguousCompletion( false )
@@ -145,6 +146,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	bind_key( Replxx::KEY::control( 'T' ),                 std::bind( &ReplxxImpl::transpose_characters,       this, _1 ) );
 	bind_key( Replxx::KEY::control( 'C' ),                 std::bind( &ReplxxImpl::abort_line,                 this, _1 ) );
 	bind_key( Replxx::KEY::control( 'D' ),                 std::bind( &ReplxxImpl::send_eof,                   this, _1 ) );
+	bind_key( Replxx::KEY::INSERT + 0,                     std::bind( &ReplxxImpl::toggle_overwrite_mode,      this, _1 ) );
 	bind_key( 127,                                         std::bind( &ReplxxImpl::delete_character,           this, _1 ) );
 	bind_key( Replxx::KEY::DELETE + 0,                     std::bind( &ReplxxImpl::delete_character,           this, _1 ) );
 	bind_key( Replxx::KEY::BACKSPACE + 0,                  std::bind( &ReplxxImpl::backspace_character,        this, _1 ) );
@@ -203,6 +205,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action, char32_
 		case ( Replxx::ACTION::LOWERCASE_WORD ):                  return ( lowercase_word( code ) );
 		case ( Replxx::ACTION::UPPERCASE_WORD ):                  return ( uppercase_word( code ) );
 		case ( Replxx::ACTION::TRANSPOSE_CHARACTERS ):            return ( transpose_characters( code ) );
+		case ( Replxx::ACTION::TOGGLE_OVERWRITE_MODE ):           return ( toggle_overwrite_mode( code ) );
 #ifndef _WIN32
 		case ( Replxx::ACTION::SUSPEND ):                         return ( suspend( code ) );
 #endif
@@ -1050,7 +1053,11 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 		beep();
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	}
-	_data.insert( _pos, c );
+	if ( ! _overwrite || ( _pos >= _data.length() ) ) {
+		_data.insert( _pos, c );
+	} else {
+		_data[_pos] = c;
+	}
 	++ _pos;
 	_prefix = _pos;
 	int inputLen = calculate_displayed_length( _data.get(), _data.length() );
@@ -1484,6 +1491,11 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::hint_move( bool previous_ ) {
 		}
 		refresh_line( HINT_ACTION::REPAINT );
 	}
+	return ( Replxx::ACTION_RESULT::CONTINUE );
+}
+
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::toggle_overwrite_mode( char32_t ) {
+	_overwrite = ! _overwrite;
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
 
