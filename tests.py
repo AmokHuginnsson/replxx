@@ -1021,6 +1021,14 @@ class ReplxxTests( unittest.TestCase ):
 			"<c9><ceos><rst><c9><c9><ceos><rst><c9>\r\n",
 			command = ReplxxTests._cSample_ + " q1 c3"
 		)
+		self_.check_scenario(
+			["<tab>", "<c-c><cr><c-d>"],
+			"<c9><ceos><rst><c9>\r\n"
+			"Display all 9 possibilities? (y or n)^C\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos><rst><c9><c9><ceos><rst><c9>\r\n",
+			command = ReplxxTests._cSample_ + " q1 c3 H200"
+		)
 	def test_preload( self_ ):
 		self_.check_scenario(
 			"<cr><c-d>",

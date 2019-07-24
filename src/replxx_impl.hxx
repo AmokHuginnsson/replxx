@@ -195,7 +195,7 @@ private:
 	Replxx::ACTION_RESULT complete_line( char32_t );
 	Replxx::ACTION_RESULT incremental_history_search( char32_t startChar );
 	Replxx::ACTION_RESULT common_prefix_search( char32_t startChar );
-	char32_t read_char( void );
+	char32_t read_char( HINT_ACTION = HINT_ACTION::SKIP );
 	char const* read_from_stdin( void );
 	char32_t do_complete_line( void );
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );

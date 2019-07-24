@@ -224,7 +224,7 @@ void Replxx::ReplxxImpl::bind_key( char32_t code_, Replxx::key_press_handler_t h
 	_keyPressHandlers[code_] = handler_;
 }
 
-char32_t Replxx::ReplxxImpl::read_char( void ) {
+char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
 	/* try scheduled key presses */ {
 		std::lock_guard<std::mutex> l( _mutex );
 		if ( !_keyPresses.empty() ) {
@@ -233,7 +233,7 @@ char32_t Replxx::ReplxxImpl::read_char( void ) {
 			return ( keyPress );
 		}
 	}
-	int hintDelay( _hintDelay );
+	int hintDelay( hintAction_ != HINT_ACTION::SKIP ? _hintDelay : 0 );
 	while ( true ) {
 		Terminal::EVENT_TYPE eventType( _terminal.wait_for_input( hintDelay ) );
 		if ( eventType == Terminal::EVENT_TYPE::TIMEOUT ) {
@@ -1004,7 +1004,7 @@ int Replxx::ReplxxImpl::get_input_line( void ) {
 	// loop collecting characters, respond to line editing characters
 	Replxx::ACTION_RESULT next( Replxx::ACTION_RESULT::CONTINUE );
 	while ( next == Replxx::ACTION_RESULT::CONTINUE ) {
-		int c( read_char() ); // get a new keystroke
+		int c( read_char( HINT_ACTION::REPAINT ) ); // get a new keystroke
 #ifndef _WIN32
 		if (c == 0 && gotResize) {
 			// caught a window resize event
