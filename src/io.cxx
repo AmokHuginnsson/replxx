@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
+#include <fcntl.h>
 
 #endif /* _WIN32 */
 
@@ -233,10 +234,9 @@ void Terminal::disable_raw_mode(void) {
 
 /**
  * Read a UTF-8 sequence from the non-Windows keyboard and return the Unicode
- * (char32_t) character it
- * encodes
+ * (char32_t) character it encodes
  *
- * @return	char32_t Unicode character
+ * @return char32_t Unicode character
  */
 char32_t read_unicode_character(void) {
 	static char8_t utf8String[5];
@@ -247,11 +247,11 @@ char32_t read_unicode_character(void) {
 		/* Continue reading if interrupted by signal. */
 		ssize_t nread;
 		do {
-			nread = read(0, &c, 1);
+			nread = read( STDIN_FILENO, &c, 1 );
 		} while ((nread == -1) && (errno == EINTR));
 
 		if (nread <= 0) return 0;
-		if (c <= 0x7F || locale::is8BitEncoding) {	// short circuit ASCII
+		if (c <= 0x7F || locale::is8BitEncoding) { // short circuit ASCII
 			utf8Count = 0;
 			return c;
 		} else if (utf8Count < sizeof(utf8String) - 1) {
@@ -265,12 +265,12 @@ char32_t read_unicode_character(void) {
 				return unicodeChar[0];
 			}
 		} else {
-			utf8Count = 0;	// this shouldn't happen: got four bytes but no UTF-8 character
+			utf8Count = 0; // this shouldn't happen: got four bytes but no UTF-8 character
 		}
 	}
 }
 
-#endif	// #ifndef _WIN32
+#endif // #ifndef _WIN32
 
 void beep() {
 	fprintf(stderr, "\x7");	// ctrl-G == bell/beep
@@ -650,6 +650,24 @@ void Terminal::jump_cursor( int xPos_, int yOffset_ ) {
 	write8( seq, strlen( seq ) );
 #endif
 }
+
+#ifndef _WIN32
+int Terminal::read_verbatim( char32_t* buffer_, int size_ ) {
+	int len( 0 );
+	buffer_[len ++] = read_unicode_character();
+	int statusFlags( ::fcntl( STDIN_FILENO, F_GETFL, 0 ) );
+	::fcntl( STDIN_FILENO, F_SETFL, statusFlags | O_NONBLOCK );
+	while ( len < size_ ) {
+		char32_t c( read_unicode_character() );
+		if ( c == 0 ) {
+			break;
+		}
+		buffer_[len ++] = c;
+	}
+	::fcntl( STDIN_FILENO, F_SETFL, statusFlags );
+	return ( len );
+}
+#endif
 
 }
 

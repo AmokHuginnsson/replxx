@@ -190,6 +190,7 @@ private:
 	Replxx::ACTION_RESULT hint_move( bool );
 	Replxx::ACTION_RESULT toggle_overwrite_mode( char32_t );
 #ifndef _WIN32
+	Replxx::ACTION_RESULT verbatim_insert( char32_t );
 	Replxx::ACTION_RESULT suspend( char32_t );
 #endif
 	Replxx::ACTION_RESULT complete_line( char32_t );
@@ -199,7 +200,8 @@ private:
 	char const* read_from_stdin( void );
 	char32_t do_complete_line( void );
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
-	void highlight( HINT_ACTION );
+	void render( char32_t );
+	void render( HINT_ACTION );
 	int handle_hints( HINT_ACTION );
 	void set_color( Replxx::Color );
 	int context_length( void );

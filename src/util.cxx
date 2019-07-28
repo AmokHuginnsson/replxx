@@ -81,7 +81,9 @@ int calculate_displayed_length( char32_t const* buf32_, int size_ ) {
 				continue;
 			}
 			i = escStart;
-			++ len;
+			len += 2;
+		} else if ( is_control_code( c ) ) {
+			len += 2;
 		} else {
 			int wcw( mk_wcwidth( c ) );
 			if ( wcw < 0 ) {

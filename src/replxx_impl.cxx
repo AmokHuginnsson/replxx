@@ -164,6 +164,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	bind_key( Replxx::KEY::control( Replxx::KEY::UP ),     std::bind( &ReplxxImpl::hint_previous,              this, _1 ) );
 	bind_key( Replxx::KEY::control( Replxx::KEY::DOWN ),   std::bind( &ReplxxImpl::hint_next,                  this, _1 ) );
 #ifndef _WIN32
+	bind_key( Replxx::KEY::control( 'V' ),                 std::bind( &ReplxxImpl::verbatim_insert,            this, _1 ) );
 	bind_key( Replxx::KEY::control( 'Z' ),                 std::bind( &ReplxxImpl::suspend,                    this, _1 ) );
 #endif
 	bind_key( Replxx::KEY::TAB + 0,                        std::bind( &ReplxxImpl::complete_line,              this, _1 ) );
@@ -207,6 +208,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action, char32_
 		case ( Replxx::ACTION::TRANSPOSE_CHARACTERS ):            return ( transpose_characters( code ) );
 		case ( Replxx::ACTION::TOGGLE_OVERWRITE_MODE ):           return ( toggle_overwrite_mode( code ) );
 #ifndef _WIN32
+		case ( Replxx::ACTION::VERBATIM_INSERT ):                 return ( verbatim_insert( code ) );
 		case ( Replxx::ACTION::SUSPEND ):                         return ( suspend( code ) );
 #endif
 		case ( Replxx::ACTION::CLEAR_SCREEN ):                    return ( clear_screen( code ) );
@@ -457,15 +459,33 @@ void Replxx::ReplxxImpl::set_color( Replxx::Color color_ ) {
 	}
 }
 
-void Replxx::ReplxxImpl::highlight( HINT_ACTION hintAction_ ) {
+void Replxx::ReplxxImpl::render( char32_t ch ) {
+	if ( ch == Replxx::KEY::ESCAPE ) {
+		_display.push_back( '^' );
+		_display.push_back( '[' );
+	} else if ( is_control_code( ch ) ) {
+		_display.push_back( '^' );
+		_display.push_back( ch + 0x40 );
+	} else {
+		_display.push_back( ch );
+	}
+	return;
+}
+
+void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 	if ( hintAction_ == HINT_ACTION::TRIM ) {
 		_display.erase( _display.begin() + _displayInputLength, _display.end() );
 		return;
 	}
-	if ( _noColor ) {
+	if ( hintAction_ == HINT_ACTION::SKIP ) {
 		return;
 	}
-	if ( hintAction_ == HINT_ACTION::SKIP ) {
+	_display.clear();
+	if ( _noColor ) {
+		for ( char32_t ch : _data ) {
+			render( ch );
+		}
+		_displayInputLength = _display.size();
 		return;
 	}
 	Replxx::colors_t colors( _data.length(), Replxx::Color::DEFAULT );
@@ -477,14 +497,13 @@ void Replxx::ReplxxImpl::highlight( HINT_ACTION hintAction_ ) {
 	if ( pi.index != -1 ) {
 		colors[pi.index] = pi.error ? Replxx::Color::ERROR : Replxx::Color::BRIGHTRED;
 	}
-	_display.clear();
 	Replxx::Color c( Replxx::Color::DEFAULT );
 	for ( int i( 0 ); i < _data.length(); ++ i ) {
 		if ( colors[i] != c ) {
 			c = colors[i];
 			set_color( c );
 		}
-		_display.push_back( _data[i] );
+		render( _data[i] );
 	}
 	set_color( Replxx::Color::DEFAULT );
 	_displayInputLength = _display.size();
@@ -645,7 +664,7 @@ Replxx::ReplxxImpl::paren_info_t Replxx::ReplxxImpl::matching_paren( void ) {
  */
 void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	// check for a matching brace/bracket/paren, remember its position if found
-	highlight( hintAction_ );
+	render( hintAction_ );
 	int hintLen( handle_hints( hintAction_ ) );
 	// calculate the position of the end of the input line
 	int xEndOfInput( 0 ), yEndOfInput( 0 );
@@ -654,11 +673,7 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 		calculate_displayed_length( _data.get(), _data.length() ) + hintLen,
 		xEndOfInput, yEndOfInput
 	);
-	if ( _noColor ) {
-		yEndOfInput += count( _data.begin(), _data.end(), '\n' );
-	} else {
-		yEndOfInput += count( _display.begin(), _display.end(), '\n' );
-	}
+	yEndOfInput += count( _display.begin(), _display.end(), '\n' );
 
 	// calculate the desired position of the cursor
 	int xCursorPos( 0 ), yCursorPos( 0 );
@@ -676,11 +691,7 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
 	_prompt._previousInputLen = _data.length();
 	// display the input line
-	if ( !_noColor ) {
-		_terminal.write32( _display.data(), _display.size() );
-	} else {
-		_terminal.write32( _data.get(), _data.length() );
-	}
+	_terminal.write32( _display.data(), _display.size() );
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap
 	if ( ( xEndOfInput == 0 ) && ( yEndOfInput > 0 ) ) {
@@ -1071,6 +1082,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 		if (inputLen > _prompt._previousInputLen) {
 			_prompt._previousInputLen = inputLen;
 		}
+		render( c );
+		_displayInputLength = _display.size();
 		_terminal.write32(reinterpret_cast<char32_t*>(&c), 1);
 	} else {
 		refresh_line();
@@ -1500,6 +1513,16 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::toggle_overwrite_mode( char32_t ) {
 }
 
 #ifndef _WIN32
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::verbatim_insert( char32_t ) {
+	static int const MAX_ESC_SEQ( 32 );
+	char32_t buf[MAX_ESC_SEQ];
+	int len( _terminal.read_verbatim( buf, MAX_ESC_SEQ ) );
+	_data.insert( _pos, UnicodeString( buf, len ), 0, len );
+	_pos += len;
+	refresh_line();
+	return ( Replxx::ACTION_RESULT::CONTINUE );
+}
+
 // ctrl-Z, job control
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::suspend( char32_t ) {
 	_terminal.disable_raw_mode(); // Returning to Linux (whatever) shell, leave raw mode

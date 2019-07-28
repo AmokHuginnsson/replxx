@@ -53,6 +53,9 @@ public:
 	EVENT_TYPE wait_for_input( int long = 0 );
 	void notify_event( EVENT_TYPE );
 	void jump_cursor( int, int );
+#ifndef _WIN32
+	int read_verbatim( char32_t*, int );
+#endif
 private:
 	Terminal( Terminal const& ) = delete;
 	Terminal& operator = ( Terminal const& ) = delete;
