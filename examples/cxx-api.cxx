@@ -274,6 +274,7 @@ int main( int argc_, char** argv_ ) {
 	rx.bind_key( Replxx::KEY::control( 'C' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::ABORT_LINE, _1 ) );
 	rx.bind_key( Replxx::KEY::control( 'T' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::TRANSPOSE_CHARACTERS, _1 ) );
 #ifndef _WIN32
+	rx.bind_key( Replxx::KEY::control( 'V' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::VERBATIM_INSERT, _1 ) );
 	rx.bind_key( Replxx::KEY::control( 'Z' ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::SUSPEND, _1 ) );
 #endif
 	rx.bind_key( Replxx::KEY::meta( Replxx::KEY::BACKSPACE ), std::bind( &Replxx::invoke, &rx, Replxx::ACTION::KILL_TO_WHITESPACE_ON_LEFT, _1 ) );

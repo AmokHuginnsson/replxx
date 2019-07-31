@@ -65,7 +65,6 @@ typedef enum {
 	REPLXX_COLOR_WHITE         = 15,
 	REPLXX_COLOR_NORMAL        = REPLXX_COLOR_LIGHTGRAY,
 	REPLXX_COLOR_DEFAULT       = -1,
-#undef ERROR
 	REPLXX_COLOR_ERROR         = -2
 } ReplxxColor;
 

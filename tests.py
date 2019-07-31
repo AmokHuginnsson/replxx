@@ -140,7 +140,8 @@ termseq = {
 	"\x1b[0;1;37m": "<white>",
 	"\x1b[1;32m": "<brightgreen>",
 	"\x1b[101;1;33m": "<err>",
-	"\x07": "<bell>"
+	"\x07": "<bell>",
+	"\x1b[2~": "<ins-key>",
 }
 colRe = re.compile( "\\x1b\\[(\\d+)G" )
 upRe = re.compile( "\\x1b\\[(\\d+)A" )
@@ -1406,6 +1407,12 @@ class ReplxxTests( unittest.TestCase ):
 			"<c9><ceos>abXYZ<yellow>012345<rst>fgh<rst><c20><c9><ceos>abXYZ<yellow>012345<rst>fgh<rst><c23>\r\n"
 			"abXYZ012345fgh\r\n",
 			"abcdefgh\n"
+		)
+	def test_verbatim_insert( self_ ):
+		self_.check_scenario(
+			["<c-v>", "<ins>", "<cr><c-d>"],
+			"<c9><ceos>^[<brightmagenta>[<yellow>2<rst>~<rst><c14><c9><ceos>^[<brightmagenta>[<yellow>2<rst>~<rst><c14>\r\n"
+			"<ins-key>\r\n"
 		)
 	def test_hint_delay( self_ ):
 		self_.check_scenario(
