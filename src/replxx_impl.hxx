@@ -87,7 +87,15 @@ public:
 		TRIM,
 		SKIP
 	};
+	typedef Replxx::ACTION_RESULT ( ReplxxImpl::* key_press_handler_raw_t )( char32_t );
 	typedef std::unordered_map<int, Replxx::key_press_handler_t> key_press_handlers_t;
+private:
+	typedef int long long unsigned action_trait_t;
+	static action_trait_t const NOOP              = 0;
+	static action_trait_t const WANT_REFRESH      = 1;
+	static action_trait_t const RESET_KILL_ACTION = 2;
+	static action_trait_t const SET_KILL_ACTION   = 4;
+	static action_trait_t const DONT_RESET_PREFIX = 8;
 private:
 	Utf8String     _utf8Buffer;
 	UnicodeString  _data;
@@ -156,6 +164,7 @@ private:
 private:
 	void preload_puffer( char const* preloadText );
 	int get_input_line( void );
+	Replxx::ACTION_RESULT action( action_trait_t, key_press_handler_raw_t const&, char32_t );
 	Replxx::ACTION_RESULT insert_character( char32_t );
 	Replxx::ACTION_RESULT go_to_begining_of_line( char32_t );
 	Replxx::ACTION_RESULT go_to_end_of_line( char32_t );
