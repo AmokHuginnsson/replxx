@@ -36,6 +36,17 @@
 #include <string>
 #include <functional>
 
+#ifdef ERROR
+enum { ERROR_BB1CA97EC761FC37101737BA0AA2E7C5 = ERROR };
+#undef ERROR
+enum { ERROR = ERROR_BB1CA97EC761FC37101737BA0AA2E7C5 };
+#endif
+#ifdef DELETE
+enum { DELETE_32F68A60CEF40FAEDBC6AF20298C1A1E = DELETE };
+#undef DELETE
+enum { DELETE = DELETE_32F68A60CEF40FAEDBC6AF20298C1A1E };
+#endif
+
 namespace replxx {
 
 class Replxx {
@@ -59,7 +70,6 @@ public:
 		WHITE         = 15,
 		NORMAL        = LIGHTGRAY,
 		DEFAULT       = -1,
-#undef ERROR
 		ERROR         = -2
 	};
 	struct KEY {
@@ -76,7 +86,6 @@ public:
 		static char32_t const RIGHT        = LEFT      + 1;
 		static char32_t const HOME         = RIGHT     + 1;
 		static char32_t const END          = HOME      + 1;
-#undef DELETE
 		static char32_t const DELETE       = END       + 1;
 		static char32_t const INSERT       = DELETE    + 1;
 		static char32_t const F1           = INSERT    + 1;
