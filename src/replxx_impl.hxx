@@ -91,11 +91,12 @@ public:
 	typedef std::unordered_map<int, Replxx::key_press_handler_t> key_press_handlers_t;
 private:
 	typedef int long long unsigned action_trait_t;
-	static action_trait_t const NOOP              = 0;
-	static action_trait_t const WANT_REFRESH      = 1;
-	static action_trait_t const RESET_KILL_ACTION = 2;
-	static action_trait_t const SET_KILL_ACTION   = 4;
-	static action_trait_t const DONT_RESET_PREFIX = 8;
+	static action_trait_t const NOOP                   =  0;
+	static action_trait_t const WANT_REFRESH           =  1;
+	static action_trait_t const RESET_KILL_ACTION      =  2;
+	static action_trait_t const SET_KILL_ACTION        =  4;
+	static action_trait_t const DONT_RESET_PREFIX      =  8;
+	static action_trait_t const DONT_RESET_COMPLETIONS = 16;
 private:
 	Utf8String     _utf8Buffer;
 	UnicodeString  _data;
@@ -126,6 +127,9 @@ private:
 	Replxx::hint_callback_t _hintCallback;
 	key_presses_t _keyPresses;
 	messages_t _messages;
+	completions_t _completions;
+	int _completionContextLength;
+	int _completionSelection;
 	std::string _preloadedBuffer; // used with set_preload_buffer
 	std::string _errorMessage;
 	mutable std::mutex _mutex;
@@ -203,11 +207,14 @@ private:
 	Replxx::ACTION_RESULT suspend( char32_t );
 #endif
 	Replxx::ACTION_RESULT complete_line( char32_t );
+	Replxx::ACTION_RESULT complete_next( char32_t );
+	Replxx::ACTION_RESULT complete_previous( char32_t );
+	Replxx::ACTION_RESULT complete( bool );
 	Replxx::ACTION_RESULT incremental_history_search( char32_t startChar );
 	Replxx::ACTION_RESULT common_prefix_search( char32_t startChar );
 	char32_t read_char( HINT_ACTION = HINT_ACTION::SKIP );
 	char const* read_from_stdin( void );
-	char32_t do_complete_line( void );
+	char32_t do_complete_line( bool );
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
 	void render( char32_t );
 	void render( HINT_ACTION );

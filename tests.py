@@ -1423,6 +1423,21 @@ class ReplxxTests( unittest.TestCase ):
 			"han\r\n",
 			command = [ ReplxxTests._cSample_, "q1", "H200" ]
 		)
+	def test_complete_next( self_ ):
+		self_.check_scenario(
+			"<up><c-n><c-n><c-p><c-p><c-p><cr><c-d>",
+			"<c9><ceos>color_<rst>\r\n"
+			"        <gray>color_black<rst>\r\n"
+			"        <gray>color_red<rst>\r\n"
+			"        "
+			"<gray>color_green<rst><u3><c15><c9><ceos><black>color_black<rst><c20><c9><ceos><red>color_red<rst><c18><c9><ceos><black>color_black<rst><c20><c9><ceos>color_<rst>\r\n"
+			"        <gray>color_black<rst>\r\n"
+			"        <gray>color_red<rst>\r\n"
+			"        "
+			"<gray>color_green<rst><u3><c15><c9><ceos><lightgray>color_normal<rst><c21><c9><ceos><lightgray>color_normal<rst><c21>\r\n"
+			"color_normal\r\n",
+			"color_\n"
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity

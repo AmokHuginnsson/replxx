@@ -108,6 +108,9 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _hintCallback( nullptr )
 	, _keyPresses()
 	, _messages()
+	, _completions()
+	, _completionContextLength( 0 )
+	, _completionSelection( -1 )
 	, _preloadedBuffer()
 	, _errorMessage()
 	, _mutex() {
@@ -153,8 +156,8 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	bind_key( Replxx::KEY::control( 'J' ),                 std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMMIT_LINE,                     _1 ) );
 	bind_key( Replxx::KEY::ENTER + 0,                      std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMMIT_LINE,                     _1 ) );
 	bind_key( Replxx::KEY::control( 'L' ),                 std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::CLEAR_SCREEN,                    _1 ) );
-	bind_key( Replxx::KEY::control( 'N' ),                 std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_NEXT,                    _1 ) );
-	bind_key( Replxx::KEY::control( 'P' ),                 std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_PREVIOUS,                _1 ) );
+	bind_key( Replxx::KEY::control( 'N' ),                 std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMPLETE_NEXT,                   _1 ) );
+	bind_key( Replxx::KEY::control( 'P' ),                 std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMPLETE_PREVIOUS,               _1 ) );
 	bind_key( Replxx::KEY::DOWN + 0,                       std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_NEXT,                    _1 ) );
 	bind_key( Replxx::KEY::UP + 0,                         std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_PREVIOUS,                _1 ) );
 	bind_key( Replxx::KEY::meta( '>' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_LAST,                    _1 ) );
@@ -215,6 +218,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32
 		case ( Replxx::ACTION::CLEAR_SELF ): clear_self_to_end_of_screen(); return ( Replxx::ACTION_RESULT::CONTINUE );
 		case ( Replxx::ACTION::REPAINT ):    repaint();           return ( Replxx::ACTION_RESULT::CONTINUE );
 		case ( Replxx::ACTION::COMPLETE_LINE ):                   return ( action( NOOP, &Replxx::ReplxxImpl::complete_line, code ) );
+		case ( Replxx::ACTION::COMPLETE_NEXT ):                   return ( action( DONT_RESET_COMPLETIONS, &Replxx::ReplxxImpl::complete_next, code ) );
+		case ( Replxx::ACTION::COMPLETE_PREVIOUS ):               return ( action( DONT_RESET_COMPLETIONS, &Replxx::ReplxxImpl::complete_previous, code ) );
 		case ( Replxx::ACTION::COMMIT_LINE ):                     return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::commit_line, code ) );
 		case ( Replxx::ACTION::ABORT_LINE ):                      return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::abort_line, code ) );
 		case ( Replxx::ACTION::SEND_EOF ):                        return ( action( NOOP, &Replxx::ReplxxImpl::send_eof, code ) );
@@ -269,6 +274,9 @@ char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
 void Replxx::ReplxxImpl::clear( void ) {
 	_pos = 0;
 	_prefix = 0;
+	_completions.clear();
+	_completionContextLength = 0;
+	_completionSelection = -1;
 	_data.clear();
 	_hintSelection = -1;
 	_hint = UnicodeString();
@@ -766,7 +774,7 @@ int longest_common_prefix( Replxx::ReplxxImpl::completions_t const& completions 
  * @param pi - Prompt struct holding information about the prompt and our
  * screen position
  */
-char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
+char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 	char32_t c = 0;
 
 	// completionCallback() expects a parsable entity, so find the previous break
@@ -776,40 +784,46 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 
 	_utf8Buffer.assign( _data, _pos );
 	// get a list of completions
-	int contextLen( context_length() );
-	Replxx::ReplxxImpl::completions_t completions( call_completer( _utf8Buffer.get(), contextLen ) );
+	_completionSelection = -1;
+	_completionContextLength = context_length();
+	_completions = call_completer( _utf8Buffer.get(), _completionContextLength );
 
 	// if no completions, we are done
-	if (completions.size() == 0) {
+	if ( _completions.empty() ) {
 		beep();
 		return 0;
 	}
 
 	// at least one completion
 	int longestCommonPrefix = 0;
-	int completionsCount( completions.size() );
+	int completionsCount( _completions.size() );
 	int selectedCompletion( 0 );
 	if ( _hintSelection != -1 ) {
 		selectedCompletion = _hintSelection;
 		completionsCount = 1;
 	}
 	if ( completionsCount == 1 ) {
-		longestCommonPrefix = static_cast<int>(completions[selectedCompletion].text().length());
+		longestCommonPrefix = static_cast<int>( _completions[selectedCompletion].text().length() );
 	} else {
-		longestCommonPrefix = longest_common_prefix( completions );
+		longestCommonPrefix = longest_common_prefix( _completions );
 	}
 	if ( _beepOnAmbiguousCompletion && ( completionsCount != 1 ) ) { // beep if ambiguous
 		beep();
 	}
 
 	// if we can extend the item, extend it and return to main loop
-	if ( ( longestCommonPrefix > contextLen ) || ( completionsCount == 1 ) ) {
-		_pos -= contextLen;
-		_data.erase( _pos, contextLen );
-		_data.insert( _pos, completions[selectedCompletion].text(), 0, longestCommonPrefix );
+	if ( ( longestCommonPrefix > _completionContextLength ) || ( completionsCount == 1 ) ) {
+		_pos -= _completionContextLength;
+		_data.erase( _pos, _completionContextLength );
+		_data.insert( _pos, _completions[selectedCompletion].text(), 0, longestCommonPrefix );
 		_pos = _pos + longestCommonPrefix;
+		_completionContextLength = longestCommonPrefix;
 		refresh_line();
 		return 0;
+	}
+
+	if ( ! showCompletions_ ) {
+		return ( 0 );
 	}
 
 	if ( _doubleTabCompletion ) {
@@ -827,13 +841,12 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 	// we got a second tab, maybe show list of possible completions
 	bool showCompletions = true;
 	bool onNewLine = false;
-	if ( static_cast<int>( completions.size() ) > _completionCountCutoff ) {
+	if ( static_cast<int>( _completions.size() ) > _completionCountCutoff ) {
 		int savePos = _pos; // move cursor to EOL to avoid overwriting the command line
 		_pos = _data.length();
 		refresh_line();
 		_pos = savePos;
-		printf("\nDisplay all %u possibilities? (y or n)",
-					 static_cast<unsigned int>(completions.size()));
+		printf( "\nDisplay all %u possibilities? (y or n)", static_cast<unsigned int>( _completions.size() ) );
 		fflush(stdout);
 		onNewLine = true;
 		while (c != 'y' && c != 'Y' && c != 'n' && c != 'N' && c != Replxx::KEY::control('C')) {
@@ -859,8 +872,8 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 	bool stopList( false );
 	if ( showCompletions ) {
 		int longestCompletion( 0 );
-		for ( size_t j( 0 ); j < completions.size(); ++ j ) {
-			int itemLength( static_cast<int>( completions[j].text().length() ) );
+		for ( size_t j( 0 ); j < _completions.size(); ++ j ) {
+			int itemLength( static_cast<int>( _completions[j].text().length() ) );
 			if ( itemLength > longestCompletion ) {
 				longestCompletion = itemLength;
 			}
@@ -879,7 +892,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 			_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
 		}
 		size_t pauseRow = _terminal.get_screen_rows() - 1;
-		size_t rowCount = (completions.size() + columnCount - 1) / columnCount;
+		size_t rowCount = (_completions.size() + columnCount - 1) / columnCount;
 		for (size_t row = 0; row < rowCount; ++row) {
 			if (row == pauseRow) {
 				printf("\n--More--");
@@ -930,17 +943,17 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 			static UnicodeString const res( ansi_color( Replxx::Color::DEFAULT ) );
 			for (int column = 0; column < columnCount; ++column) {
 				size_t index = (column * rowCount) + row;
-				if (index < completions.size()) {
-					Completion const& c( completions[index] );
+				if ( index < _completions.size() ) {
+					Completion const& c( _completions[index] );
 					int itemLength = static_cast<int>(c.text().length());
 					fflush(stdout);
 
 					if ( longestCommonPrefix > 0 ) {
-						static UnicodeString const col(ansi_color(Replxx::Color::BRIGHTMAGENTA));
+						static UnicodeString const col( ansi_color( Replxx::Color::BRIGHTMAGENTA ) );
 						if (!_noColor) {
 							_terminal.write32(col.get(), col.length());
 						}
-						_terminal.write32(&_data[_pos - contextLen], longestCommonPrefix);
+						_terminal.write32(&_data[_pos - _completionContextLength], longestCommonPrefix);
 						if (!_noColor) {
 							_terminal.write32(res.get(), res.length());
 						}
@@ -955,7 +968,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( void ) {
 						_terminal.write32( res.get(), res.length() );
 					}
 
-					if (((column + 1) * rowCount) + row < completions.size()) {
+					if ( ((column + 1) * rowCount) + row < _completions.size() ) {
 						for ( int k( itemLength ); k < longestCompletion; ++k ) {
 							printf( " " );
 						}
@@ -1063,6 +1076,11 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::action( action_trait_t actionTrait_, k
 	}
 	if ( ! ( actionTrait_ & DONT_RESET_PREFIX ) ) {
 		_prefix = _pos;
+	}
+	if ( ! ( actionTrait_ & DONT_RESET_COMPLETIONS ) ) {
+		_completions.clear();
+		_completionSelection = -1;
+		_completionContextLength = 0;
 	}
 	if ( actionTrait_ & WANT_REFRESH ) {
 		refresh_line();
@@ -1516,7 +1534,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete_line( char32_t c ) {
 		_history.reset_recall_most_recent();
 
 		// complete_line does the actual completion and replacement
-		c = do_complete_line();
+		c = do_complete_line( c != 0 );
 
 		if ( static_cast<int>( c ) < 0 ) {
 			return ( Replxx::ACTION_RESULT::BAIL );
@@ -1528,6 +1546,39 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete_line( char32_t c ) {
 		insert_character( c );
 	}
 	return ( Replxx::ACTION_RESULT::CONTINUE );
+}
+
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete( bool previous_ ) {
+	if ( _completions.empty() ) {
+		complete_line( 0 );
+	}
+	int newSelection( _completionSelection + ( previous_ ? -1 : 1 ) );
+	if ( newSelection >= static_cast<int>( _completions.size() ) ) {
+		newSelection = -1;
+	} else if ( newSelection == -2 ) {
+		newSelection = static_cast<int>( _completions.size() ) - 1;
+	}
+	if ( _completionSelection != -1 ) {
+		int oldCompletionLength( _completions[_completionSelection].text().length() - _completionContextLength );
+		_pos -= oldCompletionLength;
+		_data.erase( _pos, oldCompletionLength );
+	}
+	if ( newSelection != -1 ) {
+		int newCompletionLength( _completions[newSelection].text().length() - _completionContextLength );
+		_data.insert( _pos, _completions[newSelection].text(), _completionContextLength, newCompletionLength );
+		_pos += newCompletionLength;
+	}
+	_completionSelection = newSelection;
+	refresh_line();  // Refresh the line
+	return ( Replxx::ACTION_RESULT::CONTINUE );
+}
+
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete_next( char32_t ) {
+	return ( complete( false ) );
+}
+
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete_previous( char32_t ) {
+	return ( complete( true ) );
 }
 
 // Alt-P, reverse history search for prefix
