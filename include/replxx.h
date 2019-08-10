@@ -178,9 +178,6 @@ typedef struct Replxx Replxx;
  *
  * Use replxx_end() to free resoiurce acquired with this function.
  *
- * \param in - opened input file stream.
- * \param out - opened output file stream.
- * \param err - opened error file stream.
  * \return Replxx library resouce holder.
  */
 Replxx* replxx_init( void );

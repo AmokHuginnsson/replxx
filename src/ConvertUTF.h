@@ -87,6 +87,9 @@
 		bit mask & shift operations.
 ------------------------------------------------------------------------ */
 
+#ifndef REPLXX_CONVERT_UTF8_H_INCLUDED
+#define REPLXX_CONVERT_UTF8_H_INCLUDED 1
+
 #if 0
 typedef unsigned long	UTF32; /* at least 32 bits */
 typedef unsigned short UTF16; /* at least 16 bits */
@@ -130,5 +133,7 @@ ConversionResult ConvertUTF32toUTF8 (
 								UTF8** targetStart, UTF8* targetEnd, ConversionFlags flags);
 
 }
+
+#endif /* REPLXX_CONVERT_UTF8_H_INCLUDED */
 
 /* --------------------------------------------------------------------- */
