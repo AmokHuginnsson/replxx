@@ -36,6 +36,24 @@
 #include <string>
 #include <functional>
 
+/*
+ * For use in Windows DLLs.
+ * If you are building replxx into a DLL which you will then use:
+ *   a)  Add to your source (or build environment) '#define REPLXX_DLL' before
+ *       including replxx.hxx.
+ *   b)  Ensure 'REPLXX_BUILDING_DLL' is also defined when building the DLL that
+ *      is compiling the replxx source (to ensure it is exported).
+ */
+#ifndef REPLXX_DLL
+#define REPLXX_IMPEXP
+#else
+#ifdef REPLXX_BUILDING_DLL
+#define REPLXX_IMPEXP __declspec(dllexport)
+#else
+#define REPLXX_IMPEXP __declspec(dllimport)
+#endif
+#endif
+
 #ifdef ERROR
 enum { ERROR_BB1CA97EC761FC37101737BA0AA2E7C5 = ERROR };
 #undef ERROR
@@ -49,7 +67,7 @@ enum { DELETE = DELETE_32F68A60CEF40FAEDBC6AF20298C1A1E };
 
 namespace replxx {
 
-class Replxx {
+class REPLXX_IMPEXP Replxx {
 public:
 	enum class Color {
 		BLACK         = 0,
