@@ -36,6 +36,24 @@
 #include <string>
 #include <functional>
 
+/*
+ * For use in Windows DLLs:
+ *
+ * If you are building replxx into a DLL,
+ * unless you are using supplied CMake based build,
+ * ensure that 'REPLXX_BUILDING_DLL' is defined when
+ * building the DLL so that proper symbols are exported.
+ */
+#if defined( _WIN32 ) && ! defined( REPLXX_STATIC )
+#	ifdef REPLXX_BUILDING_DLL
+#		define REPLXX_IMPEXP __declspec( dllexport )
+#	else
+#		define REPLXX_IMPEXP __declspec( dllimport )
+#	endif
+#else
+#	define REPLXX_IMPEXP /**/
+#endif
+
 #ifdef ERROR
 enum { ERROR_BB1CA97EC761FC37101737BA0AA2E7C5 = ERROR };
 #undef ERROR
@@ -49,7 +67,7 @@ enum { DELETE = DELETE_32F68A60CEF40FAEDBC6AF20298C1A1E };
 
 namespace replxx {
 
-class Replxx {
+class REPLXX_IMPEXP Replxx {
 public:
 	enum class Color {
 		BLACK         = 0,
@@ -272,7 +290,14 @@ public:
 	class ReplxxImpl;
 private:
 	typedef std::unique_ptr<ReplxxImpl, void (*)( ReplxxImpl* )> impl_t;
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable:4251)
+#endif
 	impl_t _impl;
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
 
 public:
 	Replxx( void );

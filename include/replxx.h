@@ -44,6 +44,24 @@
 extern "C" {
 #endif
 
+/*
+ * For use in Windows DLLs:
+ *
+ * If you are building replxx into a DLL,
+ * unless you are using supplied CMake based build,
+ * ensure that 'REPLXX_BUILDING_DLL' is defined when
+ * building the DLL so that proper symbols are exported.
+ */
+#if defined( _WIN32 ) && ! defined( REPLXX_STATIC )
+#	ifdef REPLXX_BUILDING_DLL
+#		define REPLXX_IMPEXP __declspec( dllexport )
+#	else
+#		define REPLXX_IMPEXP __declspec( dllimport )
+#	endif
+#else
+#	define REPLXX_IMPEXP /**/
+#endif
+
 /*! \brief Color definitions to use in highlighter callbacks.
  */
 typedef enum {
@@ -180,13 +198,13 @@ typedef struct Replxx Replxx;
  *
  * \return Replxx library resouce holder.
  */
-Replxx* replxx_init( void );
+REPLXX_IMPEXP Replxx* replxx_init( void );
 
 /*! \brief Cleanup resources used by Replxx library.
  *
  * \param replxx - a Replxx library resource holder.
  */
-void replxx_end( Replxx* replxx );
+REPLXX_IMPEXP void replxx_end( Replxx* replxx );
 
 /*! \brief Highlighter callback type definition.
  *
@@ -210,7 +228,7 @@ typedef void (replxx_highlighter_callback_t)(char const* input, ReplxxColor* col
  * \param fn - user defined callback function.
  * \param userData - pointer to opaque user data block to be passed into each invocation of the callback.
  */
-void replxx_set_highlighter_callback( Replxx*, replxx_highlighter_callback_t* fn, void* userData );
+REPLXX_IMPEXP void replxx_set_highlighter_callback( Replxx*, replxx_highlighter_callback_t* fn, void* userData );
 
 typedef struct replxx_completions replxx_completions;
 
@@ -240,14 +258,14 @@ typedef void(replxx_completion_callback_t)(const char* input, replxx_completions
  * \param fn - user defined callback function.
  * \param userData - pointer to opaque user data block to be passed into each invocation of the callback.
  */
-void replxx_set_completion_callback( Replxx*, replxx_completion_callback_t* fn, void* userData );
+REPLXX_IMPEXP void replxx_set_completion_callback( Replxx*, replxx_completion_callback_t* fn, void* userData );
 
 /*! \brief Add another possible completion for current user input.
  *
  * \param completions - pointer to opaque list of user completions.
  * \param str - UTF-8 encoded completion string.
  */
-void replxx_add_completion( replxx_completions* completions, const char* str );
+REPLXX_IMPEXP void replxx_add_completion( replxx_completions* completions, const char* str );
 
 /*! \brief Add another possible completion for current user input.
  *
@@ -255,7 +273,7 @@ void replxx_add_completion( replxx_completions* completions, const char* str );
  * \param str - UTF-8 encoded completion string.
  * \param color - a color for the completion.
  */
-void replxx_add_color_completion( replxx_completions* completions, const char* str, ReplxxColor color );
+REPLXX_IMPEXP void replxx_add_color_completion( replxx_completions* completions, const char* str, ReplxxColor color );
 
 typedef struct replxx_hints replxx_hints;
 
@@ -286,7 +304,7 @@ typedef void(replxx_hint_callback_t)(const char* input, replxx_hints* hints, int
  * \param fn - user defined callback function.
  * \param userData - pointer to opaque user data block to be passed into each invocation of the callback.
  */
-void replxx_set_hint_callback( Replxx*, replxx_hint_callback_t* fn, void* userData );
+REPLXX_IMPEXP void replxx_set_hint_callback( Replxx*, replxx_hint_callback_t* fn, void* userData );
 
 /*! \brief Key press handler type definition.
  *
@@ -300,14 +318,14 @@ typedef ReplxxActionResult (key_press_handler_t)( int code, void* userData );
  * \param hints - pointer to opaque list of hints.
  * \param str - UTF-8 encoded hint string.
  */
-void replxx_add_hint( replxx_hints* hints, const char* str );
+REPLXX_IMPEXP void replxx_add_hint( replxx_hints* hints, const char* str );
 
 /*! \brief Read line of user input.
  *
  * \param prompt - prompt to be displayed before getting user input.
  * \return An UTF-8 encoded input given by the user (or nullptr on EOF).
  */
-char const* replxx_input( Replxx*, const char* prompt );
+REPLXX_IMPEXP char const* replxx_input( Replxx*, const char* prompt );
 
 /*! \brief Print formatted string to standard output.
  *
@@ -317,13 +335,13 @@ char const* replxx_input( Replxx*, const char* prompt );
  *
  * \param fmt - printf style format.
  */
-int replxx_print( Replxx*, char const* fmt, ... );
+REPLXX_IMPEXP int replxx_print( Replxx*, char const* fmt, ... );
 
 /*! \brief Schedule an emulated key press event.
  *
  * \param code - key press code to be emulated.
  */
-void replxx_emulate_key_press( Replxx*, int unsigned code );
+REPLXX_IMPEXP void replxx_emulate_key_press( Replxx*, int unsigned code );
 
 /*! \brief Invoke built-in action handler.
  *
@@ -333,7 +351,7 @@ void replxx_emulate_key_press( Replxx*, int unsigned code );
  * \param code - a supplementary key-code to consume by built-in action handler.
  * \return The action result informing the replxx what shall happen next.
  */
-ReplxxActionResult replxx_invoke( Replxx*, ReplxxAction action, int unsigned code );
+REPLXX_IMPEXP ReplxxActionResult replxx_invoke( Replxx*, ReplxxAction action, int unsigned code );
 
 /*! \brief Bind user defined action to handle given key-press event.
  *
@@ -341,12 +359,12 @@ ReplxxActionResult replxx_invoke( Replxx*, ReplxxAction action, int unsigned cod
  * \param handler - use this handler to handle key-press event.
  * \param userData - supplementary user data passed to invoked handlers.
  */
-void replxx_bind_key( Replxx*, int code, key_press_handler_t handler, void* userData );
+REPLXX_IMPEXP void replxx_bind_key( Replxx*, int code, key_press_handler_t handler, void* userData );
 
-void replxx_set_preload_buffer( Replxx*, const char* preloadText );
+REPLXX_IMPEXP void replxx_set_preload_buffer( Replxx*, const char* preloadText );
 
-void replxx_history_add( Replxx*, const char* line );
-int replxx_history_size( Replxx* );
+REPLXX_IMPEXP void replxx_history_add( Replxx*, const char* line );
+REPLXX_IMPEXP int replxx_history_size( Replxx* );
 
 /*! \brief Set set of word break characters.
  *
@@ -354,58 +372,58 @@ int replxx_history_size( Replxx* );
  *
  * \param wordBreakers - 7-bit ASCII set of word breaking characters.
  */
-void replxx_set_word_break_characters( Replxx*, char const* wordBreakers );
+REPLXX_IMPEXP void replxx_set_word_break_characters( Replxx*, char const* wordBreakers );
 
 /*! \brief How many completions should trigger pagination.
  */
-void replxx_set_completion_count_cutoff( Replxx*, int count );
+REPLXX_IMPEXP void replxx_set_completion_count_cutoff( Replxx*, int count );
 
 /*! \brief Set maximum number of displayed hint rows.
  */
-void replxx_set_max_hint_rows( Replxx*, int count );
+REPLXX_IMPEXP void replxx_set_max_hint_rows( Replxx*, int count );
 
 /*! \brief Set a delay before hint are shown after user stopped typing..
  *
  * \param milliseconds - a number of milliseconds to wait before showing hints.
  */
-void replxx_set_hint_delay( Replxx*, int milliseconds );
+REPLXX_IMPEXP void replxx_set_hint_delay( Replxx*, int milliseconds );
 
 /*! \brief Set tab completion behavior.
  *
  * \param val - use double tab to invoke completions (if != 0).
  */
-void replxx_set_double_tab_completion( Replxx*, int val );
+REPLXX_IMPEXP void replxx_set_double_tab_completion( Replxx*, int val );
 
 /*! \brief Set tab completion behavior.
  *
  * \param val - invoke completion even if user input is empty (if != 0).
  */
-void replxx_set_complete_on_empty( Replxx*, int val );
+REPLXX_IMPEXP void replxx_set_complete_on_empty( Replxx*, int val );
 
 /*! \brief Set tab completion behavior.
  *
  * \param val - beep if completion is ambiguous (if != 0).
  */
-void replxx_set_beep_on_ambiguous_completion( Replxx*, int val );
+REPLXX_IMPEXP void replxx_set_beep_on_ambiguous_completion( Replxx*, int val );
 
 /*! \brief Disable output coloring.
  *
  * \param val - if set to non-zero disable output colors.
  */
-void replxx_set_no_color( Replxx*, int val );
+REPLXX_IMPEXP void replxx_set_no_color( Replxx*, int val );
 
 /*! \brief Set maximum number of entries in history list.
  */
-void replxx_set_max_history_size( Replxx*, int len );
-char const* replxx_history_line( Replxx*, int index );
-int replxx_history_save( Replxx*, const char* filename );
-int replxx_history_load( Replxx*, const char* filename );
-void replxx_clear_screen( Replxx* );
+REPLXX_IMPEXP void replxx_set_max_history_size( Replxx*, int len );
+REPLXX_IMPEXP char const* replxx_history_line( Replxx*, int index );
+REPLXX_IMPEXP int replxx_history_save( Replxx*, const char* filename );
+REPLXX_IMPEXP int replxx_history_load( Replxx*, const char* filename );
+REPLXX_IMPEXP void replxx_clear_screen( Replxx* );
 #ifdef __REPLXX_DEBUG__
 void replxx_debug_dump_print_codes(void);
 #endif
 /* the following is extension to the original linenoise API */
-int replxx_install_window_change_handler( Replxx* );
+REPLXX_IMPEXP int replxx_install_window_change_handler( Replxx* );
 
 #ifdef __cplusplus
 }

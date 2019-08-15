@@ -1625,7 +1625,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 	dynamicRefresh(dp, _data.get(), _data.length(), historyLinePosition);
 
 	// loop until we get an exit character
-	int c = 0;
+	char32_t c( 0 );
 	bool keepLooping = true;
 	bool useSearchedLine = true;
 	bool searchAgain = false;
