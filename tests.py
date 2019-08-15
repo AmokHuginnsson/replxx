@@ -1217,7 +1217,14 @@ class ReplxxTests( unittest.TestCase ):
 			"<c9><ceos>color_black color_red color_green color_brown color_blue "
 			"color_magenta color_cyan color_lightgray color_gray color_brightred "
 			"color_brightgreen color_yellow color_brightblue color_brightmagenta "
-			"color_brightcyan color_white<c70> X<u2><c9><ceos>color_black color_red "
+			"color_brightcyan color_white<c70><u2><c9><ceos>color_black color_red "
+			"color_green color_brown color_blue color_magenta color_cyan color_lightgray "
+			"color_gray color_brightred color_brightgreen color_yellow color_brightblue "
+			"color_brightmagenta color_brightcyan color_white "
+			"<c71><u2><c9><ceos>color_black color_red color_green color_brown color_blue "
+			"color_magenta color_cyan color_lightgray color_gray color_brightred "
+			"color_brightgreen color_yellow color_brightblue color_brightmagenta "
+			"color_brightcyan color_white X<c72><u2><c9><ceos>color_black color_red "
 			"color_green color_brown color_blue color_magenta color_cyan color_lightgray "
 			"color_gray color_brightred color_brightgreen color_yellow color_brightblue "
 			"color_brightmagenta color_brightcyan color_white X<c72>\r\n"
@@ -1437,6 +1444,17 @@ class ReplxxTests( unittest.TestCase ):
 			"<gray>color_green<rst><u3><c15><c9><ceos><lightgray>color_normal<rst><c21><c9><ceos><lightgray>color_normal<rst><c21>\r\n"
 			"color_normal\r\n",
 			"color_\n"
+		)
+	def test_disabled_handlers( self_ ):
+		self_.check_scenario(
+			"<up><left><backspace>4<cr><c-d>",
+			"<c9><ceos>(+ 1 2)<rst><c16><c9><ceos><brightred>(<rst>+ 1 "
+			"2)<rst><c15><c9><ceos><brightred>(<rst>+ 1 "
+			")<rst><c14><c9><ceos><brightred>(<rst>+ 1 "
+			"4)<rst><c15><c9><ceos><brightred>(<rst>+ 1 4)<rst><c16>\r\n"
+			"thanks for the input: (+ 1 4)\r\n",
+			"(+ 1 2)\r\n",
+			command = [ ReplxxTests._cSample_, "N", "S" ]
 		)
 
 def parseArgs( self, func, argv ):

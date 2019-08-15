@@ -338,7 +338,7 @@ ReplxxActionResult replxx_invoke( Replxx*, ReplxxAction action, int unsigned cod
 /*! \brief Bind user defined action to handle given key-press event.
  *
  * \param code - handle this key-press event with following handler.
- * \param handle - use this handler to handle key-press event.
+ * \param handler - use this handler to handle key-press event.
  * \param userData - supplementary user data passed to invoked handlers.
  */
 void replxx_bind_key( Replxx*, int code, key_press_handler_t handler, void* userData );

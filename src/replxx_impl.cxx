@@ -1105,10 +1105,10 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 	}
 	++ _pos;
 	int inputLen = calculate_displayed_length( _data.get(), _data.length() );
-	if ( _noColor
-		|| ( ! ( !! _highlighterCallback || !! _hintCallback )
-			&& ( _prompt._indentation + inputLen < _prompt.screen_columns() )
-		)
+	if (
+		( _pos == _data.length() )
+		&& ( _noColor || ! ( !! _highlighterCallback || !! _hintCallback ) )
+		&& ( _prompt._indentation + inputLen < _prompt.screen_columns() )
 	) {
 		/* Avoid a full assign of the line in the
 		 * trivial case. */

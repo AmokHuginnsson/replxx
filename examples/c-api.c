@@ -93,6 +93,9 @@ int main( int argc, char** argv ) {
 
 	int quiet = 0;
 	char const* prompt = "\x1b[1;32mreplxx\x1b[0m> ";
+	int installCompletionCallback = 1;
+	int installHighlighterCallback = 1;
+	int installHintsCallback = 1;
 	while ( argc > 1 ) {
 		-- argc;
 		++ argv;
@@ -115,6 +118,9 @@ int main( int argc, char** argv ) {
 			case 'm': replxx_set_no_color( replxx, (*argv)[1] - '0' );                     break;
 			case 'p': prompt = recode( (*argv) + 1 );                                      break;
 			case 'q': quiet = atoi( (*argv) + 1 );                                         break;
+			case 'C': installCompletionCallback = 0;                                       break;
+			case 'S': installHighlighterCallback = 0;                                      break;
+			case 'N': installHintsCallback = 0;                                            break;
 			case 'x': split( (*argv) + 1, examples, MAX_EXAMPLE_COUNT );                   break;
 		}
 
@@ -123,9 +129,15 @@ int main( int argc, char** argv ) {
 	const char* file = "./replxx_history.txt";
 
 	replxx_history_load( replxx, file );
-	replxx_set_completion_callback( replxx, completionHook, examples );
-	replxx_set_highlighter_callback( replxx, colorHook, replxx );
-	replxx_set_hint_callback( replxx, hintHook, examples );
+	if ( installCompletionCallback ) {
+		replxx_set_completion_callback( replxx, completionHook, examples );
+	}
+	if ( installHighlighterCallback ) {
+		replxx_set_highlighter_callback( replxx, colorHook, replxx );
+	}
+	if ( installHintsCallback ) {
+		replxx_set_hint_callback( replxx, hintHook, examples );
+	}
 	replxx_bind_key( replxx, '.', word_eater, replxx );
 
 	printf("starting...\n");
