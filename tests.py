@@ -1432,8 +1432,27 @@ class ReplxxTests( unittest.TestCase ):
 		)
 	def test_complete_next( self_ ):
 		self_.check_scenario(
-			"<up><c-n><c-n><c-p><c-p><c-p><cr><c-d>",
+			"<up><c-n><c-n><c-n><c-p><c-p><c-p><cr><c-d>",
 			"<c9><ceos>color_<rst>\r\n"
+			"        <gray>color_black<rst>\r\n"
+			"        <gray>color_red<rst>\r\n"
+			"        <gray>color_green<rst><u3><c15><c9><ceos>color_<rst><c15>\r\n"
+			"<brightmagenta>color_<rst>black          "
+			"<brightmagenta>color_<rst>cyan           "
+			"<brightmagenta>color_<rst>brightblue\r\n"
+			"<brightmagenta>color_<rst><red>red<rst>            "
+			"<brightmagenta>color_<rst>lightgray      "
+			"<brightmagenta>color_<rst>brightmagenta\r\n"
+			"<brightmagenta>color_<rst>green          "
+			"<brightmagenta>color_<rst>gray           "
+			"<brightmagenta>color_<rst>brightcyan\r\n"
+			"<brightmagenta>color_<rst>brown          "
+			"<brightmagenta>color_<rst><brightred>brightred<rst>      "
+			"<brightmagenta>color_<rst>white\r\n"
+			"<brightmagenta>color_<rst>blue           "
+			"<brightmagenta>color_<rst>brightgreen    <brightmagenta>color_<rst>normal\r\n"
+			"<brightmagenta>color_<rst>magenta        <brightmagenta>color_<rst>yellow\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos>color_<rst>\r\n"
 			"        <gray>color_black<rst>\r\n"
 			"        <gray>color_red<rst>\r\n"
 			"        "

@@ -1550,7 +1550,11 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete_line( char32_t c ) {
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete( bool previous_ ) {
 	if ( _completions.empty() ) {
-		complete_line( 0 );
+		bool first( _completions.empty() );
+		complete_line( first ? '\t' : 0 );
+		if ( first ) {
+			return ( Replxx::ACTION_RESULT::CONTINUE );
+		}
 	}
 	int newSelection( _completionSelection + ( previous_ ? -1 : 1 ) );
 	if ( newSelection >= static_cast<int>( _completions.size() ) ) {
