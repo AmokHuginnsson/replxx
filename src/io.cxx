@@ -605,9 +605,10 @@ void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 	COORD coord = { 0, 0 };
 	CONSOLE_SCREEN_BUFFER_INFO inf;
 	bool toEnd( clearScreen_ == CLEAR_SCREEN::TO_END );
-	GetConsoleScreenBufferInfo( _consoleOut, &inf );
+	HANDLE consoleOut( _consoleOut ? _consoleOut : GetStdHandle( STD_OUTPUT_HANDLE ) );
+	GetConsoleScreenBufferInfo( consoleOut, &inf );
 	if ( ! toEnd ) {
-		SetConsoleCursorPosition( _consoleOut, coord );
+		SetConsoleCursorPosition( consoleOut, coord );
 	} else {
 		coord = inf.dwCursorPosition;
 	}
@@ -617,7 +618,7 @@ void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 			? ( inf.dwSize.Y - inf.dwCursorPosition.Y ) * inf.dwSize.X - inf.dwCursorPosition.X
 			: inf.dwSize.X * inf.dwSize.Y
 	);
-	FillConsoleOutputCharacterA( _consoleOut, ' ', toWrite, coord, &nWritten );
+	FillConsoleOutputCharacterA( consoleOut, ' ', toWrite, coord, &nWritten );
 #else
 	if ( clearScreen_ == CLEAR_SCREEN::WHOLE ) {
 		char const clearCode[] = "\033c\033[H\033[2J\033[0m";
