@@ -1,4 +1,7 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include <ctype.h>
+#include <string.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -52,6 +55,22 @@ void colorHook( char const* str_, ReplxxColor* colors_, int size_, void* ud ) {
 ReplxxActionResult word_eater( int ignored, void* ud ) {
 	Replxx* replxx = (Replxx*)ud;
 	return ( replxx_invoke( replxx, REPLXX_ACTION_KILL_TO_BEGINING_OF_WORD, 0 ) );
+}
+
+ReplxxActionResult upper_case_line( int ignored, void* ud ) {
+	Replxx* replxx = (Replxx*)ud;
+	ReplxxState state;
+	replxx_get_state( replxx, &state );
+	int l = strlen( state.text );
+	char* d = strdup( state.text );
+	for ( int i = 0; i < l; ++ i ) {
+		d[i] = toupper( d[i] );
+	}
+	state.text = d;
+	state.cursorPosition /= 2;
+	replxx_set_state( replxx, &state );
+	free( d );
+	return ( REPLXX_ACTION_RESULT_CONTINUE );
 }
 
 char const* recode( char* s ) {
@@ -139,6 +158,7 @@ int main( int argc, char** argv ) {
 		replxx_set_hint_callback( replxx, hintHook, examples );
 	}
 	replxx_bind_key( replxx, '.', word_eater, replxx );
+	replxx_bind_key( replxx, REPLXX_KEY_F2, upper_case_line, replxx );
 
 	printf("starting...\n");
 

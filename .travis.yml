@@ -1,10 +1,8 @@
 language: C++
 dist: xenial
 script:
-  - mkdir -p build && cd build
-  - cmake ..
-  - make
-  - cd .. && env SKIP=8bit_encoding ./tests.py
+  - ./build-all.sh
+  - env SKIP=8bit_encoding ./tests.py
 addons:
   apt:
     packages:

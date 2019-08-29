@@ -113,6 +113,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _completionSelection( -1 )
 	, _preloadedBuffer()
 	, _errorMessage()
+	, _modifiedState( false )
 	, _mutex() {
 	using namespace std::placeholders;
 	bind_key( Replxx::KEY::control( 'A' ),                 std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_TO_BEGINING_OF_LINE, _1 ) );
@@ -229,6 +230,19 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32
 
 void Replxx::ReplxxImpl::bind_key( char32_t code_, Replxx::key_press_handler_t handler_ ) {
 	_keyPressHandlers[code_] = handler_;
+}
+
+Replxx::State Replxx::ReplxxImpl::get_state( void ) const {
+	_utf8Buffer.assign( _data );
+	return ( Replxx::State( _utf8Buffer.get(), _pos ) );
+}
+
+void Replxx::ReplxxImpl::set_state( Replxx::State const& state_ ) {
+	_data.assign( state_.text() );
+	if ( state_.cursor_position() >= 0 ) {
+		_pos = min( state_.cursor_position(), _data.length() );
+	}
+	_modifiedState = true;
 }
 
 char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
@@ -515,6 +529,7 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 	}
 	set_color( Replxx::Color::DEFAULT );
 	_displayInputLength = _display.size();
+	_modifiedState = false;
 	return;
 }
 
@@ -1059,6 +1074,9 @@ int Replxx::ReplxxImpl::get_input_line( void ) {
 		key_press_handlers_t::iterator it( _keyPressHandlers.find( c ) );
 		if ( it != _keyPressHandlers.end() ) {
 			next = it->second( c );
+			if ( _modifiedState ) {
+				refresh_line();
+			}
 		} else {
 			next = action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::insert_character, c );
 		}
@@ -1083,7 +1101,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::action( action_trait_t actionTrait_, k
 		_completionContextLength = 0;
 	}
 	if ( actionTrait_ & WANT_REFRESH ) {
-		refresh_line();
+		_modifiedState = true;
 	}
 	return ( res );
 }

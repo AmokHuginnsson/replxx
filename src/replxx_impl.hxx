@@ -98,7 +98,7 @@ private:
 	static action_trait_t const DONT_RESET_PREFIX      =  8;
 	static action_trait_t const DONT_RESET_COMPLETIONS = 16;
 private:
-	Utf8String     _utf8Buffer;
+	mutable Utf8String     _utf8Buffer;
 	UnicodeString  _data;
 	char_widths_t  _charWidths; // character widths from mk_wcwidth()
 	display_t      _display;
@@ -132,6 +132,7 @@ private:
 	int _completionSelection;
 	std::string _preloadedBuffer; // used with set_preload_buffer
 	std::string _errorMessage;
+	bool _modifiedState;
 	mutable std::mutex _mutex;
 public:
 	ReplxxImpl( FILE*, FILE*, FILE* );
@@ -162,6 +163,8 @@ public:
 	void emulate_key_press( char32_t );
 	Replxx::ACTION_RESULT invoke( Replxx::ACTION, char32_t );
 	void bind_key( char32_t, Replxx::key_press_handler_t );
+	Replxx::State get_state( void ) const;
+	void set_state( Replxx::State const& );
 private:
 	ReplxxImpl( ReplxxImpl const& ) = delete;
 	ReplxxImpl& operator = ( ReplxxImpl const& ) = delete;

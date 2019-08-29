@@ -212,6 +212,14 @@ void Replxx::bind_key( char32_t keyPress_, key_press_handler_t handler_ ) {
 	_impl->bind_key( keyPress_, handler_ );
 }
 
+Replxx::State Replxx::get_state( void ) const {
+	return ( _impl->get_state() );
+}
+
+void Replxx::set_state( Replxx::State const& state_ ) {
+	_impl->set_state( state_ );
+}
+
 int Replxx::install_window_change_handler( void ) {
 	return ( _impl->install_window_change_handler() );
 }
@@ -261,6 +269,18 @@ replxx::Replxx::ACTION_RESULT key_press_handler_forwarder( key_press_handler_t h
 void replxx_bind_key( ::Replxx* replxx_, int code_, key_press_handler_t handler_, void* userData_ ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->bind_key( code_, std::bind( key_press_handler_forwarder, handler_, _1, userData_ ) );
+}
+
+void replxx_get_state( ::Replxx* replxx_, ReplxxState* state ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx::Replxx::State s( replxx->get_state() );
+	state->text = s.text();
+	state->cursorPosition = s.cursor_position();
+}
+
+void replxx_set_state( ::Replxx* replxx_, ReplxxState* state ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->set_state( replxx::Replxx::State( state->text, state->cursorPosition ) );
 }
 
 /**

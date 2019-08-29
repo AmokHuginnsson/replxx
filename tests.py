@@ -187,8 +187,8 @@ verbosity = None
 
 class ReplxxTests( unittest.TestCase ):
 	_prompt_ = "\033\\[1;32mreplxx\033\\[0m> "
-	_cxxSample_ = "./build/example-cxx-api"
-	_cSample_ = "./build/example-c-api"
+	_cxxSample_ = "./build/debug/example-cxx-api"
+	_cSample_ = "./build/debug/example-c-api"
 	_end_ = "\r\nExiting Replxx\r\n"
 	def check_scenario(
 		self_, seq_, expected_,
@@ -1474,6 +1474,14 @@ class ReplxxTests( unittest.TestCase ):
 			"thanks for the input: (+ 1 4)\r\n",
 			"(+ 1 2)\r\n",
 			command = [ ReplxxTests._cSample_, "N", "S" ]
+		)
+	def test_state_manipulation( self_ ):
+		self_.check_scenario(
+			"<up><f2>~<cr><c-d>",
+			"<c9><ceos>replxx<rst><c15><c9><ceos>REPLXX<rst><c12><c9><ceos>REP~LXX<rst><c13><c9><ceos>REP~LXX<rst><c16>\r\n"
+			"REP~LXX\r\n",
+			"replxx\n",
+			command = [ ReplxxTests._cSample_, "q1" ]
 		)
 
 def parseArgs( self, func, argv ):

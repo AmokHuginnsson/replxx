@@ -287,6 +287,23 @@ public:
 	 */
 	typedef std::function<ACTION_RESULT ( char32_t code )> key_press_handler_t;
 
+	struct State {
+		char const* _text;
+		int _cursorPosition;
+		State( char const* text_, int cursorPosition_ = -1 )
+			: _text( text_ )
+			, _cursorPosition( cursorPosition_ ) {
+		}
+		State( State const& ) = default;
+		State& operator = ( State const& ) = default;
+		char const* text( void ) const {
+			return ( _text );
+		}
+		int cursor_position( void ) const {
+			return ( _cursorPosition );
+		}
+	};
+
 	class ReplxxImpl;
 private:
 	typedef std::unique_ptr<ReplxxImpl, void (*)( ReplxxImpl* )> impl_t;
@@ -328,6 +345,22 @@ public:
 	 * \return An UTF-8 encoded input given by the user (or nullptr on EOF).
 	 */
 	char const* input( std::string const& prompt );
+
+	/*! \brief Get current state data.
+	 *
+	 * This call is intended to be used in handlers.
+	 *
+	 * \return Current state of the model.
+	 */
+	State get_state( void ) const;
+
+	/*! \brief Set new state data.
+	 *
+	 * This call is intended to be used in handlers.
+	 *
+	 * \param state - new state of the model.
+	 */
+	void set_state( State const& state );
 
 	/*! \brief Print formatted string to standard output.
 	 *

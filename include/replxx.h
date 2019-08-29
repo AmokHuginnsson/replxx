@@ -190,6 +190,11 @@ typedef enum {
 	REPLXX_ACTION_RESULT_BAIL      /*!< Stop processing user input, returns nullptr from the \e input() call. */
 } ReplxxActionResult;
 
+typedef struct ReplxxStateTag {
+	char const* text;
+	int cursorPosition;
+} ReplxxState;
+
 typedef struct Replxx Replxx;
 
 /*! \brief Create Replxx library resouce holder.
@@ -326,6 +331,22 @@ REPLXX_IMPEXP void replxx_add_hint( replxx_hints* hints, const char* str );
  * \return An UTF-8 encoded input given by the user (or nullptr on EOF).
  */
 REPLXX_IMPEXP char const* replxx_input( Replxx*, const char* prompt );
+
+/*! \brief Get current state data.
+ *
+ * This call is intended to be used in handlers.
+ *
+ * \param state - buffer for current state of the model.
+ */
+REPLXX_IMPEXP void replxx_get_state( Replxx*, ReplxxState* state );
+
+/*! \brief Set new state data.
+ *
+ * This call is intended to be used in handlers.
+ *
+ * \param state - new state of the model.
+ */
+REPLXX_IMPEXP void replxx_set_state( Replxx*, ReplxxState* state );
 
 /*! \brief Print formatted string to standard output.
  *
