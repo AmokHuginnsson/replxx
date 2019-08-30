@@ -5,7 +5,12 @@ cmake_minimum_required(VERSION 3.0)
 project( replxx VERSION 0.0.2 LANGUAGES CXX C )
 
 option(REPLXX_BuildExamples "Build the examples." ON)
-option(BUILD_SHARED_LIBS "Build as a shared library" OFF)
+option(BUILD_SHARED_LIBS "Build as a shared library" ON)
+option(BUILD_STATIC_LIBS "Build as a static library" ON)
+
+if (REPLXX_BuildExamples AND NOT BUILD_STATIC_LIBS)
+	set( BUILD_STATIC_LIBS ON )
+endif()
 
 set( CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/build" )
 
@@ -77,30 +82,49 @@ set(
 	src/wcwidth.cpp
 	src/windows.cxx
 )
-add_library(replxx SHARED ${REPLXX_SOURCES})
-add_library(replxx-static ${REPLXX_SOURCES})
-
-include(GenerateExportHeader)
-generate_export_header(replxx)
-
-add_library(Replxx::Replxx ALIAS replxx)
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+include(GenerateExportHeader)
 
-target_include_directories(
-	replxx
-	PUBLIC ${PROJECT_SOURCE_DIR}/include
-	PRIVATE ${PROJECT_SOURCE_DIR}/src
-)
+if ( BUILD_STATIC_LIBS )
+	add_library(replxx-static STATIC ${REPLXX_SOURCES})
 
-target_include_directories(
-	replxx-static
-	PUBLIC ${PROJECT_SOURCE_DIR}/include
-	PRIVATE ${PROJECT_SOURCE_DIR}/src
-)
+	target_include_directories(
+		replxx-static
+		PUBLIC ${PROJECT_SOURCE_DIR}/include
+		PRIVATE ${PROJECT_SOURCE_DIR}/src
+	)
+	generate_export_header(replxx-static)
+	if ( MSVC )
+		set_target_properties( replxx-static PROPERTIES RELEASE_OUTPUT_NAME replxx-static DEBUG_OUTPUT_NAME replxx-static-d )
+		target_compile_definitions(replxx-static PRIVATE REPLXX_STATIC)
+	else ()
+		set_target_properties( replxx-static PROPERTIES RELEASE_OUTPUT_NAME replxx DEBUG_OUTPUT_NAME replxx-d )
+	endif ()
+	set( TARGETS replxx-static )
+endif()
+
+if ( BUILD_SHARED_LIBS )
+	add_library(replxx SHARED ${REPLXX_SOURCES})
+	add_library(Replxx::Replxx ALIAS replxx)
+
+	target_include_directories(
+		replxx
+		PUBLIC ${PROJECT_SOURCE_DIR}/include
+		PRIVATE ${PROJECT_SOURCE_DIR}/src
+	)
+	generate_export_header(replxx)
+	set_target_properties( replxx PROPERTIES RELEASE_OUTPUT_NAME replxx DEBUG_OUTPUT_NAME replxx-d )
+	set( TARGETS ${TARGETS} replxx )
+	target_compile_definitions(replxx PRIVATE REPLXX_BUILDING_DLL)
+endif()
 
 # install
-install(TARGETS replxx replxx-static DESTINATION lib)
+if ( MSVC )
+				install( TARGETS ${TARGETS} RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib )
+else()
+	install( TARGETS ${TARGETS} DESTINATION lib )
+endif()
 
 # headers
 install(FILES include/replxx.hxx include/replxx.h DESTINATION include)
@@ -128,6 +152,11 @@ if (REPLXX_BuildExamples)
 		set( CXX_LIB stdc++ )
 	endif()
 
+	if (MSVC)
+		target_compile_definitions(example-cxx-api PRIVATE REPLXX_STATIC)
+		target_compile_definitions(example-c-api PRIVATE REPLXX_STATIC)
+	endif()
+
 	target_link_libraries(
 		example-c-api
 		PRIVATE replxx-static ${CXX_LIB}
@@ -137,17 +166,7 @@ endif()
 # packaging
 include(CPack)
 
-set_target_properties( replxx PROPERTIES RELEASE_OUTPUT_NAME replxx DEBUG_OUTPUT_NAME replxx-d )
-if (MSVC)
-	set_target_properties( replxx-static PROPERTIES RELEASE_OUTPUT_NAME replxx-static DEBUG_OUTPUT_NAME replxx-static-d )
-	target_compile_definitions(replxx PRIVATE REPLXX_BUILDING_DLL)
-	target_compile_definitions(replxx-static PRIVATE REPLXX_STATIC)
-	target_compile_definitions(example-cxx-api PRIVATE REPLXX_STATIC)
-	target_compile_definitions(example-c-api PRIVATE REPLXX_STATIC)
-else ()
-	set_target_properties( replxx-static PROPERTIES RELEASE_OUTPUT_NAME replxx DEBUG_OUTPUT_NAME replxx-d )
-	set(CPACK_SET_DESTDIR ON)
-endif ()
+set(CPACK_SET_DESTDIR ON)
 
 set(CPACK_PACKAGE_VENDOR  "codestation.org")
 set(CPACK_PACKAGE_CONTACT "amok@codestation.org")
