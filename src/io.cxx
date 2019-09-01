@@ -66,8 +66,8 @@ bool out( is_a_tty( 1 ) );
 
 Terminal::Terminal( void )
 #ifdef _WIN32
-	: _consoleOut()
-	, _consoleIn()
+	: _consoleOut( INVALID_HANDLE_VALUE )
+	, _consoleIn( INVALID_HANDLE_VALUE )
 	, _oldMode()
 	, _oldDisplayAttribute()
 	, _inputCodePage( GetConsoleCP() )
@@ -219,8 +219,8 @@ void Terminal::disable_raw_mode(void) {
 		SetConsoleMode( _consoleIn, _oldMode );
 		SetConsoleCP( _inputCodePage );
 		SetConsoleOutputCP( _outputCodePage );
-		_consoleIn = 0;
-		_consoleOut = 0;
+		_consoleIn = INVALID_HANDLE_VALUE;
+		_consoleOut = INVALID_HANDLE_VALUE;
 #else
 		if ( tcsetattr( 0, TCSADRAIN, &_origTermios ) == -1 ) {
 			return;
@@ -605,7 +605,7 @@ void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 	COORD coord = { 0, 0 };
 	CONSOLE_SCREEN_BUFFER_INFO inf;
 	bool toEnd( clearScreen_ == CLEAR_SCREEN::TO_END );
-	HANDLE consoleOut( _consoleOut ? _consoleOut : GetStdHandle( STD_OUTPUT_HANDLE ) );
+	HANDLE consoleOut( _consoleOut != INVALID_HANDLE_VALUE ? _consoleOut : GetStdHandle( STD_OUTPUT_HANDLE ) );
 	GetConsoleScreenBufferInfo( consoleOut, &inf );
 	if ( ! toEnd ) {
 		SetConsoleCursorPosition( consoleOut, coord );
