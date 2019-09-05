@@ -454,6 +454,12 @@ public:
 	 */
 	void set_immediate_completion( bool val );
 
+	/*! \brief Set history duplicate entries behaviour.
+	 *
+	 * \param val - should history contain only unique entries?
+	 */
+	void set_unique_history( bool val );
+
 	/*! \brief Disable output coloring.
 	 *
 	 * \param val - if set to non-zero disable output colors.

@@ -154,6 +154,7 @@ public:
 	void set_complete_on_empty( bool val );
 	void set_beep_on_ambiguous_completion( bool val );
 	void set_immediate_completion( bool val );
+	void set_unique_history( bool );
 	void set_no_color( bool val );
 	void set_max_history_size( int len );
 	void set_completion_count_cutoff( int len );

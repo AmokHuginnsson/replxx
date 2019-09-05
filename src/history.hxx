@@ -18,12 +18,16 @@ private:
 	int _index;
 	int _previousIndex;
 	bool _recallMostRecent;
+	bool _unique;
 public:
 	History( void );
 	void add( UnicodeString const& line );
 	int save( std::string const& filename );
 	int load( std::string const& filename );
 	void set_max_size( int len );
+	void set_unique( bool unique_ ) {
+		_unique = unique_;
+	}
 	void reset_pos( int = -1 );
 	UnicodeString const& operator[] ( int ) const;
 	void set_recall_most_recent( void ) {

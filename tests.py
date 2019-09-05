@@ -765,6 +765,39 @@ class ReplxxTests( unittest.TestCase ):
 			"five\n",
 			command = ReplxxTests._cSample_ + " q1 s3"
 		)
+	def test_history_unique( self_ ):
+		self_.check_scenario(
+			"a<cr>b<cr>a<cr>b<cr><up><up><up><cr><c-d>",
+			"<c9><ceos>a<rst><c10><c9><ceos>a<rst><c10>\r\n"
+			"a\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos>b<rst><c10><c9><ceos>b<rst><c10>\r\n"
+			"b\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos>a<rst><c10><c9><ceos>a<rst><c10>\r\n"
+			"a\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos>b<rst><c10><c9><ceos>b<rst><c10>\r\n"
+			"b\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos>b<rst><c10><c9><ceos>a<rst><c10><c9><ceos>c<rst><c10><c9><ceos>c<rst><c10>\r\n"
+			"c\r\n",
+			"a\nb\nc\n",
+			command = ReplxxTests._cSample_ + " u1 q1"
+		)
+		self_.check_scenario(
+			"a<cr>b<cr>a<cr>b<cr><up><up><up><cr><c-d>",
+			"<c9><ceos>a<rst><c10><c9><ceos>a<rst><c10>\r\n"
+			"a\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos>b<rst><c10><c9><ceos>b<rst><c10>\r\n"
+			"b\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos>a<rst><c10><c9><ceos>a<rst><c10>\r\n"
+			"a\r\n"
+			"<brightgreen>replxx<rst>> <c9><ceos>b<rst><c10><c9><ceos>b<rst><c10>\r\n"
+			"b\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><ceos>b<rst><c10><c9><ceos>a<rst><c10><c9><ceos>b<rst><c10><c9><ceos>b<rst><c10>\r\n"
+			"b\r\n",
+			"a\nb\nc\n",
+			command = ReplxxTests._cSample_ + " u0 q1"
+		)
 	def test_capitalize( self_ ):
 		self_.check_scenario(
 			"<up><home><right><m-c><m-c><right><right><m-c><m-c><m-c><cr><c-d>",

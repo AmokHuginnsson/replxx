@@ -1923,6 +1923,10 @@ void Replxx::ReplxxImpl::set_immediate_completion( bool val ) {
 	_immediateCompletion = val;
 }
 
+void Replxx::ReplxxImpl::set_unique_history( bool val ) {
+	_history.set_unique( val );
+}
+
 void Replxx::ReplxxImpl::set_no_color( bool val ) {
 	_noColor = val;
 }

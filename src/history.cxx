@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fstream>
 #include <cstring>
 
@@ -23,11 +24,15 @@ History::History( void )
 	, _maxLineLength( 0 )
 	, _index( 0 )
 	, _previousIndex( -2 )
-	, _recallMostRecent( false ) {
+	, _recallMostRecent( false )
+	, _unique( true ) {
 }
 
 void History::add( UnicodeString const& line ) {
 	if ( ( _maxSize > 0 ) && ( _data.empty() || ( line != _data.back() ) ) ) {
+		if ( _unique ) {
+			_data.erase( std::remove( _data.begin(), _data.end(), line ), _data.end() );
+		}
 		if ( size() > _maxSize ) {
 			_data.erase( _data.begin() );
 			if ( -- _previousIndex < -1 ) {
