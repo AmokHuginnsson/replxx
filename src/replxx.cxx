@@ -188,6 +188,10 @@ void Replxx::set_beep_on_ambiguous_completion( bool val ) {
 	_impl->set_beep_on_ambiguous_completion( val );
 }
 
+void Replxx::set_immediate_completion( bool val ) {
+	_impl->set_immediate_completion( val );
+}
+
 void Replxx::set_no_color( bool val ) {
 	_impl->set_no_color( val );
 }
@@ -447,6 +451,11 @@ void replxx_set_no_color( ::Replxx* replxx_, int val ) {
 void replxx_set_beep_on_ambiguous_completion( ::Replxx* replxx_, int val ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->set_beep_on_ambiguous_completion( val ? true : false );
+}
+
+void replxx_set_immediate_completion( ::Replxx* replxx_, int val ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->set_immediate_completion( val ? true : false );
 }
 
 /* Fetch a line of the history by (zero-based) index.	If the requested

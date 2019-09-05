@@ -1432,7 +1432,7 @@ class ReplxxTests( unittest.TestCase ):
 		)
 	def test_complete_next( self_ ):
 		self_.check_scenario(
-			"<up><c-n><c-n><c-n><c-p><c-p><c-p><cr><c-d>",
+			"<up><c-n><c-n><c-p><c-p><c-p><cr><c-d>",
 			"<c9><ceos>color_<rst>\r\n"
 			"        <gray>color_black<rst>\r\n"
 			"        <gray>color_red<rst>\r\n"
@@ -1463,6 +1463,39 @@ class ReplxxTests( unittest.TestCase ):
 			"<gray>color_green<rst><u3><c15><c9><ceos><lightgray>color_normal<rst><c21><c9><ceos><lightgray>color_normal<rst><c21>\r\n"
 			"color_normal\r\n",
 			"color_\n"
+		)
+		self_.check_scenario(
+			"l<c-n><c-n><c-p><c-p><cr><c-d>",
+			"<c9><ceos>l<rst>\r\n"
+			"        <gray>lc_ctype<rst>\r\n"
+			"        <gray>lc_time<rst>\r\n"
+			"        <gray>lc_messages<rst><u3><c10><c9><ceos>lc_<rst>\r\n"
+			"        <gray>lc_ctype<rst>\r\n"
+			"        <gray>lc_time<rst>\r\n"
+			"        "
+			"<gray>lc_messages<rst><u3><c12><c9><ceos>lc_ctype<rst><c17><c9><ceos>lc_time<rst><c16><c9><ceos>lc_ctype<rst><c17><c9><ceos>lc_<rst>\r\n"
+			"        <gray>lc_ctype<rst>\r\n"
+			"        <gray>lc_time<rst>\r\n"
+			"        <gray>lc_messages<rst><u3><c12><c9><ceos>lc_<rst><c12>\r\n"
+			"lc_\r\n",
+			command = [ ReplxxTests._cSample_, "xlc_ctype,lc_time,lc_messages,zoom", "I1", "q1" ]
+		)
+		self_.check_scenario(
+			"l<c-n><c-n><c-p><c-p><cr><c-d>",
+			"<c9><ceos>l<rst>\r\n"
+			"        <gray>lc_ctype<rst>\r\n"
+			"        <gray>lc_time<rst>\r\n"
+			"        <gray>lc_messages<rst><u3><c10><c9><ceos>lc_<rst>\r\n"
+			"        <gray>lc_ctype<rst>\r\n"
+			"        <gray>lc_time<rst>\r\n"
+			"        "
+			"<gray>lc_messages<rst><u3><c12><c9><ceos>lc_ctype<rst><c17><c9><ceos>lc_<rst>\r\n"
+			"        <gray>lc_ctype<rst>\r\n"
+			"        <gray>lc_time<rst>\r\n"
+			"        "
+			"<gray>lc_messages<rst><u3><c12><c9><ceos>lc_messages<rst><c20><c9><ceos>lc_messages<rst><c20>\r\n"
+			"lc_messages\r\n",
+			command = [ ReplxxTests._cSample_, "xlc_ctype,lc_time,lc_messages,zoom", "I0", "q1" ]
 		)
 	def test_disabled_handlers( self_ ):
 		self_.check_scenario(

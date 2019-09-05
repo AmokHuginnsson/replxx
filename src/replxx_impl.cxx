@@ -98,6 +98,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _doubleTabCompletion( false )
 	, _completeOnEmpty( true )
 	, _beepOnAmbiguousCompletion( false )
+	, _immediateCompletion( true )
 	, _noColor( false )
 	, _keyPressHandlers()
 	, _terminal()
@@ -1569,8 +1570,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete_line( char32_t c ) {
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete( bool previous_ ) {
 	if ( _completions.empty() ) {
 		bool first( _completions.empty() );
-		complete_line( first ? '\t' : 0 );
-		if ( first ) {
+		complete_line( _immediateCompletion || first ? '\t' : 0 );
+		if ( ! _immediateCompletion && first ) {
 			return ( Replxx::ACTION_RESULT::CONTINUE );
 		}
 	}
@@ -1916,6 +1917,10 @@ void Replxx::ReplxxImpl::set_complete_on_empty( bool val ) {
 
 void Replxx::ReplxxImpl::set_beep_on_ambiguous_completion( bool val ) {
 	_beepOnAmbiguousCompletion = val;
+}
+
+void Replxx::ReplxxImpl::set_immediate_completion( bool val ) {
+	_immediateCompletion = val;
 }
 
 void Replxx::ReplxxImpl::set_no_color( bool val ) {

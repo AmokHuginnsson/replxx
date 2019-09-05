@@ -133,6 +133,7 @@ int main( int argc, char** argv ) {
 			case 'H': replxx_set_hint_delay( replxx, atoi( (*argv) + 1 ) );                break;
 			case 's': replxx_set_max_history_size( replxx, atoi( (*argv) + 1 ) );          break;
 			case 'i': replxx_set_preload_buffer( replxx, recode( (*argv) + 1 ) );          break;
+			case 'I': replxx_set_immediate_completion( replxx, (*argv)[1] - '0' );         break;
 			case 'w': replxx_set_word_break_characters( replxx, (*argv) + 1 );             break;
 			case 'm': replxx_set_no_color( replxx, (*argv)[1] - '0' );                     break;
 			case 'p': prompt = recode( (*argv) + 1 );                                      break;

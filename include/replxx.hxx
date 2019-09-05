@@ -443,6 +443,17 @@ public:
 	 */
 	void set_beep_on_ambiguous_completion( bool val );
 
+	/*! \brief Set complete next/complete previous behavior.
+	 *
+	 * COMPLETE_NEXT/COMPLETE_PREVIOUS actions have two modes of operations,
+	 * in case when a partial completion is possible complete only partial part (`false` setting)
+	 * or complete first proposed completion fully (`true` setting).
+	 * The default is to complete fully (a `true` setting - complete immediately).
+	 *
+	 * \param val - complete immediately.
+	 */
+	void set_immediate_completion( bool val );
+
 	/*! \brief Disable output coloring.
 	 *
 	 * \param val - if set to non-zero disable output colors.
