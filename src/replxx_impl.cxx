@@ -299,6 +299,22 @@ void Replxx::ReplxxImpl::clear( void ) {
 	_displayInputLength = 0;
 }
 
+void Replxx::ReplxxImpl::call_modify_callback( void ) {
+	if ( ! _modifyCallback ) {
+		return;
+	}
+	_utf8Buffer.assign( _data );
+	std::string origLine( _utf8Buffer.get() );
+	int pos( _pos );
+	std::string line( origLine );
+	_modifyCallback( line, pos );
+	if ( ( pos != _pos ) || ( line != origLine ) ) {
+		_data.assign( line.c_str() );
+		_pos = min( pos, _data.length() );
+		_modifiedState = true;
+	}
+}
+
 Replxx::ReplxxImpl::completions_t Replxx::ReplxxImpl::call_completer( std::string const& input, int& contextLen_ ) const {
 	Replxx::completions_t completionsIntermediary(
 		!! _completionCallback
@@ -1087,6 +1103,7 @@ int Replxx::ReplxxImpl::get_input_line( void ) {
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::action( action_trait_t actionTrait_, key_press_handler_raw_t const& handler_, char32_t code_ ) {
 	Replxx::ACTION_RESULT res( ( this->*handler_ )( code_ ) );
+	call_modify_callback();
 	if ( actionTrait_ & RESET_KILL_ACTION ) {
 		_killRing.lastAction = KillRing::actionOther;
 	}
@@ -1123,9 +1140,11 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 		_data[_pos] = c;
 	}
 	++ _pos;
+	call_modify_callback();
 	int inputLen = calculate_displayed_length( _data.get(), _data.length() );
 	if (
 		( _pos == _data.length() )
+		&& ! _modifiedState
 		&& ( _noColor || ! ( !! _highlighterCallback || !! _hintCallback ) )
 		&& ( _prompt._indentation + inputLen < _prompt.screen_columns() )
 	) {
@@ -1873,6 +1892,10 @@ int Replxx::ReplxxImpl::history_size( void ) const {
 std::string Replxx::ReplxxImpl::history_line( int index ) {
 	_utf8Buffer.assign( _history[index] );
 	return ( _utf8Buffer.get() );
+}
+
+void Replxx::ReplxxImpl::set_modify_callback( Replxx::modify_callback_t const& fn ) {
+	_modifyCallback = fn;
 }
 
 void Replxx::ReplxxImpl::set_completion_callback( Replxx::completion_callback_t const& fn ) {

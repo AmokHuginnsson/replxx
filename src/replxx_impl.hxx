@@ -123,6 +123,7 @@ private:
 	Terminal _terminal;
 	std::thread::id _currentThread;
 	Prompt _prompt;
+	Replxx::modify_callback_t _modifyCallback;
 	Replxx::completion_callback_t _completionCallback;
 	Replxx::highlighter_callback_t _highlighterCallback;
 	Replxx::hint_callback_t _hintCallback;
@@ -137,6 +138,7 @@ private:
 	mutable std::mutex _mutex;
 public:
 	ReplxxImpl( FILE*, FILE*, FILE* );
+	void set_modify_callback( Replxx::modify_callback_t const& fn );
 	void set_completion_callback( Replxx::completion_callback_t const& fn );
 	void set_highlighter_callback( Replxx::highlighter_callback_t const& fn );
 	void set_hint_callback( Replxx::hint_callback_t const& fn );
@@ -159,8 +161,6 @@ public:
 	void set_max_history_size( int len );
 	void set_completion_count_cutoff( int len );
 	int install_window_change_handler( void );
-	completions_t call_completer( std::string const& input, int& ) const;
-	hints_t call_hinter( std::string const& input, int&, Replxx::Color& color ) const;
 	void print( char const*, int );
 	Replxx::ACTION_RESULT clear_screen( char32_t );
 	void emulate_key_press( char32_t );
@@ -221,6 +221,9 @@ private:
 	char32_t read_char( HINT_ACTION = HINT_ACTION::SKIP );
 	char const* read_from_stdin( void );
 	char32_t do_complete_line( bool );
+	void call_modify_callback( void );
+	completions_t call_completer( std::string const& input, int& ) const;
+	hints_t call_hinter( std::string const& input, int&, Replxx::Color& color ) const;
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
 	void render( char32_t );
 	void render( HINT_ACTION );

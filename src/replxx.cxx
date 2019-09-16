@@ -124,6 +124,10 @@ void Replxx::set_completion_callback( completion_callback_t const& fn ) {
 	_impl->set_completion_callback( fn );
 }
 
+void Replxx::set_modify_callback( modify_callback_t const& fn ) {
+	_impl->set_modify_callback( fn );
+}
+
 void Replxx::set_highlighter_callback( highlighter_callback_t const& fn ) {
 	_impl->set_highlighter_callback( fn );
 }
@@ -344,6 +348,19 @@ struct replxx_completions {
 struct replxx_hints {
 	replxx::Replxx::hints_t data;
 };
+
+void modify_fwd( replxx_modify_callback_t fn, std::string& line_, int& cursorPosition_, void* userData_ ) {
+	char* s( strdup( line_.c_str() ) );
+	fn( &s, &cursorPosition_, userData_ );
+	line_ = s;
+	free( s );
+	return;
+}
+
+void replxx_set_modify_callback(::Replxx* replxx_, replxx_modify_callback_t* fn, void* userData) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->set_modify_callback( std::bind( &modify_fwd, fn, _1, _2, userData ) );
+}
 
 replxx::Replxx::completions_t completions_fwd( replxx_completion_callback_t fn, std::string const& input_, int& contextLen_, void* userData ) {
 	replxx_completions completions;

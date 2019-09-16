@@ -224,6 +224,20 @@ public:
 	typedef std::vector<Completion> completions_t;
 	typedef std::vector<std::string> hints_t;
 
+	/*! \brief Line modification callback type definition.
+	 *
+	 * User can observe and modify line contents (and cursor position)
+	 * in response to changes to both introduced by the user through
+	 * normal interactions.
+	 *
+	 * When callback returns Replxx updates current line content
+	 * and current cursor position to the ones updated by the callback.
+	 *
+	 * \param line[in,out] - a R/W reference to an UTF-8 encoded input entered by the user so far.
+	 * \param cursorPosition[in,out] - a R/W reference to current cursor position.
+	 */
+	typedef std::function<void ( std::string& line, int& cursorPosition )> modify_callback_t;
+
 	/*! \brief Completions callback type definition.
 	 *
 	 * \e contextLen is counted in Unicode code points (not in bytes!).
@@ -320,6 +334,12 @@ public:
 	Replxx( void );
 	Replxx( Replxx&& ) = default;
 	Replxx& operator = ( Replxx&& ) = default;
+
+	/*! \brief Register modify callback.
+	 *
+	 * \param fn - user defined callback function.
+	 */
+	void set_modify_callback( modify_callback_t const& fn );
 
 	/*! \brief Register completion callback.
 	 *

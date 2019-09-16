@@ -10,6 +10,25 @@
 #include "replxx.h"
 #include "util.h"
 
+void modify_callback(char** line, int* cursorPosition, void* ud) {
+	char* s = *line;
+	char* p = strchr( s, '*' );
+	if ( p ) {
+		int len = strlen( s );
+		char* n = *line = calloc( len * 2, 1 );
+		int i = p - s;
+		strncpy(n, s, i);
+		n += i;
+		strncpy(n, s, i);
+		n += i;
+		strncpy(n, p + 1, len - i - 1);
+		n += ( len - i - 1 );
+		strncpy(n, p + 1, len - i - 1);
+		*cursorPosition *= 2;
+		free( s );
+	}
+}
+
 void completionHook(char const* context, replxx_completions* lc, int* contextLen, void* ud) {
 	char** examples = (char**)( ud );
 	size_t i;
@@ -112,6 +131,7 @@ int main( int argc, char** argv ) {
 
 	int quiet = 0;
 	char const* prompt = "\x1b[1;32mreplxx\x1b[0m> ";
+	int installModifyCallback = 0;
 	int installCompletionCallback = 1;
 	int installHighlighterCallback = 1;
 	int installHintsCallback = 1;
@@ -139,6 +159,7 @@ int main( int argc, char** argv ) {
 			case 'm': replxx_set_no_color( replxx, (*argv)[1] - '0' );                     break;
 			case 'p': prompt = recode( (*argv) + 1 );                                      break;
 			case 'q': quiet = atoi( (*argv) + 1 );                                         break;
+			case 'M': installModifyCallback = atoi( (*argv) + 1 );                         break;
 			case 'C': installCompletionCallback = 0;                                       break;
 			case 'S': installHighlighterCallback = 0;                                      break;
 			case 'N': installHintsCallback = 0;                                            break;
@@ -150,6 +171,9 @@ int main( int argc, char** argv ) {
 	const char* file = "./replxx_history.txt";
 
 	replxx_history_load( replxx, file );
+	if ( installModifyCallback ) {
+		replxx_set_modify_callback( replxx, modify_callback, 0 );
+	}
 	if ( installCompletionCallback ) {
 		replxx_set_completion_callback( replxx, completionHook, examples );
 	}

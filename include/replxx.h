@@ -211,6 +211,28 @@ REPLXX_IMPEXP Replxx* replxx_init( void );
  */
 REPLXX_IMPEXP void replxx_end( Replxx* replxx );
 
+/*! \brief Line modification callback type definition.
+ *
+ * User can observe and modify line contents (and cursor position)
+ * in response to changes to both introduced by the user through
+ * normal interactions.
+ *
+ * When callback returns Replxx updates current line content
+ * and current cursor position to the ones updated by the callback.
+ *
+ * \param line[in,out] - a R/W reference to an UTF-8 encoded input entered by the user so far.
+ * \param cursorPosition[in,out] - a R/W reference to current cursor position.
+ * \param userData - pointer to opaque user data block.
+ */
+typedef void (replxx_modify_callback_t)(char** input, int* contextLen, void* userData);
+
+/*! \brief Register modify callback.
+ *
+ * \param fn - user defined callback function.
+ * \param userData - pointer to opaque user data block to be passed into each invocation of the callback.
+ */
+REPLXX_IMPEXP void replxx_set_modify_callback( Replxx*, replxx_modify_callback_t* fn, void* userData );
+
 /*! \brief Highlighter callback type definition.
  *
  * If user want to have colorful input she must simply install highlighter callback.

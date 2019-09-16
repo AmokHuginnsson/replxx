@@ -1549,6 +1549,17 @@ class ReplxxTests( unittest.TestCase ):
 			"replxx\n",
 			command = [ ReplxxTests._cSample_, "q1" ]
 		)
+	def test_modify_callback( self_ ):
+		self_.check_scenario(
+			"<up><home><right><right>*<cr><c-d>",
+			"<c9><ceos>abcd<brightmagenta>12<rst><c15><c9><ceos>abcd<brightmagenta>12<rst><c9>"
+			"<c9><ceos>abcd<brightmagenta>12<rst><c10><c9><ceos>abcd<brightmagenta>12<rst><c11>"
+			"<c9><ceos>ababcd<brightmagenta>12<rst>cd<brightmagenta>12<rst><c15>"
+			"<c9><ceos>ababcd<brightmagenta>12<rst>cd<brightmagenta>12<rst><c21>\r\n"
+			"ababcd12cd12\r\n",
+			"abcd12\n",
+			command = [ ReplxxTests._cSample_, "q1", "M1" ]
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity
