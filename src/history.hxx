@@ -14,7 +14,6 @@ public:
 private:
 	lines_t _data;
 	int _maxSize;
-	int _maxLineLength;
 	int _index;
 	int _previousIndex;
 	bool _recallMostRecent;
@@ -22,8 +21,9 @@ private:
 public:
 	History( void );
 	void add( UnicodeString const& line );
-	int save( std::string const& filename );
-	int load( std::string const& filename );
+	void save( std::string const& filename );
+	void load( std::string const& filename );
+	void clear( void );
 	void set_max_size( int len );
 	void set_unique( bool unique_ ) {
 		_unique = unique_;
@@ -62,9 +62,6 @@ public:
 	bool common_prefix_search( UnicodeString const&, int, bool );
 	int size( void ) const {
 		return ( static_cast<int>( _data.size() ) );
-	}
-	int max_line_length( void ) {
-		return ( _maxLineLength );
 	}
 private:
 	History( History const& ) = delete;

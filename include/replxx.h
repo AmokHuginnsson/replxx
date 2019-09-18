@@ -476,8 +476,9 @@ REPLXX_IMPEXP void replxx_set_no_color( Replxx*, int val );
  */
 REPLXX_IMPEXP void replxx_set_max_history_size( Replxx*, int len );
 REPLXX_IMPEXP char const* replxx_history_line( Replxx*, int index );
-REPLXX_IMPEXP int replxx_history_save( Replxx*, const char* filename );
-REPLXX_IMPEXP int replxx_history_load( Replxx*, const char* filename );
+REPLXX_IMPEXP void replxx_history_save( Replxx*, const char* filename );
+REPLXX_IMPEXP void replxx_history_load( Replxx*, const char* filename );
+REPLXX_IMPEXP void replxx_history_clear( Replxx* );
 REPLXX_IMPEXP void replxx_clear_screen( Replxx* );
 #ifdef __REPLXX_DEBUG__
 void replxx_debug_dump_print_codes(void);

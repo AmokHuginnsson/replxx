@@ -416,8 +416,9 @@ public:
 	void bind_key( char32_t code, key_press_handler_t handler );
 
 	void history_add( std::string const& line );
-	int history_save( std::string const& filename );
-	int history_load( std::string const& filename );
+	void history_save( std::string const& filename );
+	void history_load( std::string const& filename );
+	void history_clear( void );
 	int history_size( void ) const;
 	std::string history_line( int index );
 

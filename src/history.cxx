@@ -5,6 +5,7 @@
 #ifndef _WIN32
 
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 
 #endif /* _WIN32 */
@@ -21,7 +22,6 @@ static int const REPLXX_DEFAULT_HISTORY_MAX_LEN( 1000 );
 History::History( void )
 	: _data()
 	, _maxSize( REPLXX_DEFAULT_HISTORY_MAX_LEN )
-	, _maxLineLength( 0 )
 	, _index( 0 )
 	, _previousIndex( -2 )
 	, _recallMostRecent( false )
@@ -39,20 +39,25 @@ void History::add( UnicodeString const& line ) {
 				_previousIndex = -2;
 			}
 		}
-		if ( static_cast<int>( line.length() ) > _maxLineLength ) {
-			_maxLineLength = static_cast<int>( line.length() );
-		}
 		_data.push_back( line );
 	}
 }
 
-int History::save( std::string const& filename ) {
+void History::save( std::string const& filename ) {
 #ifndef _WIN32
-	mode_t old_umask = umask( S_IXUSR | S_IRWXG| S_IRWXO );
+	mode_t old_umask = umask( S_IXUSR | S_IRWXG | S_IRWXO );
+	std::string lockName( filename + ".lock" );
+	int fdLock( ::open( lockName.c_str(), O_CREAT | O_RDWR, 0600 ) );
+	static_cast<void>( ::lockf( fdLock, F_LOCK, 0 ) == 0 );
 #endif
+	lines_t data( std::move( _data ) );
+	load( filename );
+	for ( UnicodeString const& h : data ) {
+		add( h );
+	}
 	ofstream histFile( filename );
 	if ( ! histFile ) {
-		return ( -1 );
+		return;
 	}
 #ifndef _WIN32
 	umask( old_umask );
@@ -65,13 +70,18 @@ int History::save( std::string const& filename ) {
 			histFile << utf8.get() << endl;
 		}
 	}
-	return ( 0 );
+#ifndef _WIN32
+	static_cast<void>( ::lockf( fdLock, F_ULOCK, 0 ) == 0 );
+	::close( fdLock );
+	::unlink( lockName.c_str() );
+#endif
+	return;
 }
 
-int History::load( std::string const& filename ) {
+void History::load( std::string const& filename ) {
 	ifstream histFile( filename );
 	if ( ! histFile ) {
-		return ( -1 );
+		return;
 	}
 	string line;
 	while ( getline( histFile, line ).good() ) {
@@ -83,7 +93,13 @@ int History::load( std::string const& filename ) {
 			add( UnicodeString( line ) );
 		}
 	}
-	return 0;
+	return;
+}
+
+void History::clear( void ) {
+	_data.clear();
+	_index = 0;
+	_previousIndex = -2;
 }
 
 void History::set_max_size( int size_ ) {
