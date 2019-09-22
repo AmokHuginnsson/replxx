@@ -1,4 +1,8 @@
+#ifndef __sun
 #define _POSIX_C_SOURCE 200809L
+#else
+#define __EXTENSIONS__ 1
+#endif
 
 #include <ctype.h>
 #include <string.h>

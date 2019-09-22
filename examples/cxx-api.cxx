@@ -1,6 +1,7 @@
 #include <regex>
 #include <string>
 #include <vector>
+#include <cerrno>
 #include <cctype>
 #include <cstdlib>
 #include <utility>
