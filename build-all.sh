@@ -20,13 +20,13 @@ while [ ${#} -gt 0 ] ; do
 	fi
 
 	if [ \( ${#} -gt 0 \) -a \( "x${1}" = "xstatic-only" \) ] ; then
-		staticOnly="-DBUILD_SHARED_LIBS=OFF"
+		skip="shared"
 		shift
 		continue
 	fi
 
 	if [ \( ${#} -gt 0 \) -a \( "x${1}" = "xshared-only" \) ] ; then
-		sharedOnly="-DBUILD_STATIC_LIBS=OFF -DREPLXX_BuildExamples=OFF"
+		skip="static"
 		shift
 		continue
 	fi
@@ -40,17 +40,25 @@ done
 
 build_target() {
 	target="${1}"
+	linkMode="${2}"
+	if [ "x${linkMode}" = "xshared" ] ; then
+		shared="-DBUILD_SHARED_LIBS=ON"
+		examples="-DREPLXX_BUILD_EXAMPLES=OFF"
+	else
+		shared="-DBUILD_SHARED_LIBS=OFF"
+		examples="-DREPLXX_BUILD_EXAMPLES=ON"
+	fi
 	mkdir -p "build/${target}"
 	cd "build/${target}"
 	if [ "x${msvcxx}" = "x1" ] ; then
 		CMAKE="/cygdrive/c/Program Files/CMake/bin/cmake.exe"
-		"${CMAKE}" ${sharedOnly} ${staticOnly} -G 'Visual Studio 14' ${installPrefix} ../../
-	  "${CMAKE}" --build . --config Debug
+		"${CMAKE}" ${STATIC} ${shared} ${examples} -G 'Visual Studio 14' ${installPrefix} ../../
+		"${CMAKE}" --build . --config Debug
 		"${CMAKE}" --build . --config Release
 		"${CMAKE}" --build . --config Debug --target Install
 		"${CMAKE}" --build . --config Release --target Install
 	else
-		cmake -DCMAKE_BUILD_TYPE=${target} ${sharedOnly} ${staticOnly} ${installPrefix} ../../
+		cmake -DCMAKE_BUILD_TYPE=${target} ${shared} ${examples} ${installPrefix} ../../
 		make
 		${sudo} make install
 	fi
@@ -58,6 +66,11 @@ build_target() {
 }
 
 for target in debug release ; do
-	build_target "${target}"
+	for linkMode in shared static ; do
+		if [ "x${linkMode}" = "x${skip}" ] ; then
+			continue
+		fi
+		build_target "${target}" "${linkMode}"
+	done
 done
 

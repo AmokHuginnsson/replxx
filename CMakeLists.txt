@@ -1,174 +1,204 @@
-# -*- mode: CMAKE; -*-
-
-cmake_minimum_required(VERSION 3.0)
-
-project( replxx VERSION 0.0.2 LANGUAGES CXX C )
-
-option(REPLXX_BuildExamples "Build the examples." ON)
-option(BUILD_SHARED_LIBS "Build as a shared library" ON)
-option(BUILD_STATIC_LIBS "Build as a static library" ON)
-
-if (REPLXX_BuildExamples AND NOT BUILD_STATIC_LIBS)
-	set( BUILD_STATIC_LIBS ON )
-endif()
-
-set( CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/build" )
-
-if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Release CACHE string "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE)
-endif()
-
-message(STATUS "Build mode: ${CMAKE_BUILD_TYPE}")
-
-# INFO
-set(REPLXX_DISPLAY_NAME "replxx")
-set(REPLXX_URL_INFO_ABOUT "https://github.com/AmokHuginnsson/replxx")
-set(REPLXX_CONTACT "amok@codestation.org")
-set(REPLXX_FRIENDLY_STRING "replxx - Read Evaluate Print Loop library")
-
-# compiler options
-if(CMAKE_COMPILER_IS_GNUCXX)
-	message(STATUS "Compiler type GNU: ${CMAKE_CXX_COMPILER}")
-	set(BASE_COMPILER_OPTIONS "-std=c++11 -Wall -Wextra -D_GNU_SOURCE -pthread")
-	set(CMAKE_CXX_FLAGS                "${CMAKE_CXX_FLAGS} ${BASE_COMPILER_OPTIONS}")
-	set(CMAKE_CXX_FLAGS_COVERAGE       "${CMAKE_CXX_FLAGS} ${BASE_COMPILER_OPTIONS} -O0 --coverage -fno-inline -fno-default-inline -fno-inline-small-functions")
-	set(CMAKE_CXX_FLAGS_DEBUG          "${CMAKE_CXX_FLAGS_DEBUG} ${BASE_COMPILER_OPTIONS} -O0 -g -ggdb -g3 -ggdb3")
-	set(CMAKE_CXX_FLAGS_MINSIZEREL     "${CMAKE_CXX_FLAGS_MINSIZEREL} ${BASE_COMPILER_OPTIONS} -Os")
-	set(CMAKE_CXX_FLAGS_RELEASE        "${CMAKE_CXX_FLAGS_RELEASE} ${BASE_COMPILER_OPTIONS} -O3 -fomit-frame-pointer")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${BASE_COMPILER_OPTIONS} -O3 -g")
-	set(CMAKE_C_FLAGS "-std=c99")
-elseif(CMAKE_COMPILER_IS_CLANGCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	# using regular Clang or AppleClang
-	message(STATUS "Compiler type CLANG: ${CMAKE_CXX_COMPILER}")
-	set(BASE_COMPILER_OPTIONS "-std=c++11 -Wall -Wextra -D_GNU_SOURCE -pthread")
-	set(CMAKE_CXX_FLAGS                "${CMAKE_CXX_FLAGS} ${BASE_COMPILER_OPTIONS}")
-	set(CMAKE_CXX_FLAGS_DEBUG          "${CMAKE_CXX_FLAGS_DEBUG} ${BASE_COMPILER_OPTIONS} -O0 -g")
-	set(CMAKE_CXX_FLAGS_MINSIZEREL     "${CMAKE_CXX_FLAGS_MINSIZEREL} ${BASE_COMPILER_OPTIONS} -Os")
-	set(CMAKE_CXX_FLAGS_RELEASE        "${CMAKE_CXX_FLAGS_RELEASE} ${BASE_COMPILER_OPTIONS} -O3 -fomit-frame-pointer")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${BASE_COMPILER_OPTIONS} -O3 -g")
-	set(CMAKE_C_FLAGS "-std=c99")
-elseif(MSVC)
-	message(STATUS "Compiler type MSVC: ${CMAKE_CXX_COMPILER}")
-	add_definitions("-D_CRT_SECURE_NO_WARNINGS=1")
-
-	set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /INCREMENTAL:NO /SUBSYSTEM:CONSOLE /LTCG /ignore:4099")
-	set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "${CMAKE_EXE_LINKER_FLAGS_MINSIZEREL} /SUBSYSTEM:CONSOLE /ignore:4099")
-	set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /SUBSYSTEM:CONSOLE /ignore:4099")
-	set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} /SUBSYSTEM:CONSOLE /ignore:4099")
-else()
-	# unknown compiler
-	message(STATUS "Compiler type UNKNOWN: ${CMAKE_CXX_COMPILER}")
-	set(BASE_COMPILER_OPTIONS "-std=c++11 -Wall -Wextra -pthread")
-	set(CMAKE_CXX_FLAGS                "${CMAKE_CXX_FLAGS} ${BASE_COMPILER_OPTIONS}")
-	set(CMAKE_CXX_FLAGS_DEBUG          "${CMAKE_CXX_FLAGS_DEBUG} ${BASE_COMPILER_OPTIONS} -O0 -g")
-	set(CMAKE_CXX_FLAGS_MINSIZEREL     "${CMAKE_CXX_FLAGS_MINSIZEREL} ${BASE_COMPILER_OPTIONS} -Os")
-	set(CMAKE_CXX_FLAGS_RELEASE        "${CMAKE_CXX_FLAGS_RELEASE} ${BASE_COMPILER_OPTIONS} -O3 -fomit-frame-pointer")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${BASE_COMPILER_OPTIONS} -O3 -g")
-	set(CMAKE_C_FLAGS "-std=c99")
-endif()
-
-# build libreplxx
-set(
-	REPLXX_SOURCES
-	src/conversion.cxx
-	src/ConvertUTF.cpp
-	src/escape.cxx
-	src/history.cxx
-	src/replxx_impl.cxx
-	src/io.cxx
-	src/prompt.cxx
-	src/replxx.cxx
-	src/util.cxx
-	src/wcwidth.cpp
-	src/windows.cxx
+cmake_minimum_required(VERSION 3.5)
+project(
+	replxx
+	# HOMEPAGE_URL "https://github.com/AmokHuginnsson/replxx"
+	# DESCRIPTION "replxx - Read Evaluate Print Loop library"
+	VERSION 0.0.2
+	LANGUAGES CXX C
 )
 
+if (NOT DEFINED CMAKE_CXX_STANDARD)
+	set(CMAKE_CXX_STANDARD 11)
+endif()
+
+if (NOT DEFINED CMAKE_C_STANDARD)
+	set(CMAKE_C_STANDARD 99)
+endif()
+
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON)
+
+include(CMakePackageConfigHelpers)
+include(CMakeDependentOption)
 include(GenerateExportHeader)
+include(GNUInstallDirs)
 
-if ( BUILD_STATIC_LIBS )
-	add_library(replxx-static STATIC ${REPLXX_SOURCES})
+find_package(Threads)
 
-	target_include_directories(
-		replxx-static
-		PUBLIC ${PROJECT_SOURCE_DIR}/include
-		PRIVATE ${PROJECT_SOURCE_DIR}/src
-	)
-	generate_export_header(replxx-static)
-	if ( MSVC )
-		set_target_properties( replxx-static PROPERTIES RELEASE_OUTPUT_NAME replxx-static DEBUG_OUTPUT_NAME replxx-static-d )
-		target_compile_definitions(replxx-static PRIVATE REPLXX_STATIC)
-	else ()
-		set_target_properties( replxx-static PROPERTIES RELEASE_OUTPUT_NAME replxx DEBUG_OUTPUT_NAME replxx-d )
-	endif ()
-	set( TARGETS replxx-static )
+cmake_dependent_option(
+	REPLXX_BUILD_EXAMPLES
+	"Build the examples" ON
+	"CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF
+)
+cmake_dependent_option(
+	REPLXX_BUILD_PACKAGE
+	"Generate package target" ON
+	"CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF
+)
+
+if (NOT CMAKE_BUILD_TYPE)
+	message(AUTHOR_WARNING "CMAKE_BUILD_TYPE not set. Defaulting to Release")
+	set(CMAKE_BUILD_TYPE Release)
 endif()
 
-if ( BUILD_SHARED_LIBS )
-	add_library(replxx SHARED ${REPLXX_SOURCES})
-	add_library(Replxx::Replxx ALIAS replxx)
+# INFO
+set(REPLXX_URL_INFO_ABOUT "https://github.com/AmokHuginnsson/replxx")
+set(REPLXX_DISPLAY_NAME "replxx")
+set(REPLXX_CONTACT "amok@codestation.org")
 
-	target_include_directories(
+set(is-clang $<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>)
+set(is-msvc $<CXX_COMPILER_ID:MSVC>)
+set(is-gnu $<CXX_COMPILER_ID:GNU>)
+set(compiler-id-clang-or-gnu $<OR:${is-clang},${is-gnu}>)
+
+set(coverage-config $<AND:$<CONFIG:Coverage>,$<OR:${is-gnu},${is-clang}>>)
+
+set(replxx-source-patterns "src/*.cpp" "src/*.cxx")
+
+if (CMAKE_VERSION VERSION_GREATER 3.11)
+	list(INSERT replxx-source-patterns 0 CONFIGURE_DEPENDS)
+endif()
+
+file(GLOB replxx-sources ${replxx-source-patterns})
+
+add_library(replxx ${replxx-sources})
+add_library(replxx::replxx ALIAS replxx)
+
+target_include_directories(
+	replxx
+	PUBLIC
+		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+		$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+	PRIVATE
+		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+)
+target_compile_definitions(
+	replxx
+	PRIVATE
+		$<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS=1>
+		$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:REPLXX_STATIC>
+		$<$<BOOL:${BUILD_SHARED_LIBS}>:REPLXX_BUILDING_DLL>
+)
+target_compile_options(
+	replxx
+	PRIVATE
+		$<$<AND:$<CONFIG:RelWithDebInfo>,${compiler-id-clang-or-gnu}>:-fomit-frame-pointer>
+		$<$<AND:$<CONFIG:MinSizeRel>,${compiler-id-clang-or-gnu}>:-Os>
+		$<$<AND:$<CONFIG:Debug>,$<CXX_COMPILER_ID:GNU>>:-g -ggdb -g3 -ggdb3>
+		$<${coverage-config}:-O0 --coverage>
+		$<${coverage-config}:-fno-inline -fno-default-inline>
+		$<${coverage-config}:-fno-inline-small-functions>
+		$<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra>
+		$<$<CXX_COMPILER_ID:GNU>:-Wno-unknown-pragmas>
+)
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+	target_link_options(
 		replxx
-		PUBLIC ${PROJECT_SOURCE_DIR}/include
-		PRIVATE ${PROJECT_SOURCE_DIR}/src
+		PRIVATE
+			$<${coverage-config}:--coverage>
+			$<${is-msvc}:/ignore:4099>
 	)
-	generate_export_header(replxx)
-	set_target_properties( replxx PROPERTIES RELEASE_OUTPUT_NAME replxx DEBUG_OUTPUT_NAME replxx-d )
-	set( TARGETS ${TARGETS} replxx )
-	target_compile_definitions(replxx PRIVATE REPLXX_BUILDING_DLL)
+else()
+# "safest" way prior to 3.13
+	target_link_libraries(
+		replxx
+		PRIVATE
+			$<${coverage-config}:--coverage>
+			$<${is-msvc}:/ignore:4099>
+	)
+endif()
+target_link_libraries(replxx PUBLIC Threads::Threads)
+
+set_property(TARGET replxx PROPERTY DEBUG_POSTFIX -d)
+if ( NOT BUILD_SHARED_LIBS AND MSVC )
+	set_property(TARGET replxx PROPERTY OUTPUT_NAME replxx-static)
 endif()
 
-# install
-if ( MSVC )
-				install( TARGETS ${TARGETS} RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib )
-else()
-	install( TARGETS ${TARGETS} DESTINATION lib )
-endif()
+generate_export_header(replxx)
+
+configure_package_config_file(
+	"${PROJECT_SOURCE_DIR}/replxx-config.cmake.in"
+	"${PROJECT_BINARY_DIR}/replxx-config.cmake"
+	INSTALL_DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/replxx
+	NO_CHECK_REQUIRED_COMPONENTS_MACRO
+	NO_SET_AND_CHECK_MACRO
+)
+
+write_basic_package_version_file(
+	"${PROJECT_BINARY_DIR}/replxx-config-version.cmake"
+	COMPATIBILITY AnyNewerVersion
+)
+
+install(
+	TARGETS replxx EXPORT replxx-targets
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(
+	EXPORT replxx-targets
+	NAMESPACE replxx::
+	DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/replxx
+)
+
+install(
+	FILES
+		"${PROJECT_BINARY_DIR}/replxx-config-version.cmake"
+		"${PROJECT_BINARY_DIR}/replxx-config.cmake"
+	DESTINATION
+		${CMAKE_INSTALL_DATADIR}/cmake/replxx
+)
 
 # headers
-install(FILES include/replxx.hxx include/replxx.h DESTINATION include)
+install(
+	FILES
+		include/replxx.hxx
+		include/replxx.h
+	DESTINATION
+		${CMAKE_INSTALL_INCLUDEDIR}
+)
 
-if (REPLXX_BuildExamples)
-	# build example
-	add_executable(
-		example-c-api
-		examples/c-api.c
-		examples/util.c
+if (REPLXX_BUILD_EXAMPLES)
+	add_executable(replxx-example-cxx-api "")
+	add_executable(replxx-example-c-api "")
+
+	target_sources(
+		replxx-example-cxx-api
+		PRIVATE
+			examples/cxx-api.cxx
+			examples/util.c
 	)
-
-	add_executable(
-		example-cxx-api
-		examples/cxx-api.cxx
-		examples/util.c
+	target_sources(
+		replxx-example-c-api
+		PRIVATE
+			examples/c-api.c
+			examples/util.c
 	)
-
+	target_compile_definitions(replxx-example-cxx-api PRIVATE REPLXX_STATIC)
+	target_compile_definitions(replxx-example-c-api PRIVATE REPLXX_STATIC)
+	target_link_libraries(replxx-example-cxx-api PRIVATE replxx::replxx)
 	target_link_libraries(
-		example-cxx-api
-		PRIVATE replxx-static
+		replxx-example-c-api
+		PRIVATE
+		replxx::replxx
+		$<$<CXX_COMPILER_ID:GNU>:stdc++>
 	)
 
-	if ( NOT MSVC )
-		set( CXX_LIB stdc++ )
-	endif()
-
-	if (MSVC)
-		target_compile_definitions(example-cxx-api PRIVATE REPLXX_STATIC)
-		target_compile_definitions(example-c-api PRIVATE REPLXX_STATIC)
-	endif()
-
-	target_link_libraries(
-		example-c-api
-		PRIVATE replxx-static ${CXX_LIB}
-	)
 endif()
 
-# packaging
+if (NOT REPLXX_BUILD_PACKAGE)
+	return()
+endif()
+
 include(CPack)
 
 set(CPACK_SET_DESTDIR ON)
 
-set(CPACK_PACKAGE_VENDOR  "codestation.org")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Readline and libedit replacement library")
+set(CPACK_PACKAGE_HOMEPAGE_URL "${REPLXX_URL_INFO_ABOUT}")
+set(CPACK_PACKAGE_VENDOR	"codestation.org")
 set(CPACK_PACKAGE_CONTACT "amok@codestation.org")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 
@@ -176,6 +206,5 @@ set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
 set(CPACK_STRIP_FILES "ON")
 
-set(CPACK_PACKAGE_NAME "replxx")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utilities")
 

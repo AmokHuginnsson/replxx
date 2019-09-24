@@ -199,8 +199,8 @@ def rapid( item ):
 
 class ReplxxTests( unittest.TestCase ):
 	_prompt_ = "\033\\[1;32mreplxx\033\\[0m> "
-	_cxxSample_ = "./build/debug/example-cxx-api"
-	_cSample_ = "./build/debug/example-c-api"
+	_cxxSample_ = "./build/debug/replxx-example-cxx-api"
+	_cSample_ = "./build/debug/replxx-example-c-api"
 	_end_ = "\r\nExiting Replxx\r\n"
 	def send_str( self_, str_, intraKeyDelay_ ):
 		if isinstance(str_, Rapid):
