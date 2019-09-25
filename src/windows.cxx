@@ -107,10 +107,6 @@ int win_write( char const* str_, int size_ ) {
 	DWORD currentMode( 0 );
 	HANDLE consoleOut( GetStdHandle( STD_OUTPUT_HANDLE ) );
 	if ( tty::out && GetConsoleMode( consoleOut, &currentMode ) ) {
-		UINT inputCodePage( GetConsoleCP() );
-		UINT outputCodePage( GetConsoleOutputCP() );
-		SetConsoleCP( 65001 );
-		SetConsoleOutputCP( 65001 );
 		DWORD nWritten( 0 );
 		if ( SetConsoleMode( consoleOut, currentMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING ) ) {
 			WriteConsoleA( consoleOut, str_, size_, &nWritten, nullptr );
@@ -144,8 +140,6 @@ int win_write( char const* str_, int size_ ) {
 				count += nWritten;
 			}
 		}
-		SetConsoleCP( inputCodePage );
-		SetConsoleOutputCP( outputCodePage );
 	} else {
 		count = _write( 1, str_, size_ );
 	}

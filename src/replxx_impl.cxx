@@ -728,10 +728,11 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 		_prompt._indentation, // 0-based on Win32
 		-( _prompt._cursorRowOffset - _prompt._extraLines )
 	);
-	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
 	_prompt._previousInputLen = _data.length();
 	// display the input line
-	_terminal.write32( _display.data(), _display.size() );
+	_terminal.write32( _display.data(), _displayInputLength );
+	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
+	_terminal.write32( _display.data() + _displayInputLength, _display.size() - _displayInputLength );
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap
 	if ( ( xEndOfInput == 0 ) && ( yEndOfInput > 0 ) ) {
