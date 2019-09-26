@@ -416,7 +416,7 @@ char32_t Terminal::read_char( void ) {
 				key += 0x10000;
 			}
 			if ( is_control_code( key ) ) {
-				key += 0x40;
+				key = control_to_human( key );
 				modifierKeys |= Replxx::KEY::BASE_CONTROL;
 			}
 			key |= modifierKeys;
@@ -473,7 +473,7 @@ char32_t Terminal::read_char( void ) {
 					friendlyTextPtr = const_cast<char*>("DEL");
 				} else {
 					friendlyTextBuf[0] = '^';
-					friendlyTextBuf[1] = keyCopy + 0x40;
+					friendlyTextBuf[1] = control_to_human( keyCopy );
 					friendlyTextBuf[2] = 0;
 					friendlyTextPtr = friendlyTextBuf;
 				}
@@ -493,7 +493,7 @@ char32_t Terminal::read_char( void ) {
 
 	c = EscapeSequenceProcessing::doDispatch(c);
 	if ( is_control_code( c ) ) {
-		c = Replxx::KEY::control( c + 0x40 );
+		c = Replxx::KEY::control( control_to_human( c ) );
 	}
 #endif // #_WIN32
 	return ( c );

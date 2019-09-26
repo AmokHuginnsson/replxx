@@ -504,7 +504,7 @@ void Replxx::ReplxxImpl::render( char32_t ch ) {
 		_display.push_back( '[' );
 	} else if ( is_control_code( ch ) ) {
 		_display.push_back( '^' );
-		_display.push_back( ch + 0x40 );
+		_display.push_back( control_to_human( ch ) );
 	} else {
 		_display.push_back( ch );
 	}
