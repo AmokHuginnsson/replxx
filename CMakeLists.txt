@@ -74,10 +74,18 @@ target_compile_options(replxx
     $<${coverage-config}:-fno-inline-small-functions>
     $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra>
     $<$<CXX_COMPILER_ID:GNU>:-Wno-unknown-pragmas>)
+if (CMAKE_VERSION VERSION_GREATER 3.12)
 target_link_options(replxx
   PRIVATE
     $<${coverage-config}:--coverage>
     $<${is-msvc}:/ignore:4099>)
+else()
+# "safest" way prior to 3.13
+target_link_libraries(replxx
+  PRIVATE
+    $<${coverage-config}:--coverage>
+    $<${is-msvc}:/ignore:4099>)
+endif()
 target_link_libraries(replxx PUBLIC Threads::Threads)
 
 set_property(TARGET replxx PROPERTY DEBUG_POSTFIX -d)
