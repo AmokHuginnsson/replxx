@@ -47,12 +47,17 @@ set(is-gnu $<CXX_COMPILER_ID:GNU>)
 
 set(coverage-config $<AND:$<CONFIG:Coverage>,$<OR:${is-gnu},${is-clang}>>)
 
-file(GLOB replxx-sources CONFIGURE_DEPENDS "src/*.cpp" "src/*.cxx")
+set(replxx-source-patterns "src/*.cpp" "src/*.cxx")
 
-add_library(replxx)
+if (CMAKE_VERSION VERSION_GREATER 3.11)
+  list(INSERT replxx-source-patterns 0 CONFIGURE_DEPENDS)
+endif()
+
+file(GLOB replxx-sources ${replxx-source-patterns})
+
+add_library(replxx ${replxx-sources})
 add_library(replxx::replxx ALIAS replxx)
 
-target_sources(replxx PRIVATE ${replxx-sources})
 target_include_directories(replxx
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
