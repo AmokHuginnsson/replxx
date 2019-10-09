@@ -105,7 +105,7 @@ configure_package_config_file(
 
 write_basic_package_version_file(
   "${PROJECT_BINARY_DIR}/replxx-config-version.cmake"
-  COMPATIBILITY SameMinorVersion)
+  COMPATIBILITY AnyNewerVersion)
 
 install(TARGETS replxx EXPORT replxx-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
