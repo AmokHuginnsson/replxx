@@ -132,8 +132,8 @@ install(
     ${CMAKE_INSTALL_INCLUDEDIR})
 
 if (REPLXX_BUILD_EXAMPLES)
-  add_executable(replxx-example-cxx-api)
-  add_executable(replxx-example-c-api)
+  add_executable(replxx-example-cxx-api "")
+  add_executable(replxx-example-c-api "")
 
   target_sources(replxx-example-cxx-api
     PRIVATE
