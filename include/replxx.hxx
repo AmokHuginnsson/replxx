@@ -420,7 +420,7 @@ public:
 	void history_load( std::string const& filename );
 	void history_clear( void );
 	int history_size( void ) const;
-	std::string history_line( int index );
+	std::string history_line( int index ) const;
 
 	void set_preload_buffer( std::string const& preloadText );
 

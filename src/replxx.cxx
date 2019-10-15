@@ -160,7 +160,7 @@ int Replxx::history_size( void ) const {
 	return ( _impl->history_size() );
 }
 
-std::string Replxx::history_line( int index ) {
+std::string Replxx::history_line( int index ) const {
 	return ( _impl->history_line( index ) );
 }
 
