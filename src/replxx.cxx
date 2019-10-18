@@ -160,7 +160,7 @@ int Replxx::history_size( void ) const {
 	return ( _impl->history_size() );
 }
 
-std::string Replxx::history_line( int index ) const {
+char const* Replxx::history_line( int index ) const {
 	return ( _impl->history_line( index ) );
 }
 
@@ -493,7 +493,7 @@ void replxx_set_unique_history( ::Replxx* replxx_, int val ) {
  * copy of the line. */
 char const* replxx_history_line( ::Replxx* replxx_, int index ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
-	return ( replxx->history_line( index ).c_str() );
+	return ( replxx->history_line( index ) );
 }
 
 /* Save the history in the specified file. On success 0 is returned

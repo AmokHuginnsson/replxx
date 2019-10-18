@@ -1894,7 +1894,7 @@ int Replxx::ReplxxImpl::history_size( void ) const {
 	return ( _history.size() );
 }
 
-std::string Replxx::ReplxxImpl::history_line( int index ) const {
+char const* Replxx::ReplxxImpl::history_line( int index ) const {
 	_utf8Buffer.assign( _history[index] );
 	return ( _utf8Buffer.get() );
 }
