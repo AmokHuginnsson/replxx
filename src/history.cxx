@@ -122,8 +122,8 @@ void History::reset_pos( int pos_ ) {
 }
 
 bool History::move( bool up_ ) {
-	if (_previousIndex != -2 && ! up_ ) {
-		_index = 1 + _previousIndex;	// emulate Windows down-arrow
+	if ( _previousIndex != -2 && ! up_ ) {
+		_index = _previousIndex; // emulate Windows down-arrow
 	} else {
 		_index += up_ ? -1 : 1;
 	}

@@ -15,6 +15,14 @@ private:
 	lines_t _data;
 	int _maxSize;
 	int _index;
+	/*
+	 * _previousIndex and _recallMostRecent are used to allow
+	 * HISTORY_NEXT action (a down-arrow key) to have a special meaning
+	 * if invoked after a line from history was accepted without
+	 * any modification.
+	 * Special meaning is: a down arrow shall jump to the line one
+	 * after previously accepted from history.
+	 */
 	int _previousIndex;
 	bool _recallMostRecent;
 	bool _unique;

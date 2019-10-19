@@ -798,6 +798,16 @@ class ReplxxTests( unittest.TestCase ):
 			"a\nb\nc\n",
 			command = ReplxxTests._cSample_ + " u0 q1"
 		)
+	def test_history_recall_most_recent( self_ ):
+		self_.check_scenario(
+			"<pgup><down><cr><down><cr><c-d>",
+			"<c9>aaaa<rst><ceos><c13><c9>bbbb<rst><ceos><c13><c9>bbbb<rst><ceos><c13>\r\n"
+			"bbbb\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9>cccc<rst><ceos><c13><c9>cccc<rst><ceos><c13>\r\n"
+			"cccc\r\n",
+			"aaaa\nbbbb\ncccc\ndddd\n"
+		)
 	def test_capitalize( self_ ):
 		self_.check_scenario(
 			"<up><home><right><m-c><m-c><right><right><m-c><m-c><m-c><cr><c-d>",
