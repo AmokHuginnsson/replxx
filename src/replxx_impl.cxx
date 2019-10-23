@@ -763,9 +763,9 @@ void Replxx::ReplxxImpl::repaint( void ) {
 	refresh_line( HINT_ACTION::SKIP );
 }
 
-void Replxx::ReplxxImpl::clear_self_to_end_of_screen( void ) {
+void Replxx::ReplxxImpl::clear_self_to_end_of_screen( Prompt const* prompt_ ) {
 	// position at the start of the prompt, clear to end of previous input
-	_terminal.jump_cursor( 0, -_prompt._cursorRowOffset );
+	_terminal.jump_cursor( 0, prompt_ ? -prompt_->_cursorRowOffset : -_prompt._cursorRowOffset );
 	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
 	return;
 }
@@ -1969,7 +1969,7 @@ void Replxx::ReplxxImpl::set_no_color( bool val ) {
  * @param pos   current cursor position within the buffer (0 <= pos <= len)
  */
 void Replxx::ReplxxImpl::dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos) {
-	clear_self_to_end_of_screen();
+	clear_self_to_end_of_screen( &pi );
 	// calculate the position of the end of the prompt
 	int xEndOfPrompt, yEndOfPrompt;
 	calculate_screen_position(

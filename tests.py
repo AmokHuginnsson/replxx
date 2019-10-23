@@ -707,6 +707,22 @@ class ReplxxTests( unittest.TestCase ):
 			"<c9><rst><ceos><c9><c9><rst><ceos><c9>\r\n",
 			"\n".join( _words_ ) + "\n"
 		)
+	def test_history_search_overlong_line( self_ ):
+		self_.check_scenario(
+			"<c-r>lo<cr><c-d>",
+			"<c1><ceos><c1><ceos>(reverse-i-search)`': "
+			"<c23><c1><ceos>(reverse-i-search)`l': some very long line of text, much "
+			"longer then a witdth of a terminal, "
+			"seriously<c37><u1><c1><ceos>(reverse-i-search)`lo': some very long line of "
+			"text, much longer then a witdth of a terminal, "
+			"seriously<u1><c59><c1><ceos><brightgreen>replxx<rst>> some very long line of "
+			"text, much longer then a witdth of a terminal, "
+			"seriously<u1><c43><c9><ceos><c24>\r\n"
+			"some very long line of text, much longer then a witdth of a terminal, "
+			"seriously\r\n",
+			"fake\nsome very long line of text, much longer then a witdth of a terminal, seriously\nanother fake",
+			dimensions = ( 24, 64 )
+		)
 	def test_history_prefix_search_backward( self_ ):
 		self_.check_scenario(
 			"repl<m-p><m-p><cr><c-d>",

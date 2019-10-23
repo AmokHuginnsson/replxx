@@ -236,7 +236,7 @@ private:
 	bool is_word_break_character( char32_t ) const;
 	void dynamicRefresh(Prompt& pi, char32_t* buf32, int len, int pos);
 	char const* finalize_input( char const* );
-	void clear_self_to_end_of_screen( void );
+	void clear_self_to_end_of_screen( Prompt const* = nullptr );
 	typedef struct {
 		int index;
 		bool error;
