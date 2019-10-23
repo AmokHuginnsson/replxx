@@ -183,16 +183,16 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32_t code ) {
 	switch ( action_ ) {
-		case ( Replxx::ACTION::INSERT_CHARACTER ):                return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::insert_character, code ) );
-		case ( Replxx::ACTION::DELETE_CHARACTER_UNDER_CURSOR ):   return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::delete_character, code ) );
-		case ( Replxx::ACTION::DELETE_CHARACTER_LEFT_OF_CURSOR ): return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::backspace_character, code ) );
-		case ( Replxx::ACTION::KILL_TO_END_OF_LINE ):             return ( action( WANT_REFRESH | SET_KILL_ACTION, &Replxx::ReplxxImpl::kill_to_end_of_line, code ) );
-		case ( Replxx::ACTION::KILL_TO_BEGINING_OF_LINE ):        return ( action( SET_KILL_ACTION, &Replxx::ReplxxImpl::kill_to_begining_of_line, code ) );
-		case ( Replxx::ACTION::KILL_TO_END_OF_WORD ):             return ( action( SET_KILL_ACTION, &Replxx::ReplxxImpl::kill_word_to_right, code ) );
-		case ( Replxx::ACTION::KILL_TO_BEGINING_OF_WORD ):        return ( action( SET_KILL_ACTION, &Replxx::ReplxxImpl::kill_word_to_left, code ) );
-		case ( Replxx::ACTION::KILL_TO_WHITESPACE_ON_LEFT ):      return ( action( SET_KILL_ACTION, &Replxx::ReplxxImpl::kill_to_whitespace_to_left, code ) );
-		case ( Replxx::ACTION::YANK ):                            return ( action( NOOP, &Replxx::ReplxxImpl::yank, code ) );
-		case ( Replxx::ACTION::YANK_CYCLE ):                      return ( action( NOOP, &Replxx::ReplxxImpl::yank_cycle, code ) );
+		case ( Replxx::ACTION::INSERT_CHARACTER ):                return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::insert_character, code ) );
+		case ( Replxx::ACTION::DELETE_CHARACTER_UNDER_CURSOR ):   return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::delete_character, code ) );
+		case ( Replxx::ACTION::DELETE_CHARACTER_LEFT_OF_CURSOR ): return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::backspace_character, code ) );
+		case ( Replxx::ACTION::KILL_TO_END_OF_LINE ):             return ( action( WANT_REFRESH | SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_to_end_of_line, code ) );
+		case ( Replxx::ACTION::KILL_TO_BEGINING_OF_LINE ):        return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_to_begining_of_line, code ) );
+		case ( Replxx::ACTION::KILL_TO_END_OF_WORD ):             return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_word_to_right, code ) );
+		case ( Replxx::ACTION::KILL_TO_BEGINING_OF_WORD ):        return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_word_to_left, code ) );
+		case ( Replxx::ACTION::KILL_TO_WHITESPACE_ON_LEFT ):      return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_to_whitespace_to_left, code ) );
+		case ( Replxx::ACTION::YANK ):                            return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::yank, code ) );
+		case ( Replxx::ACTION::YANK_CYCLE ):                      return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::yank_cycle, code ) );
 		case ( Replxx::ACTION::MOVE_CURSOR_TO_BEGINING_OF_LINE ): return ( action( WANT_REFRESH, &Replxx::ReplxxImpl::go_to_begining_of_line, code ) );
 		case ( Replxx::ACTION::MOVE_CURSOR_TO_END_OF_LINE ):      return ( action( WANT_REFRESH, &Replxx::ReplxxImpl::go_to_end_of_line, code ) );
 		case ( Replxx::ACTION::MOVE_CURSOR_ONE_WORD_LEFT ):       return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_word_left, code ) );
@@ -207,10 +207,10 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32
 		case ( Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH ):    return ( action( RESET_KILL_ACTION | DONT_RESET_PREFIX, &Replxx::ReplxxImpl::common_prefix_search, code ) );
 		case ( Replxx::ACTION::HINT_NEXT ):                       return ( action( NOOP, &Replxx::ReplxxImpl::hint_next, code ) );
 		case ( Replxx::ACTION::HINT_PREVIOUS ):                   return ( action( NOOP, &Replxx::ReplxxImpl::hint_previous, code ) );
-		case ( Replxx::ACTION::CAPITALIZE_WORD ):                 return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::capitalize_word, code ) );
-		case ( Replxx::ACTION::LOWERCASE_WORD ):                  return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::lowercase_word, code ) );
-		case ( Replxx::ACTION::UPPERCASE_WORD ):                  return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::uppercase_word, code ) );
-		case ( Replxx::ACTION::TRANSPOSE_CHARACTERS ):            return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::transpose_characters, code ) );
+		case ( Replxx::ACTION::CAPITALIZE_WORD ):                 return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::capitalize_word, code ) );
+		case ( Replxx::ACTION::LOWERCASE_WORD ):                  return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::lowercase_word, code ) );
+		case ( Replxx::ACTION::UPPERCASE_WORD ):                  return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::uppercase_word, code ) );
+		case ( Replxx::ACTION::TRANSPOSE_CHARACTERS ):            return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::transpose_characters, code ) );
 		case ( Replxx::ACTION::TOGGLE_OVERWRITE_MODE ):           return ( action( NOOP, &Replxx::ReplxxImpl::toggle_overwrite_mode, code ) );
 #ifndef _WIN32
 		case ( Replxx::ACTION::VERBATIM_INSERT ):                 return ( action( WANT_REFRESH | RESET_KILL_ACTION, &Replxx::ReplxxImpl::verbatim_insert, code ) );
@@ -219,12 +219,12 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32
 		case ( Replxx::ACTION::CLEAR_SCREEN ):                    return ( action( NOOP, &Replxx::ReplxxImpl::clear_screen, code ) );
 		case ( Replxx::ACTION::CLEAR_SELF ): clear_self_to_end_of_screen(); return ( Replxx::ACTION_RESULT::CONTINUE );
 		case ( Replxx::ACTION::REPAINT ):    repaint();           return ( Replxx::ACTION_RESULT::CONTINUE );
-		case ( Replxx::ACTION::COMPLETE_LINE ):                   return ( action( NOOP, &Replxx::ReplxxImpl::complete_line, code ) );
-		case ( Replxx::ACTION::COMPLETE_NEXT ):                   return ( action( DONT_RESET_COMPLETIONS, &Replxx::ReplxxImpl::complete_next, code ) );
-		case ( Replxx::ACTION::COMPLETE_PREVIOUS ):               return ( action( DONT_RESET_COMPLETIONS, &Replxx::ReplxxImpl::complete_previous, code ) );
+		case ( Replxx::ACTION::COMPLETE_LINE ):                   return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::complete_line, code ) );
+		case ( Replxx::ACTION::COMPLETE_NEXT ):                   return ( action( RESET_KILL_ACTION | DONT_RESET_COMPLETIONS | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::complete_next, code ) );
+		case ( Replxx::ACTION::COMPLETE_PREVIOUS ):               return ( action( RESET_KILL_ACTION | DONT_RESET_COMPLETIONS | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::complete_previous, code ) );
 		case ( Replxx::ACTION::COMMIT_LINE ):                     return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::commit_line, code ) );
-		case ( Replxx::ACTION::ABORT_LINE ):                      return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::abort_line, code ) );
-		case ( Replxx::ACTION::SEND_EOF ):                        return ( action( NOOP, &Replxx::ReplxxImpl::send_eof, code ) );
+		case ( Replxx::ACTION::ABORT_LINE ):                      return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::abort_line, code ) );
+		case ( Replxx::ACTION::SEND_EOF ):                        return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::send_eof, code ) );
 	}
 	return ( Replxx::ACTION_RESULT::BAIL );
 }
@@ -1096,7 +1096,7 @@ int Replxx::ReplxxImpl::get_input_line( void ) {
 				refresh_line();
 			}
 		} else {
-			next = action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::insert_character, c );
+			next = action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::insert_character, c );
 		}
 	}
 	return ( next == Replxx::ACTION_RESULT::RETURN ? _data.length() : -1 );
@@ -1105,6 +1105,9 @@ int Replxx::ReplxxImpl::get_input_line( void ) {
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::action( action_trait_t actionTrait_, key_press_handler_raw_t const& handler_, char32_t code_ ) {
 	Replxx::ACTION_RESULT res( ( this->*handler_ )( code_ ) );
 	call_modify_callback();
+	if ( actionTrait_ & HISTORY_RECALL_MOST_RECENT ) {
+		_history.reset_recall_most_recent();
+	}
 	if ( actionTrait_ & RESET_KILL_ACTION ) {
 		_killRing.lastAction = KillRing::actionOther;
 	}
@@ -1126,7 +1129,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::action( action_trait_t actionTrait_, k
 }
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
-	_history.reset_recall_most_recent();
 	/*
 	 * beep on unknown Ctrl and/or Meta keys
 	 * don't insert control characters
@@ -1223,7 +1225,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::move_one_word_right( char32_t ) {
 // meta-Backspace, kill word to left of cursor
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_word_to_left( char32_t ) {
 	if ( _pos > 0 ) {
-		_history.reset_recall_most_recent();
 		int startingPos = _pos;
 		while ( _pos > 0 && is_word_break_character( _data[_pos - 1] ) ) {
 			-- _pos;
@@ -1241,7 +1242,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_word_to_left( char32_t ) {
 // meta-D, kill word to right of cursor
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_word_to_right( char32_t ) {
 	if ( _pos < _data.length() ) {
-		_history.reset_recall_most_recent();
 		int endingPos = _pos;
 		while ( endingPos < _data.length() && is_word_break_character( _data[endingPos] ) ) {
 			++ endingPos;
@@ -1259,7 +1259,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_word_to_right( char32_t ) {
 // ctrl-W, kill to whitespace (not word) to left of cursor
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_to_whitespace_to_left( char32_t ) {
 	if ( _pos > 0 ) {
-		_history.reset_recall_most_recent();
 		int startingPos = _pos;
 		while ( _pos > 0 && _data[_pos - 1] == ' ' ) {
 			--_pos;
@@ -1278,14 +1277,12 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_to_whitespace_to_left( char32_t )
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_to_end_of_line( char32_t ) {
 	_killRing.kill( _data.get() + _pos, _data.length() - _pos, true );
 	_data.erase( _pos, _data.length() - _pos );
-	_history.reset_recall_most_recent();
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
 
 // ctrl-U, kill all characters to the left of the cursor
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_to_begining_of_line( char32_t ) {
 	if (_pos > 0) {
-		_history.reset_recall_most_recent();
 		_killRing.kill( _data.get(), _pos, false );
 		_data.erase( 0, _pos );
 		_pos = 0;
@@ -1296,7 +1293,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_to_begining_of_line( char32_t ) {
 
 // ctrl-Y, yank killed text
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::yank( char32_t ) {
-	_history.reset_recall_most_recent();
 	UnicodeString* restoredText( _killRing.yank() );
 	if ( restoredText ) {
 		_data.insert( _pos, *restoredText, 0, restoredText->length() );
@@ -1316,7 +1312,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::yank_cycle( char32_t ) {
 		beep();
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	}
-	_history.reset_recall_most_recent();
 	UnicodeString* restoredText = _killRing.yankPop();
 	if ( !restoredText ) {
 		beep();
@@ -1333,7 +1328,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::yank_cycle( char32_t ) {
 
 // meta-C, give word initial Cap
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::capitalize_word( char32_t ) {
-	_history.reset_recall_most_recent();
 	if (_pos < _data.length()) {
 		while ( _pos < _data.length() && is_word_break_character( _data[_pos] ) ) {
 			++_pos;
@@ -1358,7 +1352,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::capitalize_word( char32_t ) {
 // meta-L, lowercase word
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::lowercase_word( char32_t ) {
 	if (_pos < _data.length()) {
-		_history.reset_recall_most_recent();
 		while ( _pos < _data.length() && is_word_break_character( _data[_pos] ) ) {
 			++ _pos;
 		}
@@ -1376,7 +1369,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::lowercase_word( char32_t ) {
 // meta-U, uppercase word
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::uppercase_word( char32_t ) {
 	if (_pos < _data.length()) {
-		_history.reset_recall_most_recent();
 		while ( _pos < _data.length() && is_word_break_character( _data[_pos] ) ) {
 			++ _pos;
 		}
@@ -1394,7 +1386,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::uppercase_word( char32_t ) {
 // ctrl-T, transpose characters
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::transpose_characters( char32_t ) {
 	if ( _pos > 0 && _data.length() > 1 ) {
-		_history.reset_recall_most_recent();
 		size_t leftCharPos = ( _pos == _data.length() ) ? _pos - 2 : _pos - 1;
 		char32_t aux = _data[leftCharPos];
 		_data[leftCharPos] = _data[leftCharPos + 1];
@@ -1409,7 +1400,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::transpose_characters( char32_t ) {
 
 // ctrl-C, abort this line
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::abort_line( char32_t ) {
-	_history.reset_recall_most_recent();
 	errno = EAGAIN;
 	_history.drop_last();
 	// we need one last refresh with the cursor at the end of the line
@@ -1423,7 +1413,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::abort_line( char32_t ) {
 // DEL, delete the character under the cursor
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::delete_character( char32_t ) {
 	if ( ( _data.length() > 0 ) && ( _pos < _data.length() ) ) {
-		_history.reset_recall_most_recent();
 		_data.erase( _pos );
 		refresh_line();
 	}
@@ -1443,7 +1432,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::send_eof( char32_t key_ ) {
 // backspace/ctrl-H, delete char to left of cursor
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::backspace_character( char32_t ) {
 	if ( _pos > 0 ) {
-		_history.reset_recall_most_recent();
 		-- _pos;
 		_data.erase( _pos );
 		refresh_line();
@@ -1569,9 +1557,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::suspend( char32_t ) {
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete_line( char32_t c ) {
 	if ( !! _completionCallback && ( _completeOnEmpty || ( _pos > 0 ) ) ) {
-		_killRing.lastAction = KillRing::actionOther;
-		_history.reset_recall_most_recent();
-
 		// complete_line does the actual completion and replacement
 		c = do_complete_line( c != 0 );
 

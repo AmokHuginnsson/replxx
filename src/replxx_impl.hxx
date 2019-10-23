@@ -91,12 +91,13 @@ public:
 	typedef std::unordered_map<int, Replxx::key_press_handler_t> key_press_handlers_t;
 private:
 	typedef int long long unsigned action_trait_t;
-	static action_trait_t const NOOP                   =  0;
-	static action_trait_t const WANT_REFRESH           =  1;
-	static action_trait_t const RESET_KILL_ACTION      =  2;
-	static action_trait_t const SET_KILL_ACTION        =  4;
-	static action_trait_t const DONT_RESET_PREFIX      =  8;
-	static action_trait_t const DONT_RESET_COMPLETIONS = 16;
+	static action_trait_t const NOOP                       =  0;
+	static action_trait_t const WANT_REFRESH               =  1;
+	static action_trait_t const RESET_KILL_ACTION          =  2;
+	static action_trait_t const SET_KILL_ACTION            =  4;
+	static action_trait_t const DONT_RESET_PREFIX          =  8;
+	static action_trait_t const DONT_RESET_COMPLETIONS     = 16;
+	static action_trait_t const HISTORY_RECALL_MOST_RECENT = 32;
 private:
 	mutable Utf8String     _utf8Buffer;
 	UnicodeString  _data;
