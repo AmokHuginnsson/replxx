@@ -76,6 +76,7 @@ keytab = {
 	"<m-p>": "\033p",
 	"<m-u>": "\033u",
 	"<m-y>": "\033y",
+	"<m-.>": "\033.",
 	"<m-backspace>": "\033\177",
 	"<f1>": "\033OP",
 	"<f2>": "\033OQ",
@@ -1050,6 +1051,22 @@ class ReplxxTests( unittest.TestCase ):
 			"<c9>a<rst><ceos><c10>\r\n"
 			"a\r\n",
 			"a b c d e f g h i j k\n"
+		)
+	def test_yank_last_arg( self_ ):
+		self_.check_scenario(
+			"0123<left><left><m-.><m-.><m-.><cr><c-d>",
+			"<c9><yellow>0<rst><ceos><c10>"
+			"<c9><yellow>01<rst><ceos><c11>"
+			"<c9><yellow>012<rst><ceos><c12>"
+			"<c9><yellow>0123<rst><ceos><c13>"
+			"<c9><yellow>0123<rst><ceos><c12>"
+			"<c9><yellow>0123<rst><ceos><c11>"
+			"<c9><yellow>01<rst>cat<yellow>23<rst><ceos><c14>"
+			"<c9><yellow>01<rst>trillion<yellow>23<rst><ceos><c19>"
+			"<c9><yellow>01<rst>twelve<yellow>23<rst><ceos><c17>"
+			"<c9><yellow>01<rst>twelve<yellow>23<rst><ceos><c19>\r\n"
+			"01twelve23\r\n",
+			"one two three\nten eleven twelve\nmillion trillion\ndog cat\n"
 		)
 	def test_tab_completion_cutoff( self_ ):
 		self_.check_scenario(

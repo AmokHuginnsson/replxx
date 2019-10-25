@@ -98,6 +98,7 @@ private:
 	static action_trait_t const DONT_RESET_PREFIX          =  8;
 	static action_trait_t const DONT_RESET_COMPLETIONS     = 16;
 	static action_trait_t const HISTORY_RECALL_MOST_RECENT = 32;
+	static action_trait_t const DONT_RESET_HIST_YANK_INDEX = 64;
 private:
 	mutable Utf8String     _utf8Buffer;
 	UnicodeString  _data;
@@ -108,8 +109,10 @@ private:
 	int _pos;    // character position in buffer ( 0 <= _pos <= _len )
 	int _prefix; // prefix length used in common prefix search
 	int _hintSelection; // Currently selected hint.
+	int _historyYankIndex;
 	History _history;
 	KillRing _killRing;
+	int _lastYankSize;
 	int _maxHintRows;
 	int _hintDelay;
 	char const* _breakChars;
@@ -191,6 +194,7 @@ private:
 	Replxx::ACTION_RESULT kill_to_end_of_line( char32_t );
 	Replxx::ACTION_RESULT yank( char32_t );
 	Replxx::ACTION_RESULT yank_cycle( char32_t );
+	Replxx::ACTION_RESULT yank_last_arg( char32_t );
 	Replxx::ACTION_RESULT capitalize_word( char32_t );
 	Replxx::ACTION_RESULT lowercase_word( char32_t );
 	Replxx::ACTION_RESULT uppercase_word( char32_t );

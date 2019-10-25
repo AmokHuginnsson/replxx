@@ -88,8 +88,10 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _pos( 0 )
 	, _prefix( 0 )
 	, _hintSelection( -1 )
+	, _historyYankIndex( -1 )
 	, _history()
 	, _killRing()
+	, _lastYankSize( 0 )
 	, _maxHintRows( REPLXX_MAX_HINT_ROWS )
 	, _hintDelay( 0 )
 	, _breakChars( defaultBreakChars )
@@ -142,6 +144,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	bind_key( Replxx::KEY::control( 'Y' ),                 std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::YANK,                            _1 ) );
 	bind_key( Replxx::KEY::meta( 'y' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::YANK_CYCLE,                      _1 ) );
 	bind_key( Replxx::KEY::meta( 'Y' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::YANK_CYCLE,                      _1 ) );
+	bind_key( Replxx::KEY::meta( '.' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::YANK_LAST_ARG,                   _1 ) );
 	bind_key( Replxx::KEY::meta( 'c' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::CAPITALIZE_WORD,                 _1 ) );
 	bind_key( Replxx::KEY::meta( 'C' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::CAPITALIZE_WORD,                 _1 ) );
 	bind_key( Replxx::KEY::meta( 'l' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::LOWERCASE_WORD,                  _1 ) );
@@ -193,6 +196,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32
 		case ( Replxx::ACTION::KILL_TO_WHITESPACE_ON_LEFT ):      return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_to_whitespace_to_left, code ) );
 		case ( Replxx::ACTION::YANK ):                            return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::yank, code ) );
 		case ( Replxx::ACTION::YANK_CYCLE ):                      return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::yank_cycle, code ) );
+		case ( Replxx::ACTION::YANK_LAST_ARG ):                   return ( action( HISTORY_RECALL_MOST_RECENT | DONT_RESET_HIST_YANK_INDEX, &Replxx::ReplxxImpl::yank_last_arg, code ) );
 		case ( Replxx::ACTION::MOVE_CURSOR_TO_BEGINING_OF_LINE ): return ( action( WANT_REFRESH, &Replxx::ReplxxImpl::go_to_begining_of_line, code ) );
 		case ( Replxx::ACTION::MOVE_CURSOR_TO_END_OF_LINE ):      return ( action( WANT_REFRESH, &Replxx::ReplxxImpl::go_to_end_of_line, code ) );
 		case ( Replxx::ACTION::MOVE_CURSOR_ONE_WORD_LEFT ):       return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_word_left, code ) );
@@ -1122,6 +1126,9 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::action( action_trait_t actionTrait_, k
 		_completionSelection = -1;
 		_completionContextLength = 0;
 	}
+	if ( ! ( actionTrait_ & DONT_RESET_HIST_YANK_INDEX ) ) {
+		_historyYankIndex = -1;
+	}
 	if ( actionTrait_ & WANT_REFRESH ) {
 		_modifiedState = true;
 	}
@@ -1260,10 +1267,10 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_word_to_right( char32_t ) {
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_to_whitespace_to_left( char32_t ) {
 	if ( _pos > 0 ) {
 		int startingPos = _pos;
-		while ( _pos > 0 && _data[_pos - 1] == ' ' ) {
+		while ( ( _pos > 0 ) && isspace( _data[_pos - 1] ) ) {
 			--_pos;
 		}
-		while ( _pos > 0 && _data[_pos - 1] != ' ' ) {
+		while ( ( _pos > 0 ) && ! isspace( _data[_pos - 1] ) ) {
 			-- _pos;
 		}
 		_killRing.kill( _data.get() + _pos, startingPos - _pos, false );
@@ -1299,7 +1306,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::yank( char32_t ) {
 		_pos += restoredText->length();
 		refresh_line();
 		_killRing.lastAction = KillRing::actionYank;
-		_killRing.lastYankSize = restoredText->length();
+		_lastYankSize = restoredText->length();
 	} else {
 		beep();
 	}
@@ -1317,11 +1324,42 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::yank_cycle( char32_t ) {
 		beep();
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	}
-	_pos -= _killRing.lastYankSize;
-	_data.erase( _pos, _killRing.lastYankSize );
+	_pos -= _lastYankSize;
+	_data.erase( _pos, _lastYankSize );
 	_data.insert( _pos, *restoredText, 0, restoredText->length() );
 	_pos += restoredText->length();
-	_killRing.lastYankSize = restoredText->length();
+	_lastYankSize = restoredText->length();
+	refresh_line();
+	return ( Replxx::ACTION_RESULT::CONTINUE );
+}
+
+// meta-., "yank-last-arg", on consecutive uses move back in history for popped text
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::yank_last_arg( char32_t ) {
+	if ( _history.size() < 2 ) {
+		return ( Replxx::ACTION_RESULT::CONTINUE );
+	}
+	if ( _historyYankIndex == -1 ) {
+		_lastYankSize = 0;
+	} else {
+		-- _historyYankIndex;
+	}
+	if ( _historyYankIndex < 0 ) {
+		_historyYankIndex = _history.size() - 2;
+	}
+	UnicodeString const& histLine( _history[_historyYankIndex] );
+	int endPos( histLine.length() );
+	while ( ( endPos > 0 ) && isspace( histLine[endPos - 1] ) ) {
+		-- endPos;
+	}
+	int startPos( endPos );
+	while ( ( startPos > 0 ) && ! isspace( histLine[startPos - 1] ) ) {
+		-- startPos;
+	}
+	_pos -= _lastYankSize;
+	_data.erase( _pos, _lastYankSize );
+	_lastYankSize = endPos - startPos;
+	_data.insert( _pos, histLine, startPos, _lastYankSize );
+	_pos += _lastYankSize;
 	refresh_line();
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
