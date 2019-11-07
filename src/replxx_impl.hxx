@@ -38,6 +38,7 @@
 #include <unordered_map>
 #include <thread>
 #include <mutex>
+#include <chrono>
 
 #include "replxx.hxx"
 #include "history.hxx"
@@ -112,6 +113,8 @@ private:
 	int _historyYankIndex;
 	History _history;
 	KillRing _killRing;
+	int long long _lastRefreshTime;
+	bool _refreshSkipped;
 	int _lastYankSize;
 	int _maxHintRows;
 	int _hintDelay;

@@ -2,6 +2,7 @@
 #include <memory>
 #include <cerrno>
 #include <iostream>
+#include <chrono>
 
 #ifdef _WIN32
 
@@ -76,6 +77,13 @@ static bool isUnsupportedTerm(void) {
 	return false;
 }
 
+int long long RAPID_REFRESH_MS = 1;
+int long long RAPID_REFRESH_US = RAPID_REFRESH_MS * 1000;
+
+inline int long long now_us( void ) {
+	return ( std::chrono::duration_cast<std::chrono::microseconds>( std::chrono::high_resolution_clock::now().time_since_epoch() ).count() );
+}
+
 }
 
 Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
@@ -91,6 +99,8 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _historyYankIndex( -1 )
 	, _history()
 	, _killRing()
+	, _lastRefreshTime( now_us() )
+	, _refreshSkipped( false )
 	, _lastYankSize( 0 )
 	, _maxHintRows( REPLXX_MAX_HINT_ROWS )
 	, _hintDelay( 0 )
@@ -259,12 +269,17 @@ char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
 			return ( keyPress );
 		}
 	}
-	int hintDelay( hintAction_ != HINT_ACTION::SKIP ? _hintDelay : 0 );
+	int hintDelay(
+		_refreshSkipped
+			? RAPID_REFRESH_MS * 2
+			: ( hintAction_ != HINT_ACTION::SKIP ? _hintDelay : 0 )
+	);
 	while ( true ) {
 		Terminal::EVENT_TYPE eventType( _terminal.wait_for_input( hintDelay ) );
 		if ( eventType == Terminal::EVENT_TYPE::TIMEOUT ) {
-			refresh_line( HINT_ACTION::REPAINT );
+			refresh_line( _refreshSkipped ? HINT_ACTION::REGENERATE : HINT_ACTION::REPAINT );
 			hintDelay = 0;
+			_refreshSkipped = false;
 			continue;
 		}
 		if ( eventType == Terminal::EVENT_TYPE::KEY_PRESS ) {
@@ -707,6 +722,14 @@ Replxx::ReplxxImpl::paren_info_t Replxx::ReplxxImpl::matching_paren( void ) {
  * redrawn here screen position
  */
 void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
+	int long long now( now_us() );
+	int long long duration( now - _lastRefreshTime );
+	if ( duration < RAPID_REFRESH_US ) {
+		_lastRefreshTime = now;
+		_refreshSkipped = true;
+		return;
+	}
+	_refreshSkipped = false;
 	// check for a matching brace/bracket/paren, remember its position if found
 	render( hintAction_ );
 	int hintLen( handle_hints( hintAction_ ) );
@@ -746,6 +769,7 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	// position the cursor
 	_terminal.jump_cursor( xCursorPos, -( yEndOfInput - yCursorPos ) );
 	_prompt._cursorRowOffset = _prompt._extraLines + yCursorPos; // remember row for next pass
+	 _lastRefreshTime = now_us();
 }
 
 int Replxx::ReplxxImpl::context_length() {
@@ -1443,7 +1467,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::abort_line( char32_t ) {
 	// we need one last refresh with the cursor at the end of the line
 	// so we don't display the next prompt over the previous input line
 	_pos = _data.length(); // pass _data.length() as _pos for EOL
-	refresh_line( HINT_ACTION::TRIM );
+	_lastRefreshTime = 0;
+	refresh_line( _refreshSkipped ? HINT_ACTION::REGENERATE : HINT_ACTION::TRIM );
 	_terminal.write8( "^C\r\n", 4 );
 	return ( Replxx::ACTION_RESULT::BAIL );
 }
@@ -1483,7 +1508,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::commit_line( char32_t ) {
 	// we need one last refresh with the cursor at the end of the line
 	// so we don't display the next prompt over the previous input line
 	_pos = _data.length(); // pass _data.length() as _pos for EOL
-	refresh_line( HINT_ACTION::TRIM );
+	_lastRefreshTime = 0;
+	refresh_line( _refreshSkipped ? HINT_ACTION::REGENERATE : HINT_ACTION::TRIM );
 	_history.commit_index();
 	_history.drop_last();
 	return ( Replxx::ACTION_RESULT::RETURN );

@@ -150,7 +150,10 @@ downRe = re.compile( "\\x1b\\[(\\d+)B" )
 
 def sym_to_raw( str_ ):
 	for sym, seq in keytab.items():
-		str_ = str_.replace( sym, seq )
+		if isinstance( str_, Rapid ):
+			str_ = Rapid( str_.replace( sym, seq ) )
+		else:
+			str_ = str_.replace( sym, seq )
 	return str_
 
 def seq_to_sym( str_ ):
@@ -186,11 +189,27 @@ def skip( test_ ):
 
 verbosity = None
 
+class Rapid( str ): pass
+
+def rapid( item ):
+	if isinstance( item, str ):
+		r = Rapid( item )
+		return r
+	return list( map( Rapid, item ) )
+
 class ReplxxTests( unittest.TestCase ):
 	_prompt_ = "\033\\[1;32mreplxx\033\\[0m> "
 	_cxxSample_ = "./build/debug/example-cxx-api"
 	_cSample_ = "./build/debug/example-c-api"
 	_end_ = "\r\nExiting Replxx\r\n"
+	def send_str( self_, str_, intraKeyDelay_ ):
+		if isinstance(str_, Rapid):
+			self_._replxx.send( str_ )
+			return
+		for char in str_:
+			self_._replxx.send( char )
+			time.sleep( intraKeyDelay_ )
+
 	def check_scenario(
 		self_, seq_, expected_,
 		history = "one\ntwo\nthree\n",
@@ -200,7 +219,8 @@ class ReplxxTests( unittest.TestCase ):
 		prompt = _prompt_,
 		end = _prompt_ + _end_,
 		encoding = "utf-8",
-		pause = 0.25
+		pause = 0.25,
+		intraKeyDelay = 0.002
 	):
 		with open( "replxx_history.txt", "wb" ) as f:
 			f.write( history.encode( encoding ) )
@@ -219,23 +239,32 @@ class ReplxxTests( unittest.TestCase ):
 		self_._replxx.expect( prompt )
 		self_.maxDiff = None
 		if isinstance( seq_, str ):
-			seqs = seq_.split( "<c-z>" )
+			if isinstance( seq_, Rapid ):
+				seqs = rapid( seq_.split( "<c-z>" ) )
+			else:
+				seqs = seq_.split( "<c-z>" )
 			for seq in seqs:
 				last = seq is seqs[-1]
 				if not last:
 					seq += "<c-z>"
-				self_._replxx.send( sym_to_raw( seq ) )
+				self_.send_str( sym_to_raw( seq ), intraKeyDelay )
 				if not last:
 					time.sleep( pause )
 					self_._replxx.kill( signal.SIGCONT )
 		else:
 			for seq in seq_:
 				last = seq is seq_[-1]
-				self_._replxx.send( sym_to_raw( seq ) )
+				self_.send_str( sym_to_raw( seq ), intraKeyDelay )
 				if not last:
 					time.sleep( pause )
 		self_._replxx.expect( end )
-		self_.assertSequenceEqual( seq_to_sym( self_._replxx.before ), expected_ )
+		if isinstance( expected_, str ):
+			self_.assertSequenceEqual( seq_to_sym( self_._replxx.before ), expected_ )
+		else:
+			try:
+				self_.assertIn( seq_to_sym( self_._replxx.before ), expected_ )
+			except:
+				self_.assertSequenceEqual( seq_to_sym( self_._replxx.before ), "" )
 	def test_unicode( self_ ):
 		self_.check_scenario(
 			"<up><cr><c-d>",
@@ -1359,48 +1388,116 @@ class ReplxxTests( unittest.TestCase ):
 		self_.assertSequenceEqual( res.stdout, b"starting...\nreplxx FTW!\n\nExiting Replxx\n" )
 	def test_async_print( self_ ):
 		self_.check_scenario(
-			[ "a", "b", "c", "d", "e", "f<cr><c-d>" ],
-			"<c1><ceos>0\r\n"
-			"<brightgreen>replxx<rst>> "
-			"<c9><ceos><c9><c9>a<rst><ceos><c10><c9>ab<rst><ceos><c11><c1><ceos>1\r\n"
-			"<brightgreen>replxx<rst>> "
-			"<c9>ab<rst><ceos><c11><c9>abc<rst><ceos><c12><c9>abcd<rst><ceos><c13><c1><ceos>2\r\n"
-			"<brightgreen>replxx<rst>> "
-			"<c9>abcd<rst><ceos><c13><c9>abcde<rst><ceos><c14><c9>abcdef<rst><ceos><c15><c9>abcdef<rst><ceos><c15>\r\n"
-			"abcdef\r\n",
+			[ "a", "b", "c", "d", "e", "f<cr><c-d>" ], [
+				"<c1><ceos>0\r\n"
+				"<brightgreen>replxx<rst>> "
+				"<c9><ceos><c9><c9>a<rst><ceos><c10><c9>ab<rst><ceos><c11><c1><ceos>1\r\n"
+				"<brightgreen>replxx<rst>> "
+				"<c9>ab<rst><ceos><c11><c9>abc<rst><ceos><c12><c9>abcd<rst><ceos><c13><c1><ceos>2\r\n"
+				"<brightgreen>replxx<rst>> "
+				"<c9>abcd<rst><ceos><c13><c9>abcde<rst><ceos><c14><c9>abcdef<rst><ceos><c15><c9>abcdef<rst><ceos><c15>\r\n"
+				"abcdef\r\n",
+				"<c1><ceos>0\r\n"
+				"<brightgreen>replxx<rst>> "
+				"<c9>a<rst><ceos><c10><c9>ab<rst><ceos><c11><c1><ceos>1\r\n"
+				"<brightgreen>replxx<rst>> "
+				"<c9>ab<rst><ceos><c11><c9>abc<rst><ceos><c12><c9>abcd<rst><ceos><c13><c1><ceos>2\r\n"
+				"<brightgreen>replxx<rst>> "
+				"<c9>abcd<rst><ceos><c13><c9>abcde<rst><ceos><c14><c9>abcdef<rst><ceos><c15><c9>abcdef<rst><ceos><c15>\r\n"
+				"abcdef\r\n",
+			],
 			command = [ ReplxxTests._cxxSample_, "" ],
 			pause = 0.5
 		)
 		self_.check_scenario(
-			[ "<up>", "a", "b", "c", "d", "e", "f<cr><c-d>" ],
-			"<c1><ceos>0\r\n"
-			"<brightgreen>replxx<rst>> <c9><ceos><c9><c9>a very long line of "
-			"user input, wider then current terminal, the line is wrapped: "
-			"<rst><ceos><c11><u2><c9>a very long line of user input, wider then current "
-			"terminal, the line is wrapped: a<rst><ceos><c12><u2><c1><ceos>1\r\n"
-			"<brightgreen>replxx<rst>> \r\n"
-			"\r\n"
-			"<u2><c9>a very long line of user input, wider then current terminal, "
-			"the line is wrapped: a<rst><ceos><c12><u2><c9>a very long line of user "
-			"input, wider then current terminal, the line is wrapped: "
-			"ab<rst><ceos><c13><u2><c9>a very long line of user input, wider then current "
-			"terminal, the line is wrapped: abc<rst><ceos><c14><u2><c1><ceos>2\r\n"
-			"<brightgreen>replxx<rst>> \r\n"
-			"\r\n"
-			"<u2><c9>a very long line of user input, wider then current terminal, "
-			"the line is wrapped: abc<rst><ceos><c14><u2><c9>a very long line of user "
-			"input, wider then current terminal, the line is wrapped: "
-			"abcd<rst><ceos><c15><u2><c9>a very long line of user input, wider then "
-			"current terminal, the line is wrapped: abcde<rst><ceos><c16><u2><c1><ceos>3\r\n"
-			"<brightgreen>replxx<rst>> \r\n"
-			"\r\n"
-			"<u2><c9>a very long line of user input, wider then current terminal, "
-			"the line is wrapped: abcde<rst><ceos><c16><u2><c9>a very long line of user "
-			"input, wider then current terminal, the line is wrapped: "
-			"abcdef<rst><ceos><c17><u2><c9>a very long line of user input, wider then "
-			"current terminal, the line is wrapped: abcdef<rst><ceos><c17>\r\n"
-			"a very long line of user input, wider then current terminal, the line is "
-			"wrapped: abcdef\r\n",
+			[ "<up>", "a", "b", "c", "d", "e", "f<cr><c-d>" ], [
+				"<c1><ceos>0\r\n"
+				"<brightgreen>replxx<rst>> <c9><ceos><c9><c9>a very long line of "
+				"user input, wider then current terminal, the line is wrapped: "
+				"<rst><ceos><c11><u2><c9>a very long line of user input, wider then current "
+				"terminal, the line is wrapped: a<rst><ceos><c12><u2><c1><ceos>1\r\n"
+				"<brightgreen>replxx<rst>> \r\n"
+				"\r\n"
+				"<u2><c9>a very long line of user input, wider then current terminal, "
+				"the line is wrapped: a<rst><ceos><c12><u2><c9>a very long line of user "
+				"input, wider then current terminal, the line is wrapped: "
+				"ab<rst><ceos><c13><u2><c9>a very long line of user input, wider then current "
+				"terminal, the line is wrapped: abc<rst><ceos><c14><u2><c1><ceos>2\r\n"
+				"<brightgreen>replxx<rst>> \r\n"
+				"\r\n"
+				"<u2><c9>a very long line of user input, wider then current terminal, "
+				"the line is wrapped: abc<rst><ceos><c14><u2><c9>a very long line of user "
+				"input, wider then current terminal, the line is wrapped: "
+				"abcd<rst><ceos><c15><u2><c9>a very long line of user input, wider then "
+				"current terminal, the line is wrapped: abcde<rst><ceos><c16><u2><c1><ceos>3\r\n"
+				"<brightgreen>replxx<rst>> \r\n"
+				"\r\n"
+				"<u2><c9>a very long line of user input, wider then current terminal, "
+				"the line is wrapped: abcde<rst><ceos><c16><u2><c9>a very long line of user "
+				"input, wider then current terminal, the line is wrapped: "
+				"abcdef<rst><ceos><c17><u2><c9>a very long line of user input, wider then "
+				"current terminal, the line is wrapped: abcdef<rst><ceos><c17>\r\n"
+				"a very long line of user input, wider then current terminal, the line is "
+				"wrapped: abcdef\r\n",
+				"<c1><ceos>0\r\n"
+				"<brightgreen>replxx<rst>> <c9><ceos><c9><c9>a very long line of user input, "
+				"wider then current terminal, the line is wrapped: <rst><ceos><c11><u2><c9>a "
+				"very long line of user input, wider then current terminal, the line is "
+				"wrapped: a<rst><ceos><c12><u2><c1><ceos>1\r\n"
+				"<brightgreen>replxx<rst>> \r\n"
+				"\r\n"
+				"<u2><c9>a very long line of user input, wider then current terminal, the "
+				"line is wrapped: a<rst><ceos><c12><u2><c9>a very long line of user input, "
+				"wider then current terminal, the line is wrapped: "
+				"ab<rst><ceos><c13><u2><c9>a very long line of user input, wider then current "
+				"terminal, the line is wrapped: abc<rst><ceos><c14><u2><c1><ceos>2\r\n"
+				"<brightgreen>replxx<rst>> \r\n"
+				"\r\n"
+				"<u2><c9>a very long line of user input, wider then current terminal, the "
+				"line is wrapped: abc<rst><ceos><c14><u2><c9>a very long line of user input, "
+				"wider then current terminal, the line is wrapped: "
+				"abcd<rst><ceos><c15><u2><c1><ceos>3\r\n"
+				"<brightgreen>replxx<rst>> \r\n"
+				"\r\n"
+				"<u2><c9>a very long line of user input, wider then current terminal, the "
+				"line is wrapped: abcd<rst><ceos><c15><u2><c9>a very long line of user input, "
+				"wider then current terminal, the line is wrapped: "
+				"abcde<rst><ceos><c16><u2><c9>a very long line of user input, wider then "
+				"current terminal, the line is wrapped: abcdef<rst><ceos><c17><u2><c9>a very "
+				"long line of user input, wider then current terminal, the line is wrapped: "
+				"abcdef<rst><ceos><c17>\r\n"
+				"a very long line of user input, wider then current terminal, the line is "
+				"wrapped: abcdef\r\n",
+				"<c1><ceos>0\r\n"
+				"<brightgreen>replxx<rst>> <c9>a very long line of user input, wider then "
+				"current terminal, the line is wrapped: <rst><ceos><c11><u2><c9>a very long "
+				"line of user input, wider then current terminal, the line is wrapped: "
+				"a<rst><ceos><c12><u2><c1><ceos>1\r\n"
+				"<brightgreen>replxx<rst>> \r\n"
+				"\r\n"
+				"<u2><c9>a very long line of user input, wider then current terminal, the "
+				"line is wrapped: a<rst><ceos><c12><u2><c9>a very long line of user input, "
+				"wider then current terminal, the line is wrapped: "
+				"ab<rst><ceos><c13><u2><c9>a very long line of user input, wider then current "
+				"terminal, the line is wrapped: abc<rst><ceos><c14><u2><c1><ceos>2\r\n"
+				"<brightgreen>replxx<rst>> \r\n"
+				"\r\n"
+				"<u2><c9>a very long line of user input, wider then current terminal, the "
+				"line is wrapped: abc<rst><ceos><c14><u2><c9>a very long line of user input, "
+				"wider then current terminal, the line is wrapped: "
+				"abcd<rst><ceos><c15><u2><c1><ceos>3\r\n"
+				"<brightgreen>replxx<rst>> \r\n"
+				"\r\n"
+				"<u2><c9>a very long line of user input, wider then current terminal, the "
+				"line is wrapped: abcd<rst><ceos><c15><u2><c9>a very long line of user input, "
+				"wider then current terminal, the line is wrapped: "
+				"abcde<rst><ceos><c16><u2><c9>a very long line of user input, wider then "
+				"current terminal, the line is wrapped: abcdef<rst><ceos><c17><u2><c9>a very "
+				"long line of user input, wider then current terminal, the line is wrapped: "
+				"abcdef<rst><ceos><c17>\r\n"
+				"a very long line of user input, wider then current terminal, the line is "
+				"wrapped: abcdef\r\n"
+			],
 			"a very long line of user input, wider then current terminal, the line is wrapped: \n",
 			command = [ ReplxxTests._cxxSample_, "" ],
 			dimensions = ( 10, 40 ),
@@ -1493,7 +1590,7 @@ class ReplxxTests( unittest.TestCase ):
 		)
 	def test_verbatim_insert( self_ ):
 		self_.check_scenario(
-			["<c-v>", "<ins>", "<cr><c-d>"],
+			["<c-v>", rapid( "<ins>" ), "<cr><c-d>"],
 			"<c9>^[<brightmagenta>[<yellow>2<rst>~<rst><ceos><c14><c9>^[<brightmagenta>[<yellow>2<rst>~<rst><ceos><c14>\r\n"
 			"<ins-key>\r\n"
 		)
@@ -1508,36 +1605,64 @@ class ReplxxTests( unittest.TestCase ):
 		)
 	def test_complete_next( self_ ):
 		self_.check_scenario(
-			"<up><c-n><c-n><c-p><c-p><c-p><cr><c-d>",
-			"<c9>color_<rst><ceos>\r\n"
-			"        <gray>color_black<rst>\r\n"
-			"        <gray>color_red<rst>\r\n"
-			"        <gray>color_green<rst><u3><c15><c9>color_<rst><ceos><c15>\r\n"
-			"<brightmagenta>color_<rst>black          "
-			"<brightmagenta>color_<rst>cyan           "
-			"<brightmagenta>color_<rst>brightblue\r\n"
-			"<brightmagenta>color_<rst><red>red<rst>            "
-			"<brightmagenta>color_<rst>lightgray      "
-			"<brightmagenta>color_<rst>brightmagenta\r\n"
-			"<brightmagenta>color_<rst>green          "
-			"<brightmagenta>color_<rst>gray           "
-			"<brightmagenta>color_<rst>brightcyan\r\n"
-			"<brightmagenta>color_<rst>brown          "
-			"<brightmagenta>color_<rst><brightred>brightred<rst>      "
-			"<brightmagenta>color_<rst>white\r\n"
-			"<brightmagenta>color_<rst>blue           "
-			"<brightmagenta>color_<rst>brightgreen    <brightmagenta>color_<rst>normal\r\n"
-			"<brightmagenta>color_<rst>magenta        <brightmagenta>color_<rst>yellow\r\n"
-			"<brightgreen>replxx<rst>> <c9>color_<rst><ceos>\r\n"
-			"        <gray>color_black<rst>\r\n"
-			"        <gray>color_red<rst>\r\n"
-			"        "
-			"<gray>color_green<rst><u3><c15><c9><black>color_black<rst><ceos><c20><c9><red>color_red<rst><ceos><c18><c9><black>color_black<rst><ceos><c20><c9>color_<rst><ceos>\r\n"
-			"        <gray>color_black<rst>\r\n"
-			"        <gray>color_red<rst>\r\n"
-			"        "
-			"<gray>color_green<rst><u3><c15><c9><lightgray>color_normal<rst><ceos><c21><c9><lightgray>color_normal<rst><ceos><c21>\r\n"
-			"color_normal\r\n",
+			"<up><c-n><c-n><c-p><c-p><c-p><cr><c-d>", [
+				"<c9>color_<rst><ceos>\r\n"
+				"        <gray>color_black<rst>\r\n"
+				"        <gray>color_red<rst>\r\n"
+				"        <gray>color_green<rst><u3><c15><c9>color_<rst><ceos><c15>\r\n"
+				"<brightmagenta>color_<rst>black          "
+				"<brightmagenta>color_<rst>cyan           "
+				"<brightmagenta>color_<rst>brightblue\r\n"
+				"<brightmagenta>color_<rst><red>red<rst>            "
+				"<brightmagenta>color_<rst>lightgray      "
+				"<brightmagenta>color_<rst>brightmagenta\r\n"
+				"<brightmagenta>color_<rst>green          "
+				"<brightmagenta>color_<rst>gray           "
+				"<brightmagenta>color_<rst>brightcyan\r\n"
+				"<brightmagenta>color_<rst>brown          "
+				"<brightmagenta>color_<rst><brightred>brightred<rst>      "
+				"<brightmagenta>color_<rst>white\r\n"
+				"<brightmagenta>color_<rst>blue           "
+				"<brightmagenta>color_<rst>brightgreen    <brightmagenta>color_<rst>normal\r\n"
+				"<brightmagenta>color_<rst>magenta        <brightmagenta>color_<rst>yellow\r\n"
+				"<brightgreen>replxx<rst>> "
+				"<c9><black>color_black<rst><ceos><c20><c9><red>color_red<rst><ceos><c18><c9><black>color_black<rst><ceos><c20><c9>color_<rst><ceos>\r\n"
+				"        <gray>color_black<rst>\r\n"
+				"        <gray>color_red<rst>\r\n"
+				"        "
+				"<gray>color_green<rst><u3><c15><c9><lightgray>color_normal<rst><ceos><c21><c9><lightgray>color_normal<rst><ceos><c21>\r\n"
+				"color_normal\r\n",
+				"<up><c-n><c-n><c-p><c-p><c-p><cr><c-d>",
+				"<c9>color_<rst><ceos>\r\n"
+				"        <gray>color_black<rst>\r\n"
+				"        <gray>color_red<rst>\r\n"
+				"        <gray>color_green<rst><u3><c15><c9>color_<rst><ceos><c15>\r\n"
+				"<brightmagenta>color_<rst>black          "
+				"<brightmagenta>color_<rst>cyan           "
+				"<brightmagenta>color_<rst>brightblue\r\n"
+				"<brightmagenta>color_<rst><red>red<rst>            "
+				"<brightmagenta>color_<rst>lightgray      "
+				"<brightmagenta>color_<rst>brightmagenta\r\n"
+				"<brightmagenta>color_<rst>green          "
+				"<brightmagenta>color_<rst>gray           "
+				"<brightmagenta>color_<rst>brightcyan\r\n"
+				"<brightmagenta>color_<rst>brown          "
+				"<brightmagenta>color_<rst><brightred>brightred<rst>      "
+				"<brightmagenta>color_<rst>white\r\n"
+				"<brightmagenta>color_<rst>blue           "
+				"<brightmagenta>color_<rst>brightgreen    <brightmagenta>color_<rst>normal\r\n"
+				"<brightmagenta>color_<rst>magenta        <brightmagenta>color_<rst>yellow\r\n"
+				"<brightgreen>replxx<rst>> <c9>color_<rst><ceos>\r\n"
+				"        <gray>color_black<rst>\r\n"
+				"        <gray>color_red<rst>\r\n"
+				"        "
+				"<gray>color_green<rst><u3><c15><c9><black>color_black<rst><ceos><c20><c9><red>color_red<rst><ceos><c18><c9><black>color_black<rst><ceos><c20><c9>color_<rst><ceos>\r\n"
+				"        <gray>color_black<rst>\r\n"
+				"        <gray>color_red<rst>\r\n"
+				"        "
+				"<gray>color_green<rst><u3><c15><c9><lightgray>color_normal<rst><ceos><c21><c9><lightgray>color_normal<rst><ceos><c21>\r\n"
+				"color_normal\r\n"
+			],
 			"color_\n"
 		)
 		self_.check_scenario(
@@ -1602,6 +1727,11 @@ class ReplxxTests( unittest.TestCase ):
 			"ababcd12cd12\r\n",
 			"abcd12\n",
 			command = [ ReplxxTests._cSample_, "q1", "M1" ]
+		)
+	def test_paste( self_ ):
+		self_.check_scenario(
+			rapid( "abcdef<cr><c-d>" ),
+			"<c9>a<rst><ceos><c10><c9>abcdef<rst><ceos><c15>\r\nabcdef\r\n"
 		)
 
 def parseArgs( self, func, argv ):
