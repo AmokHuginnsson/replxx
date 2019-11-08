@@ -769,7 +769,7 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	// position the cursor
 	_terminal.jump_cursor( xCursorPos, -( yEndOfInput - yCursorPos ) );
 	_prompt._cursorRowOffset = _prompt._extraLines + yCursorPos; // remember row for next pass
-	 _lastRefreshTime = now_us();
+	_lastRefreshTime = now_us();
 }
 
 int Replxx::ReplxxImpl::context_length() {
@@ -1175,6 +1175,13 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 	}
 	++ _pos;
 	call_modify_callback();
+	int long long now( now_us() );
+	int long long duration( now - _lastRefreshTime );
+	if ( duration < RAPID_REFRESH_US ) {
+		_lastRefreshTime = now;
+		_refreshSkipped = true;
+		return ( Replxx::ACTION_RESULT::CONTINUE );
+	}
 	int inputLen = calculate_displayed_length( _data.get(), _data.length() );
 	if (
 		( _pos == _data.length() )
@@ -1193,6 +1200,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 	} else {
 		refresh_line();
 	}
+	_lastRefreshTime = now_us();
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
 
