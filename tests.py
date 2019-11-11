@@ -187,8 +187,8 @@ verbosity = None
 
 class ReplxxTests( unittest.TestCase ):
 	_prompt_ = "\033\\[1;32mreplxx\033\\[0m> "
-	_cxxSample_ = "./build/debug/example-cxx-api"
-	_cSample_ = "./build/debug/example-c-api"
+	_cxxSample_ = "./build/replxx-example-cxx-api"
+	_cSample_ = "./build/replxx-example-c-api"
 	_end_ = "\r\nExiting Replxx\r\n"
 	def check_scenario(
 		self_, seq_, expected_,

@@ -45,6 +45,8 @@ set(is-clang $<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>)
 set(is-msvc $<CXX_COMPILER_ID:MSVC>)
 set(is-gnu $<CXX_COMPILER_ID:GNU>)
 
+set(compiler-id-clang-or-gnu $<OR:${is-clang},${is-gnu}>)
+
 set(coverage-config $<AND:$<CONFIG:Coverage>,$<OR:${is-gnu},${is-clang}>>)
 
 set(replxx-source-patterns "src/*.cpp" "src/*.cxx")
