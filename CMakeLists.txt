@@ -92,7 +92,7 @@ target_compile_options(
 		$<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra>
 		$<$<CXX_COMPILER_ID:GNU>:-Wno-unknown-pragmas>
 )
-if (CMAKE_VERSION VERSION_GREATER 3.12)
+if (NOT CMAKE_VERSION VERSION_LESS 3.13)
 	target_link_options(
 		replxx
 		PRIVATE

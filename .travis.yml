@@ -1,5 +1,5 @@
 language: C++
-dist: xenial
+dist: bionic
 script:
   - ./build-all.sh
   - env SKIP=8bit_encoding ./tests.py
