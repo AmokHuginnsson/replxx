@@ -1647,8 +1647,9 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete_line( char32_t c ) {
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete( bool previous_ ) {
 	if ( _completions.empty() ) {
 		bool first( _completions.empty() );
-		complete_line( _immediateCompletion || first ? '\t' : 0 );
-		if ( ! _immediateCompletion && first ) {
+		int dataLen( _data.length() );
+		complete_line( 0 );
+		if ( ! _immediateCompletion && first && ( _data.length() > dataLen ) ) {
 			return ( Replxx::ACTION_RESULT::CONTINUE );
 		}
 	}

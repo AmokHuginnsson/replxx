@@ -1505,16 +1505,24 @@ class ReplxxTests( unittest.TestCase ):
 		)
 	def test_async_emulate_key_press( self_ ):
 		self_.check_scenario(
-			[ "a", "b", "c", "d", "e", "f<cr><c-d>" ],
-			"<c9><yellow>1<rst><ceos><c10><c9><yellow>1<rst>a"
-			"<rst><ceos><c11><c9><yellow>1<rst>ab<rst><ceos><c12><c9><yellow>1<rst>ab"
-			"<yellow>2<rst><ceos><c13><c9><yellow>1<rst>ab<yellow>2"
-			"<rst>c<rst><ceos><c14><c9><yellow>1<rst>ab<yellow>2"
-			"<rst>cd<rst><ceos><c15><c9><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3"
-			"<rst><ceos><c16><c9><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>e"
-			"<rst><ceos><c17><c9><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef"
-			"<rst><ceos><c18><c9><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<rst><ceos><c18>\r\n"
-			"1ab2cd3ef\r\n",
+			[ "a", "b", "c", "d", "e", "f<cr><c-d>" ], [
+				"<c9><yellow>1<rst><ceos><c10><c9><yellow>1<rst>a"
+				"<rst><ceos><c11><c9><yellow>1<rst>ab<rst><ceos><c12><c9><yellow>1<rst>ab"
+				"<yellow>2<rst><ceos><c13><c9><yellow>1<rst>ab<yellow>2"
+				"<rst>c<rst><ceos><c14><c9><yellow>1<rst>ab<yellow>2"
+				"<rst>cd<rst><ceos><c15><c9><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3"
+				"<rst><ceos><c16><c9><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>e"
+				"<rst><ceos><c17><c9><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef"
+				"<rst><ceos><c18><c9><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<rst><ceos><c18>\r\n"
+				"1ab2cd3ef\r\n",
+				"<c9><yellow>1<rst>a<rst><ceos><c11><c9><yellow>1<rst>ab"
+				"<rst><ceos><c12><c9><yellow>1<rst>ab<yellow>2<rst><ceos><c13><c9><yellow>1<rst>ab"
+				"<yellow>2<rst>c<rst><ceos><c14><c9><yellow>1<rst>ab<yellow>2<rst>cd<rst><ceos><c15>"
+				"<c9><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst><ceos><c16><c9><yellow>1<rst>ab"
+				"<yellow>2<rst>cd<yellow>3<rst>e<rst><ceos><c17><c9><yellow>1<rst>ab<yellow>2<rst>cd"
+				"<yellow>3<rst>ef<rst><ceos><c18><c9><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<rst><ceos><c18>\r\n"
+				"1ab2cd3ef\r\n"
+			],
 			command = [ ReplxxTests._cxxSample_, "123456" ],
 			pause = 0.5
 		)
@@ -1605,64 +1613,19 @@ class ReplxxTests( unittest.TestCase ):
 		)
 	def test_complete_next( self_ ):
 		self_.check_scenario(
-			"<up><c-n><c-n><c-p><c-p><c-p><cr><c-d>", [
-				"<c9>color_<rst><ceos>\r\n"
-				"        <gray>color_black<rst>\r\n"
-				"        <gray>color_red<rst>\r\n"
-				"        <gray>color_green<rst><u3><c15><c9>color_<rst><ceos><c15>\r\n"
-				"<brightmagenta>color_<rst>black          "
-				"<brightmagenta>color_<rst>cyan           "
-				"<brightmagenta>color_<rst>brightblue\r\n"
-				"<brightmagenta>color_<rst><red>red<rst>            "
-				"<brightmagenta>color_<rst>lightgray      "
-				"<brightmagenta>color_<rst>brightmagenta\r\n"
-				"<brightmagenta>color_<rst>green          "
-				"<brightmagenta>color_<rst>gray           "
-				"<brightmagenta>color_<rst>brightcyan\r\n"
-				"<brightmagenta>color_<rst>brown          "
-				"<brightmagenta>color_<rst><brightred>brightred<rst>      "
-				"<brightmagenta>color_<rst>white\r\n"
-				"<brightmagenta>color_<rst>blue           "
-				"<brightmagenta>color_<rst>brightgreen    <brightmagenta>color_<rst>normal\r\n"
-				"<brightmagenta>color_<rst>magenta        <brightmagenta>color_<rst>yellow\r\n"
-				"<brightgreen>replxx<rst>> "
-				"<c9><black>color_black<rst><ceos><c20><c9><red>color_red<rst><ceos><c18><c9><black>color_black<rst><ceos><c20><c9>color_<rst><ceos>\r\n"
-				"        <gray>color_black<rst>\r\n"
-				"        <gray>color_red<rst>\r\n"
-				"        "
-				"<gray>color_green<rst><u3><c15><c9><lightgray>color_normal<rst><ceos><c21><c9><lightgray>color_normal<rst><ceos><c21>\r\n"
-				"color_normal\r\n",
-				"<up><c-n><c-n><c-p><c-p><c-p><cr><c-d>",
-				"<c9>color_<rst><ceos>\r\n"
-				"        <gray>color_black<rst>\r\n"
-				"        <gray>color_red<rst>\r\n"
-				"        <gray>color_green<rst><u3><c15><c9>color_<rst><ceos><c15>\r\n"
-				"<brightmagenta>color_<rst>black          "
-				"<brightmagenta>color_<rst>cyan           "
-				"<brightmagenta>color_<rst>brightblue\r\n"
-				"<brightmagenta>color_<rst><red>red<rst>            "
-				"<brightmagenta>color_<rst>lightgray      "
-				"<brightmagenta>color_<rst>brightmagenta\r\n"
-				"<brightmagenta>color_<rst>green          "
-				"<brightmagenta>color_<rst>gray           "
-				"<brightmagenta>color_<rst>brightcyan\r\n"
-				"<brightmagenta>color_<rst>brown          "
-				"<brightmagenta>color_<rst><brightred>brightred<rst>      "
-				"<brightmagenta>color_<rst>white\r\n"
-				"<brightmagenta>color_<rst>blue           "
-				"<brightmagenta>color_<rst>brightgreen    <brightmagenta>color_<rst>normal\r\n"
-				"<brightmagenta>color_<rst>magenta        <brightmagenta>color_<rst>yellow\r\n"
-				"<brightgreen>replxx<rst>> <c9>color_<rst><ceos>\r\n"
-				"        <gray>color_black<rst>\r\n"
-				"        <gray>color_red<rst>\r\n"
-				"        "
-				"<gray>color_green<rst><u3><c15><c9><black>color_black<rst><ceos><c20><c9><red>color_red<rst><ceos><c18><c9><black>color_black<rst><ceos><c20><c9>color_<rst><ceos>\r\n"
-				"        <gray>color_black<rst>\r\n"
-				"        <gray>color_red<rst>\r\n"
-				"        "
-				"<gray>color_green<rst><u3><c15><c9><lightgray>color_normal<rst><ceos><c21><c9><lightgray>color_normal<rst><ceos><c21>\r\n"
-				"color_normal\r\n"
-			],
+			"<up><c-n><c-n><c-p><c-p><c-p><cr><c-d>",
+			"<c9>color_<rst><ceos>\r\n"
+			"        <gray>color_black<rst>\r\n"
+			"        <gray>color_red<rst>\r\n"
+			"        "
+			"<gray>color_green<rst><u3><c15><c9><black>color_black<rst><ceos><c20>"
+			"<c9><red>color_red<rst><ceos><c18><c9><black>color_black<rst><ceos><c20><c9>color_<rst><ceos>\r\n"
+
+			"        <gray>color_black<rst>\r\n"
+			"        <gray>color_red<rst>\r\n"
+			"        "
+			"<gray>color_green<rst><u3><c15><c9><lightgray>color_normal<rst><ceos><c21><c9><lightgray>color_normal<rst><ceos><c21>\r\n"
+			"color_normal\r\n",
 			"color_\n"
 		)
 		self_.check_scenario(
