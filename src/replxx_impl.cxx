@@ -1853,7 +1853,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 					_history.reset_pos( historySearchIndex );
 					historyLinePosition = lineSearchPos;
 					break;
-				} else if ( ( dp._direction > 0 ) ? ( historySearchIndex < _history.size() ) : ( historySearchIndex > 0 ) ) {
+				} else if ( ( dp._direction > 0 ) ? ( historySearchIndex < ( _history.size() - 1 ) ) : ( historySearchIndex > 0 ) ) {
 					historySearchIndex += dp._direction;
 					activeHistoryLine.assign( _history[historySearchIndex] );
 					lineSearchPos = ( dp._direction > 0 ) ? 0 : ( activeHistoryLine.length() - dp._searchText.length() );
