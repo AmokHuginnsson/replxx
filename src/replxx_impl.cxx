@@ -463,7 +463,7 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 		if ( get_input_line() == -1 ) {
 			return ( finalize_input( nullptr ) );
 		}
-		printf("\n");
+		_terminal.write8( "\n", 1 );
 		_utf8Buffer.assign( _data );
 		return ( finalize_input( _utf8Buffer.get() ) );
 	} catch ( std::exception const& ) {
@@ -996,7 +996,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 						break;
 				}
 			} else {
-				printf("\n");
+				_terminal.write8( "\n", 1 );
 			}
 			if (stopList) {
 				break;
@@ -1045,12 +1045,6 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 		_terminal.write8( "\n", 1 );
 	}
 	_prompt.write();
-#ifndef _WIN32
-	// we have to generate our own newline on line wrap on Linux
-	if (_prompt._indentation == 0 && _prompt._extraLines > 0) {
-		_terminal.write8( "\n", 1 );
-	}
-#endif
 	_prompt._cursorRowOffset = _prompt._extraLines;
 	refresh_line();
 	return 0;
@@ -1067,13 +1061,6 @@ int Replxx::ReplxxImpl::get_input_line( void ) {
 
 	// display the prompt
 	_prompt.write();
-
-#ifndef _WIN32
-	// we have to generate our own newline on line wrap on Linux
-	if ( ( _prompt._indentation == 0 ) && ( _prompt._extraLines > 0 ) ) {
-		_terminal.write8( "\n", 1 );
-	}
-#endif
 
 	// the cursor starts out at the end of the prompt
 	_prompt._cursorRowOffset = _prompt._extraLines;
@@ -1912,12 +1899,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::clear_screen( char32_t c ) {
 	_terminal.clear_screen( Terminal::CLEAR_SCREEN::WHOLE );
 	if ( c ) {
 		_prompt.write();
-#ifndef _WIN32
-		// we have to generate our own newline on line wrap on Linux
-		if (_prompt._indentation == 0 && _prompt._extraLines > 0) {
-			_terminal.write8( "\n", 1 );
-		}
-#endif
 		_prompt._cursorRowOffset = _prompt._extraLines;
 		refresh_line();
 	}

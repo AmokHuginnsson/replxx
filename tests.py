@@ -1189,6 +1189,14 @@ class ReplxxTests( unittest.TestCase ):
 			prompt = prompt,
 			end = prompt + ReplxxTests._end_
 		)
+		prompt = "repl>\n"
+		self_.check_scenario(
+			"a<cr><c-d>",
+			"<c1>a<rst><ceos><c2><c1>a<rst><ceos><c2>\r\na\r\n",
+			command = ReplxxTests._cSample_ + " q1 'p{}'".format( prompt ),
+			prompt = prompt,
+			end = prompt + ReplxxTests._end_
+		)
 	def test_long_line( self_ ):
 		self_.check_scenario(
 			"<up><c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left>~<c-left><cr><c-d>",
