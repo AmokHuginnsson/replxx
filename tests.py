@@ -854,6 +854,17 @@ class ReplxxTests( unittest.TestCase ):
 			"cccc\r\n",
 			"aaaa\nbbbb\ncccc\ndddd\n"
 		)
+	def test_history_abort_incremental_history_search_position( self_ ):
+		self_.check_scenario(
+			"<up><up><c-r>cc<c-c><up><cr><c-d>",
+			"<c9>hhhh<rst><ceos><c13><c9>gggg<rst><ceos><c13><c1><ceos><c1><ceos>(reverse-i-search)`': "
+			"gggg<c27><c1><ceos>(reverse-i-search)`c': "
+			"cccc<c27><bell><c1><ceos>(reverse-i-search)`cc': "
+			"cccc<c28><c1><ceos><brightgreen>replxx<rst>> "
+			"gggg<c13><c9>gggg<rst><ceos><c13><c9>ffff<rst><ceos><c13><c9>ffff<rst><ceos><c13>\r\n"
+			"ffff\r\n",
+			"aaaa\nbbbb\ncccc\ndddd\neeee\nffff\ngggg\nhhhh\n"
+		)
 	def test_capitalize( self_ ):
 		self_.check_scenario(
 			"<up><home><right><m-c><m-c><right><right><m-c><m-c><m-c><cr><c-d>",

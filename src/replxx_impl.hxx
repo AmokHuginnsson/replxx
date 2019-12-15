@@ -141,6 +141,7 @@ private:
 	int _completionSelection;
 	std::string _preloadedBuffer; // used with set_preload_buffer
 	std::string _errorMessage;
+	UnicodeString _previousSearchText; // remembered across invocations of replxx_input()
 	bool _modifiedState;
 	mutable std::mutex _mutex;
 public:

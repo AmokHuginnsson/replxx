@@ -32,8 +32,6 @@ public:
 	void write();
 };
 
-extern UnicodeString previousSearchText; // remembered across invocations of replxx_input()
-
 // changing prompt for "(reverse-i-search)`text':" etc.
 //
 struct DynamicPrompt : public Prompt {

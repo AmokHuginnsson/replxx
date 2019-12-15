@@ -113,7 +113,6 @@ void Prompt::set_text( UnicodeString const& text_ ) {
 const UnicodeString forwardSearchBasePrompt("(i-search)`");
 const UnicodeString reverseSearchBasePrompt("(reverse-i-search)`");
 const UnicodeString endSearchBasePrompt("': ");
-UnicodeString previousSearchText;	// remembered across invocations of replxx_input()
 
 DynamicPrompt::DynamicPrompt( Terminal& terminal_, int initialDirection )
 	: Prompt( terminal_ )

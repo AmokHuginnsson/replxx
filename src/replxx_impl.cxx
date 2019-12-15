@@ -126,6 +126,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _completionSelection( -1 )
 	, _preloadedBuffer()
 	, _errorMessage()
+	, _previousSearchText()
 	, _modifiedState( false )
 	, _mutex() {
 	using namespace std::placeholders;
@@ -1702,6 +1703,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 	if ( _history.is_last() ) {
 		_history.update_last( _data );
 	}
+	int historyCurrentPos( _history.current_pos() );
 	int historyLinePosition( _pos );
 	clear_self_to_end_of_screen();
 
@@ -1779,8 +1781,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 			case Replxx::KEY::control('S'):
 			case Replxx::KEY::control('R'):
 				if ( dp._searchText.length() == 0 ) { // if no current search text, recall previous text
-					if ( previousSearchText.length() > 0 ) {
-						dp._searchText = previousSearchText;
+					if ( _previousSearchText.length() > 0 ) {
+						dp._searchText = _previousSearchText;
 					}
 				}
 				if ((dp._direction == 1 && c == Replxx::KEY::control('R')) ||
@@ -1885,11 +1887,13 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 		_history.set_recall_most_recent();
 		_data.assign( activeHistoryLine );
 		_pos = historyLinePosition;
+	} else if ( ! useSearchedLine ) {
+		_history.reset_pos( historyCurrentPos );
 	}
 	dynamicRefresh(pb, _data.get(), _data.length(), _pos); // redraw the original prompt with current input
 	_prompt._previousInputLen = _data.length();
 	_prompt._cursorRowOffset = _prompt._extraLines + pb._cursorRowOffset;
-	previousSearchText = dp._searchText; // save search text for possible reuse on ctrl-R ctrl-R
+	_previousSearchText = dp._searchText; // save search text for possible reuse on ctrl-R ctrl-R
 	emulate_key_press( c ); // pass a character or -1 back to main loop
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
