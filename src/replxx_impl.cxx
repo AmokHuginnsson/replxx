@@ -1943,7 +1943,7 @@ int Replxx::ReplxxImpl::history_size( void ) const {
 }
 
 Replxx::HistoryScan::impl_t Replxx::ReplxxImpl::history_scan( void ) const {
-	return ( _history.scan( _utf8Buffer ) );
+	return ( _history.scan() );
 }
 
 void Replxx::ReplxxImpl::set_modify_callback( Replxx::modify_callback_t const& fn ) {

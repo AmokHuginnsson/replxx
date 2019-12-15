@@ -482,7 +482,9 @@ class ReplxxTests( unittest.TestCase ):
 			"four\r\n"
 		)
 		with open( "replxx_history.txt", "rb" ) as f:
-			self_.assertSequenceEqual( f.read().decode(), "one\ntwo\nthree\nfour\n" )
+			data = f.read().decode()
+			self_.assertSequenceEqual( data[:-33], "### 0000-00-00 00:00:00.000\none\n### 0000-00-00 00:00:00.000\ntwo\n### 0000-00-00 00:00:00.000\nthree\n" )
+			self_.assertSequenceEqual( data[-5:], "four\n" )
 	def test_paren_matching( self_ ):
 		self_.check_scenario(
 			"ab(cd)ef<left><left><left><left><left><left><left><cr><c-d>",
@@ -829,7 +831,8 @@ class ReplxxTests( unittest.TestCase ):
 			"   3: repl_charlie delta\r\n"
 			"   4: misc input\r\n"
 			"   5: repl_echo golf\r\n"
-			"   6: /history\r\n",
+			"   6: /history\r\n"
+			"/history\r\n",
 			"some command\n"
 			"repl_alfa bravo\n"
 			"other request\n"

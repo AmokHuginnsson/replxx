@@ -34,10 +34,10 @@ bool Replxx::HistoryScan::next( void ) {
 	return ( _impl->next() );
 }
 
-Replxx::HistoryScanImpl::HistoryScanImpl( History::entries_t const& entries_, Utf8String& utf8Cache_ )
+Replxx::HistoryScanImpl::HistoryScanImpl( History::entries_t const& entries_ )
 	: _entries( entries_ )
 	, _it( _entries.end() )
-	, _utf8Cache( utf8Cache_ )
+	, _utf8Cache()
 	, _entryCache( std::string(), std::string() ) {
 }
 
@@ -55,13 +55,13 @@ bool Replxx::HistoryScanImpl::next( void ) {
 }
 
 Replxx::HistoryEntry const& Replxx::HistoryScanImpl::get( void ) const {
-	_utf8Cache.assign( *_it );
-	_entryCache = Replxx::HistoryEntry( "", _utf8Cache.get() );
+	_utf8Cache.assign( _it->text() );
+	_entryCache = Replxx::HistoryEntry( _it->timestamp(), _utf8Cache.get() );
 	return ( _entryCache );
 }
 
-Replxx::HistoryScan::impl_t History::scan( Utf8String& utf8_ ) const {
-	return ( Replxx::HistoryScan::impl_t( new Replxx::HistoryScanImpl( _entries, utf8_ ), delete_ReplxxHistoryScanImpl ) );
+Replxx::HistoryScan::impl_t History::scan( void ) const {
+	return ( Replxx::HistoryScan::impl_t( new Replxx::HistoryScanImpl( _entries ), delete_ReplxxHistoryScanImpl ) );
 }
 
 History::History( void )
@@ -74,20 +74,29 @@ History::History( void )
 	, _unique( true ) {
 }
 
-void History::add( UnicodeString const& line ) {
-	if ( ( _maxSize > 0 ) && ( _entries.empty() || ( line != _entries.back() ) ) ) {
-		if ( _unique ) {
-			entries_t::iterator it( std::find( _entries.begin(), _entries.end(), line ) );
-			if ( it != _entries.end() ) {
-				erase( it );
-			}
-		}
-		if ( size() > _maxSize ) {
-			erase( _entries.begin() );
-			_recallMostRecent = false;
-		}
-		_entries.push_back( line );
+void History::add( UnicodeString const& line, std::string const& when ) {
+	if ( ( _maxSize <= 0 ) || ( ! _entries.empty() && ( line == _entries.back().text() ) ) ) {
+		return;
 	}
+	if ( _unique ) {
+		entries_t::iterator it(
+			std::find_if(
+				_entries.begin(),
+				_entries.end(),
+				[&line]( Entry const& entry_ ) {
+					return ( entry_.text() == line );
+				}
+			)
+		);
+		if ( it != _entries.end() ) {
+			erase( it );
+		}
+	}
+	if ( size() > _maxSize ) {
+		erase( _entries.begin() );
+		_recallMostRecent = false;
+	}
+	_entries.emplace_back( when, line );
 	if ( _current == _entries.end() ) {
 		_current = moved( _entries.end(), -1 );
 	}
@@ -118,8 +127,8 @@ void History::save( std::string const& filename ) {
 #endif
 	entries_t data( std::move( _entries ) );
 	load( filename );
-	for ( UnicodeString const& h : data ) {
-		add( h );
+	for ( Entry const& h : data ) {
+		add( h.text(), h.timestamp() );
 	}
 	ofstream histFile( filename );
 	if ( ! histFile ) {
@@ -130,14 +139,37 @@ void History::save( std::string const& filename ) {
 	chmod( filename.c_str(), S_IRUSR | S_IWUSR );
 #endif
 	Utf8String utf8;
-	for ( UnicodeString const& h : _entries ) {
-		if ( ! h.is_empty() ) {
-			utf8.assign( h );
-			histFile << utf8.get() << endl;
+	for ( Entry const& h : _entries ) {
+		if ( ! h.text().is_empty() ) {
+			utf8.assign( h.text() );
+			histFile << "### " << h.timestamp() << "\n" << utf8.get() << endl;
 		}
 	}
 	return;
 }
+
+namespace {
+
+bool is_timestamp( std::string const& s ) {
+	static char const TIMESTAMP_PATTERN[] = "### dddd-dd-dd dd:dd:dd.ddd";
+	static int const TIMESTAMP_LENGTH( sizeof ( TIMESTAMP_PATTERN ) - 1 );
+	if ( s.length() != TIMESTAMP_LENGTH ) {
+		return ( false );
+	}
+	for ( int i( 0 ); i < TIMESTAMP_LENGTH; ++ i ) {
+		if ( TIMESTAMP_PATTERN[i] == 'd' ) {
+			if ( ! isdigit( s[i] ) ) {
+				return ( false );
+			}
+		} else if ( s[i] != TIMESTAMP_PATTERN[i] ) {
+			return ( false );
+		}
+	}
+	return ( true );
+}
+
+}
+
 
 void History::load( std::string const& filename ) {
 	ifstream histFile( filename );
@@ -145,13 +177,18 @@ void History::load( std::string const& filename ) {
 		return;
 	}
 	string line;
+	string when( "0000-00-00 00:00:00.000" );
 	while ( getline( histFile, line ).good() ) {
 		string::size_type eol( line.find_first_of( "\r\n" ) );
 		if ( eol != string::npos ) {
 			line.erase( eol );
 		}
+		if ( is_timestamp( line ) ) {
+			when.assign( line, 4 );
+			continue;
+		}
 		if ( ! line.empty() ) {
-			add( UnicodeString( line ) );
+			add( UnicodeString( line ), when );
 		}
 	}
 	return;
@@ -221,7 +258,7 @@ bool History::common_prefix_search( UnicodeString const& prefix_, int prefixSize
 	int step( back_ ? -1 : 1 );
 	entries_t::const_iterator it( moved( _current, step, true ) );
 	while ( it != _current ) {
-		if ( it->starts_with( prefix_.begin(), prefix_.begin() + prefixSize_ ) ) {
+		if ( it->text().starts_with( prefix_.begin(), prefix_.begin() + prefixSize_ ) ) {
 			_current = it;
 			commit_index();
 			return ( true );

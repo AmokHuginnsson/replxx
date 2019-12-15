@@ -6,12 +6,28 @@
 #include "unicodestring.hxx"
 #include "utf8string.hxx"
 #include "conversion.hxx"
+#include "util.hxx"
 
 namespace replxx {
 
 class History {
 public:
-	typedef std::list<UnicodeString> entries_t;
+	class Entry {
+		std::string _timestamp;
+		UnicodeString _text;
+	public:
+		Entry( std::string const& timestamp_, UnicodeString const& text_ )
+			: _timestamp( timestamp_ )
+			, _text( text_ ) {
+		}
+		std::string const& timestamp( void ) const {
+			return ( _timestamp );
+		}
+		UnicodeString const& text( void ) const {
+			return ( _text );
+		}
+	};
+	typedef std::list<Entry> entries_t;
 private:
 	entries_t _entries;
 	int _maxSize;
@@ -30,7 +46,7 @@ private:
 	bool _unique;
 public:
 	History( void );
-	void add( UnicodeString const& line );
+	void add( UnicodeString const& line, std::string const& when = now_ms_str() );
 	void save( std::string const& filename );
 	void load( std::string const& filename );
 	void clear( void );
@@ -57,21 +73,21 @@ public:
 		return ( _entries.empty() );
 	}
 	void update_last( UnicodeString const& line_ ) {
-		_entries.back() = line_;
+		_entries.back() = Entry( now_ms_str(), line_ );
 	}
 	bool move( bool );
 	UnicodeString const& current( void ) const {
-		return ( *_current );
+		return ( _current->text() );
 	}
 	UnicodeString const& yank_line( void ) const {
-		return ( *_yankPos );
+		return ( _yankPos->text() );
 	}
 	void jump( bool, bool = true );
 	bool common_prefix_search( UnicodeString const&, int, bool );
 	int size( void ) const {
 		return ( static_cast<int>( _entries.size() ) );
 	}
-	Replxx::HistoryScan::impl_t scan( Utf8String& ) const;
+	Replxx::HistoryScan::impl_t scan( void ) const;
 	void save_pos( void );
 	void restore_pos( void );
 private:
@@ -85,10 +101,10 @@ private:
 class Replxx::HistoryScanImpl {
 	History::entries_t const& _entries;
 	History::entries_t::const_iterator _it;
-	Utf8String& _utf8Cache;
+	mutable Utf8String _utf8Cache;
 	mutable Replxx::HistoryEntry _entryCache;
 public:
-	HistoryScanImpl( History::entries_t const&, Utf8String& );
+	HistoryScanImpl( History::entries_t const& );
 	bool next( void );
 	Replxx::HistoryEntry const& get( void ) const;
 };

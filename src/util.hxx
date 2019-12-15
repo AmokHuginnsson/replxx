@@ -18,6 +18,7 @@ void recompute_character_widths( char32_t const* text, char* widths, int charCou
 void calculate_screen_position( int x, int y, int screenColumns, int charCount, int& xOut, int& yOut );
 int calculate_displayed_length( char32_t const* buf32, int size );
 char const* ansi_color( Replxx::Color );
+std::string now_ms_str( void );
 
 }
 

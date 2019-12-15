@@ -1,5 +1,7 @@
+#include <chrono>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <wctype.h>
 
 #include "util.hxx"
@@ -146,6 +148,18 @@ char const* ansi_color( Replxx::Color color_ ) {
 		case Replxx::Color::DEFAULT:       code = reset;         break;
 	}
 	return ( code );
+}
+
+std::string now_ms_str( void ) {
+	std::chrono::milliseconds ms( std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ) );
+	time_t t( ms.count() / 1000 );
+	tm broken;
+	localtime_r( &t, &broken );
+	static int const BUFF_SIZE( 32 );
+	char str[BUFF_SIZE];
+	strftime( str, BUFF_SIZE, "%Y-%m-%d %H:%M:%S.", &broken );
+	snprintf( str + sizeof ( "YYYY-mm-dd HH:MM:SS" ), 5, "%03d", static_cast<int>( ms.count() % 1000 ) );
+	return ( str );
 }
 
 }
