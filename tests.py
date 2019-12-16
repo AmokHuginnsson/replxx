@@ -737,6 +737,24 @@ class ReplxxTests( unittest.TestCase ):
 			"<c9><rst><ceos><c9><c9><rst><ceos><c9>\r\n",
 			"\n".join( _words_ ) + "\n"
 		)
+	def test_history_search_backward_position( self_ ):
+		self_.check_scenario(
+			"<c-r>req<up><cr><c-d>",
+			"<c1><ceos><c1><ceos>(reverse-i-search)`': "
+			"<c23><c1><ceos>(reverse-i-search)`r': echo repl "
+			"golf<c29><c1><ceos>(reverse-i-search)`re': echo repl "
+			"golf<c30><c1><ceos>(reverse-i-search)`req': other "
+			"request<c32><c1><ceos><brightgreen>replxx<rst>> other request<c15><c9>alfa "
+			"repl bravo<rst><ceos><c24><c9>alfa repl bravo<rst><ceos><c24>\r\n"
+			"alfa repl bravo\r\n",
+			"some command\n"
+			"alfa repl bravo\n"
+			"other request\n"
+			"charlie repl delta\n"
+			"misc input\n"
+			"echo repl golf\n"
+			"final thoughts\n"
+		)
 	def test_history_search_overlong_line( self_ ):
 		self_.check_scenario(
 			"<c-r>lo<cr><c-d>",
@@ -767,6 +785,59 @@ class ReplxxTests( unittest.TestCase ):
 			"misc input\n"
 			"repl_echo golf\n"
 			"final thoughts\n"
+		)
+	def test_history_prefix_search_backward_position( self_ ):
+		self_.check_scenario(
+			"repl<m-p><up><cr><c-d>",
+			"<c9>r<rst><ceos><c10><c9>re<rst><ceos><c11><c9>rep<rst><ceos><c12><c9>repl<rst><ceos><c13><c9>repl_echo "
+			"golf<rst><ceos><c23><c9>misc input<rst><ceos><c19><c9>misc "
+			"input<rst><ceos><c19>\r\n"
+			"misc input\r\n",
+			"some command\n"
+			"repl_alfa bravo\n"
+			"other request\n"
+			"repl_charlie delta\n"
+			"misc input\n"
+			"repl_echo golf\n"
+			"final thoughts\n"
+		)
+	def test_history_listing( self_ ):
+		self_.check_scenario(
+			"<up><cr><c-d>",
+			"<c9><brightmagenta>.history<rst><ceos><c17><c9><brightmagenta>.history<rst><ceos><c17>\r\n"
+			"   0: some command\r\n"
+			"   1: repl_alfa bravo\r\n"
+			"   2: other request\r\n"
+			"   3: repl_charlie delta\r\n"
+			"   4: misc input\r\n"
+			"   5: repl_echo golf\r\n"
+			"   6: .history\r\n",
+			"some command\n"
+			"repl_alfa bravo\n"
+			"other request\n"
+			"repl_charlie delta\n"
+			"misc input\n"
+			"repl_echo golf\n"
+			".history\n"
+		)
+		self_.check_scenario(
+			"<up><cr><c-d>",
+			"<c9>/history<rst><ceos><c17><c9>/history<rst><ceos><c17>\r\n"
+			"   0: some command\r\n"
+			"   1: repl_alfa bravo\r\n"
+			"   2: other request\r\n"
+			"   3: repl_charlie delta\r\n"
+			"   4: misc input\r\n"
+			"   5: repl_echo golf\r\n"
+			"   6: /history\r\n",
+			"some command\n"
+			"repl_alfa bravo\n"
+			"other request\n"
+			"repl_charlie delta\n"
+			"misc input\n"
+			"repl_echo golf\n"
+			"/history\n",
+			command = ReplxxTests._cSample_ + " q1"
 		)
 	def test_history_browse( self_ ):
 		self_.check_scenario(
@@ -1106,6 +1177,15 @@ class ReplxxTests( unittest.TestCase ):
 			"<c9><yellow>01<rst>twelve<yellow>23<rst><ceos><c17>"
 			"<c9><yellow>01<rst>twelve<yellow>23<rst><ceos><c19>\r\n"
 			"01twelve23\r\n",
+			"one two three\nten eleven twelve\nmillion trillion\ndog cat\n"
+		)
+		self_.check_scenario(
+			"<up><up><up> <m-.><m-.><cr><c-d>",
+			"<c9>dog cat<rst><ceos><c16><c9>million trillion<rst><ceos><c25><c9>ten "
+			"eleven twelve<rst><ceos><c26><c9>ten eleven twelve <rst><ceos><c27><c9>ten "
+			"eleven twelve cat<rst><ceos><c30><c9>ten eleven twelve "
+			"trillion<rst><ceos><c35><c9>ten eleven twelve trillion<rst><ceos><c35>\r\n"
+			"ten eleven twelve trillion\r\n",
 			"one two three\nten eleven twelve\nmillion trillion\ndog cat\n"
 		)
 	def test_tab_completion_cutoff( self_ ):
