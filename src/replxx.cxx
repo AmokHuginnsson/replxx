@@ -102,6 +102,7 @@
 #include "replxx.h"
 #include "replxx.hxx"
 #include "replxx_impl.hxx"
+#include "history.hxx"
 #include "io.hxx"
 
 using namespace std;
@@ -160,8 +161,8 @@ int Replxx::history_size( void ) const {
 	return ( _impl->history_size() );
 }
 
-char const* Replxx::history_line( int index ) const {
-	return ( _impl->history_line( index ) );
+Replxx::HistoryScan Replxx::history_scan( void ) const {
+	return ( _impl->history_scan() );
 }
 
 void Replxx::set_preload_buffer( std::string const& preloadText ) {
@@ -488,12 +489,24 @@ void replxx_set_unique_history( ::Replxx* replxx_, int val ) {
 	replxx->set_unique_history( val ? true : false );
 }
 
-/* Fetch a line of the history by (zero-based) index.	If the requested
- * line does not exist, NULL is returned.	The return value is a heap-allocated
- * copy of the line. */
-char const* replxx_history_line( ::Replxx* replxx_, int index ) {
+ReplxxHistoryScan* replxx_history_scan_start( ::Replxx* replxx_ ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
-	return ( replxx->history_line( index ) );
+	return ( reinterpret_cast<ReplxxHistoryScan*>( replxx->history_scan().release() ) );
+}
+
+void replxx_history_scan_stop( ::Replxx*, ReplxxHistoryScan* historyScan_ ) {
+	delete reinterpret_cast<replxx::Replxx::HistoryScanImpl*>( historyScan_ );
+}
+
+int replxx_history_scan_next( ::Replxx*, ReplxxHistoryScan* historyScan_, ReplxxHistoryEntry* historyEntry_ ) {
+	replxx::Replxx::HistoryScanImpl* historyScan( reinterpret_cast<replxx::Replxx::HistoryScanImpl*>( historyScan_ ) );
+	bool hasNext( historyScan->next() );
+	if ( hasNext ) {
+		replxx::Replxx::HistoryEntry const& historyEntry( historyScan->get() );
+		historyEntry_->timestamp = historyEntry.timestamp().c_str();
+		historyEntry_->text = historyEntry.text().c_str();
+	}
+	return ( hasNext ? 0 : -1 );
 }
 
 /* Save the history in the specified file. On success 0 is returned

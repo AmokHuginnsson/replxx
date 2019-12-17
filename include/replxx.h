@@ -197,6 +197,11 @@ typedef struct ReplxxStateTag {
 } ReplxxState;
 
 typedef struct Replxx Replxx;
+typedef struct ReplxxHistoryScan ReplxxHistoryScan;
+typedef struct ReplxxHistoryEntryTag {
+	char const* timestamp;
+	char const* text;
+} ReplxxHistoryEntry;
 
 /*! \brief Create Replxx library resouce holder.
  *
@@ -476,7 +481,9 @@ REPLXX_IMPEXP void replxx_set_no_color( Replxx*, int val );
 /*! \brief Set maximum number of entries in history list.
  */
 REPLXX_IMPEXP void replxx_set_max_history_size( Replxx*, int len );
-REPLXX_IMPEXP char const* replxx_history_line( Replxx*, int index );
+REPLXX_IMPEXP ReplxxHistoryScan* replxx_history_scan_start( Replxx* );
+REPLXX_IMPEXP void replxx_history_scan_stop( Replxx*, ReplxxHistoryScan* );
+REPLXX_IMPEXP int replxx_history_scan_next( Replxx*, ReplxxHistoryScan*, ReplxxHistoryEntry* );
 REPLXX_IMPEXP void replxx_history_save( Replxx*, const char* filename );
 REPLXX_IMPEXP void replxx_history_load( Replxx*, const char* filename );
 REPLXX_IMPEXP void replxx_history_clear( Replxx* );

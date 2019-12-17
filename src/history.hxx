@@ -4,15 +4,16 @@
 #include <vector>
 
 #include "unicodestring.hxx"
+#include "utf8string.hxx"
 #include "conversion.hxx"
 
 namespace replxx {
 
 class History {
 public:
-	typedef std::vector<UnicodeString> lines_t;
+	typedef std::vector<UnicodeString> entries_t;
 private:
-	lines_t _data;
+	entries_t _entries;
 	int _maxSize;
 	int _index;
 	/*
@@ -38,17 +39,15 @@ public:
 	}
 	void reset_pos( int = -1 );
 	UnicodeString const& operator[] ( int ) const;
-	void set_recall_most_recent( void ) {
-		_recallMostRecent = true;
-	}
 	void reset_recall_most_recent( void ) {
 		_recallMostRecent = false;
 	}
 	void drop_last( void ) {
-		_data.pop_back();
+		_entries.pop_back();
 	}
 	void commit_index( void ) {
-		_previousIndex = _recallMostRecent ? _index : -2;
+		_previousIndex = _index;
+		_recallMostRecent = true;
 	}
 	int current_pos( void ) const {
 		return ( _index );
@@ -57,23 +56,35 @@ public:
 		return ( _index == ( size() - 1 ) );
 	}
 	bool is_empty( void ) const {
-		return ( _data.empty() );
+		return ( _entries.empty() );
 	}
 	void update_last( UnicodeString const& line_ ) {
-		_data.back() = line_;
+		_entries.back() = line_;
 	}
 	bool move( bool );
 	UnicodeString const& current( void ) const {
-		return ( _data[_index] );
+		return ( _entries[_index] );
 	}
 	void jump( bool );
 	bool common_prefix_search( UnicodeString const&, int, bool );
 	int size( void ) const {
-		return ( static_cast<int>( _data.size() ) );
+		return ( static_cast<int>( _entries.size() ) );
 	}
+	Replxx::HistoryScan::impl_t scan( Utf8String& ) const;
 private:
 	History( History const& ) = delete;
 	History& operator = ( History const& ) = delete;
+};
+
+class Replxx::HistoryScanImpl {
+	History::entries_t const& _entries;
+	History::entries_t::const_iterator _it;
+	Utf8String& _utf8Cache;
+	mutable Replxx::HistoryEntry _entryCache;
+public:
+	HistoryScanImpl( History::entries_t const&, Utf8String& );
+	bool next( void );
+	Replxx::HistoryEntry const& get( void ) const;
 };
 
 }

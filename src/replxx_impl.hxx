@@ -155,6 +155,7 @@ public:
 	void history_save( std::string const& filename );
 	void history_load( std::string const& filename );
 	void history_clear( void );
+	Replxx::HistoryScan::impl_t history_scan( void ) const;
 	char const* history_line( int index ) const;
 	int history_size( void ) const;
 	void set_preload_buffer(std::string const& preloadText);

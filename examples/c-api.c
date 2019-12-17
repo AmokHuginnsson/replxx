@@ -205,13 +205,12 @@ int main( int argc, char** argv ) {
 			/* Display the current history. */
 			int index = 0;
 			int size = replxx_history_size( replxx );
-			for ( ; index < size; ++index) {
-				char const* hist = replxx_history_line( replxx, index );
-				if (hist == NULL) {
-					break;
-				}
-				replxx_print( replxx, "%4d: %s\n", index, hist );
+			ReplxxHistoryScan* hs = replxx_history_scan_start( replxx );
+			ReplxxHistoryEntry he;
+			for ( ; replxx_history_scan_next( replxx, hs, &he ) == 0; ++index ) {
+				replxx_print( replxx, "%4d: %s\n", index, he.text );
 			}
+			replxx_history_scan_stop( replxx, hs );
 		}
 		if (*result != '\0') {
 			replxx_print( replxx, quiet ? "%s\n" : "thanks for the input: %s\n", result );

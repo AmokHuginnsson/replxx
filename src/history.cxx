@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <memory>
 #include <fstream>
 #include <cstring>
 
@@ -10,36 +11,78 @@
 
 #endif /* _WIN32 */
 
+#include "replxx.hxx"
 #include "history.hxx"
-#include "utf8string.hxx"
 
 using namespace std;
 
 namespace replxx {
 
+namespace {
+void delete_ReplxxHistoryScanImpl( Replxx::HistoryScanImpl* impl_ ) {
+	delete impl_;
+}
+}
+
 static int const REPLXX_DEFAULT_HISTORY_MAX_LEN( 1000 );
 
+Replxx::HistoryScan::HistoryScan( impl_t impl_ )
+	: _impl( std::move( impl_ ) ) {
+}
+
+bool Replxx::HistoryScan::next( void ) {
+	return ( _impl->next() );
+}
+
+Replxx::HistoryScanImpl::HistoryScanImpl( History::entries_t const& entries_, Utf8String& utf8Cache_ )
+	: _entries( entries_ )
+	, _it( _entries.end() )
+	, _utf8Cache( utf8Cache_ )
+	, _entryCache( std::string(), std::string() ) {
+}
+
+Replxx::HistoryEntry const& Replxx::HistoryScan::get( void ) const {
+	return ( _impl->get() );
+}
+
+bool Replxx::HistoryScanImpl::next( void ) {
+	if ( _it == _entries.end() ) {
+		_it = _entries.begin();
+	} else {
+		++ _it;
+	}
+	return ( _it != _entries.end() );
+}
+
+Replxx::HistoryEntry const& Replxx::HistoryScanImpl::get( void ) const {
+	_utf8Cache.assign( *_it );
+	_entryCache = Replxx::HistoryEntry( "", _utf8Cache.get() );
+	return ( _entryCache );
+}
+
+Replxx::HistoryScan::impl_t History::scan( Utf8String& utf8_ ) const {
+	return ( Replxx::HistoryScan::impl_t( new Replxx::HistoryScanImpl( _entries, utf8_ ), delete_ReplxxHistoryScanImpl ) );
+}
+
 History::History( void )
-	: _data()
+	: _entries()
 	, _maxSize( REPLXX_DEFAULT_HISTORY_MAX_LEN )
 	, _index( 0 )
-	, _previousIndex( -2 )
+	, _previousIndex( 0 )
 	, _recallMostRecent( false )
 	, _unique( true ) {
 }
 
 void History::add( UnicodeString const& line ) {
-	if ( ( _maxSize > 0 ) && ( _data.empty() || ( line != _data.back() ) ) ) {
+	if ( ( _maxSize > 0 ) && ( _entries.empty() || ( line != _entries.back() ) ) ) {
 		if ( _unique ) {
-			_data.erase( std::remove( _data.begin(), _data.end(), line ), _data.end() );
+			_entries.erase( std::remove( _entries.begin(), _entries.end(), line ), _entries.end() );
 		}
 		if ( size() > _maxSize ) {
-			_data.erase( _data.begin() );
-			if ( -- _previousIndex < -1 ) {
-				_previousIndex = -2;
-			}
+			_entries.erase( _entries.begin() );
+			_recallMostRecent = false;
 		}
-		_data.push_back( line );
+		_entries.push_back( line );
 	}
 }
 
@@ -50,7 +93,7 @@ void History::save( std::string const& filename ) {
 	int fdLock( ::open( lockName.c_str(), O_CREAT | O_RDWR, 0600 ) );
 	static_cast<void>( ::lockf( fdLock, F_LOCK, 0 ) == 0 );
 #endif
-	lines_t data( std::move( _data ) );
+	entries_t data( std::move( _entries ) );
 	load( filename );
 	for ( UnicodeString const& h : data ) {
 		add( h );
@@ -64,7 +107,7 @@ void History::save( std::string const& filename ) {
 	chmod( filename.c_str(), S_IRUSR | S_IWUSR );
 #endif
 	Utf8String utf8;
-	for ( UnicodeString const& h : _data ) {
+	for ( UnicodeString const& h : _entries ) {
 		if ( ! h.is_empty() ) {
 			utf8.assign( h );
 			histFile << utf8.get() << endl;
@@ -97,9 +140,9 @@ void History::load( std::string const& filename ) {
 }
 
 void History::clear( void ) {
-	_data.clear();
+	_entries.clear();
 	_index = 0;
-	_previousIndex = -2;
+	_recallMostRecent = false;
 }
 
 void History::set_max_size( int size_ ) {
@@ -107,7 +150,7 @@ void History::set_max_size( int size_ ) {
 		_maxSize = size_;
 		int curSize( size() );
 		if ( _maxSize < curSize ) {
-			_data.erase( _data.begin(), _data.begin() + ( curSize - _maxSize ) );
+			_entries.erase( _entries.begin(), _entries.begin() + ( curSize - _maxSize ) );
 		}
 	}
 }
@@ -115,19 +158,18 @@ void History::set_max_size( int size_ ) {
 void History::reset_pos( int pos_ ) {
 	if ( pos_ == -1 ) {
 		_index = size() - 1;
-		_recallMostRecent = false;
 	} else {
 		_index = pos_;
 	}
 }
 
 bool History::move( bool up_ ) {
-	if ( _previousIndex != -2 && ! up_ ) {
+	if ( _recallMostRecent && ! up_ ) {
 		_index = _previousIndex; // emulate Windows down-arrow
 	} else {
 		_index += up_ ? -1 : 1;
 	}
-	_previousIndex = -2;
+	_recallMostRecent = false;
 	if (_index < 0) {
 		_index = 0;
 		return ( false );
@@ -135,34 +177,31 @@ bool History::move( bool up_ ) {
 		_index = size() - 1;
 		return ( false );
 	}
-	_recallMostRecent = true;
 	return ( true );
 }
 
 void History::jump( bool start_ ) {
 	_index = start_ ? 0 : size() - 1;
-	_previousIndex = -2;
-	_recallMostRecent = true;
+	_recallMostRecent = false;
 }
 
 bool History::common_prefix_search( UnicodeString const& prefix_, int prefixSize_, bool back_ ) {
 	int direct( size() + ( back_ ? -1 : 1 ) );
-	int i( ( _index + direct ) % _data.size() );
+	int i( ( _index + direct ) % _entries.size() );
 	while ( i != _index ) {
-		if ( _data[i].starts_with( prefix_.begin(), prefix_.begin() + prefixSize_ ) ) {
+		if ( _entries[i].starts_with( prefix_.begin(), prefix_.begin() + prefixSize_ ) ) {
 			_index = i;
-			_previousIndex = -2;
-			_recallMostRecent = true;
+			commit_index();
 			return ( true );
 		}
 		i += direct;
-		i %= _data.size();
+		i %= _entries.size();
 	}
 	return ( false );
 }
 
 UnicodeString const& History::operator[] ( int idx_ ) const {
-	return ( _data[ idx_ ] );
+	return ( _entries[ idx_ ] );
 }
 
 }

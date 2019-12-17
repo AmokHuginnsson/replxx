@@ -404,8 +404,9 @@ int main( int argc_, char** argv_ ) {
 
 		} else if (input.compare(0, 8, ".history") == 0) {
 			// display the current history
-			for (size_t i = 0, sz = rx.history_size(); i < sz; ++i) {
-				std::cout << std::setw(4) << i << ": " << rx.history_line(i) << "\n";
+			Replxx::HistoryScan hs( rx.history_scan() );
+			for ( int i( 0 ); hs.next(); ++ i ) {
+				std::cout << std::setw(4) << i << ": " << hs.get().text() << "\n";
 			}
 
 			rx.history_add(input);

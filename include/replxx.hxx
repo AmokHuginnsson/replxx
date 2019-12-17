@@ -223,6 +223,44 @@ public:
 		}
 	};
 	typedef std::vector<Completion> completions_t;
+	class HistoryEntry {
+		std::string _timestamp;
+		std::string _text;
+	public:
+		HistoryEntry( std::string const& timestamp_, std::string const& text_ )
+			: _timestamp( timestamp_ )
+			, _text( text_ ) {
+		}
+		std::string const& timestamp( void ) const {
+			return ( _timestamp );
+		}
+		std::string const& text( void ) const {
+			return ( _text );
+		}
+	};
+	class HistoryScanImpl;
+	class HistoryScan {
+	public:
+		typedef std::unique_ptr<HistoryScanImpl, void (*)( HistoryScanImpl* )> impl_t;
+	private:
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable:4251)
+#endif
+		impl_t _impl;
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
+	public:
+		HistoryScan( impl_t );
+		HistoryScan( HistoryScan&& ) = default;
+		HistoryScan& operator = ( HistoryScan&& ) = default;
+		bool next( void );
+		HistoryEntry const& get( void ) const;
+	private:
+		HistoryScan( HistoryScan const& ) = delete;
+		HistoryScan& operator = ( HistoryScan const& ) = delete;
+	};
 	typedef std::vector<std::string> hints_t;
 
 	/*! \brief Line modification callback type definition.
@@ -421,7 +459,7 @@ public:
 	void history_load( std::string const& filename );
 	void history_clear( void );
 	int history_size( void ) const;
-	char const* history_line( int index ) const;
+	HistoryScan history_scan( void ) const;
 
 	void set_preload_buffer( std::string const& preloadText );
 

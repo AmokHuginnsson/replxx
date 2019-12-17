@@ -1884,7 +1884,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 	pb.update_screen_columns();
 	pb._previousLen = dp._characterCount;
 	if ( useSearchedLine && ( activeHistoryLine.length() > 0 ) ) {
-		_history.set_recall_most_recent();
+		_history.commit_index();
 		_data.assign( activeHistoryLine );
 		_pos = historyLinePosition;
 	} else if ( ! useSearchedLine ) {
@@ -1935,6 +1935,10 @@ void Replxx::ReplxxImpl::history_clear( void ) {
 
 int Replxx::ReplxxImpl::history_size( void ) const {
 	return ( _history.size() );
+}
+
+Replxx::HistoryScan::impl_t Replxx::ReplxxImpl::history_scan( void ) const {
+	return ( _history.scan( _utf8Buffer ) );
 }
 
 char const* Replxx::ReplxxImpl::history_line( int index ) const {
