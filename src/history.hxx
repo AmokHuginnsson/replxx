@@ -16,6 +16,7 @@ private:
 	entries_t _entries;
 	int _maxSize;
 	int _index;
+	int _yankIndex;
 	/*
 	 * _previousIndex and _recallMostRecent are used to allow
 	 * HISTORY_NEXT action (a down-arrow key) to have a special meaning
@@ -38,6 +39,8 @@ public:
 		_unique = unique_;
 	}
 	void reset_pos( int = -1 );
+	void reset_yank_iterator();
+	bool next_yank_position( void );
 	UnicodeString const& operator[] ( int ) const;
 	void reset_recall_most_recent( void ) {
 		_recallMostRecent = false;
@@ -64,6 +67,9 @@ public:
 	bool move( bool );
 	UnicodeString const& current( void ) const {
 		return ( _entries[_index] );
+	}
+	UnicodeString const& yank_line( void ) const {
+		return ( _entries[_yankIndex] );
 	}
 	void jump( bool );
 	bool common_prefix_search( UnicodeString const&, int, bool );

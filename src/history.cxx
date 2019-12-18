@@ -68,6 +68,7 @@ History::History( void )
 	: _entries()
 	, _maxSize( REPLXX_DEFAULT_HISTORY_MAX_LEN )
 	, _index( 0 )
+	, _yankIndex( -1 )
 	, _previousIndex( 0 )
 	, _recallMostRecent( false )
 	, _unique( true ) {
@@ -86,12 +87,27 @@ void History::add( UnicodeString const& line ) {
 	}
 }
 
+class FileLock {
+	std::string _path;
+	int _lockFd;
+public:
+	FileLock( std::string const& name_ )
+		: _path( name_ + ".lock" )
+		, _lockFd( ::open( _path.c_str(), O_CREAT | O_RDWR, 0600 ) ) {
+		static_cast<void>( ::lockf( _lockFd, F_LOCK, 0 ) == 0 );
+	}
+	~FileLock( void ) {
+		static_cast<void>( ::lockf( _lockFd, F_ULOCK, 0 ) == 0 );
+		::close( _lockFd );
+		::unlink( _path.c_str() );
+		return;
+	}
+};
+
 void History::save( std::string const& filename ) {
 #ifndef _WIN32
 	mode_t old_umask = umask( S_IXUSR | S_IRWXG | S_IRWXO );
-	std::string lockName( filename + ".lock" );
-	int fdLock( ::open( lockName.c_str(), O_CREAT | O_RDWR, 0600 ) );
-	static_cast<void>( ::lockf( fdLock, F_LOCK, 0 ) == 0 );
+	FileLock fileLock( filename );
 #endif
 	entries_t data( std::move( _entries ) );
 	load( filename );
@@ -113,11 +129,6 @@ void History::save( std::string const& filename ) {
 			histFile << utf8.get() << endl;
 		}
 	}
-#ifndef _WIN32
-	static_cast<void>( ::lockf( fdLock, F_ULOCK, 0 ) == 0 );
-	::close( fdLock );
-	::unlink( lockName.c_str() );
-#endif
 	return;
 }
 
@@ -161,6 +172,23 @@ void History::reset_pos( int pos_ ) {
 	} else {
 		_index = pos_;
 	}
+}
+
+void History::reset_yank_iterator( void ) {
+	_yankIndex = -1;
+}
+
+bool History::next_yank_position( void ) {
+	bool resetYankSize( false );
+	if ( _yankIndex == -1 ) {
+		resetYankSize = true;
+	} else {
+		-- _yankIndex;
+	}
+	if ( _yankIndex < 0 ) {
+		_yankIndex = _entries.size() - 2;
+	}
+	return ( resetYankSize );
 }
 
 bool History::move( bool up_ ) {

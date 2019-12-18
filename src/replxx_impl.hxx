@@ -110,7 +110,6 @@ private:
 	int _pos;    // character position in buffer ( 0 <= _pos <= _len )
 	int _prefix; // prefix length used in common prefix search
 	int _hintSelection; // Currently selected hint.
-	int _historyYankIndex;
 	History _history;
 	KillRing _killRing;
 	int long long _lastRefreshTime;
@@ -156,7 +155,6 @@ public:
 	void history_load( std::string const& filename );
 	void history_clear( void );
 	Replxx::HistoryScan::impl_t history_scan( void ) const;
-	char const* history_line( int index ) const;
 	int history_size( void ) const;
 	void set_preload_buffer(std::string const& preloadText);
 	void set_word_break_characters( char const* wordBreakers );

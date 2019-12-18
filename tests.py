@@ -930,8 +930,8 @@ class ReplxxTests( unittest.TestCase ):
 			"<up><up><c-r>cc<c-c><up><cr><c-d>",
 			"<c9>hhhh<rst><ceos><c13><c9>gggg<rst><ceos><c13><c1><ceos><c1><ceos>(reverse-i-search)`': "
 			"gggg<c27><c1><ceos>(reverse-i-search)`c': "
-			"cccc<c27><bell><c1><ceos>(reverse-i-search)`cc': "
-			"cccc<c28><c1><ceos><brightgreen>replxx<rst>> "
+			"cccc<c27><c1><ceos>(reverse-i-search)`cc': "
+			"cccc<c27><c1><ceos><brightgreen>replxx<rst>> "
 			"gggg<c13><c9>gggg<rst><ceos><c13><c9>ffff<rst><ceos><c13><c9>ffff<rst><ceos><c13>\r\n"
 			"ffff\r\n",
 			"aaaa\nbbbb\ncccc\ndddd\neeee\nffff\ngggg\nhhhh\n"

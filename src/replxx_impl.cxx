@@ -96,7 +96,6 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _pos( 0 )
 	, _prefix( 0 )
 	, _hintSelection( -1 )
-	, _historyYankIndex( -1 )
 	, _history()
 	, _killRing()
 	, _lastRefreshTime( now_us() )
@@ -1139,7 +1138,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::action( action_trait_t actionTrait_, k
 		_completionContextLength = 0;
 	}
 	if ( ! ( actionTrait_ & DONT_RESET_HIST_YANK_INDEX ) ) {
-		_historyYankIndex = -1;
+		_history.reset_yank_iterator();
 	}
 	if ( actionTrait_ & WANT_REFRESH ) {
 		_modifiedState = true;
@@ -1358,15 +1357,10 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::yank_last_arg( char32_t ) {
 	if ( _history.size() < 2 ) {
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	}
-	if ( _historyYankIndex == -1 ) {
+	if ( _history.next_yank_position() ) {
 		_lastYankSize = 0;
-	} else {
-		-- _historyYankIndex;
 	}
-	if ( _historyYankIndex < 0 ) {
-		_historyYankIndex = _history.size() - 2;
-	}
-	UnicodeString const& histLine( _history[_historyYankIndex] );
+	UnicodeString const& histLine( _history.yank_line() );
 	int endPos( histLine.length() );
 	while ( ( endPos > 0 ) && isspace( histLine[endPos - 1] ) ) {
 		-- endPos;
@@ -1798,9 +1792,9 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 #ifndef _WIN32
 			case Replxx::KEY::control('Z'): { // ctrl-Z, job control
 				_terminal.disable_raw_mode(); // Returning to Linux (whatever) shell, leave raw mode
-				raise(SIGSTOP);   // Break out in mid-line
+				raise( SIGSTOP );   // Break out in mid-line
 				_terminal.enable_raw_mode();  // Back from Linux shell, re-enter raw mode
-				dynamicRefresh(dp, activeHistoryLine.get(), activeHistoryLine.length(), historyLinePosition);
+				dynamicRefresh( dp, activeHistoryLine.get(), activeHistoryLine.length(), historyLinePosition );
 				continue;
 			} break;
 #endif
@@ -1811,7 +1805,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 				if ( dp._searchText.length() > 0 ) {
 					dp._searchText.erase( dp._searchText.length() - 1 );
 					dp.updateSearchPrompt();
-					_history.reset_pos( dp._direction == -1 ? _history.size() - 1 : 0 );
+					_history.jump( dp._direction > 0 );
 				} else {
 					beep();
 				}
@@ -1837,36 +1831,48 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 		activeHistoryLine.assign( _history.current() );
 		if ( dp._searchText.length() > 0 ) {
 			bool found = false;
-			int historySearchIndex = _history.current_pos();
 			int lineSearchPos = historyLinePosition;
 			if ( searchAgain ) {
 				lineSearchPos += dp._direction;
 			}
 			searchAgain = false;
+			int historyPosition( _history.current_pos() );
 			while ( true ) {
-				while ( ( ( lineSearchPos + dp._searchText.length() ) <= activeHistoryLine.length() ) && ( lineSearchPos >= 0 ) ) {
-					if ( std::equal( dp._searchText.begin(), dp._searchText.end(), activeHistoryLine.begin() + lineSearchPos ) ) {
+				while (
+					dp._direction < 0
+						? ( lineSearchPos >= 0 )
+						: ( ( lineSearchPos + dp._searchText.length() ) <= activeHistoryLine.length() )
+				) {
+					if (
+						( lineSearchPos >= 0 )
+						&& ( ( lineSearchPos + dp._searchText.length() ) <= activeHistoryLine.length() )
+						&& std::equal( dp._searchText.begin(), dp._searchText.end(), activeHistoryLine.begin() + lineSearchPos )
+					) {
 						found = true;
 						break;
 					}
 					lineSearchPos += dp._direction;
 				}
 				if ( found ) {
-					_history.reset_pos( historySearchIndex );
 					historyLinePosition = lineSearchPos;
 					break;
-				} else if ( ( dp._direction > 0 ) ? ( historySearchIndex < ( _history.size() - 1 ) ) : ( historySearchIndex > 0 ) ) {
-					historySearchIndex += dp._direction;
-					activeHistoryLine.assign( _history[historySearchIndex] );
+				} else if ( _history.move( dp._direction < 0 ) ) {
+					activeHistoryLine.assign( _history.current() );
 					lineSearchPos = ( dp._direction > 0 ) ? 0 : ( activeHistoryLine.length() - dp._searchText.length() );
 				} else {
 					beep();
 					break;
 				}
 			} // while
+			if ( ! found ) {
+				_history.reset_pos( historyPosition );
+			}
+		} else {
+			_history.reset_pos( historyCurrentPos );
+			historyLinePosition = _pos;
 		}
 		activeHistoryLine.assign( _history.current() );
-		dynamicRefresh(dp, activeHistoryLine.get(), activeHistoryLine.length(), historyLinePosition); // draw user's text with our prompt
+		dynamicRefresh( dp, activeHistoryLine.get(), activeHistoryLine.length(), historyLinePosition ); // draw user's text with our prompt
 	} // while
 
 	// leaving history search, restore previous prompt, maybe make searched line
@@ -1939,11 +1945,6 @@ int Replxx::ReplxxImpl::history_size( void ) const {
 
 Replxx::HistoryScan::impl_t Replxx::ReplxxImpl::history_scan( void ) const {
 	return ( _history.scan( _utf8Buffer ) );
-}
-
-char const* Replxx::ReplxxImpl::history_line( int index ) const {
-	_utf8Buffer.assign( _history[index] );
-	return ( _utf8Buffer.get() );
 }
 
 void Replxx::ReplxxImpl::set_modify_callback( Replxx::modify_callback_t const& fn ) {
