@@ -1057,7 +1057,7 @@ int Replxx::ReplxxImpl::get_input_line( void ) {
 	} else {
 		_history.add( UnicodeString() );
 	}
-	_history.reset_pos();
+	_history.jump( false, false );
 
 	// display the prompt
 	_prompt.write();
@@ -1697,7 +1697,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 	if ( _history.is_last() ) {
 		_history.update_last( _data );
 	}
-	int historyCurrentPos( _history.current_pos() );
+	_history.save_pos();
 	int historyLinePosition( _pos );
 	clear_self_to_end_of_screen();
 
@@ -1836,7 +1836,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 				lineSearchPos += dp._direction;
 			}
 			searchAgain = false;
-			int historyPosition( _history.current_pos() );
 			while ( true ) {
 				while (
 					dp._direction < 0
@@ -1865,10 +1864,10 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 				}
 			} // while
 			if ( ! found ) {
-				_history.reset_pos( historyPosition );
+				_history.restore_pos();
 			}
 		} else {
-			_history.reset_pos( historyCurrentPos );
+			_history.restore_pos();
 			historyLinePosition = _pos;
 		}
 		activeHistoryLine.assign( _history.current() );
@@ -1894,7 +1893,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 		_data.assign( activeHistoryLine );
 		_pos = historyLinePosition;
 	} else if ( ! useSearchedLine ) {
-		_history.reset_pos( historyCurrentPos );
+		_history.restore_pos();
 	}
 	dynamicRefresh(pb, _data.get(), _data.length(), _pos); // redraw the original prompt with current input
 	_prompt._previousInputLen = _data.length();

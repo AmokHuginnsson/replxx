@@ -67,9 +67,9 @@ Replxx::HistoryScan::impl_t History::scan( Utf8String& utf8_ ) const {
 History::History( void )
 	: _entries()
 	, _maxSize( REPLXX_DEFAULT_HISTORY_MAX_LEN )
-	, _index( 0 )
-	, _yankIndex( -1 )
-	, _previousIndex( 0 )
+	, _current( _entries.begin() )
+	, _yankPos( _entries.end() )
+	, _previous( _entries.begin() )
 	, _recallMostRecent( false )
 	, _unique( true ) {
 }
@@ -77,14 +77,21 @@ History::History( void )
 void History::add( UnicodeString const& line ) {
 	if ( ( _maxSize > 0 ) && ( _entries.empty() || ( line != _entries.back() ) ) ) {
 		if ( _unique ) {
-			_entries.erase( std::remove( _entries.begin(), _entries.end(), line ), _entries.end() );
+			entries_t::iterator it( std::find( _entries.begin(), _entries.end(), line ) );
+			if ( it != _entries.end() ) {
+				erase( it );
+			}
 		}
 		if ( size() > _maxSize ) {
-			_entries.erase( _entries.begin() );
+			erase( _entries.begin() );
 			_recallMostRecent = false;
 		}
 		_entries.push_back( line );
 	}
+	if ( _current == _entries.end() ) {
+		_current = moved( _entries.end(), -1 );
+	}
+	_yankPos = _entries.end();
 }
 
 class FileLock {
@@ -152,84 +159,121 @@ void History::load( std::string const& filename ) {
 
 void History::clear( void ) {
 	_entries.clear();
-	_index = 0;
+	_current = _entries.begin();
 	_recallMostRecent = false;
 }
 
 void History::set_max_size( int size_ ) {
 	if ( size_ >= 0 ) {
 		_maxSize = size_;
-		int curSize( size() );
-		if ( _maxSize < curSize ) {
-			_entries.erase( _entries.begin(), _entries.begin() + ( curSize - _maxSize ) );
+		while ( size() > _maxSize ) {
+			erase( _entries.begin() );
 		}
 	}
 }
 
-void History::reset_pos( int pos_ ) {
-	if ( pos_ == -1 ) {
-		_index = size() - 1;
-	} else {
-		_index = pos_;
-	}
-}
-
 void History::reset_yank_iterator( void ) {
-	_yankIndex = -1;
+	_yankPos = _entries.end();
 }
 
 bool History::next_yank_position( void ) {
 	bool resetYankSize( false );
-	if ( _yankIndex == -1 ) {
+	if ( _yankPos == _entries.end() ) {
 		resetYankSize = true;
-	} else {
-		-- _yankIndex;
 	}
-	if ( _yankIndex < 0 ) {
-		_yankIndex = _entries.size() - 2;
+	if ( ( _yankPos != _entries.begin() ) && ( _yankPos != _entries.end() ) ) {
+		-- _yankPos;
+	} else {
+		_yankPos = moved( _entries.end(), -2 );
 	}
 	return ( resetYankSize );
 }
 
 bool History::move( bool up_ ) {
-	if ( _recallMostRecent && ! up_ ) {
-		_index = _previousIndex; // emulate Windows down-arrow
-	} else {
-		_index += up_ ? -1 : 1;
+	bool doRecall( _recallMostRecent && ! up_ );
+	if ( doRecall ) {
+		_current = _previous; // emulate Windows down-arrow
 	}
 	_recallMostRecent = false;
-	if (_index < 0) {
-		_index = 0;
-		return ( false );
-	} else if ( _index >= size() ) {
-		_index = size() - 1;
-		return ( false );
-	}
-	return ( true );
+	return ( doRecall || move( _current, up_ ? -1 : 1 ) );
 }
 
-void History::jump( bool start_ ) {
-	_index = start_ ? 0 : size() - 1;
-	_recallMostRecent = false;
+void History::jump( bool start_, bool reset_ ) {
+	if ( start_ ) {
+		_current = _entries.begin();
+	} else {
+		_current = moved( _entries.end(), -1 );
+	}
+	if ( reset_ ) {
+		_recallMostRecent = false;
+	}
+}
+
+void History::save_pos( void ) {
+	_previous = _current;
+}
+
+void History::restore_pos( void ) {
+	_current = _previous;
 }
 
 bool History::common_prefix_search( UnicodeString const& prefix_, int prefixSize_, bool back_ ) {
-	int direct( size() + ( back_ ? -1 : 1 ) );
-	int i( ( _index + direct ) % _entries.size() );
-	while ( i != _index ) {
-		if ( _entries[i].starts_with( prefix_.begin(), prefix_.begin() + prefixSize_ ) ) {
-			_index = i;
+	int step( back_ ? -1 : 1 );
+	entries_t::const_iterator it( moved( _current, step, true ) );
+	while ( it != _current ) {
+		if ( it->starts_with( prefix_.begin(), prefix_.begin() + prefixSize_ ) ) {
+			_current = it;
 			commit_index();
 			return ( true );
 		}
-		i += direct;
-		i %= _entries.size();
+		move( it, step, true );
 	}
 	return ( false );
 }
 
-UnicodeString const& History::operator[] ( int idx_ ) const {
-	return ( _entries[ idx_ ] );
+bool History::move( entries_t::const_iterator& it_, int by_, bool wrapped_ ) const {
+	if ( by_ > 0 ) {
+		for ( int i( 0 ); i < by_; ++ i ) {
+			++ it_;
+			if ( it_ != _entries.end() ) {
+				break;
+			} else if ( wrapped_ ) {
+				it_ = _entries.begin();
+			} else {
+				-- it_;
+				return ( false );
+			}
+		}
+	} else {
+		for ( int i( 0 ); i > by_; -- i ) {
+			if ( it_ != _entries.begin() ) {
+				-- it_;
+			} else if ( wrapped_ ) {
+				it_ = moved( _entries.end(), -1 );
+			} else {
+				return ( false );
+			}
+		}
+	}
+	return ( true );
+}
+
+History::entries_t::const_iterator History::moved( entries_t::const_iterator it_, int by_, bool wrapped_ ) const {
+	move( it_, by_, wrapped_ );
+	return ( it_ );
+}
+
+void History::erase( entries_t::iterator it_ ) {
+	bool invalidated( it_ == _current );
+	it_ = _entries.erase( it_ );
+	if ( invalidated ) {
+		_current = it_;
+	}
+	if ( ( _current == _entries.end() ) && ! _entries.empty() ) {
+		-- _current;
+	}
+	_yankPos = _entries.end();
+	_previous = _current;
 }
 
 }

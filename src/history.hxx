@@ -1,7 +1,7 @@
 #ifndef REPLXX_HISTORY_HXX_INCLUDED
 #define REPLXX_HISTORY_HXX_INCLUDED 1
 
-#include <vector>
+#include <list>
 
 #include "unicodestring.hxx"
 #include "utf8string.hxx"
@@ -11,21 +11,21 @@ namespace replxx {
 
 class History {
 public:
-	typedef std::vector<UnicodeString> entries_t;
+	typedef std::list<UnicodeString> entries_t;
 private:
 	entries_t _entries;
 	int _maxSize;
-	int _index;
-	int _yankIndex;
+	entries_t::const_iterator _current;
+	entries_t::const_iterator _yankPos;
 	/*
-	 * _previousIndex and _recallMostRecent are used to allow
+	 * _previous and _recallMostRecent are used to allow
 	 * HISTORY_NEXT action (a down-arrow key) to have a special meaning
 	 * if invoked after a line from history was accepted without
 	 * any modification.
 	 * Special meaning is: a down arrow shall jump to the line one
 	 * after previously accepted from history.
 	 */
-	int _previousIndex;
+	entries_t::const_iterator _previous;
 	bool _recallMostRecent;
 	bool _unique;
 public:
@@ -38,10 +38,8 @@ public:
 	void set_unique( bool unique_ ) {
 		_unique = unique_;
 	}
-	void reset_pos( int = -1 );
 	void reset_yank_iterator();
 	bool next_yank_position( void );
-	UnicodeString const& operator[] ( int ) const;
 	void reset_recall_most_recent( void ) {
 		_recallMostRecent = false;
 	}
@@ -49,14 +47,11 @@ public:
 		_entries.pop_back();
 	}
 	void commit_index( void ) {
-		_previousIndex = _index;
+		_previous = _current;
 		_recallMostRecent = true;
 	}
-	int current_pos( void ) const {
-		return ( _index );
-	}
 	bool is_last( void ) const {
-		return ( _index == ( size() - 1 ) );
+		return ( _current == _entries.rbegin().base() );
 	}
 	bool is_empty( void ) const {
 		return ( _entries.empty() );
@@ -66,20 +61,25 @@ public:
 	}
 	bool move( bool );
 	UnicodeString const& current( void ) const {
-		return ( _entries[_index] );
+		return ( *_current );
 	}
 	UnicodeString const& yank_line( void ) const {
-		return ( _entries[_yankIndex] );
+		return ( *_yankPos );
 	}
-	void jump( bool );
+	void jump( bool, bool = true );
 	bool common_prefix_search( UnicodeString const&, int, bool );
 	int size( void ) const {
 		return ( static_cast<int>( _entries.size() ) );
 	}
 	Replxx::HistoryScan::impl_t scan( Utf8String& ) const;
+	void save_pos( void );
+	void restore_pos( void );
 private:
 	History( History const& ) = delete;
 	History& operator = ( History const& ) = delete;
+	bool move( entries_t::const_iterator&, int, bool = false ) const;
+	entries_t::const_iterator moved( entries_t::const_iterator, int, bool = false ) const;
+	void erase( entries_t::iterator );
 };
 
 class Replxx::HistoryScanImpl {
