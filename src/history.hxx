@@ -2,11 +2,29 @@
 #define REPLXX_HISTORY_HXX_INCLUDED 1
 
 #include <list>
+#include <unordered_map>
 
 #include "unicodestring.hxx"
 #include "utf8string.hxx"
 #include "conversion.hxx"
 #include "util.hxx"
+
+namespace std {
+template<>
+struct hash<replxx::UnicodeString> {
+	std::size_t operator()( replxx::UnicodeString const& us_ ) const {
+		std::size_t h( 0 );
+		char32_t const* p( us_.get() );
+		char32_t const* e( p + us_.length() );
+		while ( p != e ) {
+			h *= 31;
+			h += *p;
+			++ p;
+		}
+		return ( h );
+	}
+};
+}
 
 namespace replxx {
 
@@ -28,8 +46,10 @@ public:
 		}
 	};
 	typedef std::list<Entry> entries_t;
+	typedef std::unordered_map<UnicodeString, entries_t::const_iterator> locations_t;
 private:
 	entries_t _entries;
+	locations_t _locations;
 	int _maxSize;
 	entries_t::const_iterator _current;
 	entries_t::const_iterator _yankPos;
@@ -53,28 +73,23 @@ public:
 	void set_max_size( int len );
 	void set_unique( bool unique_ ) {
 		_unique = unique_;
+		remove_duplicates();
 	}
 	void reset_yank_iterator();
 	bool next_yank_position( void );
 	void reset_recall_most_recent( void ) {
 		_recallMostRecent = false;
 	}
-	void drop_last( void ) {
-		_entries.pop_back();
-	}
 	void commit_index( void ) {
 		_previous = _current;
 		_recallMostRecent = true;
 	}
-	bool is_last( void ) const {
-		return ( _current == _entries.rbegin().base() );
-	}
 	bool is_empty( void ) const {
 		return ( _entries.empty() );
 	}
-	void update_last( UnicodeString const& line_ ) {
-		_entries.back() = Entry( now_ms_str(), line_ );
-	}
+	void update_last( UnicodeString const& );
+	void drop_last( void );
+	bool is_last( void ) const;
 	bool move( bool );
 	UnicodeString const& current( void ) const {
 		return ( _current->text() );
@@ -95,7 +110,11 @@ private:
 	History& operator = ( History const& ) = delete;
 	bool move( entries_t::const_iterator&, int, bool = false ) const;
 	entries_t::const_iterator moved( entries_t::const_iterator, int, bool = false ) const;
-	void erase( entries_t::iterator );
+	void erase( entries_t::const_iterator );
+	void trim_to_max_size( void );
+	void remove_duplicate( UnicodeString const& );
+	void remove_duplicates( void );
+	entries_t::const_iterator last( void ) const;
 };
 
 class Replxx::HistoryScanImpl {

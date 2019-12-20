@@ -78,27 +78,12 @@ void History::add( UnicodeString const& line, std::string const& when ) {
 	if ( ( _maxSize <= 0 ) || ( ! _entries.empty() && ( line == _entries.back().text() ) ) ) {
 		return;
 	}
-	if ( _unique ) {
-		entries_t::iterator it(
-			std::find_if(
-				_entries.begin(),
-				_entries.end(),
-				[&line]( Entry const& entry_ ) {
-					return ( entry_.text() == line );
-				}
-			)
-		);
-		if ( it != _entries.end() ) {
-			erase( it );
-		}
-	}
-	if ( size() > _maxSize ) {
-		erase( _entries.begin() );
-		_recallMostRecent = false;
-	}
+	remove_duplicate( line );
+	trim_to_max_size();
 	_entries.emplace_back( when, line );
+	_locations.insert( make_pair( line, last() ) );
 	if ( _current == _entries.end() ) {
-		_current = moved( _entries.end(), -1 );
+		_current = last();
 	}
 	_yankPos = _entries.end();
 }
@@ -125,9 +110,10 @@ void History::save( std::string const& filename ) {
 	mode_t old_umask = umask( S_IXUSR | S_IRWXG | S_IRWXO );
 	FileLock fileLock( filename );
 #endif
-	entries_t data( std::move( _entries ) );
+	entries_t entries( std::move( _entries ) );
+	locations_t locations( std::move( _locations ) );
 	load( filename );
-	for ( Entry const& h : data ) {
+	for ( Entry const& h : entries ) {
 		add( h.text(), h.timestamp() );
 	}
 	ofstream histFile( filename );
@@ -170,7 +156,6 @@ bool is_timestamp( std::string const& s ) {
 
 }
 
-
 void History::load( std::string const& filename ) {
 	ifstream histFile( filename );
 	if ( ! histFile ) {
@@ -184,7 +169,7 @@ void History::load( std::string const& filename ) {
 			line.erase( eol );
 		}
 		if ( is_timestamp( line ) ) {
-			when.assign( line, 4 );
+			when.assign( line, 4, std::string::npos );
 			continue;
 		}
 		if ( ! line.empty() ) {
@@ -195,6 +180,7 @@ void History::load( std::string const& filename ) {
 }
 
 void History::clear( void ) {
+	_locations.clear();
 	_entries.clear();
 	_current = _entries.begin();
 	_recallMostRecent = false;
@@ -203,9 +189,7 @@ void History::clear( void ) {
 void History::set_max_size( int size_ ) {
 	if ( size_ >= 0 ) {
 		_maxSize = size_;
-		while ( size() > _maxSize ) {
-			erase( _entries.begin() );
-		}
+		trim_to_max_size();
 	}
 }
 
@@ -239,7 +223,7 @@ void History::jump( bool start_, bool reset_ ) {
 	if ( start_ ) {
 		_current = _entries.begin();
 	} else {
-		_current = moved( _entries.end(), -1 );
+		_current = last();
 	}
 	if ( reset_ ) {
 		_recallMostRecent = false;
@@ -286,7 +270,7 @@ bool History::move( entries_t::const_iterator& it_, int by_, bool wrapped_ ) con
 			if ( it_ != _entries.begin() ) {
 				-- it_;
 			} else if ( wrapped_ ) {
-				it_ = moved( _entries.end(), -1 );
+				it_ = last();
 			} else {
 				return ( false );
 			}
@@ -300,8 +284,9 @@ History::entries_t::const_iterator History::moved( entries_t::const_iterator it_
 	return ( it_ );
 }
 
-void History::erase( entries_t::iterator it_ ) {
+void History::erase( entries_t::const_iterator it_ ) {
 	bool invalidated( it_ == _current );
+	_locations.erase( it_->text() );
 	it_ = _entries.erase( it_ );
 	if ( invalidated ) {
 		_current = it_;
@@ -311,6 +296,56 @@ void History::erase( entries_t::iterator it_ ) {
 	}
 	_yankPos = _entries.end();
 	_previous = _current;
+}
+
+void History::trim_to_max_size( void ) {
+	while ( size() > _maxSize ) {
+		erase( _entries.begin() );
+	}
+}
+
+void History::remove_duplicate( UnicodeString const& line_ ) {
+	if ( ! _unique ) {
+		return;
+	}
+	locations_t::iterator it( _locations.find( line_ ) );
+	if ( it == _locations.end() ) {
+		return;
+	}
+	erase( it->second );
+}
+
+void History::remove_duplicates( void ) {
+	_locations.clear();
+	typedef std::pair<locations_t::iterator, bool> locations_insertion_result_t;
+	for ( entries_t::iterator it( _entries.begin() ), end( _entries.end() ); it != end; ++ it ) {
+		locations_insertion_result_t locationsInsertionResult( _locations.insert( make_pair( it->text(), it ) ) );
+		if ( ! locationsInsertionResult.second ) {
+			_entries.erase( locationsInsertionResult.first->second );
+			locationsInsertionResult.first->second = it;
+		}
+	}
+}
+
+void History::update_last( UnicodeString const& line_ ) {
+	if ( _unique ) {
+		_locations.erase( _entries.back().text() );
+		remove_duplicate( line_ );
+		_locations.insert( make_pair( line_, last() ) );
+	}
+	_entries.back() = Entry( now_ms_str(), line_ );
+}
+
+void History::drop_last( void ) {
+	erase( last() );
+}
+
+bool History::is_last( void ) const {
+	return ( _current == last() );
+}
+
+History::entries_t::const_iterator History::last( void ) const {
+	return ( moved( _entries.end(), -1 ) );
 }
 
 }

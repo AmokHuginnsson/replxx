@@ -918,6 +918,32 @@ class ReplxxTests( unittest.TestCase ):
 			"a\nb\nc\n",
 			command = ReplxxTests._cSample_ + " u0 q1"
 		)
+		self_.check_scenario(
+			rapid( "/history\n/unique\n/history\n<c-d>" ),
+			"<c9>/<rst><ceos><c10><c9>/history<rst><ceos><c17>\r\n"
+			"   0: a\r\n"
+			"   1: b\r\n"
+			"   2: c\r\n"
+			"   3: b\r\n"
+			"   4: c\r\n"
+			"   5: d\r\n"
+			"   6: a\r\n"
+			"   7: c\r\n"
+			"   8: a\r\n"
+			"/history\r\n"
+			"<brightgreen>replxx<rst>> <c9>/unique<rst><ceos><c16>\r\n"
+			"/unique\r\n"
+			"<brightgreen>replxx<rst>> <c9>/history<rst><ceos><c17>\r\n"
+			"   0: b\r\n"
+			"   1: d\r\n"
+			"   2: c\r\n"
+			"   3: a\r\n"
+			"   4: /history\r\n"
+			"   5: /unique\r\n"
+			"/history\r\n",
+			"a\nb\nc\nb\nc\nd\na\nc\nc\na\n",
+			command = ReplxxTests._cSample_ + " u0 q1"
+		)
 	def test_history_recall_most_recent( self_ ):
 		self_.check_scenario(
 			"<pgup><down><cr><down><cr><c-d>",

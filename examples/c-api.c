@@ -201,7 +201,7 @@ int main( int argc, char** argv ) {
 		if (result == NULL) {
 			printf("\n");
 			break;
-		} else if (!strncmp(result, "/history", 8)) {
+		} else if (!strncmp(result, "/history", 9)) {
 			/* Display the current history. */
 			int index = 0;
 			int size = replxx_history_size( replxx );
@@ -211,6 +211,8 @@ int main( int argc, char** argv ) {
 				replxx_print( replxx, "%4d: %s\n", index, he.text );
 			}
 			replxx_history_scan_stop( replxx, hs );
+		} else if (!strncmp(result, "/unique", 8)) {
+			replxx_set_unique_history( replxx, 1 );
 		}
 		if (*result != '\0') {
 			replxx_print( replxx, quiet ? "%s\n" : "thanks for the input: %s\n", result );
