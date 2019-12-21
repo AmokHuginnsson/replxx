@@ -44,6 +44,9 @@ public:
 		UnicodeString const& text( void ) const {
 			return ( _text );
 		}
+		bool operator < ( Entry const& other_ ) const {
+			return ( _timestamp < other_._timestamp );
+		}
 	};
 	typedef std::list<Entry> entries_t;
 	typedef std::unordered_map<UnicodeString, entries_t::const_iterator> locations_t;
@@ -114,7 +117,9 @@ private:
 	void trim_to_max_size( void );
 	void remove_duplicate( UnicodeString const& );
 	void remove_duplicates( void );
+	void do_load( std::string const& );
 	entries_t::const_iterator last( void ) const;
+	void sort( void );
 };
 
 class Replxx::HistoryScanImpl {

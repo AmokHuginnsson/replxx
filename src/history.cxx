@@ -75,7 +75,11 @@ History::History( void )
 }
 
 void History::add( UnicodeString const& line, std::string const& when ) {
-	if ( ( _maxSize <= 0 ) || ( ! _entries.empty() && ( line == _entries.back().text() ) ) ) {
+	if ( _maxSize <= 0 ) {
+		return;
+	}
+	if ( ! _entries.empty() && ( line == _entries.back().text() ) ) {
+		_entries.back() = Entry( now_ms_str(), line );
 		return;
 	}
 	remove_duplicate( line );
@@ -110,12 +114,12 @@ void History::save( std::string const& filename ) {
 	mode_t old_umask = umask( S_IXUSR | S_IRWXG | S_IRWXO );
 	FileLock fileLock( filename );
 #endif
-	entries_t entries( std::move( _entries ) );
-	locations_t locations( std::move( _locations ) );
-	load( filename );
-	for ( Entry const& h : entries ) {
-		add( h.text(), h.timestamp() );
-	}
+	do_load( filename );
+	sort();
+	remove_duplicates();
+	trim_to_max_size();
+	_previous = _current = last();
+	_yankPos = _entries.end();
 	ofstream histFile( filename );
 	if ( ! histFile ) {
 		return;
@@ -156,7 +160,7 @@ bool is_timestamp( std::string const& s ) {
 
 }
 
-void History::load( std::string const& filename ) {
+void History::do_load( std::string const& filename ) {
 	ifstream histFile( filename );
 	if ( ! histFile ) {
 		return;
@@ -173,10 +177,29 @@ void History::load( std::string const& filename ) {
 			continue;
 		}
 		if ( ! line.empty() ) {
-			add( UnicodeString( line ), when );
+			_entries.emplace_back( when, UnicodeString( line ) );
 		}
 	}
 	return;
+}
+
+void History::load( std::string const& filename ) {
+	clear();
+	do_load( filename );
+	sort();
+	remove_duplicates();
+	trim_to_max_size();
+	_previous = _current = last();
+	_yankPos = _entries.end();
+}
+
+void History::sort( void ) {
+	typedef std::vector<Entry> sortable_entries_t;
+	_locations.clear();
+	sortable_entries_t sortableEntries( _entries.begin(), _entries.end() );
+	std::stable_sort( sortableEntries.begin(), sortableEntries.end() );
+	_entries.clear();
+	_entries.insert( _entries.begin(), sortableEntries.begin(), sortableEntries.end() );
 }
 
 void History::clear( void ) {
@@ -316,6 +339,9 @@ void History::remove_duplicate( UnicodeString const& line_ ) {
 }
 
 void History::remove_duplicates( void ) {
+	if ( ! _unique ) {
+		return;
+	}
 	_locations.clear();
 	typedef std::pair<locations_t::iterator, bool> locations_insertion_result_t;
 	for ( entries_t::iterator it( _entries.begin() ), end( _entries.end() ); it != end; ++ it ) {

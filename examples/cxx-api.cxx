@@ -412,6 +412,12 @@ int main( int argc_, char** argv_ ) {
 			rx.history_add(input);
 			continue;
 
+		} else if (input.compare(0, 6, ".merge") == 0) {
+			history_file = "replxx_history_alt.txt";
+
+			rx.history_add(input);
+			continue;
+
 		} else if (input.compare(0, 6, ".clear") == 0) {
 			// clear the screen
 			rx.clear_screen();

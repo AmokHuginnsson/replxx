@@ -929,7 +929,8 @@ class ReplxxTests( unittest.TestCase ):
 			"   5: d\r\n"
 			"   6: a\r\n"
 			"   7: c\r\n"
-			"   8: a\r\n"
+			"   8: c\r\n"
+			"   9: a\r\n"
 			"/history\r\n"
 			"<brightgreen>replxx<rst>> <c9>/unique<rst><ceos><c16>\r\n"
 			"/unique\r\n"
@@ -1824,6 +1825,56 @@ class ReplxxTests( unittest.TestCase ):
 			rapid( "abcdef<cr><c-d>" ),
 			"<c9>a<rst><ceos><c10><c9>abcdef<rst><ceos><c15>\r\nabcdef\r\n"
 		)
+	def test_history_merge( self_ ):
+		with open( "replxx_history_alt.txt", "w" ) as f:
+			f.write(
+				"### 0000-00-00 00:00:00.001\n"
+				"one\n"
+				"### 0000-00-00 00:00:00.003\n"
+				"three\n"
+				"### 0000-00-00 00:00:00.005\n"
+				"other\n"
+				"### 0000-00-00 00:00:00.009\n"
+				"same\n"
+				"### 0000-00-00 00:00:00.017\n"
+				"seven\n"
+			)
+			f.close()
+		self_.check_scenario(
+			"<up><cr><c-d>",
+			"<c9><brightmagenta>.<rst>merge<rst><ceos><c15><c9><brightmagenta>.<rst>merge<rst><ceos><c15>\r\n",
+			"### 0000-00-00 00:00:00.002\n"
+			"two\n"
+			"### 0000-00-00 00:00:00.004\n"
+			"four\n"
+			"### 0000-00-00 00:00:00.006\n"
+			"same\n"
+			"### 0000-00-00 00:00:00.008\n"
+			"other\n"
+			"### 0000-00-00 00:00:00.018\n"
+			".merge\n"
+		)
+		with open( "replxx_history_alt.txt", "r" ) as f:
+			data = f.read()
+			expected = (
+				"### 0000-00-00 00:00:00.001\n"
+				"one\n"
+				"### 0000-00-00 00:00:00.002\n"
+				"two\n"
+				"### 0000-00-00 00:00:00.003\n"
+				"three\n"
+				"### 0000-00-00 00:00:00.004\n"
+				"four\n"
+				"### 0000-00-00 00:00:00.008\n"
+				"other\n"
+				"### 0000-00-00 00:00:00.009\n"
+				"same\n"
+				"### 0000-00-00 00:00:00.017\n"
+				"seven\n"
+				"### "
+			)
+			self_.assertSequenceEqual( data[:-31], expected )
+			self_.assertSequenceEqual( data[-7:], ".merge\n" )
 
 def parseArgs( self, func, argv ):
 	global verbosity
