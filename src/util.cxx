@@ -154,7 +154,11 @@ std::string now_ms_str( void ) {
 	std::chrono::milliseconds ms( std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ) );
 	time_t t( ms.count() / 1000 );
 	tm broken;
+#ifdef _WIN32
+#define localtime_r( t, b ) localtime_s( ( b ), ( t ) )
+#endif
 	localtime_r( &t, &broken );
+#undef localtime_r
 	static int const BUFF_SIZE( 32 );
 	char str[BUFF_SIZE];
 	strftime( str, BUFF_SIZE, "%Y-%m-%d %H:%M:%S.", &broken );

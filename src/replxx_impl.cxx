@@ -271,7 +271,7 @@ char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
 	}
 	int hintDelay(
 		_refreshSkipped
-			? RAPID_REFRESH_MS * 2
+			? static_cast<int>( RAPID_REFRESH_MS * 2 )
 			: ( hintAction_ != HINT_ACTION::SKIP ? _hintDelay : 0 )
 	);
 	while ( true ) {

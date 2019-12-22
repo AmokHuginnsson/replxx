@@ -92,6 +92,7 @@ void History::add( UnicodeString const& line, std::string const& when ) {
 	_yankPos = _entries.end();
 }
 
+#ifndef _WIN32
 class FileLock {
 	std::string _path;
 	int _lockFd;
@@ -108,6 +109,7 @@ public:
 		return;
 	}
 };
+#endif
 
 void History::save( std::string const& filename ) {
 #ifndef _WIN32

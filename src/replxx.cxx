@@ -355,7 +355,11 @@ struct replxx_hints {
 };
 
 void modify_fwd( replxx_modify_callback_t fn, std::string& line_, int& cursorPosition_, void* userData_ ) {
+#ifdef _WIN32
+#define strdup _strdup
+#endif
 	char* s( strdup( line_.c_str() ) );
+#undef strdup
 	fn( &s, &cursorPosition_, userData_ );
 	line_ = s;
 	free( s );

@@ -85,7 +85,11 @@ ReplxxActionResult upper_case_line( int ignored, void* ud ) {
 	ReplxxState state;
 	replxx_get_state( replxx, &state );
 	int l = strlen( state.text );
+#ifdef _WIN32
+#define strdup _strdup
+#endif
 	char* d = strdup( state.text );
+#undef strdup
 	for ( int i = 0; i < l; ++ i ) {
 		d[i] = toupper( d[i] );
 	}

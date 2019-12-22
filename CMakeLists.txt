@@ -76,7 +76,7 @@ target_include_directories(
 target_compile_definitions(
 	replxx
 	PRIVATE
-		$<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS=1>
+		$<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS=1 /ignore:4503>
 		$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:REPLXX_STATIC>
 		$<$<BOOL:${BUILD_SHARED_LIBS}>:REPLXX_BUILDING_DLL>
 )
@@ -176,8 +176,8 @@ if (REPLXX_BUILD_EXAMPLES)
 			examples/c-api.c
 			examples/util.c
 	)
-	target_compile_definitions(replxx-example-cxx-api PRIVATE REPLXX_STATIC)
-	target_compile_definitions(replxx-example-c-api PRIVATE REPLXX_STATIC)
+	target_compile_definitions(replxx-example-cxx-api PRIVATE REPLXX_STATIC $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS=1>)
+	target_compile_definitions(replxx-example-c-api PRIVATE REPLXX_STATIC $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS=1>)
 	target_link_libraries(replxx-example-cxx-api PRIVATE replxx::replxx)
 	target_link_libraries(
 		replxx-example-c-api
