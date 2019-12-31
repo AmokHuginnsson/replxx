@@ -40,6 +40,11 @@ void Prompt::update_screen_columns( void ) {
 }
 
 void Prompt::set_text( UnicodeString const& text_ ) {
+	_extraLines = 0;
+	_lastLinePosition = 0;
+	_previousInputLen = 0;
+	_previousLen = 0;
+	_screenColumns = 0;
 	update_screen_columns();
 	// strip control characters from the prompt -- we do allow newline
 	_text = text_;
