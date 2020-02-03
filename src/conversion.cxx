@@ -73,9 +73,8 @@ ConversionResult copyString8to32(char32_t* dst, int dstSize, int& dstCount, cons
 	);
 }
 
-void copyString32to8(
-	char* dst, int dstSize, const char32_t* src, int srcSize, int* dstCount
-) {
+int copyString32to8( char* dst, int dstSize, const char32_t* src, int srcSize ) {
+	int resCount( 0 );
 	if ( ! locale::is8BitEncoding ) {
 		const UTF32* sourceStart = reinterpret_cast<const UTF32*>(src);
 		const UTF32* sourceEnd = sourceStart + srcSize;
@@ -83,16 +82,13 @@ void copyString32to8(
 		UTF8* targetEnd = targetStart + dstSize;
 
 		ConversionResult res = ConvertUTF32toUTF8(
-				&sourceStart, sourceEnd, &targetStart, targetEnd, lenientConversion);
+			&sourceStart, sourceEnd, &targetStart, targetEnd, lenientConversion
+		);
 
-		if (res == conversionOK) {
-			int resCount( targetStart - reinterpret_cast<UTF8*>( dst ) );
-
+		if ( res == conversionOK ) {
+			resCount = targetStart - reinterpret_cast<UTF8*>( dst );
 			if ( resCount < dstSize ) {
 				*targetStart = 0;
-			}
-			if ( dstCount ) {
-				*dstCount = resCount;
 			}
 		}
 	} else {
@@ -100,13 +96,12 @@ void copyString32to8(
 		for ( i = 0; ( i < dstSize ) && ( i < srcSize ) && src[i]; ++ i ) {
 			dst[i] = static_cast<char>( src[i] );
 		}
-		if ( dstCount ) {
-			*dstCount = i;
-		}
+		resCount = i;
 		if ( i < dstSize ) {
 			dst[i] = 0;
 		}
 	}
+	return ( resCount );
 }
 
 }

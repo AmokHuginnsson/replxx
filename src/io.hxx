@@ -9,6 +9,8 @@
 #include <termios.h>
 #endif
 
+#include "utf8string.hxx"
+
 namespace replxx {
 
 class Terminal {
@@ -34,6 +36,7 @@ private:
 	int _interrupt[2];
 #endif
 	bool _rawMode; /* for destructor to check if restore is needed */
+	Utf8String _utf8;
 public:
 	enum class CLEAR_SCREEN {
 		WHOLE,

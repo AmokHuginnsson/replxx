@@ -12,20 +12,24 @@ private:
 	typedef std::unique_ptr<char[]> buffer_t;
 	buffer_t _data;
 	int _bufSize;
+	int _len;
 public:
 	Utf8String( void )
 		: _data()
-		, _bufSize( 0 ) {
+		, _bufSize( 0 )
+		, _len( 0 ) {
 	}
 	explicit Utf8String( UnicodeString const& src )
 		: _data()
-		, _bufSize( 0 ) {
+		, _bufSize( 0 )
+		, _len( 0 ) {
 		assign( src, src.length() );
 	}
 
 	Utf8String( UnicodeString const& src_, int len_ )
 		: _data()
-		, _bufSize( 0 ) {
+		, _bufSize( 0 )
+		, _len( 0 ) {
 		assign( src_, len_ );
 	}
 
@@ -34,9 +38,13 @@ public:
 	}
 
 	void assign( UnicodeString const& str_, int len_ ) {
+		assign( str_.get(), len_ );
+	}
+
+	void assign( char32_t const* str_, int len_ ) {
 		int len( len_ * 4 );
 		realloc( len );
-		copyString32to8( _data.get(), len, str_.get(), len_ );
+		_len = copyString32to8( _data.get(), len, str_, len_ );
 	}
 
 	void assign( std::string const& str_ ) {
@@ -46,6 +54,10 @@ public:
 
 	char const* get() const {
 		return _data.get();
+	}
+
+	int size( void ) const {
+		return ( _len );
 	}
 
 private:

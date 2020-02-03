@@ -78,7 +78,8 @@ Terminal::Terminal( void )
 	: _origTermios()
 	, _interrupt()
 #endif
-	, _rawMode( false ) {
+	, _rawMode( false )
+	, _utf8() {
 #ifdef _WIN32
 	_interrupt = CreateEvent( nullptr, true, false, TEXT( "replxx_interrupt_event" ) );
 #else
@@ -99,20 +100,8 @@ Terminal::~Terminal( void ) {
 }
 
 void Terminal::write32( char32_t const* text32, int len32 ) {
-	int len8 = 4 * len32 + 1;
-	unique_ptr<char[]> text8(new char[len8]);
-	int count8 = 0;
-
-	copyString32to8(text8.get(), len8, text32, len32, &count8);
-	int nWritten( 0 );
-#ifdef _WIN32
-	nWritten = win_write( text8.get(), count8 );
-#else
-	nWritten = write( 1, text8.get(), count8 );
-#endif
-	if ( nWritten != count8 ) {
-		throw std::runtime_error( "write failed" );
-	}
+	_utf8.assign( text32, len32 );
+	write8( _utf8.get(), _utf8.size() );
 	return;
 }
 
