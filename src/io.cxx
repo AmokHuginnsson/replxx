@@ -15,6 +15,10 @@
 #define write _write
 #define STDIN_FILENO 0
 
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+static DWORD const ENABLE_VIRTUAL_TERMINAL_PROCESSING = 4;
+#endif
+
 #include "windows.hxx"
 
 #else /* _WIN32 */
@@ -68,12 +72,14 @@ Terminal::Terminal( void )
 #ifdef _WIN32
 	: _consoleOut( INVALID_HANDLE_VALUE )
 	, _consoleIn( INVALID_HANDLE_VALUE )
-	, _oldMode()
+	, _origOutMode()
+	, _origInMode()
 	, _oldDisplayAttribute()
 	, _inputCodePage( GetConsoleCP() )
 	, _outputCodePage( GetConsoleOutputCP() )
 	, _interrupt( INVALID_HANDLE_VALUE )
 	, _events()
+	, _empty()
 #else
 	: _origTermios()
 	, _interrupt()
@@ -107,7 +113,13 @@ void Terminal::write32( char32_t const* text32, int len32 ) {
 
 void Terminal::write8( char const* data_, int size_ ) {
 #ifdef _WIN32
-	int nWritten( win_write( data_, size_ ) );
+	if ( ! _rawMode ) {
+		enable_out();
+	}
+	int nWritten( win_write( _consoleOut, _autoEscape, data_, size_ ) );
+	if ( ! _rawMode ) {
+		disable_out();
+	}
 #else
 	int nWritten( write( 1, data_, size_ ) );
 #endif
@@ -152,18 +164,35 @@ inline int notty( void ) {
 }
 }
 
+void Terminal::enable_out( void ) {
+#ifdef _WIN32
+	_consoleOut = GetStdHandle( STD_OUTPUT_HANDLE );
+	SetConsoleOutputCP( 65001 );
+	GetConsoleMode( _consoleOut, &_origOutMode );
+	_autoEscape = SetConsoleMode( _consoleOut, _origOutMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING ) != 0;
+#endif
+}
+
+void Terminal::disable_out( void ) {
+#ifdef _WIN32
+	SetConsoleMode( _consoleOut, _origOutMode );
+	SetConsoleOutputCP( _outputCodePage );
+	_consoleOut = INVALID_HANDLE_VALUE;
+	_autoEscape = false;
+#endif
+}
+
 int Terminal::enable_raw_mode( void ) {
 	if ( ! _rawMode ) {
 #ifdef _WIN32
 		_consoleIn = GetStdHandle( STD_INPUT_HANDLE );
-		_consoleOut = GetStdHandle( STD_OUTPUT_HANDLE );
 		SetConsoleCP( 65001 );
-		SetConsoleOutputCP( 65001 );
-		GetConsoleMode( _consoleIn, &_oldMode );
+		GetConsoleMode( _consoleIn, &_origInMode );
 		SetConsoleMode(
 			_consoleIn,
-			_oldMode & ~( ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT )
+			_origInMode & ~( ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT )
 		);
+		enable_out();
 #else
 		struct termios raw;
 
@@ -205,11 +234,10 @@ int Terminal::enable_raw_mode( void ) {
 void Terminal::disable_raw_mode(void) {
 	if ( _rawMode ) {
 #ifdef _WIN32
-		SetConsoleMode( _consoleIn, _oldMode );
+		disable_out();
+		SetConsoleMode( _consoleIn, _origInMode );
 		SetConsoleCP( _inputCodePage );
-		SetConsoleOutputCP( _outputCodePage );
 		_consoleIn = INVALID_HANDLE_VALUE;
-		_consoleOut = INVALID_HANDLE_VALUE;
 #else
 		if ( tcsetattr( 0, TCSADRAIN, &_origTermios ) == -1 ) {
 			return;
@@ -591,6 +619,18 @@ void Terminal::notify_event( EVENT_TYPE eventType_ ) {
  */
 void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 #ifdef _WIN32
+	if ( _autoEscape ) {
+#endif
+		if ( clearScreen_ == CLEAR_SCREEN::WHOLE ) {
+			char const clearCode[] = "\033c\033[H\033[2J\033[0m";
+			static_cast<void>( write(1, clearCode, sizeof ( clearCode ) - 1) >= 0 );
+		} else {
+			char const clearCode[] = "\033[J";
+			static_cast<void>( write(1, clearCode, sizeof ( clearCode ) - 1) >= 0 );
+		}
+		return;
+#ifdef _WIN32
+	}
 	COORD coord = { 0, 0 };
 	CONSOLE_SCREEN_BUFFER_INFO inf;
 	bool toEnd( clearScreen_ == CLEAR_SCREEN::TO_END );
@@ -607,14 +647,10 @@ void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 			? ( inf.dwSize.Y - inf.dwCursorPosition.Y ) * inf.dwSize.X - inf.dwCursorPosition.X
 			: inf.dwSize.X * inf.dwSize.Y
 	);
-	FillConsoleOutputCharacterA( consoleOut, ' ', toWrite, coord, &nWritten );
-#else
-	if ( clearScreen_ == CLEAR_SCREEN::WHOLE ) {
-		char const clearCode[] = "\033c\033[H\033[2J\033[0m";
-		static_cast<void>( write(1, clearCode, sizeof ( clearCode ) - 1) >= 0 );
-	} else {
-		char const clearCode[] = "\033[J";
-		static_cast<void>( write(1, clearCode, sizeof ( clearCode ) - 1) >= 0 );
+	_empty.resize( toWrite, ' ' );
+	WriteConsoleA( consoleOut, _empty.data(), toWrite, &nWritten, nullptr );
+	if ( toEnd ) {
+		SetConsoleCursorPosition( consoleOut, coord );
 	}
 #endif
 }
@@ -640,6 +676,18 @@ void Terminal::jump_cursor( int xPos_, int yOffset_ ) {
 	write8( seq, strlen( seq ) );
 #endif
 }
+
+#ifdef _WIN32
+void Terminal::set_cursor_visible( bool visible_ ) {
+	CONSOLE_CURSOR_INFO     cursorInfo;
+	GetConsoleCursorInfo( _consoleOut, &cursorInfo );
+	cursorInfo.bVisible = visible_;
+	SetConsoleCursorInfo( _consoleOut, &cursorInfo );
+	return;
+}
+#else
+void Terminal::set_cursor_visible( bool ) {}
+#endif
 
 #ifndef _WIN32
 int Terminal::read_verbatim( char32_t* buffer_, int size_ ) {

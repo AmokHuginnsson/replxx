@@ -6,10 +6,6 @@
 #include "conversion.hxx"
 #include "io.hxx"
 
-#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
-static DWORD const ENABLE_VIRTUAL_TERMINAL_PROCESSING = 4;
-#endif
-
 using namespace std;
 
 namespace replxx {
@@ -17,7 +13,7 @@ namespace replxx {
 WinAttributes WIN_ATTR;
 
 template<typename T>
-T* HandleEsc(T* p, T* end) {
+T* HandleEsc(HANDLE out_, T* p, T* end) {
 	if (*p == '[') {
 		int code = 0;
 
@@ -93,25 +89,21 @@ T* HandleEsc(T* p, T* end) {
 		++p;
 	}
 
-	auto handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleTextAttribute(
-		handle,
+		out_,
 		WIN_ATTR._consoleAttribute | WIN_ATTR._consoleColor
 	);
 
 	return p;
 }
 
-int win_write( char const* str_, int size_ ) {
+int win_write( HANDLE out_, bool autoEscape_, char const* str_, int size_ ) {
 	int count( 0 );
-	DWORD currentMode( 0 );
-	HANDLE consoleOut( GetStdHandle( STD_OUTPUT_HANDLE ) );
-	if ( tty::out && GetConsoleMode( consoleOut, &currentMode ) ) {
+	if ( tty::out ) {
 		DWORD nWritten( 0 );
-		if ( SetConsoleMode( consoleOut, currentMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING ) ) {
-			WriteConsoleA( consoleOut, str_, size_, &nWritten, nullptr );
+		if ( autoEscape_ ) {
+			WriteConsoleA( out_, str_, size_, &nWritten, nullptr );
 			count = nWritten;
-			SetConsoleMode( consoleOut, currentMode );
 		} else {
 			char const* s( str_ );
 			char const* e( str_ + size_ );
@@ -119,14 +111,14 @@ int win_write( char const* str_, int size_ ) {
 				if ( *str_ == 27 ) {
 					if ( s < str_ ) {
 						int toWrite( str_ - s );
-						WriteConsoleA( consoleOut, s, static_cast<DWORD>( toWrite ), &nWritten, nullptr );
+						WriteConsoleA( out_, s, static_cast<DWORD>( toWrite ), &nWritten, nullptr );
 						count += nWritten;
 						if ( nWritten != toWrite ) {
 							s = str_ = nullptr;
 							break;
 						}
 					}
-					s = HandleEsc( str_ + 1, e );
+					s = HandleEsc( out_, str_ + 1, e );
 					int escaped( s - str_);
 					count += escaped;
 					str_ = s;
@@ -136,7 +128,7 @@ int win_write( char const* str_, int size_ ) {
 			}
 
 			if ( s < str_ ) {
-				WriteConsoleA( consoleOut, s, static_cast<DWORD>( str_ - s ), &nWritten, nullptr );
+				WriteConsoleA( out_, s, static_cast<DWORD>( str_ - s ), &nWritten, nullptr );
 				count += nWritten;
 			}
 		}

@@ -533,6 +533,7 @@ void Replxx::ReplxxImpl::render( char32_t ch ) {
 void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 	if ( hintAction_ == HINT_ACTION::TRIM ) {
 		_display.erase( _display.begin() + _displayInputLength, _display.end() );
+		_modifiedState = false;
 		return;
 	}
 	if ( hintAction_ == HINT_ACTION::SKIP ) {
@@ -544,6 +545,7 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 			render( ch );
 		}
 		_displayInputLength = _display.size();
+		_modifiedState = false;
 		return;
 	}
 	Replxx::colors_t colors( _data.length(), Replxx::Color::DEFAULT );
@@ -751,6 +753,7 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	);
 
 	// position at the end of the prompt, clear to end of previous input
+	_terminal.set_cursor_visible( false );
 	_terminal.jump_cursor(
 		_prompt._indentation, // 0-based on Win32
 		-( _prompt._cursorRowOffset - _prompt._extraLines )
@@ -768,6 +771,7 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 #endif
 	// position the cursor
 	_terminal.jump_cursor( xCursorPos, -( yEndOfInput - yCursorPos ) );
+	_terminal.set_cursor_visible( true );
 	_prompt._cursorRowOffset = _prompt._extraLines + yCursorPos; // remember row for next pass
 	_lastRefreshTime = now_us();
 }
