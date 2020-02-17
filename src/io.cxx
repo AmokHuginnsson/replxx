@@ -643,13 +643,16 @@ void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 		coord = inf.dwCursorPosition;
 	}
 	DWORD nWritten( 0 );
+	SHORT height( inf.srWindow.Bottom - inf.srWindow.Top );
+	DWORD yPos( inf.dwCursorPosition.Y - inf.srWindow.Top );
 	DWORD toWrite(
 		toEnd
-			? ( inf.dwSize.Y - inf.dwCursorPosition.Y ) * inf.dwSize.X - inf.dwCursorPosition.X
-			: inf.dwSize.X * inf.dwSize.Y
+			? ( height + 1 - yPos ) * inf.dwSize.X - inf.dwCursorPosition.X
+			: inf.dwSize.X * height
 	);
-	_empty.resize( toWrite, ' ' );
-	WriteConsoleA( consoleOut, _empty.data(), toWrite, &nWritten, nullptr );
+//	FillConsoleOutputCharacterA( consoleOut, ' ', toWrite, coord, &nWritten );
+	_empty.resize( toWrite - 1, ' ' );
+	WriteConsoleA( consoleOut, _empty.data(), toWrite - 1, &nWritten, nullptr );
 	if ( toEnd ) {
 		SetConsoleCursorPosition( consoleOut, coord );
 	}

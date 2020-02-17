@@ -609,7 +609,7 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 			set_color( Replxx::Color::DEFAULT );
 		}
 	} else if ( ( _maxHintRows > 0 ) && ( hintCount > 0 ) ) {
-		int startCol( _prompt._indentation + _pos - contextLen );
+		int startCol( _prompt._indentation + _pos );
 		int maxCol( _prompt.screen_columns() );
 #ifdef _WIN32
 		-- maxCol;
@@ -621,7 +621,7 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 		}
 		if ( _hintSelection != -1 ) {
 			_hint = hints[_hintSelection];
-			len = min<int>( _hint.length(), maxCol - startCol - _data.length() );
+			len = min<int>( _hint.length(), maxCol - startCol );
 			if ( contextLen < len ) {
 				set_color( c );
 				for ( int i( contextLen ); i < len; ++ i ) {
@@ -630,6 +630,7 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 				set_color( Replxx::Color::DEFAULT );
 			}
 		}
+		startCol -= contextLen;
 		for ( int hintRow( 0 ); hintRow < min( hintCount, _maxHintRows ); ++ hintRow ) {
 #ifdef _WIN32
 			_display.push_back( '\r' );
