@@ -53,6 +53,7 @@ public:
 	void write8( char const*, int );
 	int get_screen_columns(void);
 	int get_screen_rows(void);
+	void enable_bracketed_paste( void );
 	int enable_raw_mode(void);
 	void disable_raw_mode(void);
 	char32_t read_char(void);

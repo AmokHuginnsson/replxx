@@ -241,6 +241,10 @@ int Replxx::install_window_change_handler( void ) {
 	return ( _impl->install_window_change_handler() );
 }
 
+void Replxx::enable_bracketed_paste( void ) {
+	_impl->enable_bracketed_paste();
+}
+
 void Replxx::print( char const* format_, ... ) {
 	::std::va_list ap;
 	va_start( ap, format_ );
@@ -580,3 +584,7 @@ int replxx_install_window_change_handler( ::Replxx* replxx_ ) {
 	return ( replxx->install_window_change_handler() );
 }
 
+void replxx_enable_bracketed_paste( ::Replxx* replxx_ ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->enable_bracketed_paste();
+}

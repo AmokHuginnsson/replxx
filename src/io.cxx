@@ -183,6 +183,11 @@ void Terminal::disable_out( void ) {
 #endif
 }
 
+void Terminal::enable_bracketed_paste( void ) {
+	static const auto BRACK_PASTE_INIT = "\033[?2004h";
+	write8(BRACK_PASTE_INIT, strlen(BRACK_PASTE_INIT));
+}
+
 int Terminal::enable_raw_mode( void ) {
 	if ( ! _rawMode ) {
 #ifdef _WIN32
@@ -712,4 +717,3 @@ int Terminal::read_verbatim( char32_t* buffer_, int size_ ) {
 #endif
 
 }
-

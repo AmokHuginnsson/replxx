@@ -92,6 +92,10 @@ public:
 		return *this;
 	}
 
+	void push_back( char32_t c_ ) {
+		_data.push_back( c_ );
+	}
+
 	UnicodeString& append( char32_t const* src, int len ) {
 		_data.insert( _data.end(), src, src + len );
 		return *this;
@@ -145,6 +149,14 @@ public:
 		return (
 			( std::distance( first_, last_ ) <= length() )
 			&& ( std::equal( first_, last_, _data.begin() ) )
+		);
+	}
+
+	bool ends_with( data_buffer_t::const_iterator first_, data_buffer_t::const_iterator last_ ) const {
+		auto len = std::distance( first_, last_ );
+		return (
+			( len <= length() )
+			&& ( std::equal( first_, last_, _data.end() - len ) )
 		);
 	}
 

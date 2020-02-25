@@ -494,6 +494,8 @@ void replxx_debug_dump_print_codes(void);
 /* the following is extension to the original linenoise API */
 REPLXX_IMPEXP int replxx_install_window_change_handler( Replxx* );
 
+REPLXX_IMPEXP void replxx_enable_bracketed_paste( Replxx* );
+
 #ifdef __cplusplus
 }
 #endif
