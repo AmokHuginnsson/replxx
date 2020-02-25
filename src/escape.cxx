@@ -115,6 +115,9 @@ static char32_t ctrlRightArrowKeyRoutine(char32_t) {
 static char32_t ctrlLeftArrowKeyRoutine(char32_t) {
 	return thisKeyMetaCtrl | Replxx::KEY::BASE_CONTROL | Replxx::KEY::LEFT;
 }
+static char32_t bracketPasteKeyRoutine(char32_t) {
+	return thisKeyMetaCtrl | Replxx::KEY::BRACKETED_PASTE;
+}
 static char32_t escFailureRoutine(char32_t) {
 	beep();
 	return -1;
@@ -442,11 +445,23 @@ static char32_t escLeftBracket20SemicolonRoutine(char32_t c) {
 	return doDispatch(c, escLeftBracket20SemicolonDispatch);
 }
 
+static CharacterDispatchRoutine escLeftBracket200Routines[] = {
+	bracketPasteKeyRoutine, escFailureRoutine
+};
+static CharacterDispatch escLeftBracket200Dispatch = {
+	1, "~", escLeftBracket200Routines
+};
+static char32_t escLeftBracket200Routine(char32_t c) {
+	c = read_unicode_character();
+	if (c == 0) return 0;
+	return doDispatch(c, escLeftBracket200Dispatch);
+}
+
 static CharacterDispatchRoutine escLeftBracket20Routines[] = {
-	f9KeyRoutine, escLeftBracket20SemicolonRoutine, escFailureRoutine
+	f9KeyRoutine, escLeftBracket20SemicolonRoutine, escLeftBracket200Routine, escFailureRoutine
 };
 static CharacterDispatch escLeftBracket20Dispatch = {
-	2, "~;", escLeftBracket20Routines
+	3, "~;0", escLeftBracket20Routines
 };
 static char32_t escLeftBracket20Routine(char32_t c) {
 	c = read_unicode_character();

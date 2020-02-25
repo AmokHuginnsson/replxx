@@ -131,6 +131,7 @@ public:
 		static char32_t const F23          = F22       + 1;
 		static char32_t const F24          = F23       + 1;
 		static char32_t const MOUSE        = F24       + 1;
+		static char32_t const BRACKETED_PASTE = MOUSE  + 1;
 		static constexpr char32_t shift( char32_t key_ ) {
 			return ( key_ | BASE_SHIFT );
 		}
@@ -181,6 +182,7 @@ public:
 		VERBATIM_INSERT,
 		SUSPEND,
 #endif
+		BRACKETED_PASTE,
 		CLEAR_SCREEN,
 		CLEAR_SELF,
 		REPAINT,
@@ -531,6 +533,7 @@ public:
 	void set_max_history_size( int len );
 	void clear_screen( void );
 	int install_window_change_handler( void );
+	void enable_bracketed_paste( void );
 
 private:
 	Replxx( Replxx const& ) = delete;

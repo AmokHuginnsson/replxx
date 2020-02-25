@@ -110,6 +110,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _completeOnEmpty( true )
 	, _beepOnAmbiguousCompletion( false )
 	, _immediateCompletion( true )
+	, _bracketedPaste( false )
 	, _noColor( false )
 	, _keyPressHandlers()
 	, _terminal()
@@ -192,6 +193,11 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	bind_key( Replxx::KEY::meta( 'P' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH,    _1 ) );
 	bind_key( Replxx::KEY::meta( 'n' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH,    _1 ) );
 	bind_key( Replxx::KEY::meta( 'N' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH,    _1 ) );
+	bind_key( Replxx::KEY::BRACKETED_PASTE,                std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::BRACKETED_PASTE,                 _1 ) );
+}
+
+Replxx::ReplxxImpl::~ReplxxImpl( void ) {
+	disable_bracketed_paste();
 }
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32_t code ) {
@@ -239,6 +245,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32
 		case ( Replxx::ACTION::COMMIT_LINE ):                     return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::commit_line, code ) );
 		case ( Replxx::ACTION::ABORT_LINE ):                      return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::abort_line, code ) );
 		case ( Replxx::ACTION::SEND_EOF ):                        return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::send_eof, code ) );
+		case ( Replxx::ACTION::BRACKETED_PASTE ):                 return ( action( WANT_REFRESH | RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::bracketed_paste, code ) );
 	}
 	return ( Replxx::ACTION_RESULT::BAIL );
 }
@@ -489,6 +496,22 @@ int Replxx::ReplxxImpl::install_window_change_handler( void ) {
 	}
 #endif
 	return 0;
+}
+
+void Replxx::ReplxxImpl::enable_bracketed_paste( void ) {
+	if ( _bracketedPaste ) {
+		return;
+	}
+	_terminal.enable_bracketed_paste();
+	_bracketedPaste = true;
+}
+
+void Replxx::ReplxxImpl::disable_bracketed_paste( void ) {
+	if ( ! _bracketedPaste ) {
+		return;
+	}
+	_terminal.disable_bracketed_paste();
+	_bracketedPaste = false;
 }
 
 void Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
@@ -1916,6 +1939,25 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::clear_screen( char32_t c ) {
 		_prompt._cursorRowOffset = _prompt._extraLines;
 		refresh_line();
 	}
+	return ( Replxx::ACTION_RESULT::CONTINUE );
+}
+
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::bracketed_paste( char32_t ) {
+	static const UnicodeString BRACK_PASTE_SUFF( "\033[201~" );
+	static const int BRACK_PASTE_SLEN( BRACK_PASTE_SUFF.length() );
+	UnicodeString buf;
+	while ( char32_t c = read_unicode_character() ) {
+		if ( c == '\r' ) {
+			c = '\n';
+		}
+		buf.push_back( c );
+		if ( ( c == '~' ) && buf.ends_with( BRACK_PASTE_SUFF.begin(), BRACK_PASTE_SUFF.end() ) ) {
+			buf.erase( buf.length() - BRACK_PASTE_SLEN, BRACK_PASTE_SLEN );
+			break;
+		}
+	}
+	_data.insert( _pos, buf, 0, buf.length() );
+	_pos += buf.length();
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
 

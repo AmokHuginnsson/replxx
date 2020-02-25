@@ -105,6 +105,16 @@
 #include "history.hxx"
 #include "io.hxx"
 
+static_assert(
+	static_cast<int>( replxx::Replxx::ACTION::SEND_EOF ) == static_cast<int>( REPLXX_ACTION_SEND_EOF ),
+	"C and C++ `ACTION` APIs are missaligned!"
+);
+
+static_assert(
+	static_cast<int>( replxx::Replxx::KEY::BRACKETED_PASTE ) == static_cast<int>( REPLXX_KEY_BRACKETED_PASTE ),
+	"C and C++ `KEY` APIs are missaligned!"
+);
+
 using namespace std;
 using namespace std::placeholders;
 using namespace replxx;
@@ -239,6 +249,10 @@ void Replxx::set_state( Replxx::State const& state_ ) {
 
 int Replxx::install_window_change_handler( void ) {
 	return ( _impl->install_window_change_handler() );
+}
+
+void Replxx::enable_bracketed_paste( void ) {
+	_impl->enable_bracketed_paste();
 }
 
 void Replxx::print( char const* format_, ... ) {
@@ -491,6 +505,11 @@ void replxx_set_immediate_completion( ::Replxx* replxx_, int val ) {
 void replxx_set_unique_history( ::Replxx* replxx_, int val ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->set_unique_history( val ? true : false );
+}
+
+void replxx_enable_bracketed_paste( ::Replxx* replxx_ ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->enable_bracketed_paste();
 }
 
 ReplxxHistoryScan* replxx_history_scan_start( ::Replxx* replxx_ ) {

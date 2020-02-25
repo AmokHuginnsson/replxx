@@ -126,6 +126,7 @@ enum { REPLXX_KEY_F22          = REPLXX_KEY_F21       + 1 };
 enum { REPLXX_KEY_F23          = REPLXX_KEY_F22       + 1 };
 enum { REPLXX_KEY_F24          = REPLXX_KEY_F23       + 1 };
 enum { REPLXX_KEY_MOUSE        = REPLXX_KEY_F24       + 1 };
+enum { REPLXX_KEY_BRACKETED_PASTE = REPLXX_KEY_MOUSE  + 1 };
 
 #define REPLXX_KEY_SHIFT( key )   ( ( key ) | REPLXX_KEY_BASE_SHIFT )
 #define REPLXX_KEY_CONTROL( key ) ( ( key ) | REPLXX_KEY_BASE_CONTROL )
@@ -172,6 +173,7 @@ typedef enum {
 	REPLXX_ACTION_VERBATIM_INSERT,
 	REPLXX_ACTION_SUSPEND,
 #endif
+	REPLXX_ACTION_BRACKETED_PASTE,
 	REPLXX_ACTION_CLEAR_SCREEN,
 	REPLXX_ACTION_CLEAR_SELF,
 	REPLXX_ACTION_REPAINT,
@@ -493,6 +495,7 @@ void replxx_debug_dump_print_codes(void);
 #endif
 /* the following is extension to the original linenoise API */
 REPLXX_IMPEXP int replxx_install_window_change_handler( Replxx* );
+REPLXX_IMPEXP void replxx_enable_bracketed_paste( Replxx* );
 
 #ifdef __cplusplus
 }

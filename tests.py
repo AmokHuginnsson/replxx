@@ -115,6 +115,8 @@ keytab = {
 	"<c-f11>": "\033[23;5~",
 	"<c-f12>": "\033[24;5~",
 	"<s-tab>": "\033[Z",
+	"<paste-pfx>": "\033[200~",
+	"<paste-sfx>": "\033[201~"
 }
 
 termseq = {
@@ -143,6 +145,8 @@ termseq = {
 	"\x1b[101;1;33m": "<err>",
 	"\x07": "<bell>",
 	"\x1b[2~": "<ins-key>",
+	"\x1b[?2004h": "<paste-on>",
+	"\x1b[?2004l": "<paste-off>"
 }
 colRe = re.compile( "\\x1b\\[(\\d+)G" )
 upRe = re.compile( "\\x1b\\[(\\d+)A" )
@@ -1875,6 +1879,29 @@ class ReplxxTests( unittest.TestCase ):
 			)
 			self_.assertSequenceEqual( data[:-31], expected )
 			self_.assertSequenceEqual( data[-7:], ".merge\n" )
+	def test_bracketed_paste( self_ ):
+		self_.check_scenario(
+			"a0<paste-pfx>b1c2d3e<paste-sfx>4f<cr><c-d>",
+			"<c9>a<rst><ceos><c10>"
+			"<c9>a<brightmagenta>0<rst><ceos><c11>"
+			"<c9>a<brightmagenta>0<rst>b<brightmagenta>1<rst>c<brightmagenta>2<rst>d<brightmagenta>3<rst>e<rst><ceos><c18>"
+			"<c9>a<brightmagenta>0<rst>b<brightmagenta>1<rst>c<brightmagenta>2<rst>d<brightmagenta>3<rst>e<brightmagenta>4<rst><ceos><c19>"
+			"<c9>a<brightmagenta>0<rst>b<brightmagenta>1<rst>c<brightmagenta>2<rst>d<brightmagenta>3<rst>e<brightmagenta>4<rst>f<rst><ceos><c20>"
+			"<c9>a<brightmagenta>0<rst>b<brightmagenta>1<rst>c<brightmagenta>2<rst>d<brightmagenta>3<rst>e<brightmagenta>4<rst>f<rst><ceos><c20>\r\n"
+			"a0b1c2d3e4f\r\n",
+			command = [ ReplxxTests._cSample_, "q1" ]
+		)
+		self_.check_scenario(
+			"a0<paste-pfx>b1c2d3e<paste-sfx>4f<cr><c-d>",
+			"<c9>a<rst><ceos><c10>"
+			"<c9>a<brightmagenta>0<rst><ceos><c11>"
+			"<c9>a<brightmagenta>0<rst>b<brightmagenta>1<rst>c<brightmagenta>2<rst>d<brightmagenta>3<rst>e<rst><ceos><c18>"
+			"<c9>a<brightmagenta>0<rst>b<brightmagenta>1<rst>c<brightmagenta>2<rst>d<brightmagenta>3<rst>e<brightmagenta>4<rst><ceos><c19>"
+			"<c9>a<brightmagenta>0<rst>b<brightmagenta>1<rst>c<brightmagenta>2<rst>d<brightmagenta>3<rst>e<brightmagenta>4<rst>f<rst><ceos><c20>"
+			"<c9>a<brightmagenta>0<rst>b<brightmagenta>1<rst>c<brightmagenta>2<rst>d<brightmagenta>3<rst>e<brightmagenta>4<rst>f<rst><ceos><c20>\r\n"
+			"a0b1c2d3e4f\r\n",
+			command = [ ReplxxTests._cSample_, "q1", "B" ]
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity

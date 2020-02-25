@@ -124,6 +124,7 @@ private:
 	bool _completeOnEmpty;
 	bool _beepOnAmbiguousCompletion;
 	bool _immediateCompletion;
+	bool _bracketedPaste;
 	bool _noColor;
 	key_press_handlers_t _keyPressHandlers;
 	Terminal _terminal;
@@ -145,6 +146,7 @@ private:
 	mutable std::mutex _mutex;
 public:
 	ReplxxImpl( FILE*, FILE*, FILE* );
+	virtual ~ReplxxImpl( void );
 	void set_modify_callback( Replxx::modify_callback_t const& fn );
 	void set_completion_callback( Replxx::completion_callback_t const& fn );
 	void set_highlighter_callback( Replxx::highlighter_callback_t const& fn );
@@ -169,6 +171,8 @@ public:
 	void set_max_history_size( int len );
 	void set_completion_count_cutoff( int len );
 	int install_window_change_handler( void );
+	void enable_bracketed_paste( void );
+	void disable_bracketed_paste( void );
 	void print( char const*, int );
 	Replxx::ACTION_RESULT clear_screen( char32_t );
 	void emulate_key_press( char32_t );
@@ -227,6 +231,7 @@ private:
 	Replxx::ACTION_RESULT complete( bool );
 	Replxx::ACTION_RESULT incremental_history_search( char32_t startChar );
 	Replxx::ACTION_RESULT common_prefix_search( char32_t startChar );
+	Replxx::ACTION_RESULT bracketed_paste( char32_t startChar );
 	char32_t read_char( HINT_ACTION = HINT_ACTION::SKIP );
 	char const* read_from_stdin( void );
 	char32_t do_complete_line( bool );
