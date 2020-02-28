@@ -111,7 +111,7 @@ static_assert(
 );
 
 static_assert(
-	static_cast<int>( replxx::Replxx::KEY::BRACKETED_PASTE ) == static_cast<int>( REPLXX_KEY_BRACKETED_PASTE ),
+	static_cast<int>( replxx::Replxx::KEY::PASTE_FINISH ) == static_cast<int>( REPLXX_KEY_PASTE_FINISH ),
 	"C and C++ `KEY` APIs are missaligned!"
 );
 

@@ -193,7 +193,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	bind_key( Replxx::KEY::meta( 'P' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH,    _1 ) );
 	bind_key( Replxx::KEY::meta( 'n' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH,    _1 ) );
 	bind_key( Replxx::KEY::meta( 'N' ),                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH,    _1 ) );
-	bind_key( Replxx::KEY::BRACKETED_PASTE,                std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::BRACKETED_PASTE,                 _1 ) );
+	bind_key( Replxx::KEY::PASTE_START,                    std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::BRACKETED_PASTE,                 _1 ) );
 }
 
 Replxx::ReplxxImpl::~ReplxxImpl( void ) {
@@ -1943,18 +1943,15 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::clear_screen( char32_t c ) {
 }
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::bracketed_paste( char32_t ) {
-	static const UnicodeString BRACK_PASTE_SUFF( "\033[201~" );
-	static const int BRACK_PASTE_SLEN( BRACK_PASTE_SUFF.length() );
 	UnicodeString buf;
-	while ( char32_t c = read_unicode_character() ) {
+	while ( char32_t c = _terminal.read_char() ) {
+		if ( c == KEY::PASTE_FINISH ) {
+			break;
+		}
 		if ( c == '\r' ) {
 			c = '\n';
 		}
 		buf.push_back( c );
-		if ( ( c == '~' ) && buf.ends_with( BRACK_PASTE_SUFF.begin(), BRACK_PASTE_SUFF.end() ) ) {
-			buf.erase( buf.length() - BRACK_PASTE_SLEN, BRACK_PASTE_SLEN );
-			break;
-		}
 	}
 	_data.insert( _pos, buf, 0, buf.length() );
 	_pos += buf.length();

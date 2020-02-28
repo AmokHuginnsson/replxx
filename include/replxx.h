@@ -126,7 +126,8 @@ enum { REPLXX_KEY_F22          = REPLXX_KEY_F21       + 1 };
 enum { REPLXX_KEY_F23          = REPLXX_KEY_F22       + 1 };
 enum { REPLXX_KEY_F24          = REPLXX_KEY_F23       + 1 };
 enum { REPLXX_KEY_MOUSE        = REPLXX_KEY_F24       + 1 };
-enum { REPLXX_KEY_BRACKETED_PASTE = REPLXX_KEY_MOUSE  + 1 };
+enum { REPLXX_KEY_PASTE_START  = REPLXX_KEY_MOUSE     + 1 };
+enum { REPLXX_KEY_PASTE_FINISH = REPLXX_KEY_PASTE_START + 1 };
 
 #define REPLXX_KEY_SHIFT( key )   ( ( key ) | REPLXX_KEY_BASE_SHIFT )
 #define REPLXX_KEY_CONTROL( key ) ( ( key ) | REPLXX_KEY_BASE_CONTROL )
