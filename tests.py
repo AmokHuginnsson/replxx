@@ -1902,6 +1902,17 @@ class ReplxxTests( unittest.TestCase ):
 			"a0b1c2d3e4f\r\n",
 			command = [ ReplxxTests._cSample_, "q1", "B" ]
 		)
+		self_.check_scenario(
+			"a0<left><paste-pfx>/eb<paste-sfx><cr><paste-pfx>/db<paste-sfx><cr><paste-pfx>x<paste-sfx><cr><c-d>",
+			"<c9>a<rst><ceos><c10><c9>a<brightmagenta>0<rst><ceos><c11><c9>a<brightmagenta>0<rst><ceos><c10>"
+			"<c9>a/eb<brightmagenta>0<rst><ceos><c13><c9>a/eb<brightmagenta>0<rst><ceos><c14>\r\n"
+			"a/eb0\r\n"
+			"<brightgreen>replxx<rst>> <c9>/db<rst><ceos><c12><c9>/db<rst><ceos><c12>\r\n"
+			"/db\r\n"
+			"<brightgreen>replxx<rst>> <c9>x<rst><ceos><c10><c9>x<rst><ceos><c10>\r\n"
+			"x\r\n",
+			command = [ ReplxxTests._cSample_, "q1" ]
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity

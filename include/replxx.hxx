@@ -535,6 +535,7 @@ public:
 	void clear_screen( void );
 	int install_window_change_handler( void );
 	void enable_bracketed_paste( void );
+	void disable_bracketed_paste( void );
 
 private:
 	Replxx( Replxx const& ) = delete;

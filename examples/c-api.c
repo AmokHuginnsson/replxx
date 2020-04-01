@@ -218,6 +218,10 @@ int main( int argc, char** argv ) {
 			replxx_history_scan_stop( replxx, hs );
 		} else if (!strncmp(result, "/unique", 8)) {
 			replxx_set_unique_history( replxx, 1 );
+		} else if (!strncmp(result, "/eb", 4)) {
+			replxx_enable_bracketed_paste( replxx );
+		} else if (!strncmp(result, "/db", 4)) {
+			replxx_disable_bracketed_paste( replxx );
 		}
 		if (*result != '\0') {
 			replxx_print( replxx, quiet ? "%s\n" : "thanks for the input: %s\n", result );

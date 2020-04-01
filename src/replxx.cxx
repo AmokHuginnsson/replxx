@@ -255,6 +255,10 @@ void Replxx::enable_bracketed_paste( void ) {
 	_impl->enable_bracketed_paste();
 }
 
+void Replxx::disable_bracketed_paste( void ) {
+	_impl->disable_bracketed_paste();
+}
+
 void Replxx::print( char const* format_, ... ) {
 	::std::va_list ap;
 	va_start( ap, format_ );
@@ -510,6 +514,11 @@ void replxx_set_unique_history( ::Replxx* replxx_, int val ) {
 void replxx_enable_bracketed_paste( ::Replxx* replxx_ ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->enable_bracketed_paste();
+}
+
+void replxx_disable_bracketed_paste( ::Replxx* replxx_ ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->disable_bracketed_paste();
 }
 
 ReplxxHistoryScan* replxx_history_scan_start( ::Replxx* replxx_ ) {
