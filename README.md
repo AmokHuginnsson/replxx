@@ -93,6 +93,17 @@ cmake -G "Visual Studio 12 2013" -DCMAKE_BUILD_TYPE=Release ..`
 
 3. Open the generated file `replxx.sln` in the `build` subdirectory with Visual Studio.
 
+## Usage with cmake
+
+### cmake find_package
+```cmake
+find_package(replxx REQUIRED)
+add_executable(main main.cpp)
+target_link_libraries(main replxx::replxx)
+```
+### conan https://conan.io/center/replxx/0.0.2
+add `replxx/0.0.2` to `conanfile.txt`
+
 ## Tested with...
 
  * Linux text only console ($TERM = linux)
