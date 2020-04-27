@@ -102,7 +102,7 @@ add_executable(main main.cpp)
 target_link_libraries(main replxx::replxx)
 ```
 ### conan https://conan.io/center/replxx/0.0.2
-add `replxx/0.0.2` to `conanfile.txt`
+add `replxx/[>=0.0.2]` to `conanfile.txt`
 
 ## Tested with...
 
