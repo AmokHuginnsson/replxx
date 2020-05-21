@@ -1970,12 +1970,12 @@ void Replxx::ReplxxImpl::history_add( std::string const& line ) {
 	_history.add( UnicodeString( line ) );
 }
 
-void Replxx::ReplxxImpl::history_save( std::string const& filename ) {
-	_history.save( filename );
+bool Replxx::ReplxxImpl::history_save( std::string const& filename ) {
+	return ( _history.save( filename ) );
 }
 
-void Replxx::ReplxxImpl::history_load( std::string const& filename ) {
-	_history.load( filename );
+bool Replxx::ReplxxImpl::history_load( std::string const& filename ) {
+	return ( _history.load( filename ) );
 }
 
 void Replxx::ReplxxImpl::history_clear( void ) {

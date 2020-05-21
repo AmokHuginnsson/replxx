@@ -487,8 +487,23 @@ REPLXX_IMPEXP void replxx_set_max_history_size( Replxx*, int len );
 REPLXX_IMPEXP ReplxxHistoryScan* replxx_history_scan_start( Replxx* );
 REPLXX_IMPEXP void replxx_history_scan_stop( Replxx*, ReplxxHistoryScan* );
 REPLXX_IMPEXP int replxx_history_scan_next( Replxx*, ReplxxHistoryScan*, ReplxxHistoryEntry* );
-REPLXX_IMPEXP void replxx_history_save( Replxx*, const char* filename );
-REPLXX_IMPEXP void replxx_history_load( Replxx*, const char* filename );
+
+/*! \brief Save REPL's history into given file.
+ *
+ * \param filename - a path to the file where REPL's history should be saved.
+ * \return 0 iff history file was successfully created, -1 otherwise.
+ */
+REPLXX_IMPEXP int replxx_history_save( Replxx*, const char* filename );
+
+/*! \brief Load REPL's history from given file.
+ *
+ * \param filename - a path to the file which contains REPL's history that should be loaded.
+ * \return 0 iff history file was successfully opened, -1 otherwise.
+ */
+REPLXX_IMPEXP int replxx_history_load( Replxx*, const char* filename );
+
+/*! \brief Clear REPL's in-memory history.
+ */
 REPLXX_IMPEXP void replxx_history_clear( Replxx* );
 REPLXX_IMPEXP void replxx_clear_screen( Replxx* );
 #ifdef __REPLXX_DEBUG__

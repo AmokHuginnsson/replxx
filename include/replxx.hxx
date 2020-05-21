@@ -458,8 +458,23 @@ public:
 	void bind_key( char32_t code, key_press_handler_t handler );
 
 	void history_add( std::string const& line );
-	void history_save( std::string const& filename );
-	void history_load( std::string const& filename );
+
+	/*! \brief Save REPL's history into given file.
+	 *
+	 * \param filename - a path to the file where REPL's history should be saved.
+	 * \return True iff history file was successfully created.
+	 */
+	bool history_save( std::string const& filename );
+
+	/*! \brief Load REPL's history from given file.
+	 *
+	 * \param filename - a path to the file which contains REPL's history that should be loaded.
+	 * \return True iff history file was successfully opened.
+	 */
+	bool history_load( std::string const& filename );
+
+	/*! \brief Clear REPL's in-memory history.
+	 */
 	void history_clear( void );
 	int history_size( void ) const;
 	HistoryScan history_scan( void ) const;
