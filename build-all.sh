@@ -60,6 +60,7 @@ build_target() {
 	else
 		cmake -DCMAKE_BUILD_TYPE=${target} ${shared} ${examples} ${installPrefix} ../../
 		make
+		echo "### `hostname` ###"
 		${sudo} make install
 	fi
 	cd ../..
