@@ -143,9 +143,10 @@ char const* ansi_color( Replxx::Color color_ ) {
 	static char const* brightcyan = has256color ? "\033[0;1;96m" : "\033[0;1;36m";
 	static char const* white = has256color ? "\033[0;1;97m" : "\033[0;1;37m";
 	static char const error[] = "\033[101;1;33m";
+	static char const intense[] = "\033[0;1m";
 
 	char const* code( reset );
-	switch ( color_ ) {
+	switch ( color_.value ) {
 		case Replxx::Color::BLACK:         code = black;         break;
 		case Replxx::Color::RED:           code = red;           break;
 		case Replxx::Color::GREEN:         code = green;         break;
@@ -162,6 +163,8 @@ char const* ansi_color( Replxx::Color color_ ) {
 		case Replxx::Color::BRIGHTMAGENTA: code = brightmagenta; break;
 		case Replxx::Color::BRIGHTCYAN:    code = brightcyan;    break;
 		case Replxx::Color::WHITE:         code = white;         break;
+		case Replxx::Color::INTENSE:       code = intense;       break;
+		case Replxx::Color::CUSTOM:        code = color_.custom_code; break;
 #undef ERROR
 		case Replxx::Color::ERROR:         code = error;         break;
 		case Replxx::Color::DEFAULT:       code = reset;         break;

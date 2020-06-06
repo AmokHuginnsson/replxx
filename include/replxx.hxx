@@ -69,26 +69,35 @@ namespace replxx {
 
 class REPLXX_IMPEXP Replxx {
 public:
-	enum class Color {
-		BLACK         = 0,
-		RED           = 1,
-		GREEN         = 2,
-		BROWN         = 3,
-		BLUE          = 4,
-		MAGENTA       = 5,
-		CYAN          = 6,
-		LIGHTGRAY     = 7,
-		GRAY          = 8,
-		BRIGHTRED     = 9,
-		BRIGHTGREEN   = 10,
-		YELLOW        = 11,
-		BRIGHTBLUE    = 12,
-		BRIGHTMAGENTA = 13,
-		BRIGHTCYAN    = 14,
-		WHITE         = 15,
-		NORMAL        = LIGHTGRAY,
-		DEFAULT       = -1,
-		ERROR         = -2
+	struct Color
+	{
+		enum Colors {
+			BLACK         = 0,
+			RED           = 1,
+			GREEN         = 2,
+			BROWN         = 3,
+			BLUE          = 4,
+			MAGENTA       = 5,
+			CYAN          = 6,
+			LIGHTGRAY     = 7,
+			GRAY          = 8,
+			BRIGHTRED     = 9,
+			BRIGHTGREEN   = 10,
+			YELLOW        = 11,
+			BRIGHTBLUE    = 12,
+			BRIGHTMAGENTA = 13,
+			BRIGHTCYAN    = 14,
+			WHITE         = 15,
+			INTENSE       = 16,
+			NORMAL        = LIGHTGRAY,
+			DEFAULT       = -1,
+			ERROR         = -2,
+			CUSTOM        = -3,
+		} value;
+		const char * custom_code = nullptr;
+		template <typename T> Color(T value_) : value(Colors(value_)) {}
+		Color(const char * custom_code_) : value(CUSTOM), custom_code(custom_code_) {}
+		bool operator==(const Color & rhs) const = default;
 	};
 	struct KEY {
 		static char32_t const BASE         = 0x0010ffff + 1;
