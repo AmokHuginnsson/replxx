@@ -1670,12 +1670,12 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete( bool previous_ ) {
 		newSelection = static_cast<int>( _completions.size() ) - 1;
 	}
 	if ( _completionSelection != -1 ) {
-		int oldCompletionLength( _completions[_completionSelection].text().length() - _completionContextLength );
+		int oldCompletionLength( max( _completions[_completionSelection].text().length() - _completionContextLength, 0 ) );
 		_pos -= oldCompletionLength;
 		_data.erase( _pos, oldCompletionLength );
 	}
 	if ( newSelection != -1 ) {
-		int newCompletionLength( _completions[newSelection].text().length() - _completionContextLength );
+		int newCompletionLength( max( _completions[newSelection].text().length() - _completionContextLength, 0 ) );
 		_data.insert( _pos, _completions[newSelection].text(), _completionContextLength, newCompletionLength );
 		_pos += newCompletionLength;
 	}
@@ -1948,7 +1948,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::bracketed_paste( char32_t ) {
 		if ( c == KEY::PASTE_FINISH ) {
 			break;
 		}
-		if ( c == '\r' ) {
+		if ( ( c == '\r' ) || ( c == KEY::control( 'M' ) ) ) {
 			c = '\n';
 		}
 		buf.push_back( c );
