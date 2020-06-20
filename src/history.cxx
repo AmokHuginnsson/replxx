@@ -38,7 +38,8 @@ Replxx::HistoryScanImpl::HistoryScanImpl( History::entries_t const& entries_ )
 	: _entries( entries_ )
 	, _it( _entries.end() )
 	, _utf8Cache()
-	, _entryCache( std::string(), std::string() ) {
+	, _entryCache( std::string(), std::string() )
+	, _cacheValid( false ) {
 }
 
 Replxx::HistoryEntry const& Replxx::HistoryScan::get( void ) const {
@@ -51,12 +52,17 @@ bool Replxx::HistoryScanImpl::next( void ) {
 	} else {
 		++ _it;
 	}
+	_cacheValid = false;
 	return ( _it != _entries.end() );
 }
 
 Replxx::HistoryEntry const& Replxx::HistoryScanImpl::get( void ) const {
+	if ( _cacheValid ) {
+		return ( _entryCache );
+	}
 	_utf8Cache.assign( _it->text() );
 	_entryCache = Replxx::HistoryEntry( _it->timestamp(), _utf8Cache.get() );
+	_cacheValid = true;
 	return ( _entryCache );
 }
 

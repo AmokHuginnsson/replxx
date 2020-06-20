@@ -127,6 +127,7 @@ class Replxx::HistoryScanImpl {
 	History::entries_t::const_iterator _it;
 	mutable Utf8String _utf8Cache;
 	mutable Replxx::HistoryEntry _entryCache;
+	mutable bool _cacheValid;
 public:
 	HistoryScanImpl( History::entries_t const& );
 	bool next( void );
