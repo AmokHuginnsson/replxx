@@ -90,7 +90,7 @@ target_compile_options(
 		$<${coverage-config}:-O0 --coverage>
 		$<${coverage-config}:-fno-inline -fno-default-inline>
 		$<${coverage-config}:-fno-inline-small-functions>
-		$<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra>
+		$<${compiler-id-clang-or-gnu}:-Wall -Wextra>
 		$<$<CXX_COMPILER_ID:GNU>:-Wno-unknown-pragmas>
 )
 if (NOT CMAKE_VERSION VERSION_LESS 3.13)
@@ -185,7 +185,8 @@ if (REPLXX_BUILD_EXAMPLES)
 		replxx-example-c-api
 		PRIVATE
 		replxx::replxx
-		$<$<CXX_COMPILER_ID:GNU>:stdc++>
+		$<${compiler-id-clang-or-gnu}:stdc++>
+		$<${is-clang}:m>
 	)
 
 endif()
