@@ -239,6 +239,10 @@ void Replxx::bind_key( char32_t keyPress_, key_press_handler_t handler_ ) {
 	_impl->bind_key( keyPress_, handler_ );
 }
 
+void Replxx::bind_key_internal( char32_t keyPress_, char const* actionName_ ) {
+	_impl->bind_key_internal( keyPress_, actionName_ );
+}
+
 Replxx::State Replxx::get_state( void ) const {
 	return ( _impl->get_state() );
 }
@@ -304,6 +308,16 @@ replxx::Replxx::ACTION_RESULT key_press_handler_forwarder( key_press_handler_t h
 void replxx_bind_key( ::Replxx* replxx_, int code_, key_press_handler_t handler_, void* userData_ ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->bind_key( code_, std::bind( key_press_handler_forwarder, handler_, _1, userData_ ) );
+}
+
+int replxx_bind_key_internal( ::Replxx* replxx_, int code_, char const* actionName_ ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	try {
+		replxx->bind_key_internal( code_, actionName_ );
+	} catch ( ... ) {
+		return ( -1 );
+	}
+	return ( 0 );
 }
 
 void replxx_get_state( ::Replxx* replxx_, ReplxxState* state ) {

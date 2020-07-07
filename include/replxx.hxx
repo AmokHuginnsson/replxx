@@ -457,6 +457,13 @@ public:
 	 */
 	void bind_key( char32_t code, key_press_handler_t handler );
 
+	/*! \brief Bind internal `replxx` action (by name) to handle given key-press event.
+	 *
+	 * \param code - handle this key-press event with following handler.
+	 * \param actionName - name of internal action to be invoked on key press.
+	 */
+	void bind_key_internal( char32_t code, char const* actionName );
+
 	void history_add( std::string const& line );
 
 	/*! \brief Save REPL's history into given file.

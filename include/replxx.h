@@ -413,6 +413,14 @@ REPLXX_IMPEXP ReplxxActionResult replxx_invoke( Replxx*, ReplxxAction action, in
  */
 REPLXX_IMPEXP void replxx_bind_key( Replxx*, int code, key_press_handler_t handler, void* userData );
 
+/*! \brief Bind internal `replxx` action (by name) to handle given key-press event.
+ *
+ * \param code - handle this key-press event with following handler.
+ * \param actionName - name of internal action to be invoked on key press.
+ * \return -1 if invalid action name was used, 0 otherwise.
+ */
+int replxx_bind_key_internal( Replxx*, int code, char const* actionName );
+
 REPLXX_IMPEXP void replxx_set_preload_buffer( Replxx*, const char* preloadText );
 
 REPLXX_IMPEXP void replxx_history_add( Replxx*, const char* line );
