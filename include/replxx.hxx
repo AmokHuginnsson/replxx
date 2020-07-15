@@ -459,6 +459,11 @@ public:
 
 	/*! \brief Bind internal `replxx` action (by name) to handle given key-press event.
 	 *
+	 * Action names are the same as names of Replxx::ACTION enumerations
+	 * but in lower case, e.g.: an action for recalling previous history line
+	 * is \e Replxx::ACTION::HISTORY_PREVIOUS so action name to be used in this
+	 * interface for the same effect is "history_previous".
+	 *
 	 * \param code - handle this key-press event with following handler.
 	 * \param actionName - name of internal action to be invoked on key press.
 	 */

@@ -1631,12 +1631,12 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::commit_line( char32_t ) {
 	return ( Replxx::ACTION_RESULT::RETURN );
 }
 
-// ctrl-N, recall next line in history
+// Down, recall next line in history
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_next( char32_t ) {
 	return ( history_move( false ) );
 }
 
-// ctrl-P, recall previous line in history
+// Up, recall previous line in history
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_previous( char32_t ) {
 	return ( history_move( true ) );
 }

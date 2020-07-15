@@ -415,6 +415,11 @@ REPLXX_IMPEXP void replxx_bind_key( Replxx*, int code, key_press_handler_t handl
 
 /*! \brief Bind internal `replxx` action (by name) to handle given key-press event.
  *
+ * Action names are the same as unique part of names of ReplxxAction enumerations
+ * but in lower case, e.g.: an action for recalling previous history line
+ * is \e REPLXX_ACTION_HISTORY_PREVIOUS so action name to be used in this
+ * interface for the same effect is "history_previous".
+ *
  * \param code - handle this key-press event with following handler.
  * \param actionName - name of internal action to be invoked on key press.
  * \return -1 if invalid action name was used, 0 otherwise.
