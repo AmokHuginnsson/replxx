@@ -290,8 +290,8 @@ public:
 	 * input == "if ( obj.me"
 	 * contextLen == 2 (depending on \e set_word_break_characters())
 	 *
-	 * Client application is free to update \e contextLen to be 6 (or any orther non-negative
-	 * number not greated than the number of code points in input) if it makes better sense
+	 * Client application is free to update \e contextLen to be 6 (or any other non-negative
+	 * number not greater than the number of code points in input) if it makes better sense
 	 * for given client application semantics.
 	 *
 	 * \param input - UTF-8 encoded input entered by the user until current cursor position.
@@ -325,8 +325,8 @@ public:
 	 * input == "if ( obj.me"
 	 * contextLen == 2 (depending on \e set_word_break_characters())
 	 *
-	 * Client application is free to update \e contextLen to be 6 (or any orther non-negative
-	 * number not greated than the number of code points in input) if it makes better sense
+	 * Client application is free to update \e contextLen to be 6 (or any other non-negative
+	 * number not greater than the number of code points in input) if it makes better sense
 	 * for given client application semantics.
 	 *
 	 * \param input - UTF-8 encoded input entered by the user until current cursor position.
@@ -339,7 +339,7 @@ public:
 	/*! \brief Key press handler type definition.
 	 *
 	 * \param code - the key code replxx got from terminal.
-	 * \return Decition on how should input() behave after this key handler returns.
+	 * \return Decision on how should input() behave after this key handler returns.
 	 */
 	typedef std::function<ACTION_RESULT ( char32_t code )> key_press_handler_t;
 

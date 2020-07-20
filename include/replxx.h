@@ -206,11 +206,11 @@ typedef struct ReplxxHistoryEntryTag {
 	char const* text;
 } ReplxxHistoryEntry;
 
-/*! \brief Create Replxx library resouce holder.
+/*! \brief Create Replxx library resource holder.
  *
- * Use replxx_end() to free resoiurce acquired with this function.
+ * Use replxx_end() to free resources acquired with this function.
  *
- * \return Replxx library resouce holder.
+ * \return Replxx library resource holder.
  */
 REPLXX_IMPEXP Replxx* replxx_init( void );
 
@@ -278,8 +278,8 @@ typedef struct replxx_completions replxx_completions;
  * input == "if ( obj.me"
  * contextLen == 2 (depending on \e replxx_set_word_break_characters())
  *
- * Client application is free to update \e contextLen to be 6 (or any orther non-negative
- * number not greated than the number of code points in input) if it makes better sense
+ * Client application is free to update \e contextLen to be 6 (or any other non-negative
+ * number not greater than the number of code points in input) if it makes better sense
  * for given client application semantics.
  *
  * \param input - UTF-8 encoded input entered by the user until current cursor position.
@@ -323,8 +323,8 @@ typedef struct replxx_hints replxx_hints;
  * input == "if ( obj.me"
  * contextLen == 2 (depending on \e replxx_set_word_break_characters())
  *
- * Client application is free to update \e contextLen to be 6 (or any orther non-negative
- * number not greated than the number of code points in input) if it makes better sense
+ * Client application is free to update \e contextLen to be 6 (or any other non-negative
+ * number not greater than the number of code points in input) if it makes better sense
  * for given client application semantics.
  *
  * \param input - UTF-8 encoded input entered by the user until current cursor position.
@@ -345,7 +345,7 @@ REPLXX_IMPEXP void replxx_set_hint_callback( Replxx*, replxx_hint_callback_t* fn
 /*! \brief Key press handler type definition.
  *
  * \param code - the key code replxx got from terminal.
- * \return Decition on how should input() behave after this key handler returns.
+ * \return Decision on how should input() behave after this key handler returns.
  */
 typedef ReplxxActionResult (key_press_handler_t)( int code, void* userData );
 
