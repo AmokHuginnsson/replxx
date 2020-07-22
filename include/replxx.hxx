@@ -246,12 +246,12 @@ public:
 	public:
 		typedef std::unique_ptr<HistoryScanImpl, void (*)( HistoryScanImpl* )> impl_t;
 	private:
-#ifdef _WIN32
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4251)
 #endif
 		impl_t _impl;
-#ifdef _WIN32
+#ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 	public:
@@ -363,12 +363,12 @@ public:
 	class ReplxxImpl;
 private:
 	typedef std::unique_ptr<ReplxxImpl, void (*)( ReplxxImpl* )> impl_t;
-#ifdef _WIN32
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4251)
 #endif
 	impl_t _impl;
-#ifdef _WIN32
+#ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 
