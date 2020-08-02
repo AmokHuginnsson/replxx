@@ -345,6 +345,7 @@ int main( int argc_, char** argv_ ) {
 
 	// set the repl prompt
 	std::string prompt {"\x1b[1;32mreplxx\x1b[0m> "};
+	bool history_auto_save = false;
 
 	// main repl loop
 	if ( argc_ > 1 ) {
@@ -385,7 +386,9 @@ int main( int argc_, char** argv_ ) {
 				<< ".exit\n\texit the repl\n"
 				<< ".clear\n\tclears the screen\n"
 				<< ".history\n\tdisplays the history output\n"
-				<< ".prompt <str>\n\tset the repl prompt to <str>\n";
+				<< ".prompt <str>\n\tset the repl prompt to <str>\n"
+				<< ".hist_autosave\n\tauto-save history after each command\n"
+			;
 
 			rx.history_add(input);
 			continue;
@@ -425,6 +428,12 @@ int main( int argc_, char** argv_ ) {
 			rx.history_add(input);
 			continue;
 
+		} else if (input.compare(0, 14, ".hist_autosave") == 0) {
+			std::cout << "history auto-save was: " << history_auto_save << "\n";
+			history_auto_save ^= true;
+			rx.history_add(input);
+			continue;
+
 		} else {
 			// default action
 			// echo the input
@@ -432,6 +441,9 @@ int main( int argc_, char** argv_ ) {
 			rx.print( "%s\n", input.c_str() );
 
 			rx.history_add( input );
+			if ( history_auto_save ) {
+				rx.history_save(history_file, false /* reload */);
+			}
 			continue;
 		}
 	}
@@ -440,7 +452,7 @@ int main( int argc_, char** argv_ ) {
 	}
 
 	// save the history
-	rx.history_save(history_file, true /* reload */);
+	rx.history_save(history_file, false /* reload */);
 
 	std::cout << "\nExiting Replxx\n";
 
