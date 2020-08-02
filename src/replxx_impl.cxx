@@ -234,10 +234,10 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	bind_key( Replxx::KEY::meta( 'F' ),                    _namedActions.at( action_names::MOVE_CURSOR_ONE_WORD_RIGHT ) );
 	bind_key( Replxx::KEY::control( Replxx::KEY::RIGHT ),  _namedActions.at( action_names::MOVE_CURSOR_ONE_WORD_RIGHT ) );
 	bind_key( Replxx::KEY::meta( Replxx::KEY::RIGHT ),     _namedActions.at( action_names::MOVE_CURSOR_ONE_WORD_RIGHT ) ); // Emacs allows Meta, readline don't
-	bind_key( Replxx::KEY::meta( Replxx::KEY::BACKSPACE ), _namedActions.at( action_names::KILL_TO_WHITESPACE_ON_LEFT ) );
+	bind_key( Replxx::KEY::meta( Replxx::KEY::BACKSPACE ), _namedActions.at( action_names::KILL_TO_BEGINING_OF_WORD ) );
 	bind_key( Replxx::KEY::meta( 'd' ),                    _namedActions.at( action_names::KILL_TO_END_OF_WORD ) );
 	bind_key( Replxx::KEY::meta( 'D' ),                    _namedActions.at( action_names::KILL_TO_END_OF_WORD ) );
-	bind_key( Replxx::KEY::control( 'W' ),                 _namedActions.at( action_names::KILL_TO_BEGINING_OF_WORD ) );
+	bind_key( Replxx::KEY::control( 'W' ),                 _namedActions.at( action_names::KILL_TO_WHITESPACE_ON_LEFT ) );
 	bind_key( Replxx::KEY::control( 'U' ),                 _namedActions.at( action_names::KILL_TO_BEGINING_OF_LINE ) );
 	bind_key( Replxx::KEY::control( 'K' ),                 _namedActions.at( action_names::KILL_TO_END_OF_LINE ) );
 	bind_key( Replxx::KEY::control( 'Y' ),                 _namedActions.at( action_names::YANK ) );
