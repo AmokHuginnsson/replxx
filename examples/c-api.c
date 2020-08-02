@@ -228,7 +228,7 @@ int main( int argc, char** argv ) {
 			replxx_history_add( replxx, result );
 		}
 	}
-	replxx_history_save( replxx, file );
+	replxx_history_save( replxx, file, 1 /* update */);
 	printf( "Exiting Replxx\n" );
 	replxx_end( replxx );
 }

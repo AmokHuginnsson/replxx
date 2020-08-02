@@ -440,7 +440,7 @@ int main( int argc_, char** argv_ ) {
 	}
 
 	// save the history
-	rx.history_save(history_file);
+	rx.history_save(history_file, true /* reload */);
 
 	std::cout << "\nExiting Replxx\n";
 

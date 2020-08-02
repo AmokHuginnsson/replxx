@@ -2068,8 +2068,8 @@ void Replxx::ReplxxImpl::history_add( std::string const& line ) {
 	_history.add( UnicodeString( line ) );
 }
 
-bool Replxx::ReplxxImpl::history_save( std::string const& filename ) {
-	return ( _history.save( filename ) );
+bool Replxx::ReplxxImpl::history_save( std::string const& filename, bool update ) {
+	return ( _history.save( filename, update ) );
 }
 
 bool Replxx::ReplxxImpl::history_load( std::string const& filename ) {

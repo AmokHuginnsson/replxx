@@ -70,13 +70,13 @@ private:
 public:
 	History( void );
 	void add( UnicodeString const& line, std::string const& when = now_ms_str() );
-	bool save( std::string const& filename );
+	bool save( std::string const& filename, bool update );
 	bool load( std::string const& filename );
 	void clear( void );
 	void set_max_size( int len );
 	void set_unique( bool unique_ ) {
 		_unique = unique_;
-		remove_duplicates();
+		remove_duplicates( _entries, _locations );
 	}
 	void reset_yank_iterator();
 	bool next_yank_position( void );
@@ -114,12 +114,12 @@ private:
 	bool move( entries_t::const_iterator&, int, bool = false ) const;
 	entries_t::const_iterator moved( entries_t::const_iterator, int, bool = false ) const;
 	void erase( entries_t::const_iterator );
-	void trim_to_max_size( void );
+	void trim_to_max_size( entries_t& entries );
 	void remove_duplicate( UnicodeString const& );
-	void remove_duplicates( void );
-	bool do_load( std::string const& );
+	void remove_duplicates( entries_t& entries, locations_t& locations );
+	bool do_load( std::string const&, entries_t& entries );
 	entries_t::const_iterator last( void ) const;
-	void sort( void );
+	void sort( entries_t& entries, locations_t& locations );
 };
 
 class Replxx::HistoryScanImpl {

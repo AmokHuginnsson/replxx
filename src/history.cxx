@@ -89,7 +89,7 @@ void History::add( UnicodeString const& line, std::string const& when ) {
 		return;
 	}
 	remove_duplicate( line );
-	trim_to_max_size();
+	trim_to_max_size( _entries );
 	_entries.emplace_back( when, line );
 	_locations.insert( make_pair( line, last() ) );
 	if ( _current == _entries.end() ) {
@@ -117,17 +117,30 @@ public:
 };
 #endif
 
-bool History::save( std::string const& filename ) {
+bool History::save( std::string const& filename, bool update ) {
 #ifndef _WIN32
 	mode_t old_umask = umask( S_IXUSR | S_IRWXG | S_IRWXO );
 	FileLock fileLock( filename );
 #endif
-	do_load( filename );
-	sort();
-	remove_duplicates();
-	trim_to_max_size();
-	_previous = _current = last();
-	_yankPos = _entries.end();
+	entries_t entries_to_save;
+	if ( update ) {
+		do_load( filename, _entries );
+		sort( _entries, _locations );
+		remove_duplicates( _entries, _locations );
+		trim_to_max_size( _entries );
+		_previous = _current = last();
+		_yankPos = _entries.end();
+
+		entries_to_save = _entries;
+	} else {
+		entries_to_save = _entries;
+		locations_t locations_tmp;
+
+		do_load( filename, entries_to_save );
+		sort( entries_to_save, locations_tmp );
+		remove_duplicates( entries_to_save, locations_tmp );
+		trim_to_max_size( entries_to_save );
+	}
 	ofstream histFile( filename );
 	if ( ! histFile ) {
 		return ( false );
@@ -137,7 +150,7 @@ bool History::save( std::string const& filename ) {
 	chmod( filename.c_str(), S_IRUSR | S_IWUSR );
 #endif
 	Utf8String utf8;
-	for ( Entry const& h : _entries ) {
+	for ( Entry const& h : entries_to_save ) {
 		if ( ! h.text().is_empty() ) {
 			utf8.assign( h.text() );
 			histFile << "### " << h.timestamp() << "\n" << utf8.get() << endl;
@@ -168,7 +181,7 @@ bool is_timestamp( std::string const& s ) {
 
 }
 
-bool History::do_load( std::string const& filename ) {
+bool History::do_load( std::string const& filename, entries_t& entries ) {
 	ifstream histFile( filename );
 	if ( ! histFile ) {
 		return ( false );
@@ -185,7 +198,7 @@ bool History::do_load( std::string const& filename ) {
 			continue;
 		}
 		if ( ! line.empty() ) {
-			_entries.emplace_back( when, UnicodeString( line ) );
+			entries.emplace_back( when, UnicodeString( line ) );
 		}
 	}
 	return ( true );
@@ -193,22 +206,22 @@ bool History::do_load( std::string const& filename ) {
 
 bool History::load( std::string const& filename ) {
 	clear();
-	bool success( do_load( filename ) );
-	sort();
-	remove_duplicates();
-	trim_to_max_size();
+	bool success( do_load( filename, _entries ) );
+	sort( _entries, _locations );
+	remove_duplicates( _entries, _locations );
+	trim_to_max_size( _entries );
 	_previous = _current = last();
 	_yankPos = _entries.end();
 	return ( success );
 }
 
-void History::sort( void ) {
+void History::sort( entries_t& entries, locations_t& locations ) {
 	typedef std::vector<Entry> sortable_entries_t;
-	_locations.clear();
-	sortable_entries_t sortableEntries( _entries.begin(), _entries.end() );
+	locations.clear();
+	sortable_entries_t sortableEntries( entries.begin(), entries.end() );
 	std::stable_sort( sortableEntries.begin(), sortableEntries.end() );
-	_entries.clear();
-	_entries.insert( _entries.begin(), sortableEntries.begin(), sortableEntries.end() );
+	entries.clear();
+	entries.insert( entries.begin(), sortableEntries.begin(), sortableEntries.end() );
 }
 
 void History::clear( void ) {
@@ -221,7 +234,7 @@ void History::clear( void ) {
 void History::set_max_size( int size_ ) {
 	if ( size_ >= 0 ) {
 		_maxSize = size_;
-		trim_to_max_size();
+		trim_to_max_size( _entries );
 	}
 }
 
@@ -330,9 +343,9 @@ void History::erase( entries_t::const_iterator it_ ) {
 	_previous = _current;
 }
 
-void History::trim_to_max_size( void ) {
+void History::trim_to_max_size( entries_t& entries ) {
 	while ( size() > _maxSize ) {
-		erase( _entries.begin() );
+		erase( entries.begin() );
 	}
 }
 
@@ -347,16 +360,16 @@ void History::remove_duplicate( UnicodeString const& line_ ) {
 	erase( it->second );
 }
 
-void History::remove_duplicates( void ) {
+void History::remove_duplicates( entries_t& entries, locations_t& locations ) {
 	if ( ! _unique ) {
 		return;
 	}
-	_locations.clear();
+	locations.clear();
 	typedef std::pair<locations_t::iterator, bool> locations_insertion_result_t;
-	for ( entries_t::iterator it( _entries.begin() ), end( _entries.end() ); it != end; ++ it ) {
-		locations_insertion_result_t locationsInsertionResult( _locations.insert( make_pair( it->text(), it ) ) );
+	for ( entries_t::iterator it( entries.begin() ), end( entries.end() ); it != end; ++ it ) {
+		locations_insertion_result_t locationsInsertionResult( locations.insert( make_pair( it->text(), it ) ) );
 		if ( ! locationsInsertionResult.second ) {
-			_entries.erase( locationsInsertionResult.first->second );
+			entries.erase( locationsInsertionResult.first->second );
 			locationsInsertionResult.first->second = it;
 		}
 	}

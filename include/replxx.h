@@ -504,9 +504,10 @@ REPLXX_IMPEXP int replxx_history_scan_next( Replxx*, ReplxxHistoryScan*, ReplxxH
 /*! \brief Save REPL's history into given file.
  *
  * \param filename - a path to the file where REPL's history should be saved.
+ * \param update - add new history items from history file into the current session.
  * \return 0 iff history file was successfully created, -1 otherwise.
  */
-REPLXX_IMPEXP int replxx_history_save( Replxx*, const char* filename );
+REPLXX_IMPEXP int replxx_history_save( Replxx*, const char* filename, int update );
 
 /*! \brief Load REPL's history from given file.
  *

@@ -155,8 +155,8 @@ void Replxx::history_add( std::string const& line ) {
 	_impl->history_add( line );
 }
 
-bool Replxx::history_save( std::string const& filename ) {
-	return ( _impl->history_save( filename ) );
+bool Replxx::history_save( std::string const& filename, bool update ) {
+	return ( _impl->history_save( filename, update ) );
 }
 
 bool Replxx::history_load( std::string const& filename ) {
@@ -557,9 +557,9 @@ int replxx_history_scan_next( ::Replxx*, ReplxxHistoryScan* historyScan_, Replxx
 
 /* Save the history in the specified file. On success 0 is returned
  * otherwise -1 is returned. */
-int replxx_history_save( ::Replxx* replxx_, const char* filename ) {
+int replxx_history_save( ::Replxx* replxx_, const char* filename, int update ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
-	return ( replxx->history_save( filename ) ? 0 : -1 );
+	return ( replxx->history_save( filename, update ) ? 0 : -1 );
 }
 
 /* Load the history from the specified file. If the file does not exist

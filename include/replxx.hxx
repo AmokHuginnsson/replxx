@@ -474,9 +474,10 @@ public:
 	/*! \brief Save REPL's history into given file.
 	 *
 	 * \param filename - a path to the file where REPL's history should be saved.
+	 * \param update - add new history items from history file into the current session.
 	 * \return True iff history file was successfully created.
 	 */
-	bool history_save( std::string const& filename );
+	bool history_save( std::string const& filename, bool update );
 
 	/*! \brief Load REPL's history from given file.
 	 *
