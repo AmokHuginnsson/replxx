@@ -434,6 +434,15 @@ public:
 	 */
 	void print( char const* fmt, ... );
 
+	/*! \brief Prints a char array with the given length to standard output.
+	 *
+	 * \copydetails print
+	 *
+	 * \param str - The char array to print.
+	 * \param length - The length of the array.
+	 */
+	void write( char const* str, int length );
+
 	/*! \brief Schedule an emulated key press event.
 	 *
 	 * \param code - key press code to be emulated.
