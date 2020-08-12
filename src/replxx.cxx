@@ -275,6 +275,11 @@ void Replxx::print( char const* format_, ... ) {
 	return ( _impl->print( buf.get(), size ) );
 }
 
+void Replxx::write( char const* str, std::size_t length )
+{
+	return ( _impl->print( str, length ) );
+}
+
 }
 
 ::Replxx* replxx_init() {
@@ -376,6 +381,16 @@ int replxx_print( ::Replxx* replxx_, char const* format_, ... ) {
 		return ( -1 );
 	}
 	return ( size );
+}
+
+int replxx_write( ::Replxx* replxx_, char const* str, std::size_t length ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	try {
+		replxx->print( str, length );
+	} catch ( ... ) {
+		return ( -1 );
+	}
+	return static_cast<int>( length );
 }
 
 struct replxx_completions {
