@@ -187,8 +187,13 @@ if (REPLXX_BUILD_EXAMPLES)
 		replxx::replxx
 		$<${compiler-id-clang-or-gnu}:stdc++>
 		$<${is-clang}:m>
+		$<${coverage-config}:--coverage>
 	)
-
+	target_link_libraries(
+		replxx-example-cxx-api
+		PRIVATE
+		$<${coverage-config}:--coverage>
+	)
 endif()
 
 if (NOT REPLXX_BUILD_PACKAGE)
