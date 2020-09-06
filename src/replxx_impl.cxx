@@ -2069,7 +2069,11 @@ void Replxx::ReplxxImpl::history_add( std::string const& line ) {
 }
 
 bool Replxx::ReplxxImpl::history_save( std::string const& filename ) {
-	return ( _history.save( filename ) );
+	return ( _history.save( filename, false ) );
+}
+
+bool Replxx::ReplxxImpl::history_sync( std::string const& filename ) {
+	return ( _history.save( filename, true ) );
 }
 
 bool Replxx::ReplxxImpl::history_load( std::string const& filename ) {

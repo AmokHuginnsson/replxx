@@ -117,17 +117,23 @@ public:
 };
 #endif
 
-bool History::save( std::string const& filename ) {
+bool History::save( std::string const& filename, bool sync_ ) {
 #ifndef _WIN32
 	mode_t old_umask = umask( S_IXUSR | S_IRWXG | S_IRWXO );
 	FileLock fileLock( filename );
 #endif
+	entries_t entries;
+	locations_t locations;
+	if ( ! sync_ ) {
+		entries.swap( _entries );
+		locations.swap( _locations );
+		_entries = entries;
+		reset_iters();
+	}
 	do_load( filename );
 	sort();
 	remove_duplicates();
 	trim_to_max_size();
-	_previous = _current = last();
-	_yankPos = _entries.end();
 	ofstream histFile( filename );
 	if ( ! histFile ) {
 		return ( false );
@@ -143,6 +149,11 @@ bool History::save( std::string const& filename ) {
 			histFile << "### " << h.timestamp() << "\n" << utf8.get() << endl;
 		}
 	}
+	if ( ! sync_ ) {
+		_entries = std::move( entries );
+		_locations = std::move( locations );
+	}
+	reset_iters();
 	return ( true );
 }
 
@@ -381,6 +392,11 @@ bool History::is_last( void ) const {
 
 History::entries_t::const_iterator History::last( void ) const {
 	return ( moved( _entries.end(), -1 ) );
+}
+
+void History::reset_iters( void ) {
+	_previous = _current = last();
+	_yankPos = _entries.end();
 }
 
 }

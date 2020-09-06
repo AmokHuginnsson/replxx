@@ -155,6 +155,7 @@ public:
 	void set_hint_callback( Replxx::hint_callback_t const& fn );
 	char const* input( std::string const& prompt );
 	void history_add( std::string const& line );
+	bool history_sync( std::string const& filename );
 	bool history_save( std::string const& filename );
 	bool history_load( std::string const& filename );
 	void history_clear( void );

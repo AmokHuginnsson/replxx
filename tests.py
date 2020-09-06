@@ -1879,6 +1879,31 @@ class ReplxxTests( unittest.TestCase ):
 			)
 			self_.assertSequenceEqual( data[:-31], expected )
 			self_.assertSequenceEqual( data[-7:], ".merge\n" )
+	def test_history_save( self_ ):
+		with open( "replxx_history_alt.txt", "w" ) as f:
+			f.write(
+				"### 0000-00-00 00:00:00.001\n"
+				"one\n"
+				"### 0000-00-00 00:00:00.003\n"
+				"three\n"
+				"### 3000-00-00 00:00:00.005\n"
+				"other\n"
+				"### 3000-00-00 00:00:00.009\n"
+				"same\n"
+				"### 3000-00-00 00:00:00.017\n"
+				"seven\n"
+			)
+			f.close()
+		self_.check_scenario(
+			"zoom<cr>.save<cr><up><cr><c-d>",
+			"<c9>z<rst><ceos><c10><c9>zo<rst><ceos><c11><c9>zoo<rst><ceos><c12><c9>zoom<rst><ceos><c13><c9>zoom<rst><ceos><c13>\r\n"
+			"zoom\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><brightmagenta>.<rst><ceos><c10><c9><brightmagenta>.<rst>s<rst><ceos><c11><c9><brightmagenta>.<rst>sa<rst><ceos><c12><c9><brightmagenta>.<rst>sav<rst><ceos><c13><c9><brightmagenta>.<rst>save<rst><ceos><c14><c9><brightmagenta>.<rst>save<rst><ceos><c14>\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9>zoom<rst><ceos><c13><c9>zoom<rst><ceos><c13>\r\n"
+			"zoom\r\n"
+		)
 	def test_bracketed_paste( self_ ):
 		self_.check_scenario(
 			"a0<paste-pfx>b1c2d3e<paste-sfx>4f<cr><c-d>",

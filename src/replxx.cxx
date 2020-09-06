@@ -155,6 +155,10 @@ void Replxx::history_add( std::string const& line ) {
 	_impl->history_add( line );
 }
 
+bool Replxx::history_sync( std::string const& filename ) {
+	return ( _impl->history_sync( filename ) );
+}
+
 bool Replxx::history_save( std::string const& filename ) {
 	return ( _impl->history_save( filename ) );
 }
@@ -567,6 +571,13 @@ int replxx_history_scan_next( ::Replxx*, ReplxxHistoryScan* historyScan_, Replxx
 		historyEntry_->text = historyEntry.text().c_str();
 	}
 	return ( hasNext ? 0 : -1 );
+}
+
+/* Save the history in the specified file. On success 0 is returned
+ * otherwise -1 is returned. */
+int replxx_history_sync( ::Replxx* replxx_, const char* filename ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	return ( replxx->history_sync( filename ) ? 0 : -1 );
 }
 
 /* Save the history in the specified file. On success 0 is returned

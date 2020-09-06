@@ -70,7 +70,7 @@ private:
 public:
 	History( void );
 	void add( UnicodeString const& line, std::string const& when = now_ms_str() );
-	bool save( std::string const& filename );
+	bool save( std::string const& filename, bool );
 	bool load( std::string const& filename );
 	void clear( void );
 	void set_max_size( int len );
@@ -120,6 +120,7 @@ private:
 	bool do_load( std::string const& );
 	entries_t::const_iterator last( void ) const;
 	void sort( void );
+	void reset_iters( void );
 };
 
 class Replxx::HistoryScanImpl {

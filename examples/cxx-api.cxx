@@ -418,6 +418,11 @@ int main( int argc_, char** argv_ ) {
 			rx.history_add(input);
 			continue;
 
+		} else if (input.compare(0, 5, ".save") == 0) {
+			history_file = "replxx_history_alt.txt";
+			rx.history_save(history_file);
+			continue;
+
 		} else if (input.compare(0, 6, ".clear") == 0) {
 			// clear the screen
 			rx.clear_screen();
@@ -440,7 +445,7 @@ int main( int argc_, char** argv_ ) {
 	}
 
 	// save the history
-	rx.history_save(history_file);
+	rx.history_sync(history_file);
 
 	std::cout << "\nExiting Replxx\n";
 
