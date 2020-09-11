@@ -2,7 +2,7 @@
 
 while [ ${#} -gt 0 ] ; do
 	if [ \( ${#} -gt 0 \) -a \( "x${1}" = "xpurge" \) ] ; then
-		/bin/rm -rf build
+		${sudo} /bin/rm -rf build
 		shift
 		continue
 	fi
@@ -37,6 +37,8 @@ while [ ${#} -gt 0 ] ; do
 		continue
 	fi
 done
+
+umask 0022
 
 build_target() {
 	target="${1}"
