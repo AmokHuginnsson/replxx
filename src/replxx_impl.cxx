@@ -2059,7 +2059,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::bracketed_paste( char32_t ) {
 bool Replxx::ReplxxImpl::is_word_break_character( char32_t char_ ) const {
 	bool wbc( false );
 	if ( char_ < 128 ) {
-		wbc = strchr( _breakChars, static_cast<char>( char_ ) ) != nullptr;
+		wbc = strchr( _breakChars.c_str(), static_cast<char>( char_ ) ) != nullptr;
 	}
 	return ( wbc );
 }

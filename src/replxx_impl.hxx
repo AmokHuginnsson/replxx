@@ -118,7 +118,7 @@ private:
 	int _lastYankSize;
 	int _maxHintRows;
 	int _hintDelay;
-	char const* _breakChars;
+	std::string _breakChars;
 	int _completionCountCutoff;
 	bool _overwrite;
 	bool _doubleTabCompletion;
