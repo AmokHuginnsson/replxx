@@ -50,6 +50,7 @@ public:
 	void assign( std::string const& str_ ) {
 		realloc( str_.length() );
 		strncpy( _data.get(), str_.c_str(), str_.length() );
+		_len = str_.length();
 	}
 
 	char const* get() const {
