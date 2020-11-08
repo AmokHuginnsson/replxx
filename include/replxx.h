@@ -396,7 +396,7 @@ REPLXX_IMPEXP int replxx_print( Replxx*, char const* fmt, ... );
  * \param str - The char array to print.
  * \param length - The length of the array.
  */
-REPLXX_IMPEXP int replxx_write( char const* str, int length );
+REPLXX_IMPEXP int replxx_write( Replxx*, char const* str, int length );
 
 /*! \brief Schedule an emulated key press event.
  *
