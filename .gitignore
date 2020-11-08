@@ -11,3 +11,4 @@ libreplxx.a
 history.txt
 *.o
 *~
+.vs
