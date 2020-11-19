@@ -53,12 +53,22 @@ public:
 		_len = str_.length();
 	}
 
+	void assign( Utf8String const& other_ ) {
+		realloc( other_._len );
+		strncpy( _data.get(), other_._data.get(), other_._len );
+		_len = other_._len;
+	}
+
 	char const* get() const {
 		return _data.get();
 	}
 
 	int size( void ) const {
 		return ( _len );
+	}
+
+	bool operator != ( Utf8String const& other_ ) {
+		return ( ( other_._len != _len ) || ( memcmp( other_._data.get(), _data.get(), _len ) != 0 ) );
 	}
 
 private:

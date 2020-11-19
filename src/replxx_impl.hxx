@@ -145,6 +145,10 @@ private:
 	std::string _errorMessage;
 	UnicodeString _previousSearchText; // remembered across invocations of replxx_input()
 	bool _modifiedState;
+	Replxx::Color _hintColor;
+	hints_t _hintsCache;
+	int _hintContextLenght;
+	Utf8String _hintSeed;
 	mutable std::mutex _mutex;
 public:
 	ReplxxImpl( FILE*, FILE*, FILE* );
