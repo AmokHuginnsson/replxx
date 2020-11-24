@@ -62,7 +62,7 @@ void hook_color(std::string const& str, Replxx::colors_t& colors, std::vector<st
 Replxx::completions_t hook_completion(std::string const& context, int& contextLen, std::vector<std::string> const& examples) {
 	Replxx::completions_t completions;
 	int utf8ContextLen( context_len( context.c_str() ) );
-	int prefixLen( context.length() - utf8ContextLen );
+	int prefixLen( static_cast<int>( context.length() ) - utf8ContextLen );
 	if ( ( prefixLen > 0 ) && ( context[prefixLen - 1] == '\\' ) ) {
 		-- prefixLen;
 		++ utf8ContextLen;
@@ -96,7 +96,7 @@ Replxx::hints_t hook_hint(std::string const& context, int& contextLen, Replxx::C
 	// or if prefix begins with a specific character
 
 	int utf8ContextLen( context_len( context.c_str() ) );
-	int prefixLen( context.length() - utf8ContextLen );
+	int prefixLen( static_cast<int>( context.length() ) - utf8ContextLen );
 	contextLen = utf8str_codepoint_len( context.c_str() + prefixLen, utf8ContextLen );
 	std::string prefix { context.substr(prefixLen) };
 

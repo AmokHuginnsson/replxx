@@ -443,7 +443,7 @@ void highlighter_fwd( replxx_highlighter_callback_t fn, std::string const& input
 			return ( static_cast<ReplxxColor>( c ) );
 		}
 	);
-	fn( input.c_str(), colorsTmp.data(), colors.size(), userData );
+	fn( input.c_str(), colorsTmp.data(), static_cast<int>( colors.size() ), userData );
 	std::transform(
 		colorsTmp.begin(),
 		colorsTmp.end(),

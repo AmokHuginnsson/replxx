@@ -53,12 +53,15 @@ build_target() {
 	mkdir -p "build/${target}"
 	cd "build/${target}"
 	if [ "x${msvcxx}" = "x1" ] ; then
-		CMAKE="/cygdrive/c/Program Files/CMake/bin/cmake.exe"
-		"${CMAKE}" ${STATIC} ${shared} ${examples} -G 'Visual Studio 14' ${installPrefix} ../../
-		"${CMAKE}" --build . --config Debug
-		"${CMAKE}" --build . --config Release
-		"${CMAKE}" --build . --config Debug --target Install
-		"${CMAKE}" --build . --config Release --target Install
+		vswhere="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe"
+		name="$("${vswhere}" -latest -property catalog_productName | tr -d '\r')"
+		ver=$("${vswhere}" -latest -property installationVersion | awk -F '.' '{print $1}')
+		cmake="/cygdrive/c/Program Files/CMake/bin/cmake.exe"
+		"${cmake}" ${STATIC} ${shared} ${examples} -G "${name} ${ver}" ${installPrefix} ../../
+		"${cmake}" --build . --config Debug
+		"${cmake}" --build . --config Release
+		"${cmake}" --build . --config Debug --target Install
+		"${cmake}" --build . --config Release --target Install
 	else
 		cmake -DCMAKE_BUILD_TYPE=${target} ${shared} ${examples} ${installPrefix} ../../
 		make

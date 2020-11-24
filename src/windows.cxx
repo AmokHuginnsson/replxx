@@ -110,7 +110,7 @@ int win_write( HANDLE out_, bool autoEscape_, char const* str_, int size_ ) {
 			while ( str_ < e ) {
 				if ( *str_ == 27 ) {
 					if ( s < str_ ) {
-						int toWrite( str_ - s );
+						int toWrite( static_cast<int>( str_ - s ) );
 						WriteConsoleA( out_, s, static_cast<DWORD>( toWrite ), &nWritten, nullptr );
 						count += nWritten;
 						if ( nWritten != toWrite ) {
@@ -119,7 +119,7 @@ int win_write( HANDLE out_, bool autoEscape_, char const* str_, int size_ ) {
 						}
 					}
 					s = HandleEsc( out_, str_ + 1, e );
-					int escaped( s - str_);
+					int escaped( static_cast<int>( s - str_ ) );
 					count += escaped;
 					str_ = s;
 				} else {

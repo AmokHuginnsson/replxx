@@ -20,7 +20,7 @@ int utf8str_codepoint_len( char const* s, int utf8len ) {
 
 int context_len( char const* prefix ) {
 	char const wb[] = " \t\n\r\v\f-=+*&^%$#@!,./?<>;:`~'\"[]{}()\\|";
-	int i = strlen( prefix ) - 1;
+	int i = (int)strlen( prefix ) - 1;
 	int cl = 0;
 	while ( i >= 0 ) {
 		if ( strchr( wb, prefix[i] ) != NULL ) {

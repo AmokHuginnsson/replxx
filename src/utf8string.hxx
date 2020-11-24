@@ -48,9 +48,9 @@ public:
 	}
 
 	void assign( std::string const& str_ ) {
-		realloc( str_.length() );
+		realloc( static_cast<int>( str_.length() ) );
 		strncpy( _data.get(), str_.c_str(), str_.length() );
-		_len = str_.length();
+		_len = static_cast<int>( str_.length() );
 	}
 
 	void assign( Utf8String const& other_ ) {

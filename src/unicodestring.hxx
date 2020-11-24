@@ -54,15 +54,15 @@ public:
 	}
 
 	UnicodeString& assign( std::string const& str_ ) {
-		_data.resize( str_.length() );
+		_data.resize( static_cast<int>( str_.length() ) );
 		int len( 0 );
-		copyString8to32( _data.data(), str_.length(), len, str_.c_str() );
+		copyString8to32( _data.data(), static_cast<int>( str_.length() ), len, str_.c_str() );
 		_data.resize( len );
 		return *this;
 	}
 
 	UnicodeString& assign( char const* str_ ) {
-		size_t byteCount( strlen( str_ ) );
+		int byteCount( static_cast<int>( strlen( str_ ) ) );
 		_data.resize( byteCount );
 		int len( 0 );
 		copyString8to32( _data.data(), byteCount, len, str_ );

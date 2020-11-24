@@ -398,7 +398,7 @@ char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
 		clear_self_to_end_of_screen();
 		while ( ! _messages.empty() ) {
 			string const& message( _messages.front() );
-			_terminal.write8( message.data(), message.length() );
+			_terminal.write8( message.data(), static_cast<int>( message.length() ) );
 			_messages.pop_front();
 		}
 		repaint();
@@ -669,7 +669,7 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 		for ( char32_t ch : _data ) {
 			render( ch );
 		}
-		_displayInputLength = _display.size();
+		_displayInputLength = static_cast<int>( _display.size() );
 		_modifiedState = false;
 		return;
 	}
@@ -691,7 +691,7 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 		render( _data[i] );
 	}
 	set_color( Replxx::Color::DEFAULT );
-	_displayInputLength = _display.size();
+	_displayInputLength = static_cast<int>( _display.size() );
 	_modifiedState = false;
 	return;
 }
@@ -725,7 +725,7 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 		_hintColor = Replxx::Color::GRAY;
 		_hintsCache = call_hinter( _utf8Buffer.get(), _hintContextLenght, _hintColor );
 	}
-	int hintCount( _hintsCache.size() );
+	int hintCount( static_cast<int>( _hintsCache.size() ) );
 	if ( hintCount == 1 ) {
 		_hint = _hintsCache.front();
 		len = _hint.length() - _hintContextLenght;
@@ -871,7 +871,7 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 		calculate_displayed_length( _data.get(), _data.length() ) + hintLen,
 		xEndOfInput, yEndOfInput
 	);
-	yEndOfInput += count( _display.begin(), _display.end(), '\n' );
+	yEndOfInput += static_cast<int>( count( _display.begin(), _display.end(), '\n' ) );
 
 	// calculate the desired position of the cursor
 	int xCursorPos( 0 ), yCursorPos( 0 );
@@ -891,7 +891,7 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	// display the input line
 	_terminal.write32( _display.data(), _displayInputLength );
 	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
-	_terminal.write32( _display.data() + _displayInputLength, _display.size() - _displayInputLength );
+	_terminal.write32( _display.data() + _displayInputLength, static_cast<int>( _display.size() ) - _displayInputLength );
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap
 	if ( ( xEndOfInput == 0 ) && ( yEndOfInput > 0 ) ) {
@@ -933,7 +933,7 @@ void Replxx::ReplxxImpl::clear_self_to_end_of_screen( Prompt const* prompt_ ) {
 
 namespace {
 int longest_common_prefix( Replxx::ReplxxImpl::completions_t const& completions ) {
-	int completionsCount( completions.size() );
+	int completionsCount( static_cast<int>( completions.size() ) );
 	if ( completionsCount < 1 ) {
 		return ( 0 );
 	}
@@ -990,7 +990,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 
 	// at least one completion
 	int longestCommonPrefix = 0;
-	int completionsCount( _completions.size() );
+	int completionsCount( static_cast<int>( _completions.size() ) );
 	int selectedCompletion( 0 );
 	if ( _hintSelection != -1 ) {
 		selectedCompletion = _hintSelection;
@@ -1315,8 +1315,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 			_prompt._previousInputLen = inputLen;
 		}
 		render( c );
-		_displayInputLength = _display.size();
-		_terminal.write32(reinterpret_cast<char32_t*>(&c), 1);
+		_displayInputLength = static_cast<int>( _display.size() );
+		_terminal.write32( reinterpret_cast<char32_t*>( &c ), 1 );
 	} else {
 		refresh_line();
 	}

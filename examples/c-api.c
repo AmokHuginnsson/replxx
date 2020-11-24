@@ -18,9 +18,9 @@ void modify_callback(char** line, int* cursorPosition, void* ud) {
 	char* s = *line;
 	char* p = strchr( s, '*' );
 	if ( p ) {
-		int len = strlen( s );
+		int len = (int)strlen( s );
 		char* n = *line = calloc( len * 2, 1 );
-		int i = p - s;
+		int i = (int)( p - s );
 		strncpy(n, s, i);
 		n += i;
 		strncpy(n, s, i);
@@ -38,7 +38,7 @@ void completionHook(char const* context, replxx_completions* lc, int* contextLen
 	size_t i;
 
 	int utf8ContextLen = context_len( context );
-	int prefixLen = strlen( context ) - utf8ContextLen;
+	int prefixLen = (int)strlen( context ) - utf8ContextLen;
 	*contextLen = utf8str_codepoint_len( context + prefixLen, utf8ContextLen );
 	for (i = 0;	examples[i] != NULL; ++i) {
 		if (strncmp(context + prefixLen, examples[i], utf8ContextLen) == 0) {
@@ -51,7 +51,7 @@ void hintHook(char const* context, replxx_hints* lc, int* contextLen, ReplxxColo
 	char** examples = (char**)( ud );
 	int i;
 	int utf8ContextLen = context_len( context );
-	int prefixLen = strlen( context ) - utf8ContextLen;
+	int prefixLen = (int)strlen( context ) - utf8ContextLen;
 	*contextLen = utf8str_codepoint_len( context + prefixLen, utf8ContextLen );
 	if ( *contextLen > 0 ) {
 		for (i = 0;	examples[i] != NULL; ++i) {
@@ -84,7 +84,7 @@ ReplxxActionResult upper_case_line( int ignored, void* ud ) {
 	Replxx* replxx = (Replxx*)ud;
 	ReplxxState state;
 	replxx_get_state( replxx, &state );
-	int l = strlen( state.text );
+	int l = (int)strlen( state.text );
 #ifdef _WIN32
 #define strdup _strdup
 #endif

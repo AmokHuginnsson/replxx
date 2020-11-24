@@ -53,7 +53,7 @@ ConversionResult copyString8to32(char32_t* dst, int dstSize, int& dstCount, cons
 				&sourceStart, sourceEnd, &targetStart, targetEnd, lenientConversion);
 
 		if (res == conversionOK) {
-			dstCount = targetStart - reinterpret_cast<UTF32*>(dst);
+			dstCount = static_cast<int>( targetStart - reinterpret_cast<UTF32*>( dst ) );
 
 			if (dstCount < dstSize) {
 				*targetStart = 0;
@@ -86,7 +86,7 @@ int copyString32to8( char* dst, int dstSize, const char32_t* src, int srcSize ) 
 		);
 
 		if ( res == conversionOK ) {
-			resCount = targetStart - reinterpret_cast<UTF8*>( dst );
+			resCount = static_cast<int>( targetStart - reinterpret_cast<UTF8*>( dst ) );
 			if ( resCount < dstSize ) {
 				*targetStart = 0;
 			}
