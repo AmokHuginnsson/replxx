@@ -663,9 +663,7 @@ void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 //	FillConsoleOutputCharacterA( consoleOut, ' ', toWrite, coord, &nWritten );
 	_empty.resize( toWrite - 1, ' ' );
 	WriteConsoleA( consoleOut, _empty.data(), toWrite - 1, &nWritten, nullptr );
-	if ( toEnd ) {
-		SetConsoleCursorPosition( consoleOut, coord );
-	}
+	SetConsoleCursorPosition( consoleOut, coord );
 #endif
 }
 
