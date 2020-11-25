@@ -360,8 +360,8 @@ void replxx_set_preload_buffer(::Replxx* replxx_, const char* preloadText) {
  * user
  *
  * @param prompt text of prompt to display to the user
- * @return the returned string belongs to the caller on return and must be
- * freed to prevent memory leaks
+ * @return the returned string is managed by replxx library
+ * and it must NOT be freed in the client.
  */
 char const* replxx_input( ::Replxx* replxx_, const char* prompt ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );

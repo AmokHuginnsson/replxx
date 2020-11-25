@@ -358,6 +358,8 @@ REPLXX_IMPEXP void replxx_add_hint( replxx_hints* hints, const char* str );
 
 /*! \brief Read line of user input.
  *
+ * Returned pointer is managed by the library and is not to be freed in the client.
+ *
  * \param prompt - prompt to be displayed before getting user input.
  * \return An UTF-8 encoded input given by the user (or nullptr on EOF).
  */
