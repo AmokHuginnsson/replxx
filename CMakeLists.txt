@@ -113,6 +113,8 @@ target_link_libraries(replxx PUBLIC Threads::Threads)
 set_target_properties(replxx PROPERTIES VERSION ${PROJECT_VERSION})
 
 set_property(TARGET replxx PROPERTY DEBUG_POSTFIX -d)
+set_property(TARGET replxx PROPERTY RELWITHDEBINFO_POSTFIX -rd)
+set_property(TARGET replxx PROPERTY MINSIZEREL_POSTFIX)
 if ( NOT BUILD_SHARED_LIBS AND MSVC )
 	set_property(TARGET replxx PROPERTY OUTPUT_NAME replxx-static)
 endif()
