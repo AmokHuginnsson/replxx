@@ -650,7 +650,7 @@ void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 	DWORD toWrite(
 		toEnd
 			? ( height + 1 - yPos ) * inf.dwSize.X - inf.dwCursorPosition.X
-			: inf.dwSize.X * height
+			: inf.dwSize.X * ( height + 1 )
 	);
 //	FillConsoleOutputCharacterA( consoleOut, ' ', toWrite, coord, &nWritten );
 	_empty.resize( toWrite - 1, ' ' );
