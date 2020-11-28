@@ -60,8 +60,13 @@ build_target() {
 	cd "build/${target}"
 	if [ "x${msvcxx}" = "x1" ] ; then
 		vswhere="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe"
-		name="$("${vswhere}" -latest -property catalog_productName | tr -d '\r')"
-		ver=$("${vswhere}" -latest -property installationVersion | awk -F '.' '{print $1}')
+		if [ -f "${vswhere}" ] ; then
+			name="$("${vswhere}" -latest -property catalog_productName | tr -d '\r')"
+			ver=$("${vswhere}" -latest -property installationVersion | awk -F '.' '{print $1}')
+		else
+			name="Visual Studio"
+			ver="14"
+		fi
 		cmake="/cygdrive/c/Program Files/CMake/bin/cmake.exe"
 		"${cmake}" ${STATIC} ${shared} ${examples} -G "${name} ${ver}" ${arch} ${installPrefix} ../../
 		"${cmake}" --build . --config Debug
