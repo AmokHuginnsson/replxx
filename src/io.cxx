@@ -636,25 +636,23 @@ void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 	}
 	COORD coord = { 0, 0 };
 	CONSOLE_SCREEN_BUFFER_INFO inf;
-	bool toEnd( clearScreen_ == CLEAR_SCREEN::TO_END );
 	HANDLE consoleOut( _consoleOut != INVALID_HANDLE_VALUE ? _consoleOut : GetStdHandle( STD_OUTPUT_HANDLE ) );
 	GetConsoleScreenBufferInfo( consoleOut, &inf );
-	if ( ! toEnd ) {
-		SetConsoleCursorPosition( consoleOut, coord );
-	} else {
+	if ( clearScreen_ == CLEAR_SCREEN::TO_END ) {
 		coord = inf.dwCursorPosition;
+		DWORD nWritten( 0 );
+		SHORT height( inf.srWindow.Bottom - inf.srWindow.Top );
+		DWORD yPos( inf.dwCursorPosition.Y - inf.srWindow.Top );
+		DWORD toWrite( ( height + 1 - yPos ) * inf.dwSize.X - inf.dwCursorPosition.X );
+//		FillConsoleOutputCharacterA( consoleOut, ' ', toWrite, coord, &nWritten );
+		_empty.resize( toWrite - 1, ' ' );
+		WriteConsoleA( consoleOut, _empty.data(), toWrite - 1, &nWritten, nullptr );
+	} else {
+		COORD scrollTarget = { 0, -inf.dwSize.Y };
+		CHAR_INFO fill{ TEXT( ' ' ), inf.wAttributes };
+		SMALL_RECT scrollRect = { 0, 0, inf.dwSize.X, inf.dwSize.Y };
+		ScrollConsoleScreenBuffer( consoleOut, &scrollRect, nullptr, scrollTarget, &fill );
 	}
-	DWORD nWritten( 0 );
-	SHORT height( inf.srWindow.Bottom - inf.srWindow.Top );
-	DWORD yPos( inf.dwCursorPosition.Y - inf.srWindow.Top );
-	DWORD toWrite(
-		toEnd
-			? ( height + 1 - yPos ) * inf.dwSize.X - inf.dwCursorPosition.X
-			: inf.dwSize.X * ( height + 1 )
-	);
-//	FillConsoleOutputCharacterA( consoleOut, ' ', toWrite, coord, &nWritten );
-	_empty.resize( toWrite - 1, ' ' );
-	WriteConsoleA( consoleOut, _empty.data(), toWrite - 1, &nWritten, nullptr );
 	SetConsoleCursorPosition( consoleOut, coord );
 #endif
 }
