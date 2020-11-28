@@ -743,6 +743,83 @@ class ReplxxTests( unittest.TestCase ):
 			"<c9><rst><ceos><c9><c9><rst><ceos><c9>\r\n",
 			"\n".join( _words_ ) + "\n"
 		)
+	def test_history_search_forward( self_ ):
+		self_.check_scenario(
+			"<c-s>repl<c-s><cr><c-d>",
+			"<c1><ceos><c1><ceos>(i-search)`': <c15><bell><c1><ceos>(i-search)`r': "
+			"<c16><bell><c1><ceos>(i-search)`re': <c17><bell><c1><ceos>(i-search)`rep': "
+			"<c18><bell><c1><ceos>(i-search)`repl': "
+			"<c19><bell><c1><ceos>(i-search)`repl': "
+			"<c19><c1><ceos><brightgreen>replxx<rst>> <c9><c9><ceos><c9>\r\n",
+			"charlie repl delta\r\n",
+			"some command\n"
+			"alfa repl bravo\n"
+			"other request\n"
+			"charlie repl delta\n"
+			"misc input\n"
+			"echo repl golf\n"
+			"final thoughts\n"
+		)
+		self_.check_scenario(
+			"<pgup><c-s>repl<c-s><cr><c-d>",
+			"<c9>final thoughts<rst><ceos><c23><c1><ceos><c1><ceos>(i-search)`': final "
+			"thoughts<c29><c1><ceos>(i-search)`r': echo repl "
+			"golf<c21><c1><ceos>(i-search)`re': echo repl "
+			"golf<c22><c1><ceos>(i-search)`rep': echo repl "
+			"golf<c23><c1><ceos>(i-search)`repl': echo repl "
+			"golf<c24><c1><ceos>(i-search)`repl': alfa repl "
+			"bravo<c24><c1><ceos><brightgreen>replxx<rst>> alfa repl bravo<c14><c9>final "
+			"thoughts<rst><ceos><c24>\r\n"
+			"alfa repl bravo\r\n",
+			"final thoughts\n"
+			"echo repl golf\n"
+			"misc input\n"
+			"charlie repl delta\n"
+			"other request\n"
+			"alfa repl bravo\n"
+			"some command\n"
+			"charlie repl delta\r\n",
+		)
+		self_.check_scenario(
+			"<c-s>for<backspace><backspace>s<cr><c-d>",
+			"<c1><ceos><c1><ceos>(i-search)`': <c15><bell><c1><ceos>(i-search)`f': "
+			"<c16><bell><c1><ceos>(i-search)`fo': <c17><bell><c1><ceos>(i-search)`for': "
+			"<c18><bell><c1><ceos>(i-search)`fo': <c17><bell><c1><ceos>(i-search)`f': "
+			"<c16><bell><c1><ceos>(i-search)`fs': "
+			"<c17><c1><ceos><brightgreen>replxx<rst>> <c9><c9><ceos><c9>\r\n",
+			"\n".join( _words_[::-1] ) + "\n"
+		)
+		self_.check_scenario(
+			"<pgup><c-s>for<backspace><backspace>s<cr><c-d>",
+			"<c9>typescript<rst><ceos><c19><c1><ceos><c1><ceos>(i-search)`': "
+			"typescript<c25><c1><ceos>(i-search)`f': swift<c19><c1><ceos>(i-search)`fo': "
+			"fortran<c17><c1><ceos>(i-search)`for': fortran<c18><c1><ceos>(i-search)`fo': "
+			"fortran<c17><c1><ceos>(i-search)`f': swift<c19><c1><ceos>(i-search)`fs': "
+			"fsharp<c17><c1><ceos><brightgreen>replxx<rst>> "
+			"fsharp<c9><c9>typescript<rst><ceos><c15>\r\n"
+			"fsharp\r\n",
+			"\n".join( _words_[::-1] ) + "\n"
+		)
+		self_.check_scenario(
+			"<c-s>mod<c-l><cr><c-d>",
+			"<c1><ceos><c1><ceos>(i-search)`': <c15><bell><c1><ceos>(i-search)`m': "
+			"<c16><bell><c1><ceos>(i-search)`mo': <c17><bell><c1><ceos>(i-search)`mod': "
+			"<c18><c1><ceos><brightgreen>replxx<rst>> "
+			"<c9><RIS><mvhm><clr><rst><brightgreen>replxx<rst>> "
+			"<c9><rst><ceos><c9><c9><rst><ceos><c9>\r\n",
+			"\n".join( _words_[::-1] ) + "\n"
+		)
+		self_.check_scenario(
+			"<pgup><c-s>mod<c-l><cr><c-d>",
+			"<c9>typescript<rst><ceos><c19><c1><ceos><c1><ceos>(i-search)`': "
+			"typescript<c25><c1><ceos>(i-search)`m': scheme<c20><c1><ceos>(i-search)`mo': "
+			"modula<c17><c1><ceos>(i-search)`mod': "
+			"modula<c18><c1><ceos><brightgreen>replxx<rst>> "
+			"typescript<c19><RIS><mvhm><clr><rst><brightgreen>replxx<rst>> "
+			"<c9>typescript<rst><ceos><c19><c9>typescript<rst><ceos><c19>\r\n"
+			"typescript\r\n",
+			"\n".join( _words_[::-1] ) + "\n"
+		)
 	def test_history_search_backward_position( self_ ):
 		self_.check_scenario(
 			"<c-r>req<up><cr><c-d>",

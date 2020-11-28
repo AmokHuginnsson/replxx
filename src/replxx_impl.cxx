@@ -1889,63 +1889,65 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 			case Replxx::KEY::meta( '<' ): // start of history
 			case Replxx::KEY::PAGE_UP:
 			case Replxx::KEY::meta( '>' ): // end of history
-			case Replxx::KEY::PAGE_DOWN:
+			case Replxx::KEY::PAGE_DOWN: {
 				keepLooping = false;
-				break;
+			} break;
 
 			// these characters revert the input line to its previous state
 			case Replxx::KEY::control('C'): // ctrl-C, abort this line
 			case Replxx::KEY::control('G'):
-			case Replxx::KEY::control('L'): // ctrl-L, clear screen and redisplay line
+			case Replxx::KEY::control('L'): { // ctrl-L, clear screen and redisplay line
 				keepLooping = false;
 				useSearchedLine = false;
 				if (c != Replxx::KEY::control('L')) {
 					c = -1; // ctrl-C and ctrl-G just abort the search and do nothing else
 				}
-				break;
+			} break;
 
 			// these characters stay in search mode and assign the display
 			case Replxx::KEY::control('S'):
-			case Replxx::KEY::control('R'):
+			case Replxx::KEY::control('R'): {
 				if ( dp._searchText.length() == 0 ) { // if no current search text, recall previous text
 					if ( _previousSearchText.length() > 0 ) {
 						dp._searchText = _previousSearchText;
 					}
 				}
-				if ((dp._direction == 1 && c == Replxx::KEY::control('R')) ||
-						(dp._direction == -1 && c == Replxx::KEY::control('S'))) {
-					dp._direction = 0 - dp._direction; // reverse _direction
-					dp.updateSearchPrompt();         // change the prompt
+				if (
+					( ( dp._direction == 1 ) && ( c == Replxx::KEY::control( 'R' ) ) )
+					|| ( ( dp._direction == -1 ) && ( c == Replxx::KEY::control( 'S' ) ) )
+				) {
+					dp._direction = 0 - dp._direction; // reverse direction
+					dp.updateSearchPrompt();           // change the prompt
 				} else {
-					searchAgain = true; // same _direction, search again
+					searchAgain = true; // same direction, search again
 				}
-				break;
+			} break;
 
 // job control is its own thing
 #ifndef _WIN32
 			case Replxx::KEY::control('Z'): { // ctrl-Z, job control
-				_terminal.disable_raw_mode(); // Returning to Linux (whatever) shell, leave raw mode
-				raise( SIGSTOP );   // Break out in mid-line
-				_terminal.enable_raw_mode();  // Back from Linux shell, re-enter raw mode
+				_terminal.disable_raw_mode();   // Returning to Linux (whatever) shell, leave raw mode
+				raise( SIGSTOP );               // Break out in mid-line
+				_terminal.enable_raw_mode();    // Back from Linux shell, re-enter raw mode
 				dynamicRefresh( dp, activeHistoryLine.get(), activeHistoryLine.length(), historyLinePosition );
 				continue;
 			} break;
 #endif
 
-			// these characters assign the search string, and hence the selected input
-			// line
-			case Replxx::KEY::BACKSPACE: // backspace/ctrl-H, delete char to left of cursor
+			// these characters assign the search string, and hence the selected input line
+			case Replxx::KEY::BACKSPACE: { // backspace/ctrl-H, delete char to left of cursor
 				if ( dp._searchText.length() > 0 ) {
 					dp._searchText.erase( dp._searchText.length() - 1 );
 					dp.updateSearchPrompt();
-					_history.jump( dp._direction > 0 );
+					_history.restore_pos();
+					historyLinePosition = _pos;
 				} else {
 					beep();
 				}
-				break;
+			} break;
 
-			case Replxx::KEY::control('Y'): // ctrl-Y, yank killed text
-				break;
+			case Replxx::KEY::control('Y'): { // ctrl-Y, yank killed text
+			} break;
 
 			default: {
 				if ( ! is_control_code( c ) && ( c < static_cast<int>( Replxx::KEY::BASE ) ) ) { // not an action character

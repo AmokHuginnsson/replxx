@@ -300,7 +300,6 @@ bool History::move( entries_t::const_iterator& it_, int by_, bool wrapped_ ) con
 		for ( int i( 0 ); i < by_; ++ i ) {
 			++ it_;
 			if ( it_ != _entries.end() ) {
-				break;
 			} else if ( wrapped_ ) {
 				it_ = _entries.begin();
 			} else {
