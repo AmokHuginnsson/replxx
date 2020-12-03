@@ -3,7 +3,7 @@ project(
 	replxx
 	# HOMEPAGE_URL "https://github.com/AmokHuginnsson/replxx"
 	# DESCRIPTION "replxx - Read Evaluate Print Loop library"
-	VERSION 0.0.2
+	VERSION 0.0.3
 	LANGUAGES CXX C
 )
 
