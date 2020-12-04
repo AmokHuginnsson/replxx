@@ -84,11 +84,11 @@ cd build
 
 * 32 bit: 
 ```bash
-cmake -G "Visual Studio 12 2013" -DCMAKE_BUILD_TYPE=Release ..`
+cmake -G "Visual Studio 12 2013" -DCMAKE_BUILD_TYPE=Release ..
 ```
 * 64 bit:
 ```bash
-`cmake -G "Visual Studio 12 2013 Win64" -DCMAKE_BUILD_TYPE=Release ..`
+cmake -G "Visual Studio 12 2013 Win64" -DCMAKE_BUILD_TYPE=Release ..
 ```
 
 3. Open the generated file `replxx.sln` in the `build` subdirectory with Visual Studio.
