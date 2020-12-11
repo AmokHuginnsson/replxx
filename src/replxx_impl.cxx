@@ -30,19 +30,13 @@
 #include "utf8string.hxx"
 #include "prompt.hxx"
 #include "util.hxx"
-#include "io.hxx"
+#include "terminal.hxx"
 #include "history.hxx"
 #include "replxx.hxx"
 
 using namespace std;
 
 namespace replxx {
-
-#ifndef _WIN32
-
-bool gotResize = false;
-
-#endif
 
 namespace {
 
@@ -95,16 +89,6 @@ static int const REPLXX_MAX_HINT_ROWS( 4 );
  * with an exception of an underscore ('_').
  */
 char const defaultBreakChars[] = " \t\v\f\a\b\r\n`~!@#$%^&*()-=+[{]}\\|;:'\",<.>/?";
-
-#ifndef _WIN32
-
-static void WindowSizeChanged(int) {
-	// do nothing here but setting this flag
-	gotResize = true;
-}
-
-#endif
-
 static const char* unsupported_term[] = {"dumb", "cons25", "emacs", NULL};
 
 static bool isUnsupportedTerm(void) {
@@ -394,6 +378,14 @@ char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
 		if ( eventType == Terminal::EVENT_TYPE::KEY_PRESS ) {
 			break;
 		}
+		if ( eventType == Terminal::EVENT_TYPE::RESIZE ) {
+			// caught a window resize event
+			// now redraw the prompt and line
+			_prompt.update_screen_columns();
+			// redraw the original prompt with current input
+			dynamicRefresh( _prompt, _data.get(), _data.length(), _pos );
+			continue;
+		}
 		std::lock_guard<std::mutex> l( _mutex );
 		clear_self_to_end_of_screen();
 		while ( ! _messages.empty() ) {
@@ -541,9 +533,6 @@ void Replxx::ReplxxImpl::emulate_key_press( char32_t keyCode_ ) {
 }
 
 char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
-#ifndef _WIN32
-	gotResize = false;
-#endif
 	try {
 		errno = 0;
 		if ( ! tty::in ) { // input not from a terminal, we should work with piped input, i.e. redirected stdin
@@ -588,16 +577,10 @@ char const* Replxx::ReplxxImpl::finalize_input( char const* retVal_ ) {
 
 int Replxx::ReplxxImpl::install_window_change_handler( void ) {
 #ifndef _WIN32
-	struct sigaction sa;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = 0;
-	sa.sa_handler = &WindowSizeChanged;
-
-	if (sigaction(SIGWINCH, &sa, nullptr) == -1) {
-		return errno;
-	}
-#endif
+	return ( _terminal.install_window_change_handler() );
+#else
 	return 0;
+#endif
 }
 
 void Replxx::ReplxxImpl::enable_bracketed_paste( void ) {
@@ -1210,17 +1193,6 @@ int Replxx::ReplxxImpl::get_input_line( void ) {
 	Replxx::ACTION_RESULT next( Replxx::ACTION_RESULT::CONTINUE );
 	while ( next == Replxx::ACTION_RESULT::CONTINUE ) {
 		int c( read_char( HINT_ACTION::REPAINT ) ); // get a new keystroke
-#ifndef _WIN32
-		if (c == 0 && gotResize) {
-			// caught a window resize event
-			// now redraw the prompt and line
-			gotResize = false;
-			_prompt.update_screen_columns();
-			// redraw the original prompt with current input
-			dynamicRefresh( _prompt, _data.get(), _data.length(), _pos );
-			continue;
-		}
-#endif
 
 		if (c == 0) {
 			return _data.length();

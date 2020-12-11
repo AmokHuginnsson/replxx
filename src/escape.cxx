@@ -1,5 +1,5 @@
 #include "escape.hxx"
-#include "io.hxx"
+#include "terminal.hxx"
 #include "replxx.hxx"
 
 #ifndef _WIN32

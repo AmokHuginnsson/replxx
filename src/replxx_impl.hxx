@@ -45,7 +45,6 @@
 #include "killring.hxx"
 #include "utf8string.hxx"
 #include "prompt.hxx"
-#include "io.hxx"
 
 namespace replxx {
 

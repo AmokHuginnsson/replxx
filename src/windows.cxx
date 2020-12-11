@@ -4,7 +4,7 @@
 
 #include "windows.hxx"
 #include "conversion.hxx"
-#include "io.hxx"
+#include "terminal.hxx"
 
 using namespace std;
 

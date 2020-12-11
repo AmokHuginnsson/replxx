@@ -19,7 +19,8 @@ public:
 	enum class EVENT_TYPE {
 		KEY_PRESS,
 		MESSAGE,
-		TIMEOUT
+		TIMEOUT,
+		RESIZE
 	};
 private:
 #ifdef _WIN32
@@ -65,6 +66,7 @@ public:
 	void set_cursor_visible( bool );
 #ifndef _WIN32
 	int read_verbatim( char32_t*, int );
+	int install_window_change_handler( void );
 #endif
 private:
 	void enable_out( void );

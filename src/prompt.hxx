@@ -4,7 +4,7 @@
 #include <cstdlib>
 
 #include "unicodestring.hxx"
-#include "io.hxx"
+#include "terminal.hxx"
 
 namespace replxx {
 

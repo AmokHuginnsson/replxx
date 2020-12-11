@@ -103,7 +103,6 @@
 #include "replxx.hxx"
 #include "replxx_impl.hxx"
 #include "history.hxx"
-#include "io.hxx"
 
 static_assert(
 	static_cast<int>( replxx::Replxx::ACTION::SEND_EOF ) == static_cast<int>( REPLXX_ACTION_SEND_EOF ),

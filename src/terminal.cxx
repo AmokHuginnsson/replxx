@@ -28,10 +28,11 @@ static DWORD const ENABLE_VIRTUAL_TERMINAL_PROCESSING = 4;
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #endif /* _WIN32 */
 
-#include "io.hxx"
+#include "terminal.hxx"
 #include "conversion.hxx"
 #include "escape.hxx"
 #include "replxx.hxx"
@@ -68,6 +69,17 @@ bool in( is_a_tty( 0 ) );
 bool out( is_a_tty( 1 ) );
 
 }
+
+#ifndef _WIN32
+Terminal* _terminal_ = nullptr;
+static void WindowSizeChanged( int ) {
+	if ( ! _terminal_ ) {
+		return;
+	}
+	_terminal_->notify_event( Terminal::EVENT_TYPE::RESIZE );
+}
+#endif
+
 
 Terminal::Terminal( void )
 #ifdef _WIN32
@@ -236,10 +248,11 @@ int Terminal::enable_raw_mode( void ) {
 		if ( tcsetattr(0, TCSADRAIN, &raw) < 0 ) {
 			return ( notty() );
 		}
+		_terminal_ = this;
 #endif
 		_rawMode = true;
 	}
-	return 0;
+	return ( 0 );
 }
 
 void Terminal::disable_raw_mode(void) {
@@ -250,6 +263,7 @@ void Terminal::disable_raw_mode(void) {
 		SetConsoleCP( _inputCodePage );
 		_consoleIn = INVALID_HANDLE_VALUE;
 #else
+		_terminal_ = nullptr;
 		if ( tcsetattr( 0, TCSADRAIN, &_origTermios ) == -1 ) {
 			return;
 		}
@@ -599,6 +613,9 @@ Terminal::EVENT_TYPE Terminal::wait_for_input( int long timeout_ ) {
 			if ( data == 'm' ) {
 				return ( EVENT_TYPE::MESSAGE );
 			}
+			if ( data == 'r' ) {
+				return ( EVENT_TYPE::RESIZE );
+			}
 		}
 		if ( FD_ISSET( 0, &fdSet ) ) {
 			return ( EVENT_TYPE::KEY_PRESS );
@@ -612,7 +629,7 @@ void Terminal::notify_event( EVENT_TYPE eventType_ ) {
 	_events.push_back( eventType_ );
 	SetEvent( _interrupt );
 #else
-	char data( eventType_ == EVENT_TYPE::KEY_PRESS ? 'k' : 'm' );
+	char data( ( eventType_ == EVENT_TYPE::KEY_PRESS ) ? 'k' : ( eventType_ == EVENT_TYPE::MESSAGE ? 'm' : 'r' ) );
 	static_cast<void>( write( _interrupt[1], &data, 1 ) == 1 );
 #endif
 }
@@ -706,6 +723,18 @@ int Terminal::read_verbatim( char32_t* buffer_, int size_ ) {
 	}
 	::fcntl( STDIN_FILENO, F_SETFL, statusFlags );
 	return ( len );
+}
+
+int Terminal::install_window_change_handler( void ) {
+	struct sigaction sa;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sa.sa_handler = &WindowSizeChanged;
+
+	if (sigaction(SIGWINCH, &sa, nullptr) == -1) {
+		return errno;
+	}
+	return 0;
 }
 #endif
 
