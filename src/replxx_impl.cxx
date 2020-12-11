@@ -383,7 +383,7 @@ char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
 			// now redraw the prompt and line
 			_prompt.update_screen_columns();
 			// redraw the original prompt with current input
-			dynamicRefresh( _prompt, _data.get(), _data.length(), _pos );
+			refresh_line( HINT_ACTION::REPAINT );
 			continue;
 		}
 		std::lock_guard<std::mutex> l( _mutex );
