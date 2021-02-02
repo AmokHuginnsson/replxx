@@ -68,13 +68,20 @@ keytab = {
 	"<c-y>": "",
 	"<c-z>": "",
 	"<m-b>": "\033b",
+	"<m-B>": "\033B",
 	"<m-c>": "\033c",
+	"<m-C>": "\033C",
 	"<m-d>": "\033d",
+	"<m-D>": "\033D",
 	"<m-f>": "\033f",
+	"<m-F>": "\033F",
 	"<m-l>": "\033l",
+	"<m-L>": "\033L",
 	"<m-n>": "\033n",
 	"<m-p>": "\033p",
 	"<m-u>": "\033u",
+	"<m-U>": "\033U",
+	"<m-w>": "\033w",
 	"<m-y>": "\033y",
 	"<m-.>": "\033.",
 	"<m-backspace>": "\033\177",
@@ -412,6 +419,24 @@ class ReplxxTests( unittest.TestCase ):
 			"ghi<rst><ceos><c21>\r\n"
 			"abc xdef ghi\r\n"
 		)
+		self_.check_scenario(
+			"<up><m-B>x<left><m-B>x<left><m-b>x<left><m-B>x<cr><c-d>",
+			"<c9>abc_def ghi_jkl mnl_opq rst_uvw<rst><ceos><c40><c9>abc_def ghi_jkl "
+			"mnl_opq rst_uvw<rst><ceos><c37><c9>abc_def ghi_jkl mnl_opq "
+			"rst_xuvw<rst><ceos><c38><c9>abc_def ghi_jkl mnl_opq "
+			"rst_xuvw<rst><ceos><c37><c9>abc_def ghi_jkl mnl_opq "
+			"rst_xuvw<rst><ceos><c33><c9>abc_def ghi_jkl mnl_opq "
+			"xrst_xuvw<rst><ceos><c34><c9>abc_def ghi_jkl mnl_opq "
+			"xrst_xuvw<rst><ceos><c33><c9>abc_def ghi_jkl mnl_opq "
+			"xrst_xuvw<rst><ceos><c25><c9>abc_def ghi_jkl xmnl_opq "
+			"xrst_xuvw<rst><ceos><c26><c9>abc_def ghi_jkl xmnl_opq "
+			"xrst_xuvw<rst><ceos><c25><c9>abc_def ghi_jkl xmnl_opq "
+			"xrst_xuvw<rst><ceos><c21><c9>abc_def ghi_xjkl xmnl_opq "
+			"xrst_xuvw<rst><ceos><c22><c9>abc_def ghi_xjkl xmnl_opq "
+			"xrst_xuvw<rst><ceos><c44>\r\n"
+			"abc_def ghi_xjkl xmnl_opq xrst_xuvw\r\n",
+			"abc_def ghi_jkl mnl_opq rst_uvw\r\n"
+		)
 	def test_next_word_key( self_ ):
 		self_.check_scenario(
 			"abc def ghi<home><c-right><m-right>x<cr><c-d>",
@@ -424,6 +449,22 @@ class ReplxxTests( unittest.TestCase ):
 			"ghi<rst><ceos><c12><c9>abc def ghi<rst><ceos><c16><c9>abc defx "
 			"ghi<rst><ceos><c17><c9>abc defx ghi<rst><ceos><c21>\r\n"
 			"abc defx ghi\r\n"
+		)
+		self_.check_scenario(
+			"<up><home><m-F>x<m-F>x<m-f>x<m-F>x<cr><c-d>",
+			"<c9>abc_def ghi_jkl mno_pqr stu_vwx<rst><ceos><c40><c9>abc_def ghi_jkl "
+			"mno_pqr stu_vwx<rst><ceos><c9><c9>abc_def ghi_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c12><c9>abcx_def ghi_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c13><c9>abcx_def ghi_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c17><c9>abcx_defx ghi_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c18><c9>abcx_defx ghi_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c26><c9>abcx_defx ghi_jklx mno_pqr "
+			"stu_vwx<rst><ceos><c27><c9>abcx_defx ghi_jklx mno_pqr "
+			"stu_vwx<rst><ceos><c31><c9>abcx_defx ghi_jklx mnox_pqr "
+			"stu_vwx<rst><ceos><c32><c9>abcx_defx ghi_jklx mnox_pqr "
+			"stu_vwx<rst><ceos><c44>\r\n"
+			"abcx_defx ghi_jklx mnox_pqr stu_vwx\r\n",
+			"abc_def ghi_jkl mno_pqr stu_vwx\r\n"
 		)
 	def test_hint_show( self_ ):
 		self_.check_scenario(
@@ -1059,6 +1100,23 @@ class ReplxxTests( unittest.TestCase ):
 			"aBc Defg iJklmn Zzxq\r\n",
 			"abc defg ijklmn zzxq\n"
 		)
+		self_.check_scenario(
+			"<up><home><right><m-C><m-C><m-c><m-C><right><right><m-C><m-C> <cr><c-d>",
+			"<c9>abc_def ghj_jkl mno_pqr stu_vwx<rst><ceos><c40><c9>abc_def ghj_jkl "
+			"mno_pqr stu_vwx<rst><ceos><c9><c9>abc_def ghj_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c10><c9>aBc_def ghj_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c12><c9>aBc_Def ghj_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c16><c9>aBc_Def Ghj_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c24><c9>aBc_Def Ghj_jkl Mno_pqr "
+			"stu_vwx<rst><ceos><c28><c9>aBc_Def Ghj_jkl Mno_pqr "
+			"stu_vwx<rst><ceos><c29><c9>aBc_Def Ghj_jkl Mno_pqr "
+			"stu_vwx<rst><ceos><c30><c9>aBc_Def Ghj_jkl Mno_pQr "
+			"stu_vwx<rst><ceos><c32><c9>aBc_Def Ghj_jkl Mno_pQr "
+			"Stu_vwx<rst><ceos><c36><c9>aBc_Def Ghj_jkl Mno_pQr Stu "
+			"_vwx<rst><ceos><c37><c9>aBc_Def Ghj_jkl Mno_pQr Stu _vwx<rst><ceos><c41>\r\n"
+			"aBc_Def Ghj_jkl Mno_pQr Stu _vwx\r\n",
+			"abc_def ghj_jkl mno_pqr stu_vwx\n"
+		)
 	def test_make_upper_case( self_ ):
 		self_.check_scenario(
 			"<up><home><right><right><right><m-u><m-u><right><m-u><cr><c-d>",
@@ -1075,6 +1133,22 @@ class ReplxxTests( unittest.TestCase ):
 			"abcDEFG HIJKLMNO PQRSTUVW\r\n",
 			"abcdefg hijklmno pqrstuvw\n"
 		)
+		self_.check_scenario(
+			"<up><home><right><m-U><m-U><right><m-u><right><right><m-U><cr><c-d>",
+			"<c9>abc_def ghi_jkl mno_pqr stu_vwx<rst><ceos><c40><c9>abc_def ghi_jkl "
+			"mno_pqr stu_vwx<rst><ceos><c9><c9>abc_def ghi_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c10><c9>aBC_def ghi_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c12><c9>aBC_DEF ghi_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c16><c9>aBC_DEF ghi_jkl mno_pqr "
+			"stu_vwx<rst><ceos><c17><c9>aBC_DEF GHI_JKL mno_pqr "
+			"stu_vwx<rst><ceos><c24><c9>aBC_DEF GHI_JKL mno_pqr "
+			"stu_vwx<rst><ceos><c25><c9>aBC_DEF GHI_JKL mno_pqr "
+			"stu_vwx<rst><ceos><c26><c9>aBC_DEF GHI_JKL mNO_pqr "
+			"stu_vwx<rst><ceos><c28><c9>aBC_DEF GHI_JKL mNO_pqr "
+			"stu_vwx<rst><ceos><c40>\r\n"
+			"aBC_DEF GHI_JKL mNO_pqr stu_vwx\r\n",
+			"abc_def ghi_jkl mno_pqr stu_vwx\n"
+		)
 	def test_make_lower_case( self_ ):
 		self_.check_scenario(
 			"<up><home><right><right><right><m-l><m-l><right><m-l><cr><c-d>",
@@ -1090,6 +1164,22 @@ class ReplxxTests( unittest.TestCase ):
 			"pqrstuvw<rst><ceos><c34>\r\n"
 			"ABCdefg hijklmno pqrstuvw\r\n",
 			"ABCDEFG HIJKLMNO PQRSTUVW\n"
+		)
+		self_.check_scenario(
+			"<up><home><right><m-L><m-L><right><m-l><right><right><m-L><cr><c-d>",
+			"<c9>ABC_DEF GHI_JKL MNO_PQR STU_VWX<rst><ceos><c40><c9>ABC_DEF GHI_JKL "
+			"MNO_PQR STU_VWX<rst><ceos><c9><c9>ABC_DEF GHI_JKL MNO_PQR "
+			"STU_VWX<rst><ceos><c10><c9>Abc_DEF GHI_JKL MNO_PQR "
+			"STU_VWX<rst><ceos><c12><c9>Abc_def GHI_JKL MNO_PQR "
+			"STU_VWX<rst><ceos><c16><c9>Abc_def GHI_JKL MNO_PQR "
+			"STU_VWX<rst><ceos><c17><c9>Abc_def ghi_jkl MNO_PQR "
+			"STU_VWX<rst><ceos><c24><c9>Abc_def ghi_jkl MNO_PQR "
+			"STU_VWX<rst><ceos><c25><c9>Abc_def ghi_jkl MNO_PQR "
+			"STU_VWX<rst><ceos><c26><c9>Abc_def ghi_jkl Mno_PQR "
+			"STU_VWX<rst><ceos><c28><c9>Abc_def ghi_jkl Mno_PQR "
+			"STU_VWX<rst><ceos><c40>\r\n"
+			"Abc_def ghi_jkl Mno_PQR STU_VWX\r\n",
+			"ABC_DEF GHI_JKL MNO_PQR STU_VWX\n"
 		)
 	def test_transpose( self_ ):
 		self_.check_scenario(
@@ -1158,6 +1248,19 @@ class ReplxxTests( unittest.TestCase ):
 			"bravo charlie delta<rst><ceos><c34>\r\n"
 			"alpha bravo charlie delta\r\n",
 			"alpha charlie bravo delta\n"
+		)
+		self_.check_scenario(
+			"<up><home><c-right><m-D><m-D><m-d><m-D><c-right><c-y><cr><c-d>",
+			"<c9>abc_ABC def_DEF ghi_GHI jkl_JKL XXX<rst><ceos><c44><c9>abc_ABC def_DEF "
+			"ghi_GHI jkl_JKL XXX<rst><ceos><c9><c9>abc_ABC def_DEF ghi_GHI jkl_JKL "
+			"XXX<rst><ceos><c16><c9>abc_ABC_DEF ghi_GHI jkl_JKL "
+			"XXX<rst><ceos><c16><c9>abc_ABC ghi_GHI jkl_JKL "
+			"XXX<rst><ceos><c16><c9>abc_ABC jkl_JKL XXX<rst><ceos><c16><c9>abc_ABC_JKL "
+			"XXX<rst><ceos><c16><c9>abc_ABC_JKL XXX<rst><ceos><c20><c9>abc_ABC_JKL "
+			"def_DEF ghi_GHI jkl XXX<rst><ceos><c40><c9>abc_ABC_JKL def_DEF ghi_GHI jkl "
+			"XXX<rst><ceos><c44>\r\n"
+			"abc_ABC_JKL def_DEF ghi_GHI jkl XXX\r\n",
+			"abc_ABC def_DEF ghi_GHI jkl_JKL XXX\n"
 		)
 	def test_kill_prev_word_to_white_space( self_ ):
 		self_.check_scenario(
