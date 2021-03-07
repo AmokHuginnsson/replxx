@@ -315,7 +315,7 @@ public:
 	 * displayed user input.
 	 *
 	 * Size of \e colors buffer is equal to number of code points in user \e input
-	 * which will be different from simple `input.lenght()`!
+	 * which will be different from simple `input.length()`!
 	 *
 	 * \param input - an UTF-8 encoded input entered by the user so far.
 	 * \param colors - output buffer for color information.
