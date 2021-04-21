@@ -41,16 +41,15 @@ Header files for the replxx library.
 ctest -V %{?_smp_mflags}
 
 %files
+%license LICENSE.md
 %{_libdir}/*.so
 %{_libdir}/*.so.*
 
 %files devel
+%doc README.md
 %{_includedir}/*.h
 %{_includedir}/*.hxx
 %{_datadir}/cmake/%{name}/*.cmake
-%doc
-
-
 
 %changelog
 
