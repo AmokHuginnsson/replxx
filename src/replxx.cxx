@@ -478,7 +478,7 @@ void replxx_add_completion( replxx_completions* lc, const char* str ) {
 	lc->data.emplace_back( str );
 }
 
-void replxx_add_completion( replxx_completions* lc, const char* str, ReplxxColor color ) {
+void replxx_add_color_completion( replxx_completions* lc, const char* str, ReplxxColor color ) {
 	lc->data.emplace_back( str, static_cast<replxx::Replxx::Color>( color ) );
 }
 
