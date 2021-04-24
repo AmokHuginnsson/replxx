@@ -454,7 +454,9 @@ void Replxx::ReplxxImpl::call_modify_callback( void ) {
 	std::string origLine( _utf8Buffer.get() );
 	int pos( _pos );
 	std::string line( origLine );
+	_terminal.disable_raw_mode();
 	_modifyCallback( line, pos );
+	_terminal.enable_raw_mode();
 	if ( ( pos != _pos ) || ( line != origLine ) ) {
 		_data.assign( line.c_str() );
 		_pos = min( pos, _data.length() );
@@ -686,7 +688,9 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 	Replxx::colors_t colors( _data.length(), Replxx::Color::DEFAULT );
 	_utf8Buffer.assign( _data );
 	if ( !! _highlighterCallback ) {
+		_terminal.disable_raw_mode();
 		_highlighterCallback( _utf8Buffer.get(), colors );
+		_terminal.enable_raw_mode();
 	}
 	paren_info_t pi( matching_paren() );
 	if ( pi.index != -1 ) {
@@ -733,7 +737,9 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 		_hintSeed.assign( _utf8Buffer );
 		_hintContextLenght = context_length();
 		_hintColor = Replxx::Color::GRAY;
+		_terminal.disable_raw_mode();
 		_hintsCache = call_hinter( _utf8Buffer.get(), _hintContextLenght, _hintColor );
+		_terminal.enable_raw_mode();
 	}
 	int hintCount( static_cast<int>( _hintsCache.size() ) );
 	if ( hintCount == 1 ) {
@@ -990,7 +996,9 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 	// get a list of completions
 	_completionSelection = -1;
 	_completionContextLength = context_length();
+	_terminal.disable_raw_mode();
 	_completions = call_completer( _utf8Buffer.get(), _completionContextLength );
+	_terminal.enable_raw_mode();
 
 	// if no completions, we are done
 	if ( _completions.empty() ) {
