@@ -122,6 +122,21 @@ inline int long long now_us( void ) {
 	return ( std::chrono::duration_cast<std::chrono::microseconds>( std::chrono::high_resolution_clock::now().time_since_epoch() ).count() );
 }
 
+class IOModeGuard {
+	Terminal& _terminal;
+public:
+	IOModeGuard( Terminal& terminal_ )
+		: _terminal( terminal_ ) {
+		_terminal.disable_raw_mode();
+	}
+	~IOModeGuard( void ) {
+		try {
+			_terminal.enable_raw_mode();
+		} catch ( ... ) {
+		}
+	}
+};
+
 }
 
 Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
@@ -454,7 +469,10 @@ void Replxx::ReplxxImpl::call_modify_callback( void ) {
 	std::string origLine( _utf8Buffer.get() );
 	int pos( _pos );
 	std::string line( origLine );
-	_modifyCallback( line, pos );
+	/* IOModeGuard scope */ {
+		IOModeGuard ioModeGuard( _terminal );
+		_modifyCallback( line, pos );
+	}
 	if ( ( pos != _pos ) || ( line != origLine ) ) {
 		_data.assign( line.c_str() );
 		_pos = min( pos, _data.length() );
@@ -686,6 +704,7 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 	Replxx::colors_t colors( _data.length(), Replxx::Color::DEFAULT );
 	_utf8Buffer.assign( _data );
 	if ( !! _highlighterCallback ) {
+		IOModeGuard ioModeGuard( _terminal );
 		_highlighterCallback( _utf8Buffer.get(), colors );
 	}
 	paren_info_t pi( matching_paren() );
@@ -733,6 +752,7 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 		_hintSeed.assign( _utf8Buffer );
 		_hintContextLenght = context_length();
 		_hintColor = Replxx::Color::GRAY;
+		IOModeGuard ioModeGuard( _terminal );
 		_hintsCache = call_hinter( _utf8Buffer.get(), _hintContextLenght, _hintColor );
 	}
 	int hintCount( static_cast<int>( _hintsCache.size() ) );
@@ -990,7 +1010,10 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 	// get a list of completions
 	_completionSelection = -1;
 	_completionContextLength = context_length();
-	_completions = call_completer( _utf8Buffer.get(), _completionContextLength );
+	/* IOModeGuard scope */ {
+		IOModeGuard ioModeGuard( _terminal );
+		_completions = call_completer( _utf8Buffer.get(), _completionContextLength );
+	}
 
 	// if no completions, we are done
 	if ( _completions.empty() ) {
@@ -1739,9 +1762,10 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::verbatim_insert( char32_t ) {
 
 // ctrl-Z, job control
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::suspend( char32_t ) {
-	_terminal.disable_raw_mode(); // Returning to Linux (whatever) shell, leave raw mode
-	raise(SIGSTOP);   // Break out in mid-line
-	_terminal.enable_raw_mode();  // Back from Linux shell, re-enter raw mode
+	/* IOModeGuard scope */ {
+		IOModeGuard ioModeGuard( _terminal );
+		raise( SIGSTOP );   // Break out in mid-line
+	}
 	// Redraw prompt
 	_prompt.write();
 	return ( Replxx::ACTION_RESULT::CONTINUE );
@@ -1932,9 +1956,13 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 // job control is its own thing
 #ifndef _WIN32
 			case Replxx::KEY::control('Z'): { // ctrl-Z, job control
-				_terminal.disable_raw_mode();   // Returning to Linux (whatever) shell, leave raw mode
-				raise( SIGSTOP );               // Break out in mid-line
-				_terminal.enable_raw_mode();    // Back from Linux shell, re-enter raw mode
+				/* IOModeGuard scope */ {
+					IOModeGuard ioModeGuard( _terminal );
+					// Returning to Linux (whatever) shell, leave raw mode
+					// Break out in mid-line
+					// Back from Linux shell, re-enter raw mode
+					raise( SIGSTOP );
+				}
 				dynamicRefresh( dp, activeHistoryLine.get(), activeHistoryLine.length(), historyLinePosition );
 				continue;
 			} break;
