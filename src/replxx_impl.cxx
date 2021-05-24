@@ -2061,6 +2061,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 		_history.commit_index();
 		_data.assign( activeHistoryLine );
 		_pos = historyLinePosition;
+		_modifiedState = true;
 	} else if ( ! useSearchedLine ) {
 		_history.restore_pos();
 	}

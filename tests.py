@@ -338,7 +338,7 @@ class ReplxxTests( unittest.TestCase ):
 			"<c23><c1><ceos>(reverse-i-search)`w': "
 			"two<c25><c1><ceos>(reverse-i-search)`w': "
 			"two<c25><c1><ceos><brightgreen>replxx<rst>> "
-			"two<c10><c9><ceos><c12>\r\n"
+			"two<c10><c9>two<rst><ceos><c10><c9>two<rst><ceos><c12>\r\n"
 			"two\r\n"
 		)
 	def test_ctrl_l( self_ ):
@@ -749,7 +749,8 @@ class ReplxxTests( unittest.TestCase ):
 			"golf<c31><c1><ceos>(reverse-i-search)`repl': echo repl "
 			"golf<c32><c1><ceos>(reverse-i-search)`repl': charlie repl "
 			"delta<c35><c1><ceos><brightgreen>replxx<rst>> charlie repl "
-			"delta<c17><c9><ceos><c27>\r\n"
+			"delta<c17><c9>charlie repl delta<rst><ceos><c17><c9>charlie repl "
+			"delta<rst><ceos><c27>\r\n"
 			"charlie repl delta\r\n",
 			"some command\n"
 			"alfa repl bravo\n"
@@ -769,7 +770,7 @@ class ReplxxTests( unittest.TestCase ):
 			"fortran<c25><c1><ceos>(reverse-i-search)`f': "
 			"swift<c27><c1><ceos>(reverse-i-search)`fs': "
 			"fsharp<c25><c1><ceos><brightgreen>replxx<rst>> "
-			"fsharp<c9><c9><ceos><c15>\r\n"
+			"fsharp<c9><c9>fsharp<rst><ceos><c9><c9>fsharp<rst><ceos><c15>\r\n"
 			"fsharp\r\n",
 			"\n".join( _words_ ) + "\n"
 		)
@@ -809,8 +810,8 @@ class ReplxxTests( unittest.TestCase ):
 			"golf<c22><c1><ceos>(i-search)`rep': echo repl "
 			"golf<c23><c1><ceos>(i-search)`repl': echo repl "
 			"golf<c24><c1><ceos>(i-search)`repl': alfa repl "
-			"bravo<c24><c1><ceos><brightgreen>replxx<rst>> alfa repl bravo<c14><c9>final "
-			"thoughts<rst><ceos><c24>\r\n"
+			"bravo<c24><c1><ceos><brightgreen>replxx<rst>> alfa repl bravo<c14><c9>alfa "
+			"repl bravo<rst><ceos><c14><c9>alfa repl bravo<rst><ceos><c24>\r\n"
 			"alfa repl bravo\r\n",
 			"final thoughts\n"
 			"echo repl golf\n"
@@ -837,7 +838,7 @@ class ReplxxTests( unittest.TestCase ):
 			"fortran<c17><c1><ceos>(i-search)`for': fortran<c18><c1><ceos>(i-search)`fo': "
 			"fortran<c17><c1><ceos>(i-search)`f': swift<c19><c1><ceos>(i-search)`fs': "
 			"fsharp<c17><c1><ceos><brightgreen>replxx<rst>> "
-			"fsharp<c9><c9>typescript<rst><ceos><c15>\r\n"
+			"fsharp<c9><c9>fsharp<rst><ceos><c9><c9>fsharp<rst><ceos><c15>\r\n"
 			"fsharp\r\n",
 			"\n".join( _words_[::-1] ) + "\n"
 		)
@@ -868,8 +869,9 @@ class ReplxxTests( unittest.TestCase ):
 			"<c23><c1><ceos>(reverse-i-search)`r': echo repl "
 			"golf<c29><c1><ceos>(reverse-i-search)`re': echo repl "
 			"golf<c30><c1><ceos>(reverse-i-search)`req': other "
-			"request<c32><c1><ceos><brightgreen>replxx<rst>> other request<c15><c9>alfa "
-			"repl bravo<rst><ceos><c24><c9>alfa repl bravo<rst><ceos><c24>\r\n"
+			"request<c32><c1><ceos><brightgreen>replxx<rst>> other request<c15><c9>other "
+			"request<rst><ceos><c15><c9>alfa repl bravo<rst><ceos><c24><c9>alfa repl "
+			"bravo<rst><ceos><c24>\r\n"
 			"alfa repl bravo\r\n",
 			"some command\n"
 			"alfa repl bravo\n"
@@ -888,8 +890,10 @@ class ReplxxTests( unittest.TestCase ):
 			"seriously<c37><u1><c1><ceos>(reverse-i-search)`lo': some very long line of "
 			"text, much longer then a witdth of a terminal, "
 			"seriously<u1><c59><c1><ceos><brightgreen>replxx<rst>> some very long line of "
-			"text, much longer then a witdth of a terminal, "
-			"seriously<u1><c43><c9><ceos><c24>\r\n"
+			"text, much longer then a witdth of a terminal, seriously<u1><c43><c9>some "
+			"very long line of text, much longer then a witdth of a terminal, "
+			"seriously<rst><ceos><u1><c43><c9>some very long line of text, much longer "
+			"then a witdth of a terminal, seriously<rst><ceos><c24>\r\n"
 			"some very long line of text, much longer then a witdth of a terminal, "
 			"seriously\r\n",
 			"fake\nsome very long line of text, much longer then a witdth of a terminal, seriously\nanother fake",
