@@ -74,6 +74,7 @@ public:
 		}
 	};
 	typedef std::vector<Completion> completions_t;
+	typedef std::vector<UnicodeString> data_t;
 	typedef std::vector<UnicodeString> hints_t;
 	typedef std::unique_ptr<char[]> utf8_buffer_t;
 	typedef std::unique_ptr<char32_t[]> input_buffer_t;
@@ -103,11 +104,11 @@ private:
 private:
 	mutable Utf8String     _utf8Buffer;
 	UnicodeString  _data;
+	int _pos;    // character position in buffer ( 0 <= _pos <= _data[_line].length() )
 	char_widths_t  _charWidths; // character widths from mk_wcwidth()
 	display_t      _display;
 	int _displayInputLength;
 	UnicodeString  _hint;
-	int _pos;    // character position in buffer ( 0 <= _pos <= _len )
 	int _prefix; // prefix length used in common prefix search
 	int _hintSelection; // Currently selected hint.
 	History _history;
@@ -197,6 +198,7 @@ private:
 	int get_input_line( void );
 	Replxx::ACTION_RESULT action( action_trait_t, key_press_handler_raw_t const&, char32_t );
 	Replxx::ACTION_RESULT insert_character( char32_t );
+	Replxx::ACTION_RESULT new_line( char32_t );
 	Replxx::ACTION_RESULT go_to_begining_of_line( char32_t );
 	Replxx::ACTION_RESULT go_to_end_of_line( char32_t );
 	Replxx::ACTION_RESULT move_one_char_left( char32_t );

@@ -1045,7 +1045,7 @@ class ReplxxTests( unittest.TestCase ):
 			command = ReplxxTests._cSample_ + " u0 q1"
 		)
 		self_.check_scenario(
-			rapid( "/history\n/unique\n/history\n<c-d>" ),
+			rapid( "/history<cr>/unique<cr>/history<cr><c-d>" ),
 			"<c9>/<rst><ceos><c10><c9>/history<rst><ceos><c17>\r\n"
 			"   0: a\r\n"
 			"   1: b\r\n"

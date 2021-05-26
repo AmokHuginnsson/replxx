@@ -25,6 +25,15 @@ public:
 		assign( src );
 	}
 
+	explicit UnicodeString( UnicodeString const& other, int offset, int len = -1 )
+		: _data() {
+		_data.insert(
+			_data.end(),
+			other._data.begin() + offset,
+			len > 0 ? other._data.begin() + offset + len : other._data.end()
+		);
+	}
+
 	explicit UnicodeString( char const* src )
 		: _data() {
 		assign( src );
