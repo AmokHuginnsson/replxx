@@ -920,7 +920,6 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 		_prompt._indentation, // 0-based on Win32
 		-( _prompt._cursorRowOffset - _prompt._extraLines )
 	);
-	_prompt._previousInputLen = _data.length();
 	// display the input line
 	_terminal.write32( _display.data(), _displayInputLength );
 	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
@@ -1336,9 +1335,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 	) {
 		/* Avoid a full assign of the line in the
 		 * trivial case. */
-		if (inputLen > _prompt._previousInputLen) {
-			_prompt._previousInputLen = inputLen;
-		}
 		render( c );
 		_displayInputLength = static_cast<int>( _display.size() );
 		_terminal.write32( reinterpret_cast<char32_t*>( &c ), 1 );
@@ -1874,7 +1870,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 	DynamicPrompt dp( _terminal, (startChar == Replxx::KEY::control('R')) ? -1 : 1 );
 
 	dp._previousLen = _prompt._previousLen;
-	dp._previousInputLen = _prompt._previousInputLen;
 	// draw user's text with our prompt
 	dynamicRefresh(dp, _data.get(), _data.length(), historyLinePosition);
 
@@ -2060,7 +2055,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 	pb._extraLines = 0;
 	pb._indentation = _prompt._indentation;
 	pb._lastLinePosition = 0;
-	pb._previousInputLen = activeHistoryLine.length();
 	pb._cursorRowOffset = dp._cursorRowOffset;
 	pb.update_screen_columns();
 	pb._previousLen = dp._characterCount;
@@ -2073,7 +2067,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 		_history.restore_pos();
 	}
 	dynamicRefresh(pb, _data.get(), _data.length(), _pos); // redraw the original prompt with current input
-	_prompt._previousInputLen = _data.length();
 	_prompt._cursorRowOffset = _prompt._extraLines + pb._cursorRowOffset;
 	_previousSearchText = dp._searchText; // save search text for possible reuse on ctrl-R ctrl-R
 	emulate_key_press( c ); // pass a character or -1 back to main loop
@@ -2244,7 +2237,6 @@ void Replxx::ReplxxImpl::dynamicRefresh(Prompt& pi, char32_t* buf32, int len, in
 	);
 
 	pi._previousLen = pi._indentation;
-	pi._previousInputLen = len;
 
 	// display the prompt
 	pi.write();

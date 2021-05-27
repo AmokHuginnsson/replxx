@@ -16,7 +16,6 @@ public:
 	int _extraLines;       // extra lines (beyond 1) occupied by prompt
 	int _indentation;      // column offset to end of prompt
 	int _lastLinePosition; // index into _text where last line begins
-	int _previousInputLen; // _characterCount of previous input line, for clearing
 	int _cursorRowOffset;  // where the cursor is relative to the start of the prompt
 	int _previousLen;      // help erasing
 private:
