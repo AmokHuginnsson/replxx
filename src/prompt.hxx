@@ -17,7 +17,6 @@ public:
 	int _indentation;      // column offset to end of prompt
 	int _lastLinePosition; // index into _text where last line begins
 	int _cursorRowOffset;  // where the cursor is relative to the start of the prompt
-	int _previousLen;      // help erasing
 private:
 	int _screenColumns;    // width of screen in columns [cache]
 	Terminal& _terminal;

@@ -1869,7 +1869,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 
 	DynamicPrompt dp( _terminal, (startChar == Replxx::KEY::control('R')) ? -1 : 1 );
 
-	dp._previousLen = _prompt._previousLen;
 	// draw user's text with our prompt
 	dynamicRefresh(dp, _data.get(), _data.length(), historyLinePosition);
 
@@ -2057,7 +2056,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 	pb._lastLinePosition = 0;
 	pb._cursorRowOffset = dp._cursorRowOffset;
 	pb.update_screen_columns();
-	pb._previousLen = dp._characterCount;
 	if ( useSearchedLine && ( activeHistoryLine.length() > 0 ) ) {
 		_history.commit_index();
 		_data.assign( activeHistoryLine );
@@ -2235,8 +2233,6 @@ void Replxx::ReplxxImpl::dynamicRefresh(Prompt& pi, char32_t* buf32, int len, in
 		calculate_displayed_length(buf32, pos), xCursorPos,
 		yCursorPos
 	);
-
-	pi._previousLen = pi._indentation;
 
 	// display the prompt
 	pi.write();

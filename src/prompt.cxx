@@ -25,7 +25,6 @@ namespace replxx {
 Prompt::Prompt( Terminal& terminal_ )
 	: _extraLines( 0 )
 	, _lastLinePosition( 0 )
-	, _previousLen( 0 )
 	, _screenColumns( 0 )
 	, _terminal( terminal_ ) {
 }
@@ -41,7 +40,6 @@ void Prompt::update_screen_columns( void ) {
 void Prompt::set_text( UnicodeString const& text_ ) {
 	_extraLines = 0;
 	_lastLinePosition = 0;
-	_previousLen = 0;
 	_screenColumns = 0;
 	update_screen_columns();
 	// strip control characters from the prompt -- we do allow newline
@@ -130,7 +128,6 @@ DynamicPrompt::DynamicPrompt( Terminal& terminal_, int initialDirection )
 	_byteCount = _characterCount;
 	_lastLinePosition = _characterCount; // TODO fix this, we are asssuming
 	                                        // that the history prompt won't wrap (!)
-	_previousLen = _characterCount;
 	_text.assign( *basePrompt ).append( endSearchBasePrompt );
 	calculate_screen_position(
 		0, 0, screen_columns(), _characterCount,
