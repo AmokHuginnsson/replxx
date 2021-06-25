@@ -51,66 +51,13 @@ void Prompt::update_state() {
 	update_screen_columns();
 	// strip control characters from the prompt -- we do allow newline
 	UnicodeString::const_iterator in( _text.begin() );
-	UnicodeString::iterator out( _text.begin() );
 
-	int visibleCount = 0;
 	int x = 0;
-
-	bool const strip = !tty::out;
-
-	while (in != _text.end()) {
-		char32_t c = *in;
-		if ('\n' == c || !is_control_code(c)) {
-			*out = c;
-			++out;
-			++in;
-			++visibleCount;
-			if ('\n' == c || ++x >= _screenColumns) {
-				x = 0;
-				++_extraLines;
-				_lastLinePosition = visibleCount;
-			}
-		} else if (c == '\x1b') {
-			if ( strip ) {
-				// jump over control chars
-				++in;
-				if (*in == '[') {
-					++in;
-					while ( ( in != _text.end() ) && ( ( *in == ';' ) || ( ( ( *in >= '0' ) && ( *in <= '9' ) ) ) ) ) {
-						++in;
-					}
-					if (*in == 'm') {
-						++in;
-					}
-				}
-			} else {
-				// copy control chars
-				*out = *in;
-				++out;
-				++in;
-				if (*in == '[') {
-					*out = *in;
-					++out;
-					++in;
-					while ( ( in != _text.end() ) && ( ( *in == ';' ) || ( ( ( *in >= '0' ) && ( *in <= '9' ) ) ) ) ) {
-						*out = *in;
-						++out;
-						++in;
-					}
-					if (*in == 'm') {
-						*out = *in;
-						++out;
-						++in;
-					}
-				}
-			}
-		} else {
-			++in;
-		}
-	}
-	_characterCount = visibleCount;
-	int charCount( static_cast<int>( out - _text.begin() ) );
-	_text.erase( charCount, _text.length() - charCount );
+	int renderedSize( 0 );
+	VisiblePromptSize vps( virtual_render( _text.get(), _text.length(), x, _extraLines, _screenColumns, _text.get(), &renderedSize ) );
+	_characterCount = vps.total_size();
+	_lastLinePosition = vps.last_line_position();
+	_text.erase( renderedSize, _text.length() - renderedSize );
 
 	_cursorRowOffset += _extraLines;
 }

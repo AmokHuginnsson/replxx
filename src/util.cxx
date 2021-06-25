@@ -5,10 +5,116 @@
 #include <wctype.h>
 
 #include "util.hxx"
+#include "terminal.hxx"
 
 namespace replxx {
 
 int mk_wcwidth( char32_t );
+
+VisiblePromptSize virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int screenColumns_, char32_t* rendered_, int* renderedSize_ ) {
+	int pos( 0 );
+	char32_t* out( rendered_ );
+	bool const renderAttributes( !!tty::out );
+	int visibleCount( 0 );
+	int lastLinePosition( 0 );
+	while ( pos < size_ ) {
+		char32_t c( display_[pos] );
+		if ( ( c == '\n' ) || ( c == '\r' ) ) {
+			if ( rendered_ && renderedSize_ ) {
+				*out = c;
+				++ out;
+				++ visibleCount;
+			}
+			x_ = 0;
+			if ( c == '\n' ) {
+				++ y_;
+				lastLinePosition = visibleCount;
+			}
+			++ pos;
+			continue;
+		}
+		if ( c == '\b' ) {
+			if ( rendered_ && renderedSize_ ) {
+				*out = c;
+				++ out;
+				++ visibleCount;
+			}
+			-- x_;
+			if ( x_ < 0 ) {
+				x_ = screenColumns_ - 1;
+				-- y_;
+			}
+			++ pos;
+			continue;
+		}
+		if ( c == '\033' ) {
+			if ( rendered_ && renderedSize_ && renderAttributes ) {
+				*out = c;
+				++ out;
+			}
+			++ pos;
+			if ( pos >= size_ ) {
+				continue;
+			}
+			c = display_[pos];
+			if ( c != '[' ) {
+				continue;
+			}
+			if ( rendered_ && renderedSize_ && renderAttributes ) {
+				*out = c;
+				++ out;
+			}
+			++ pos;
+			if ( pos >= size_ ) {
+				continue;
+			}
+			while ( pos < size_ ) {
+				c = display_[pos];
+				if ( ( c != ';' ) && ( ( c < '0' ) || ( c > '9' ) ) ) {
+					break;
+				}
+				if ( rendered_ && renderedSize_ && renderAttributes ) {
+					*out = c;
+					++ out;
+				}
+				++ pos;
+			}
+			if ( pos >= size_ ) {
+				continue;
+			}
+			c = display_[pos];
+			if ( c != 'm' ) {
+				continue;
+			}
+			if ( rendered_ && renderedSize_ && renderAttributes ) {
+				*out = c;
+				++ out;
+			}
+			++ pos;
+			continue;
+		}
+		if ( is_control_code( c ) ) {
+			++ pos;
+			continue;
+		}
+		if ( rendered_ && renderedSize_ ) {
+			*out = c;
+			++ out;
+			++ visibleCount;
+		}
+		++ x_;
+		if ( x_ >= screenColumns_ ) {
+			x_ = 0;
+			++ y_;
+			lastLinePosition = visibleCount;
+		}
+		++ pos;
+	}
+	if ( rendered_ && renderedSize_ ) {
+		*renderedSize_ = out - rendered_;
+	}
+	return ( VisiblePromptSize( visibleCount, lastLinePosition ) );
+}
 
 /**
  * Calculate a new screen position given a starting position, screen width and
