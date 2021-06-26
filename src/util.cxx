@@ -11,12 +11,11 @@ namespace replxx {
 
 int mk_wcwidth( char32_t );
 
-VisiblePromptSize virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int screenColumns_, char32_t* rendered_, int* renderedSize_ ) {
+int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int screenColumns_, char32_t* rendered_, int* renderedSize_ ) {
 	int pos( 0 );
 	char32_t* out( rendered_ );
 	bool const renderAttributes( !!tty::out );
 	int visibleCount( 0 );
-	int lastLinePosition( 0 );
 	while ( pos < size_ ) {
 		char32_t c( display_[pos] );
 		if ( ( c == '\n' ) || ( c == '\r' ) ) {
@@ -28,7 +27,6 @@ VisiblePromptSize virtual_render( char32_t const* display_, int size_, int& x_, 
 			x_ = 0;
 			if ( c == '\n' ) {
 				++ y_;
-				lastLinePosition = visibleCount;
 			}
 			++ pos;
 			continue;
@@ -106,14 +104,13 @@ VisiblePromptSize virtual_render( char32_t const* display_, int size_, int& x_, 
 		if ( x_ >= screenColumns_ ) {
 			x_ = 0;
 			++ y_;
-			lastLinePosition = visibleCount;
 		}
 		++ pos;
 	}
 	if ( rendered_ && renderedSize_ ) {
 		*renderedSize_ = out - rendered_;
 	}
-	return ( VisiblePromptSize( visibleCount, lastLinePosition ) );
+	return ( visibleCount );
 }
 
 /**

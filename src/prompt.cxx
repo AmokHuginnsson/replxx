@@ -54,9 +54,8 @@ void Prompt::update_state() {
 
 	int x = 0;
 	int renderedSize( 0 );
-	VisiblePromptSize vps( virtual_render( _text.get(), _text.length(), x, _extraLines, _screenColumns, _text.get(), &renderedSize ) );
-	_characterCount = vps.total_size();
-	_lastLinePosition = vps.last_line_position();
+	_characterCount = virtual_render( _text.get(), _text.length(), x, _extraLines, _screenColumns, _text.get(), &renderedSize );
+	_lastLinePosition = _characterCount - x;
 	_text.erase( renderedSize, _text.length() - renderedSize );
 
 	_cursorRowOffset += _extraLines;
