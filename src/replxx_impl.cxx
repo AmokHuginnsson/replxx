@@ -1867,7 +1867,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 	DynamicPrompt dp( _terminal, (startChar == Replxx::KEY::control('R')) ? -1 : 1 );
 
 	// draw user's text with our prompt
-	dynamicRefresh(_prompt, dp, _data.get(), _data.length(), historyLinePosition);
+	dynamic_refresh(_prompt, dp, _data.get(), _data.length(), historyLinePosition);
 
 	// loop until we get an exit character
 	char32_t c( 0 );
@@ -1961,7 +1961,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 					// Back from Linux shell, re-enter raw mode
 					raise( SIGSTOP );
 				}
-				dynamicRefresh( dp, dp, activeHistoryLine.get(), activeHistoryLine.length(), historyLinePosition );
+				dynamic_refresh( dp, dp, activeHistoryLine.get(), activeHistoryLine.length(), historyLinePosition );
 				continue;
 			} break;
 #endif
@@ -2039,7 +2039,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 			historyLinePosition = _pos;
 		}
 		activeHistoryLine.assign( _history.current() );
-		dynamicRefresh( dp, dp, activeHistoryLine.get(), activeHistoryLine.length(), historyLinePosition ); // draw user's text with our prompt
+		dynamic_refresh( dp, dp, activeHistoryLine.get(), activeHistoryLine.length(), historyLinePosition ); // draw user's text with our prompt
 	} // while
 
 	// leaving history search, restore previous prompt, maybe make searched line
@@ -2056,7 +2056,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 	} else if ( ! useSearchedLine ) {
 		_history.restore_pos();
 	}
-	dynamicRefresh(pb, _prompt, _data.get(), _data.length(), _pos); // redraw the original prompt with current input
+	dynamic_refresh(pb, _prompt, _data.get(), _data.length(), _pos); // redraw the original prompt with current input
 	_previousSearchText = dp._searchText; // save search text for possible reuse on ctrl-R ctrl-R
 	emulate_key_press( c ); // pass a character or -1 back to main loop
 	return ( Replxx::ACTION_RESULT::CONTINUE );
@@ -2199,30 +2199,22 @@ void Replxx::ReplxxImpl::set_no_color( bool val ) {
  * @param len   count of characters in the buffer
  * @param pos   current cursor position within the buffer (0 <= pos <= len)
  */
-void Replxx::ReplxxImpl::dynamicRefresh(Prompt& oldPrompt, Prompt& newPrompt, char32_t* buf32, int len, int pos) {
+void Replxx::ReplxxImpl::dynamic_refresh(Prompt& oldPrompt, Prompt& newPrompt, char32_t* buf32, int len, int pos) {
 	clear_self_to_end_of_screen( &oldPrompt );
 	// calculate the position of the end of the prompt
-	int xEndOfPrompt, yEndOfPrompt;
-	calculate_screen_position(
-		0, 0, newPrompt.screen_columns(), newPrompt._characterCount,
-		xEndOfPrompt, yEndOfPrompt
-	);
-
-	// calculate the position of the end of the input line
-	int xEndOfInput, yEndOfInput;
-	calculate_screen_position(
-		xEndOfPrompt, yEndOfPrompt, newPrompt.screen_columns(),
-		calculate_displayed_length(buf32, len), xEndOfInput,
-		yEndOfInput
-	);
+	int xEndOfPrompt( 0 );
+	int yEndOfPrompt( 0 );
+	virtual_render( newPrompt._text.get(), newPrompt._text.length(), xEndOfPrompt, yEndOfPrompt, newPrompt.screen_columns() );
 
 	// calculate the desired position of the cursor
-	int xCursorPos, yCursorPos;
-	calculate_screen_position(
-		xEndOfPrompt, yEndOfPrompt, newPrompt.screen_columns(),
-		calculate_displayed_length(buf32, pos), xCursorPos,
-		yCursorPos
-	);
+	int xCursorPos( xEndOfPrompt );
+	int yCursorPos( yEndOfPrompt );
+	virtual_render( buf32, pos, xCursorPos, yCursorPos, newPrompt.screen_columns() );
+
+	// calculate the position of the end of the input line
+	int xEndOfInput( xCursorPos );
+	int yEndOfInput( yCursorPos );
+	virtual_render( buf32 + pos, len - pos, xEndOfInput, yEndOfInput, newPrompt.screen_columns() );
 
 	// display the prompt
 	newPrompt.write();
