@@ -12,18 +12,31 @@ namespace replxx {
 int mk_wcwidth( char32_t );
 
 int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int screenColumns_, char32_t* rendered_, int* renderedSize_ ) {
-	int pos( 0 );
 	char32_t* out( rendered_ );
-	bool const renderAttributes( !!tty::out );
+	char32_t c( 0 );
 	int visibleCount( 0 );
-	while ( pos < size_ ) {
-		char32_t c( display_[pos] );
-		if ( ( c == '\n' ) || ( c == '\r' ) ) {
-			if ( rendered_ && renderedSize_ ) {
-				*out = c;
-				++ out;
+	auto render = [&rendered_, &renderedSize_, &c, &out, &visibleCount]( bool visible_, bool renderAttributes_ = true ) {
+		if ( rendered_ && renderedSize_ && renderAttributes_ ) {
+			*out = c;
+			++ out;
+			if ( visible_ ) {
 				++ visibleCount;
 			}
+		}
+	};
+	auto advance_cursor = [&x_, &y_, &screenColumns_]( int by_ = 1 ) {
+		x_ += by_;
+		if ( x_ >= screenColumns_ ) {
+			x_ = 0;
+			++ y_;
+		}
+	};
+	bool const renderAttributes( !!tty::out );
+	int pos( 0 );
+	while ( pos < size_ ) {
+		c = display_[pos];
+		if ( ( c == '\n' ) || ( c == '\r' ) ) {
+			render( true );
 			x_ = 0;
 			if ( c == '\n' ) {
 				++ y_;
@@ -32,11 +45,7 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 			continue;
 		}
 		if ( c == '\b' ) {
-			if ( rendered_ && renderedSize_ ) {
-				*out = c;
-				++ out;
-				++ visibleCount;
-			}
+			render( true );
 			-- x_;
 			if ( x_ < 0 ) {
 				x_ = screenColumns_ - 1;
@@ -46,22 +55,18 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 			continue;
 		}
 		if ( c == '\033' ) {
-			if ( rendered_ && renderedSize_ && renderAttributes ) {
-				*out = c;
-				++ out;
-			}
+			render( false, renderAttributes );
 			++ pos;
 			if ( pos >= size_ ) {
+				++ visibleCount;
+				advance_cursor();
 				continue;
 			}
 			c = display_[pos];
 			if ( c != '[' ) {
 				continue;
 			}
-			if ( rendered_ && renderedSize_ && renderAttributes ) {
-				*out = c;
-				++ out;
-			}
+			render( false, renderAttributes );
 			++ pos;
 			if ( pos >= size_ ) {
 				continue;
@@ -71,10 +76,7 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 				if ( ( c != ';' ) && ( ( c < '0' ) || ( c > '9' ) ) ) {
 					break;
 				}
-				if ( rendered_ && renderedSize_ && renderAttributes ) {
-					*out = c;
-					++ out;
-				}
+				render( false, renderAttributes );
 				++ pos;
 			}
 			if ( pos >= size_ ) {
@@ -84,27 +86,18 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 			if ( c != 'm' ) {
 				continue;
 			}
-			if ( rendered_ && renderedSize_ && renderAttributes ) {
-				*out = c;
-				++ out;
-			}
+			render( false, renderAttributes );
 			++ pos;
 			continue;
 		}
 		if ( is_control_code( c ) ) {
+			render( true );
+			advance_cursor( 2 );
 			++ pos;
 			continue;
 		}
-		if ( rendered_ && renderedSize_ ) {
-			*out = c;
-			++ out;
-			++ visibleCount;
-		}
-		++ x_;
-		if ( x_ >= screenColumns_ ) {
-			x_ = 0;
-			++ y_;
-		}
+		render( true );
+		advance_cursor();
 		++ pos;
 	}
 	if ( rendered_ && renderedSize_ ) {
