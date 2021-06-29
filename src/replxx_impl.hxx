@@ -257,7 +257,7 @@ private:
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
 	void render( char32_t );
 	void render( HINT_ACTION );
-	int handle_hints( HINT_ACTION );
+	void handle_hints( HINT_ACTION );
 	void set_color( Replxx::Color );
 	int context_length( void );
 	void clear( void );

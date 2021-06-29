@@ -725,25 +725,24 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 	return;
 }
 
-int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
+void Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 	if ( _noColor ) {
-		return ( 0 );
+		return;
 	}
 	if ( ! _hintCallback ) {
-		return ( 0 );
+		return;
 	}
 	if ( ( _hintDelay > 0 ) && ( hintAction_ != HINT_ACTION::REPAINT ) ) {
 		_hintSelection = -1;
-		return ( 0 );
+		return;
 	}
 	if ( ( hintAction_ == HINT_ACTION::SKIP ) || ( hintAction_ == HINT_ACTION::TRIM ) ) {
-		return ( 0 );
+		return;
 	}
 	if ( _pos != _data.length() ) {
-		return ( 0 );
+		return;
 	}
 	_hint = UnicodeString();
-	int len( 0 );
 	if ( hintAction_ == HINT_ACTION::REGENERATE ) {
 		_hintSelection = -1;
 	}
@@ -758,7 +757,7 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 	int hintCount( static_cast<int>( _hintsCache.size() ) );
 	if ( hintCount == 1 ) {
 		_hint = _hintsCache.front();
-		len = _hint.length() - _hintContextLenght;
+		int len( _hint.length() - _hintContextLenght );
 		if ( len > 0 ) {
 			set_color( _hintColor );
 			for ( int i( 0 ); i < len; ++ i ) {
@@ -779,7 +778,7 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 		}
 		if ( _hintSelection != -1 ) {
 			_hint = _hintsCache[_hintSelection];
-			len = min<int>( _hint.length(), maxCol - startCol );
+			int len( min<int>( _hint.length(), maxCol - startCol ) );
 			if ( _hintContextLenght < len ) {
 				set_color( _hintColor );
 				for ( int i( _hintContextLenght ); i < len; ++ i ) {
@@ -815,7 +814,7 @@ int Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 			set_color( Replxx::Color::DEFAULT );
 		}
 	}
-	return ( len );
+	return;
 }
 
 Replxx::ReplxxImpl::paren_info_t Replxx::ReplxxImpl::matching_paren( void ) {
@@ -893,23 +892,17 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	_refreshSkipped = false;
 	// check for a matching brace/bracket/paren, remember its position if found
 	render( hintAction_ );
-	int hintLen( handle_hints( hintAction_ ) );
-	// calculate the position of the end of the input line
-	int xEndOfInput( 0 ), yEndOfInput( 0 );
-	calculate_screen_position(
-		_prompt.indentation(), 0, _prompt.screen_columns(),
-		calculate_displayed_length( _data.get(), _data.length() ) + hintLen,
-		xEndOfInput, yEndOfInput
-	);
-	yEndOfInput += static_cast<int>( count( _display.begin(), _display.end(), '\n' ) );
-
+	handle_hints( hintAction_ );
 	// calculate the desired position of the cursor
-	int xCursorPos( 0 ), yCursorPos( 0 );
-	calculate_screen_position(
-		_prompt.indentation(), 0, _prompt.screen_columns(),
-		calculate_displayed_length( _data.get(), _pos ),
-		xCursorPos, yCursorPos
-	);
+	int xCursorPos( _prompt.indentation() );
+	int yCursorPos( 0 );
+	virtual_render( _data.get(), _pos, xCursorPos, yCursorPos, _prompt.screen_columns() );
+
+	// calculate the position of the end of the input line
+	int xEndOfInput( _prompt.indentation() );
+	int yEndOfInput( 0 );
+	virtual_render( _display.data(), static_cast<int>( _display.size() ), xEndOfInput, yEndOfInput, _prompt.screen_columns() );
+
 
 	// position at the end of the prompt, clear to end of previous input
 	_terminal.set_cursor_visible( false );
