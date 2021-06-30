@@ -15,8 +15,6 @@ inline char32_t control_to_human( char32_t key ) {
 }
 
 int virtual_render( char32_t const*, int, int&, int&, int, char32_t* = nullptr, int* = nullptr );
-void calculate_screen_position( int x, int y, int screenColumns, int charCount, int& xOut, int& yOut );
-int calculate_displayed_length( char32_t const* buf32, int size );
 char const* ansi_color( Replxx::Color );
 std::string now_ms_str( void );
 

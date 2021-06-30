@@ -1316,12 +1316,14 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 		_refreshSkipped = true;
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	}
-	int inputLen = calculate_displayed_length( _data.get(), _data.length() );
+	int xCursorPos( _prompt.indentation() );
+	int yCursorPos( 0 );
+	virtual_render( _data.get(), _data.length(), xCursorPos, yCursorPos, _prompt.screen_columns() );
 	if (
 		( _pos == _data.length() )
 		&& ! _modifiedState
 		&& ( _noColor || ! ( !! _highlighterCallback || !! _hintCallback ) )
-		&& ( _prompt.indentation() + inputLen < _prompt.screen_columns() )
+		&& ( yCursorPos == 0 )
 	) {
 		/* Avoid a full assign of the line in the
 		 * trivial case. */
@@ -1825,10 +1827,9 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete_previous( char32_t ) {
 // Alt-N, forward history search for prefix
 // Alt-N, forward history search for prefix
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::common_prefix_search( char32_t startChar ) {
-	int prefixSize( calculate_displayed_length( _data.get(), _prefix ) );
 	if (
 		_history.common_prefix_search(
-			_data, prefixSize, ( startChar == ( Replxx::KEY::meta( 'p' ) ) ) || ( startChar == ( Replxx::KEY::meta( 'P' ) ) )
+			_data, _prefix, ( startChar == ( Replxx::KEY::meta( 'p' ) ) ) || ( startChar == ( Replxx::KEY::meta( 'P' ) ) )
 		)
 	) {
 		_data.assign( _history.current() );
