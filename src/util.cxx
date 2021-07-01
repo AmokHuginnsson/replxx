@@ -159,6 +159,7 @@ char const* ansi_color( Replxx::Color color_ ) {
 		case Replxx::Color::BRIGHTMAGENTA: code = brightmagenta; break;
 		case Replxx::Color::BRIGHTCYAN:    code = brightcyan;    break;
 		case Replxx::Color::WHITE:         code = white;         break;
+#undef ERROR
 		case Replxx::Color::ERROR:         code = error;         break;
 		case Replxx::Color::DEFAULT:       code = reset;         break;
 	}
