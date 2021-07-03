@@ -778,7 +778,7 @@ void Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 		}
 		if ( _hintSelection != -1 ) {
 			_hint = _hintsCache[_hintSelection];
-			int len( min<int>( _hint.length(), maxCol - startCol ) );
+			int len( min<int>( _hint.length(), maxCol - ( startCol - _hintContextLenght ) ) );
 			if ( _hintContextLenght < len ) {
 				set_color( _hintColor );
 				for ( int i( _hintContextLenght ); i < len; ++ i ) {

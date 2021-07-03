@@ -478,11 +478,11 @@ class ReplxxTests( unittest.TestCase ):
 		self_.check_scenario(
 			"<up><cr><c-d>",
 			"<c9>zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz "
-			"<brightgreen>color_brightgreen<rst><ceos><c15><u3><c9>zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz "
-			"<brightgreen>color_brightgreen<rst><ceos><c15>\r\n"
+			"<brightgreen>color_brightgreen<rst><ceos><c63><c9>zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz "
+			"<brightgreen>color_brightgreen<rst><ceos><c63>\r\n"
 			"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz color_brightgreen\r\n",
 			"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz color_brightgreen\n",
-			dimensions = ( 64, 16 )
+			dimensions = ( 16, 64 )
 		)
 	def test_hint_scroll_down( self_ ):
 		self_.check_scenario(
@@ -519,6 +519,30 @@ class ReplxxTests( unittest.TestCase ):
 			"        "
 			"<gray>color_black<rst><u3><c11><c9><white>color_white<rst><ceos><c20><c9><white>color_white<rst><ceos><c20>\r\n"
 			"color_white\r\n"
+		)
+	def test_overlong_hint( self_ ):
+		self_.check_scenario(
+			"<up><c-down><c-down><tab><cr><c-d>",
+			"<c9>zzzzzzzzzzzzzzzzzzzzzzzzz color_br<rst><ceos>\r\n"
+			"                                  <gray>color_brown<rst>\r\n"
+			"                                  <gray>color_brightre<rst>\r\n"
+			"                                  <gray>color_brightgr<rst>\r\n"
+			"<u4><c43><c9>zzzzzzzzzzzzzzzzzzzzzzzzz color_br<rst><ceos><gray>own<rst>\r\n"
+			"                                  <gray>color_brightre<rst>\r\n"
+			"                                  <gray>color_brightgr<rst>\r\n"
+			"                                  <gray>color_brightbl<rst>\r\n"
+			"<u4><c43><c9>zzzzzzzzzzzzzzzzzzzzzzzzz "
+			"color_br<rst><ceos><gray>ightre<rst>\r\n"
+			"                                  <gray>color_brightgr<rst>\r\n"
+			"                                  <gray>color_brightbl<rst>\r\n"
+			"                                  <gray>color_brightma<rst>\r\n"
+			"<u4><c43><c9>zzzzzzzzzzzzzzzzzzzzzzzzz "
+			"<brightred>color_brightred<rst><ceos><c2><u1><c9>zzzzzzzzzzzzzzzzzzzzzzzzz "
+			"<brightred>color_brightred<rst><ceos><c2>\r\n"
+			"zzzzzzzzzzzzzzzzzzzzzzzzz color_brightred\r\n",
+			#replxx> #
+			        "zzzzzzzzzzzzzzzzzzzzzzzzz color_br\n",###################
+			dimensions = ( 16, 48 )
 		)
 	def test_history( self_ ):
 		self_.check_scenario(

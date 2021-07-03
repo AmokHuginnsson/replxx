@@ -23,11 +23,14 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 			}
 		}
 	};
-	auto advance_cursor = [&x_, &y_, &screenColumns_]( int by_ = 1 ) {
+	bool wrapped( false );
+	auto advance_cursor = [&x_, &y_, &screenColumns_, &wrapped]( int by_ = 1 ) {
+		wrapped = false;
 		x_ += by_;
 		if ( x_ >= screenColumns_ ) {
 			x_ = 0;
 			++ y_;
+			wrapped = true;
 		}
 	};
 	bool const renderAttributes( !!tty::out );
@@ -36,10 +39,10 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 		char32_t c( display_[pos] );
 		if ( ( c == '\n' ) || ( c == '\r' ) ) {
 			render( c, true );
-			x_ = 0;
-			if ( c == '\n' ) {
+			if ( ( c == '\n' ) && ! wrapped ) {
 				++ y_;
 			}
+			x_ = 0;
 			++ pos;
 			continue;
 		}
