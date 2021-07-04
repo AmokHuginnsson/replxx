@@ -28,6 +28,7 @@ keytab = {
 	"<backspace>": "",
 	"<tab>": "\t",
 	"<cr>": "\r",
+	"<s-cr>": chr( 10 ),
 	"<lf>": "\n",
 	"<left>": "\033[D",
 	"<s-left>": "\033[1;2D",
@@ -2145,6 +2146,18 @@ class ReplxxTests( unittest.TestCase ):
 			"<brightgreen>replxx<rst>> <c9>x<rst><ceos><c10><c9>x<rst><ceos><c10>\r\n"
 			"x\r\n",
 			command = [ ReplxxTests._cSample_, "q1" ]
+		)
+	def test_embedded_newline( self_ ):
+		self_.check_scenario(
+			"<up><c-left><s-cr><cr><c-d>",
+			"<c9><blue>color_blue<rst> "
+			"<red>color_red<rst><ceos><c29><c9><blue>color_blue<rst> "
+			"<red>color_red<rst><ceos><c20><c9><ceos><blue>color_blue<rst> \r\n"
+			"<red>color_red<rst><c1><u1><c9><ceos><blue>color_blue<rst> \r\n"
+			"<red>color_red<rst><c10>\r\n"
+			"color_blue \r\n"
+			"color_red\r\n",
+			"color_blue color_red\n"
 		)
 
 def parseArgs( self, func, argv ):

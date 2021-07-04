@@ -187,6 +187,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _hintsCache()
 	, _hintContextLenght( -1 )
 	, _hintSeed()
+	, _hasNewlines( false )
 	, _mutex() {
 	using namespace std::placeholders;
 	_namedActions[action_names::INSERT_CHARACTER]                = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::INSERT_CHARACTER,                _1 );
@@ -671,6 +672,9 @@ void Replxx::ReplxxImpl::set_color( Replxx::Color color_ ) {
 }
 
 void Replxx::ReplxxImpl::render( char32_t ch ) {
+	if ( ch == '\n' ) {
+		_hasNewlines = true;
+	}
 	if ( ch == Replxx::KEY::ESCAPE ) {
 		_display.push_back( '^' );
 		_display.push_back( '[' );
@@ -692,6 +696,7 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 	if ( hintAction_ == HINT_ACTION::SKIP ) {
 		return;
 	}
+	_hasNewlines = false;
 	_display.clear();
 	if ( _noColor ) {
 		for ( char32_t ch : _data ) {
@@ -903,7 +908,6 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	int yEndOfInput( 0 );
 	virtual_render( _display.data(), static_cast<int>( _display.size() ), xEndOfInput, yEndOfInput, _prompt.screen_columns() );
 
-
 	// position at the end of the prompt, clear to end of previous input
 	_terminal.set_cursor_visible( false );
 	_terminal.jump_cursor(
@@ -911,12 +915,17 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 		-( _prompt._cursorRowOffset - _prompt._extraLines )
 	);
 	// display the input line
-	_terminal.write32( _display.data(), _displayInputLength );
-	_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
-	_terminal.write32( _display.data() + _displayInputLength, static_cast<int>( _display.size() ) - _displayInputLength );
+	if ( _hasNewlines ) {
+		_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
+		_terminal.write32( _display.data(), static_cast<int>( _display.size() ) );
+	} else {
+		_terminal.write32( _display.data(), _displayInputLength );
+		_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
+		_terminal.write32( _display.data() + _displayInputLength, static_cast<int>( _display.size() ) - _displayInputLength );
+	}
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap
-	if ( ( xEndOfInput == 0 ) && ( yEndOfInput > 0 ) ) {
+	if ( ( xEndOfInput == 0 ) && ( yEndOfInput > 0 ) && ! _data.is_empty() && ( _data.back() != '\n' ) ) {
 		_terminal.write8( "\n", 1 );
 	}
 #endif
@@ -2218,7 +2227,7 @@ void Replxx::ReplxxImpl::dynamic_refresh(Prompt& oldPrompt, Prompt& newPrompt, c
 
 #ifndef _WIN32
 	// we have to generate our own newline on line wrap
-	if (xEndOfInput == 0 && yEndOfInput > 0) {
+	if ( ( xEndOfInput == 0 ) && ( yEndOfInput > 0 ) && ( len > 0 ) && ( buf32[len - 1] != '\n' ) ) {
 		_terminal.write8( "\n", 1 );
 	}
 #endif

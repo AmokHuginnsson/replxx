@@ -148,6 +148,7 @@ private:
 	hints_t _hintsCache;
 	int _hintContextLenght;
 	Utf8String _hintSeed;
+	bool _hasNewlines;
 	mutable std::mutex _mutex;
 public:
 	ReplxxImpl( FILE*, FILE*, FILE* );
