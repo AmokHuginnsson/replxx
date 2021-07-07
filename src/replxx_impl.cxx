@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <iostream>
 #include <chrono>
+#include <cassert>
 
 #ifdef _WIN32
 
@@ -1676,8 +1677,47 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_next( char32_t ) {
 	return ( history_move( false ) );
 }
 
+int Replxx::ReplxxImpl::prev_newline_position( int pos_ ) {
+	assert( ( pos_ >= 0 ) && ( pos_ <= _data.length() ) );
+	while ( pos_ >= 0 ) {
+		if ( _data[pos_] == '\n' ) {
+			break;
+		}
+		-- pos_;
+	}
+	return ( pos_ );
+}
+
+int Replxx::ReplxxImpl::next_newline_position( int pos_ ) {
+	assert( ( pos_ >= 0 ) && ( pos_ <= _data.length() ) );
+	int len( _data.length() );
+	while ( pos_ < len ) {
+		if ( _data[pos_] == '\n' ) {
+			break;
+		}
+		++ pos_;
+	}
+	return ( pos_ < len ? pos_ : -1 );
+}
+
 // Up, recall previous line in history
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_previous( char32_t ) {
+	do {
+		if ( ! _hasNewlines ) {
+			break;
+		}
+		int prevNewlinePosition( prev_newline_position( _pos ) );
+		if ( prevNewlinePosition < 0 ) {
+			break;
+		}
+		int posInLine( _pos - prevNewlinePosition );
+		int prevLineStart( prevNewlinePosition > 0 ? prev_newline_position( prevNewlinePosition - 1 ) : 0 );
+		int prevLineLength( prevNewlinePosition - prevLineStart );
+		posInLine = max( min( posInLine, prevLineLength ) - _prompt.indentation(), 0 );
+		_pos = prevLineStart + posInLine;
+		refresh_line();
+		return ( Replxx::ACTION_RESULT::CONTINUE );
+	} while ( false );
 	return ( history_move( true ) );
 }
 

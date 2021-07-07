@@ -2159,6 +2159,18 @@ class ReplxxTests( unittest.TestCase ):
 			"color_red\r\n",
 			"color_blue color_red\n"
 		)
+	def test_move_up_in_multiline( self_ ):
+		self_.check_scenario(
+			"<up><up> <cr><c-d>",
+			"<c9><ceos><blue>color_blue<rst>\r\n"
+			"<red>color_red<rst><c10><u1><c9><ceos><blue>color_blue<rst>\r\n"
+			"<red>color_red<rst><u1><c10><c9><ceos>c olor_blue\r\n"
+			"<red>color_red<rst><u1><c11><c9><ceos>c olor_blue\r\n"
+			"<red>color_red<rst><c10>\r\n"
+			"c olor_blue\r\n"
+			"color_red\r\n",
+			"some other\ncolor_bluecolor_red\n"
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity
