@@ -1702,19 +1702,25 @@ int Replxx::ReplxxImpl::next_newline_position( int pos_ ) {
 
 // Up, recall previous line in history
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_previous( char32_t ) {
+	assert( ( _pos >= 0 ) && ( _pos <= _data.length() ) );
 	do {
 		if ( ! _hasNewlines ) {
 			break;
 		}
 		int prevNewlinePosition( prev_newline_position( _pos ) );
+		if ( prevNewlinePosition == _pos ) {
+			prevNewlinePosition = prev_newline_position( _pos - 1 );
+		}
 		if ( prevNewlinePosition < 0 ) {
 			break;
 		}
-		int posInLine( _pos - prevNewlinePosition );
-		int prevLineStart( prevNewlinePosition > 0 ? prev_newline_position( prevNewlinePosition - 1 ) : 0 );
-		int prevLineLength( prevNewlinePosition - prevLineStart );
-		posInLine = max( min( posInLine, prevLineLength ) - _prompt.indentation(), 0 );
+		int posInLine( _pos - prevNewlinePosition - 1 );
+		int prevLineStart( prevNewlinePosition > 0 ? prev_newline_position( prevNewlinePosition - 1 ) + 1 : 0 );
+		int prevLineLength( max( prevNewlinePosition - prevLineStart, 0 ) );
+		int shift( prevLineStart == 0 ? _prompt.indentation() : 0 );
+		posInLine = max( min( posInLine, prevLineLength + shift ) - shift, 0 );
 		_pos = prevLineStart + posInLine;
+		assert( ( _pos >= 0 ) && ( _pos <= _data.length() ) );
 		refresh_line();
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	} while ( false );
@@ -1723,8 +1729,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_previous( char32_t ) {
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_move( bool previous_ ) {
 	// if not already recalling, add the current line to the history list so
-	// we don't
-	// have to special case it
+	// we don't have to special case it
 	if ( _history.is_last() ) {
 		_history.update_last( _data );
 	}

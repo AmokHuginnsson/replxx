@@ -2171,6 +2171,27 @@ class ReplxxTests( unittest.TestCase ):
 			"color_red\r\n",
 			"some other\ncolor_bluecolor_red\n"
 		)
+		self_.check_scenario(
+			"<up><up><up><up>x<up><cr><c-d>",
+			"<c9><ceos>bbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbbbbb<rst><c24><u3><c9><ceos>bbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbbbbb<rst><u1><c21><u2><c9><ceos>bbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbbbbb<rst><u2><c21><u1><c9><ceos>bbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbbbbb<rst><u3><c21><c9><ceos>bbbbbbbbbbbbxbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbbbbb<rst><u3><c22><c9>aaaaaaaaaaaaaaaaaaaa<rst><ceos><c29><c9>aaaaaaaaaaaaaaaaaaaa<rst><ceos><c29>\r\n"
+			"aaaaaaaaaaaaaaaaaaaa\r\n",
+			"aaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n"
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity
