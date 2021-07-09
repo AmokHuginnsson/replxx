@@ -2192,6 +2192,43 @@ class ReplxxTests( unittest.TestCase ):
 			"aaaaaaaaaaaaaaaaaaaa\r\n",
 			"aaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n"
 		)
+	def test_move_down_in_multiline( self_ ):
+		self_.check_scenario(
+			"<pgup><down><home><down> <cr><c-d>",
+			"<c9>some other<rst><ceos><c19><c9><ceos><red>color_red<rst>\r\n"
+			"<blue>color_blue<rst><c11><u1><c9><ceos><red>color_red<rst>\r\n"
+			"<blue>color_blue<rst><u1><c9><c9><ceos><red>color_red<rst>\r\n"
+			"<blue>color_blue<rst><c9><u1><c9><ceos><red>color_red<rst>\r\n"
+			"color_bl ue<rst><c10><u1><c9><ceos><red>color_red<rst>\r\n"
+			"color_bl ue<rst><c12>\r\n"
+			"color_red\r\n"
+			"color_bl ue\r\n",
+			"some other\ncolor_redcolor_blue\n"
+		)
+		self_.check_scenario(
+			"<pgup><home><down><down><down>x<down><cr><c-d>",
+			"<c9><ceos>bbbbbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbb<rst><c17><u3><c9><ceos>bbbbbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbb<rst><u3><c9><c9><ceos>bbbbbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbb<rst><u2><c9><u1><c9><ceos>bbbbbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbb<rst><u1><c9><u2><c9><ceos>bbbbbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbb<rst><c9><u3><c9><ceos>bbbbbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbxbbbbbbbb<rst><c10><u3><c9>aaaaaaaaaaaaaaaaaaaa<rst><ceos><c29><c9>aaaaaaaaaaaaaaaaaaaa<rst><ceos><c29>\r\n"
+			"aaaaaaaaaaaaaaaaaaaa\r\n",
+			"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\naaaaaaaaaaaaaaaaaaaa\n"
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity

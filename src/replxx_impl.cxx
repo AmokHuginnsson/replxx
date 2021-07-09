@@ -1672,11 +1672,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::commit_line( char32_t ) {
 	return ( Replxx::ACTION_RESULT::RETURN );
 }
 
-// Down, recall next line in history
-Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_next( char32_t ) {
-	return ( history_move( false ) );
-}
-
 int Replxx::ReplxxImpl::prev_newline_position( int pos_ ) {
 	assert( ( pos_ >= 0 ) && ( pos_ <= _data.length() ) );
 	while ( pos_ >= 0 ) {
@@ -1725,6 +1720,39 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_previous( char32_t ) {
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	} while ( false );
 	return ( history_move( true ) );
+}
+
+// Down, recall next line in history
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_next( char32_t ) {
+	assert( ( _pos >= 0 ) && ( _pos <= _data.length() ) );
+	do {
+		if ( ! _hasNewlines ) {
+			break;
+		}
+		int nextNewlinePosition( next_newline_position( _pos ) );
+		if ( nextNewlinePosition < 0 ) {
+			break;
+		}
+		int nextLineStart( nextNewlinePosition + 1 );
+		int nextLineEnd( next_newline_position( nextLineStart ) );
+		if ( nextLineEnd < 0 ) {
+			nextLineEnd = _data.length();
+		}
+		int nextLineLength( nextLineEnd - nextLineStart );
+		int prevNewlinePosition( prev_newline_position( _pos ) );
+		if ( prevNewlinePosition == _pos ) {
+			prevNewlinePosition = _pos > 0 ? prev_newline_position( _pos - 1 ) : -1;
+		}
+		int lineStartPosition( prevNewlinePosition + 1 );
+		int posInLine( _pos - lineStartPosition );
+		int shift( lineStartPosition == 0 ? _prompt.indentation() : 0 );
+		posInLine = max( min( posInLine + shift, nextLineLength ), 0 );
+		_pos = nextLineStart + posInLine;
+		assert( ( _pos >= 0 ) && ( _pos <= _data.length() ) );
+		refresh_line();
+		return ( Replxx::ACTION_RESULT::CONTINUE );
+	} while ( false );
+	return ( history_move( false ) );
 }
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_move( bool previous_ ) {
