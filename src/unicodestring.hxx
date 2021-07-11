@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cstring>
+#include <cassert>
 
 #include "conversion.hxx"
 
@@ -146,11 +147,13 @@ public:
 		_data.clear();
 	}
 
-	const char32_t& operator[]( size_t pos ) const {
+	const char32_t& operator[]( int pos ) const {
+		assert( ( pos >= 0 ) && ( pos < static_cast<int>( _data.size() ) ) );
 		return _data[pos];
 	}
 
-	char32_t& operator[]( size_t pos ) {
+	char32_t& operator[]( int pos ) {
+		assert( ( pos >= 0 ) && ( pos < static_cast<int>( _data.size() ) ) );
 		return _data[pos];
 	}
 
