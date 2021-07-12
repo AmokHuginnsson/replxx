@@ -2229,6 +2229,22 @@ class ReplxxTests( unittest.TestCase ):
 			"aaaaaaaaaaaaaaaaaaaa\r\n",
 			"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\naaaaaaaaaaaaaaaaaaaa\n"
 		)
+	def test_go_to_beginning_of_multiline_entry( self_ ):
+		self_.check_scenario(
+			"<up><pgup>x<pgup><pgup><cr><c-d>",
+			"<c9><ceos><red>color_red<rst>\r\n"
+			"<blue>color_blue<rst>\r\n"
+			"zzzzzz<rst><c7><u2><c9><ceos><red>color_red<rst>\r\n"
+			"<blue>color_blue<rst>\r\n"
+			"zzzzzz<rst><u2><c9><c9><ceos>x<red>color_red<rst>\r\n"
+			"<blue>color_blue<rst>\r\n"
+			"zzzzzz<rst><u2><c10><c9><ceos>x<red>color_red<rst>\r\n"
+			"<blue>color_blue<rst>\r\n"
+			"zzzzzz<rst><u2><c9><c9>some other<rst><ceos><c19><c9>some "
+			"other<rst><ceos><c19>\r\n"
+			"some other\r\n",
+			"some other\ncolor_redcolor_bluezzzzzz\n"
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity
