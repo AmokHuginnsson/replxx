@@ -1796,6 +1796,17 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_first( char32_t ) {
 // meta->, end of history
 // Page Down, end of history
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_last( char32_t ) {
+	do {
+		if ( ! _hasNewlines ) {
+			break;
+		}
+		if ( _pos == _data.length() ) {
+			break;
+		}
+		_pos = _data.length();
+		refresh_line();
+		return ( Replxx::ACTION_RESULT::CONTINUE );
+	} while ( false );
 	return ( history_jump( false ) );
 }
 
