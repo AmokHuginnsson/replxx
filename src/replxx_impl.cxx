@@ -1354,7 +1354,13 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::new_line( char32_t ) {
 
 // ctrl-A, HOME: move cursor to start of line
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::go_to_begining_of_line( char32_t ) {
-	_pos = 0;
+	if ( _hasNewlines ) {
+		bool onNewline( ( _pos > 0 ) && ( _pos < _data.length() ) && ( _data[_pos] == '\n' ) );
+		int startPos( onNewline ? _pos - 1 : _pos );
+		_pos = prev_newline_position( startPos ) + 1;
+	} else {
+		_pos = 0;
+	}
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
 

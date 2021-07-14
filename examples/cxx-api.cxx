@@ -241,7 +241,7 @@ int main( int argc_, char** argv_ ) {
 	rx.set_hint_callback( std::bind( &hook_hint, _1, _2, _3, cref( examples ) ) );
 
 	// other api calls
-	rx.set_word_break_characters( " \t.,-%!;:=*~^'\"/?<>|[](){}" );
+	rx.set_word_break_characters( " \n\t.,-%!;:=*~^'\"/?<>|[](){}" );
 	rx.set_completion_count_cutoff( 128 );
 	rx.set_double_tab_completion( false );
 	rx.set_complete_on_empty( true );
