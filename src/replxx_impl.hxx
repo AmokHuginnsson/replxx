@@ -92,14 +92,15 @@ public:
 	typedef std::unordered_map<int, Replxx::key_press_handler_t> key_press_handlers_t;
 private:
 	typedef int long long unsigned action_trait_t;
-	static action_trait_t const NOOP                       =  0;
-	static action_trait_t const WANT_REFRESH               =  1;
-	static action_trait_t const RESET_KILL_ACTION          =  2;
-	static action_trait_t const SET_KILL_ACTION            =  4;
-	static action_trait_t const DONT_RESET_PREFIX          =  8;
-	static action_trait_t const DONT_RESET_COMPLETIONS     = 16;
-	static action_trait_t const HISTORY_RECALL_MOST_RECENT = 32;
-	static action_trait_t const DONT_RESET_HIST_YANK_INDEX = 64;
+	static action_trait_t const NOOP                       =   0;
+	static action_trait_t const WANT_REFRESH               =   1;
+	static action_trait_t const MOVE_CURSOR                =   2;
+	static action_trait_t const RESET_KILL_ACTION          =   4;
+	static action_trait_t const SET_KILL_ACTION            =   8;
+	static action_trait_t const DONT_RESET_PREFIX          =  16;
+	static action_trait_t const DONT_RESET_COMPLETIONS     =  32;
+	static action_trait_t const HISTORY_RECALL_MOST_RECENT =  64;
+	static action_trait_t const DONT_RESET_HIST_YANK_INDEX = 128;
 private:
 	mutable Utf8String     _utf8Buffer;
 	UnicodeString  _data;
@@ -149,6 +150,8 @@ private:
 	int _hintContextLenght;
 	Utf8String _hintSeed;
 	bool _hasNewlines;
+	int _oldPos;
+	bool _moveCursor;
 	mutable std::mutex _mutex;
 public:
 	ReplxxImpl( FILE*, FILE*, FILE* );
@@ -256,6 +259,7 @@ private:
 	completions_t call_completer( std::string const& input, int& ) const;
 	hints_t call_hinter( std::string const& input, int&, Replxx::Color& color ) const;
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
+	void move_cursor( void );
 	void render( char32_t );
 	void render( HINT_ACTION );
 	void handle_hints( HINT_ACTION );
