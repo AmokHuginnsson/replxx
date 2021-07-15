@@ -2305,6 +2305,50 @@ class ReplxxTests( unittest.TestCase ):
 			"xcolor_green zzz\r\n",
 			"color_red more textcolor_blue 123color_green zzz\n"
 		)
+	def test_move_to_end_of_line_in_multiline( self_ ):
+		self_.check_scenario(
+			"<up><pgup>x<end>x<right><end>x<right><end>x<cr><c-d>",
+			"<c9><ceos><red>color_red<rst> more text\r\n"
+			"<blue>color_blue<rst> <yellow>123<rst>\r\n"
+			"<green>color_green<rst> zzz<rst><c16><u2><c9><ceos><red>color_red<rst> more "
+			"text\r\n"
+			"<blue>color_blue<rst> <yellow>123<rst>\r\n"
+			"<green>color_green<rst> zzz<rst><u2><c9><c9><ceos>x<red>color_red<rst> more "
+			"text\r\n"
+			"<blue>color_blue<rst> <yellow>123<rst>\r\n"
+			"<green>color_green<rst> zzz<rst><u2><c10><c9><ceos>x<red>color_red<rst> more "
+			"text\r\n"
+			"<blue>color_blue<rst> <yellow>123<rst>\r\n"
+			"<green>color_green<rst> zzz<rst><u2><c29><c9><ceos>x<red>color_red<rst> more "
+			"textx\r\n"
+			"<blue>color_blue<rst> <yellow>123<rst>\r\n"
+			"<green>color_green<rst> zzz<rst><u2><c30><c9><ceos>x<red>color_red<rst> more "
+			"textx\r\n"
+			"<blue>color_blue<rst> <yellow>123<rst>\r\n"
+			"<green>color_green<rst> zzz<rst><u1><c1><u1><c9><ceos>x<red>color_red<rst> "
+			"more textx\r\n"
+			"<blue>color_blue<rst> <yellow>123<rst>\r\n"
+			"<green>color_green<rst> zzz<rst><u1><c15><u1><c9><ceos>x<red>color_red<rst> "
+			"more textx\r\n"
+			"<blue>color_blue<rst> <yellow>123<rst>x\r\n"
+			"<green>color_green<rst> zzz<rst><u1><c16><u1><c9><ceos>x<red>color_red<rst> "
+			"more textx\r\n"
+			"<blue>color_blue<rst> <yellow>123<rst>x\r\n"
+			"<green>color_green<rst> zzz<rst><c1><u2><c9><ceos>x<red>color_red<rst> more "
+			"textx\r\n"
+			"<blue>color_blue<rst> <yellow>123<rst>x\r\n"
+			"<green>color_green<rst> zzz<rst><c16><u2><c9><ceos>x<red>color_red<rst> more "
+			"textx\r\n"
+			"<blue>color_blue<rst> <yellow>123<rst>x\r\n"
+			"<green>color_green<rst> zzzx<rst><c17><u2><c9><ceos>x<red>color_red<rst> "
+			"more textx\r\n"
+			"<blue>color_blue<rst> <yellow>123<rst>x\r\n"
+			"<green>color_green<rst> zzzx<rst><c17>\r\n"
+			"xcolor_red more textx\r\n"
+			"color_blue 123x\r\n"
+			"color_green zzzx\r\n",
+			"color_red more textcolor_blue 123color_green zzz\n"
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity

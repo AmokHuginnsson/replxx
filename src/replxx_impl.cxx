@@ -1365,7 +1365,14 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::go_to_begining_of_line( char32_t ) {
 }
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::go_to_end_of_line( char32_t ) {
-	_pos = _data.length();
+	if ( _hasNewlines ) {
+		_pos = next_newline_position( _pos );
+		if ( _pos < 0 ) {
+			_pos = _data.length();
+		}
+	} else {
+		_pos = _data.length();
+	}
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
 
