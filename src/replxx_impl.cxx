@@ -340,10 +340,10 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32
 		case ( Replxx::ACTION::MOVE_CURSOR_ONE_SUBWORD_RIGHT ):   return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_word_right<true>, code ) );
 		case ( Replxx::ACTION::MOVE_CURSOR_LEFT ):                return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_char_left, code ) );
 		case ( Replxx::ACTION::MOVE_CURSOR_RIGHT ):               return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_char_right, code ) );
-		case ( Replxx::ACTION::HISTORY_NEXT ):                    return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_next, code ) );
-		case ( Replxx::ACTION::HISTORY_PREVIOUS ):                return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_previous, code ) );
-		case ( Replxx::ACTION::HISTORY_FIRST ):                   return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_first, code ) );
-		case ( Replxx::ACTION::HISTORY_LAST ):                    return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_last, code ) );
+		case ( Replxx::ACTION::HISTORY_NEXT ):                    return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_next, code ) );
+		case ( Replxx::ACTION::HISTORY_PREVIOUS ):                return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_previous, code ) );
+		case ( Replxx::ACTION::HISTORY_FIRST ):                   return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_first, code ) );
+		case ( Replxx::ACTION::HISTORY_LAST ):                    return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_last, code ) );
 		case ( Replxx::ACTION::HISTORY_INCREMENTAL_SEARCH ):      return ( action( NOOP, &Replxx::ReplxxImpl::incremental_history_search, code ) );
 		case ( Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH ):    return ( action( RESET_KILL_ACTION | DONT_RESET_PREFIX, &Replxx::ReplxxImpl::common_prefix_search, code ) );
 		case ( Replxx::ACTION::HINT_NEXT ):                       return ( action( NOOP, &Replxx::ReplxxImpl::hint_next, code ) );
@@ -1755,7 +1755,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_previous( char32_t ) {
 		posInLine = max( min( posInLine, prevLineLength + shift ) - shift, 0 );
 		_pos = prevLineStart + posInLine;
 		assert( ( _pos >= 0 ) && ( _pos <= _data.length() ) );
-		refresh_line();
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	} while ( false );
 	return ( history_move( true ) );
@@ -1788,7 +1787,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_next( char32_t ) {
 		posInLine = max( min( posInLine + shift, nextLineLength ), 0 );
 		_pos = nextLineStart + posInLine;
 		assert( ( _pos >= 0 ) && ( _pos <= _data.length() ) );
-		refresh_line();
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	} while ( false );
 	return ( history_move( false ) );
@@ -1823,7 +1821,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_first( char32_t ) {
 			break;
 		}
 		_pos = 0;
-		refresh_line();
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	} while ( false );
 	return ( history_jump( true ) );
@@ -1840,7 +1837,6 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_last( char32_t ) {
 			break;
 		}
 		_pos = _data.length();
-		refresh_line();
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	} while ( false );
 	return ( history_jump( false ) );
