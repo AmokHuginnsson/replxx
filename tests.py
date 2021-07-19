@@ -2252,6 +2252,39 @@ class ReplxxTests( unittest.TestCase ):
 			"color_green zzzx\r\n",
 			"color_red more textcolor_blue 123color_green zzz\n"
 		)
+	def test_hints_in_multiline( self_ ):
+		self_.check_scenario(
+			"<up><c-down><cr><c-d>",
+			"<c9><ceos>some text\r\n"
+			"color_b<rst>\r\n"
+			"<gray>color_black<rst>\r\n"
+			"<gray>color_brown<rst>\r\n"
+			"<gray>color_blue<rst><u3><c8><u1><c9><ceos>some text\r\n"
+			"color_b<rst><gray>lack<rst>\r\n"
+			"<gray>color_brown<rst>\r\n"
+			"<gray>color_blue<rst>\r\n"
+			"<gray>color_brightred<rst><u3><c8><u1><c9><ceos>some text\r\n"
+			"color_b<rst><c8>\r\n"
+			"some text\r\n"
+			"color_b\r\n",
+			"some textcolor_b\n"
+		)
+		self_.check_scenario(
+			"<up><c-down><cr><c-d>",
+			"<c9><ceos>some text\r\n"
+			"not on start color_b<rst>\r\n"
+			"             <gray>color_black<rst>\r\n"
+			"             <gray>color_brown<rst>\r\n"
+			"             <gray>color_blue<rst><u3><c21><u1><c9><ceos>some text\r\n"
+			"not on start color_b<rst><gray>lack<rst>\r\n"
+			"             <gray>color_brown<rst>\r\n"
+			"             <gray>color_blue<rst>\r\n"
+			"             <gray>color_brightred<rst><u3><c21><u1><c9><ceos>some text\r\n"
+			"not on start color_b<rst><c21>\r\n"
+			"some text\r\n"
+			"not on start color_b\r\n",
+			"some textnot on start color_b\n"
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity

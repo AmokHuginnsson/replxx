@@ -774,7 +774,8 @@ void Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 			set_color( Replxx::Color::DEFAULT );
 		}
 	} else if ( ( _maxHintRows > 0 ) && ( hintCount > 0 ) ) {
-		int startCol( _prompt.indentation() + _pos );
+		int posInLine( pos_in_line() );
+		int startCol( ( posInLine == _pos ? _prompt.indentation() : 0 ) + posInLine );
 		int maxCol( _prompt.screen_columns() );
 #ifdef _WIN32
 		-- maxCol;
@@ -1708,7 +1709,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::commit_line( char32_t ) {
 	return ( Replxx::ACTION_RESULT::RETURN );
 }
 
-int Replxx::ReplxxImpl::prev_newline_position( int pos_ ) {
+int Replxx::ReplxxImpl::prev_newline_position( int pos_ ) const {
 	assert( ( pos_ >= 0 ) && ( pos_ <= _data.length() ) );
 	if ( pos_ == _data.length() ) {
 		-- pos_;
@@ -1722,7 +1723,7 @@ int Replxx::ReplxxImpl::prev_newline_position( int pos_ ) {
 	return ( pos_ );
 }
 
-int Replxx::ReplxxImpl::next_newline_position( int pos_ ) {
+int Replxx::ReplxxImpl::next_newline_position( int pos_ ) const {
 	assert( ( pos_ >= 0 ) && ( pos_ <= _data.length() ) );
 	int len( _data.length() );
 	while ( pos_ < len ) {
@@ -1732,6 +1733,14 @@ int Replxx::ReplxxImpl::next_newline_position( int pos_ ) {
 		++ pos_;
 	}
 	return ( pos_ < len ? pos_ : -1 );
+}
+
+int Replxx::ReplxxImpl::pos_in_line( void ) const {
+	if ( ! _hasNewlines ) {
+		return ( _pos );
+	}
+	int lineStart( prev_newline_position( _pos ) + 1 );
+	return ( _pos - lineStart );
 }
 
 // Up, recall previous line in history

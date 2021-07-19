@@ -265,8 +265,9 @@ private:
 	void handle_hints( HINT_ACTION );
 	void set_color( Replxx::Color );
 	int context_length( void );
-	int prev_newline_position( int );
-	int next_newline_position( int );
+	int prev_newline_position( int ) const;
+	int next_newline_position( int ) const;
+	int pos_in_line( void ) const;
 	void clear( void );
 	void repaint( void );
 	template <bool subword>
