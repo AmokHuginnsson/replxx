@@ -95,6 +95,7 @@ Terminal::Terminal( void )
 	, _empty()
 #else
 	: _origTermios()
+	, _rawModeTermios()
 	, _interrupt()
 #endif
 	, _rawMode( false )
@@ -179,9 +180,7 @@ inline int notty( void ) {
 
 void Terminal::enable_out( void ) {
 #ifdef _WIN32
-	_consoleOut = GetStdHandle( STD_OUTPUT_HANDLE );
 	SetConsoleOutputCP( 65001 );
-	GetConsoleMode( _consoleOut, &_origOutMode );
 	_autoEscape = SetConsoleMode( _consoleOut, _origOutMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING ) != 0;
 #endif
 }
@@ -206,70 +205,90 @@ void Terminal::disable_bracketed_paste( void ) {
 }
 
 int Terminal::enable_raw_mode( void ) {
-	if ( ! _rawMode ) {
-#ifdef _WIN32
-		_consoleIn = GetStdHandle( STD_INPUT_HANDLE );
-		SetConsoleCP( 65001 );
-		GetConsoleMode( _consoleIn, &_origInMode );
-		SetConsoleMode(
-			_consoleIn,
-			_origInMode & ~( ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT )
-		);
-		enable_out();
-#else
-		struct termios raw;
-
-		if ( ! tty::in ) {
-			return ( notty() );
-		}
-		if ( tcgetattr( 0, &_origTermios ) == -1 ) {
-			return ( notty() );
-		}
-
-		raw = _origTermios; /* modify the original mode */
-		/* input modes: no break, no CR to NL, no parity check, no strip char,
-		 * no start/stop output control. */
-		raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-		/* output modes - disable post processing */
-		// this is wrong, we don't want raw output, it turns newlines into straight
-		// linefeeds
-		// raw.c_oflag &= ~(OPOST);
-		/* control modes - set 8 bit chars */
-		raw.c_cflag |= (CS8);
-		/* local modes - echoing off, canonical off, no extended functions,
-		 * no signal chars (^Z,^C) */
-		raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-		/* control chars - set return condition: min number of bytes and timer.
-		 * We want read to return every single byte, without timeout. */
-		raw.c_cc[VMIN] = 1;
-		raw.c_cc[VTIME] = 0; /* 1 byte, no timer */
-
-		/* put terminal in raw mode after flushing */
-		if ( tcsetattr(0, TCSADRAIN, &raw) < 0 ) {
-			return ( notty() );
-		}
-		_terminal_ = this;
-#endif
-		_rawMode = true;
+	if ( _rawMode ) {
+		return ( 0 );
 	}
+#ifdef _WIN32
+	_consoleIn = GetStdHandle( STD_INPUT_HANDLE );
+	_consoleOut = GetStdHandle( STD_OUTPUT_HANDLE );
+	GetConsoleMode( _consoleIn, &_origInMode );
+	GetConsoleMode( _consoleOut, &_origOutMode );
+#else
+
+	if ( ! tty::in ) {
+		return ( notty() );
+	}
+	if ( tcgetattr( 0, &_origTermios ) == -1 ) {
+		return ( notty() );
+	}
+
+	_rawModeTermios = _origTermios; /* modify the original mode */
+	/* input modes: no break, no CR to NL, no parity check, no strip char,
+	 * no start/stop output control. */
+	_rawModeTermios.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+	/* output modes - disable post processing */
+	// this is wrong, we don't want _rawModeTermios output, it turns newlines into straight
+	// linefeeds
+	// _rawModeTermios.c_oflag &= ~(OPOST);
+	/* control modes - set 8 bit chars */
+	_rawModeTermios.c_cflag |= (CS8);
+	/* local modes - echoing off, canonical off, no extended functions,
+	 * no signal chars (^Z,^C) */
+	_rawModeTermios.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+	/* control chars - set return condition: min number of bytes and timer.
+	 * We want read to return every single byte, without timeout. */
+	_rawModeTermios.c_cc[VMIN] = 1;
+	_rawModeTermios.c_cc[VTIME] = 0; /* 1 byte, no timer */
+
+#endif
+
+	_rawMode = true;
+	if ( reset_raw_mode() < 0 ) {
+		_rawMode = false;
+		return ( notty() );
+	}
+
+#ifndef _WIN32
+	_terminal_ = this;
+#endif
 	return ( 0 );
 }
 
-void Terminal::disable_raw_mode(void) {
-	if ( _rawMode ) {
-#ifdef _WIN32
-		disable_out();
-		SetConsoleMode( _consoleIn, _origInMode );
-		SetConsoleCP( _inputCodePage );
-		_consoleIn = INVALID_HANDLE_VALUE;
-#else
-		_terminal_ = nullptr;
-		if ( tcsetattr( 0, TCSADRAIN, &_origTermios ) == -1 ) {
-			return;
-		}
-#endif
-		_rawMode = false;
+int Terminal::reset_raw_mode( void ) {
+	if ( ! _rawMode ) {
+		return ( -1 );
 	}
+#ifdef _WIN32
+	SetConsoleMode(
+		_consoleIn,
+		_origInMode & ~( ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT )
+	);
+	SetConsoleCP( 65001 );
+	enable_out();
+	return ( 0 );
+#else
+	/* put terminal in raw mode after flushing */
+	return ( tcsetattr( 0, TCSADRAIN, &_rawModeTermios ) );
+#endif
+}
+
+void Terminal::disable_raw_mode(void) {
+	if ( ! _rawMode ) {
+		return;
+	}
+#ifdef _WIN32
+	disable_out();
+	SetConsoleMode( _consoleIn, _origInMode );
+	SetConsoleCP( _inputCodePage );
+	_consoleIn = INVALID_HANDLE_VALUE;
+#else
+	_terminal_ = nullptr;
+	if ( tcsetattr( 0, TCSADRAIN, &_origTermios ) == -1 ) {
+		return;
+	}
+#endif
+	_rawMode = false;
+	return;
 }
 
 #ifndef _WIN32

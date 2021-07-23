@@ -129,11 +129,10 @@ class IOModeGuard {
 public:
 	IOModeGuard( Terminal& terminal_ )
 		: _terminal( terminal_ ) {
-		_terminal.disable_raw_mode();
 	}
 	~IOModeGuard( void ) {
 		try {
-			_terminal.enable_raw_mode();
+			_terminal.reset_raw_mode();
 		} catch ( ... ) {
 		}
 	}
