@@ -335,6 +335,7 @@ int main( int argc_, char** argv_ ) {
 	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::RIGHT ), std::bind( &message, std::ref( rx ), "<S-Right>", _1 ) );
 	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::UP ), std::bind( &message, std::ref( rx ), "<S-Up>", _1 ) );
 	rx.bind_key( Replxx::KEY::shift( Replxx::KEY::DOWN ), std::bind( &message, std::ref( rx ), "<S-Down>", _1 ) );
+	rx.bind_key( Replxx::KEY::meta( '\r' ), std::bind( &message, std::ref( rx ), "<M-Enter>", _1 ) );
 
 	// display initial welcome message
 	std::cout
