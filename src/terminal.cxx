@@ -704,7 +704,7 @@ void Terminal::clear_screen( CLEAR_SCREEN clearScreen_ ) {
 		_empty.resize( toWrite - 1, ' ' );
 		WriteConsoleA( consoleOut, _empty.data(), toWrite - 1, &nWritten, nullptr );
 	} else {
-		COORD scrollTarget = { 0, -inf.dwSize.Y };
+		COORD scrollTarget = { 0, static_cast<SHORT>( -inf.dwSize.Y ) };
 		CHAR_INFO fill{ TEXT( ' ' ), inf.wAttributes };
 		SMALL_RECT scrollRect = { 0, 0, inf.dwSize.X, inf.dwSize.Y };
 		ScrollConsoleScreenBuffer( consoleOut, &scrollRect, nullptr, scrollTarget, &fill );
