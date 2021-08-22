@@ -11,18 +11,6 @@ namespace replxx {
 int mk_wcwidth( char32_t );
 
 /**
- * Recompute widths of all characters in a char32_t buffer
- * @param text      - input buffer of Unicode characters
- * @param widths    - output buffer of character widths
- * @param charCount - number of characters in buffer
- */
-void recompute_character_widths( char32_t const* text, char* widths, int charCount ) {
-	for (int i = 0; i < charCount; ++i) {
-		widths[i] = mk_wcwidth(text[i]);
-	}
-}
-
-/**
  * Calculate a new screen position given a starting position, screen width and
  * character count
  * @param x             - initial x position (zero-based)

@@ -144,7 +144,6 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	: _utf8Buffer()
 	, _data()
 	, _pos( 0 )
-	, _charWidths()
 	, _display()
 	, _displayInputLength( 0 )
 	, _hint()
@@ -660,8 +659,6 @@ void Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
 
 void Replxx::ReplxxImpl::preload_puffer(const char* preloadText) {
 	_data.assign( preloadText );
-	_charWidths.resize( _data.length() );
-	recompute_character_widths( _data.get(), _charWidths.data(), _data.length() );
 	_prefix = _pos = _data.length();
 }
 

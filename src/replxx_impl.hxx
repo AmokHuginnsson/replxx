@@ -78,7 +78,6 @@ public:
 	typedef std::vector<UnicodeString> hints_t;
 	typedef std::unique_ptr<char[]> utf8_buffer_t;
 	typedef std::unique_ptr<char32_t[]> input_buffer_t;
-	typedef std::vector<char> char_widths_t;
 	typedef std::vector<char32_t> display_t;
 	typedef std::deque<char32_t> key_presses_t;
 	typedef std::deque<std::string> messages_t;
@@ -105,7 +104,6 @@ private:
 	mutable Utf8String     _utf8Buffer;
 	UnicodeString  _data;
 	int _pos;    // character position in buffer ( 0 <= _pos <= _data[_line].length() )
-	char_widths_t  _charWidths; // character widths from mk_wcwidth()
 	display_t      _display;
 	int _displayInputLength;
 	UnicodeString  _hint;
