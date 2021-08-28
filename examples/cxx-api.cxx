@@ -7,6 +7,7 @@
 #include <utility>
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 #include <thread>
 #include <chrono>
 
@@ -223,10 +224,13 @@ int main( int argc_, char** argv_ ) {
 	rx.install_window_change_handler();
 
 	// the path to the history file
-	std::string history_file {"./replxx_history.txt"};
+	std::string history_file_path {"./replxx_history.txt"};
 
 	// load the history file if it exists
-	rx.history_load(history_file);
+	/* scope for ifstream object for auto-close */ {
+		std::ifstream history_file( history_file_path.c_str() );
+		rx.history_load( history_file );
+	}
 
 	// set the max history size
 	rx.set_max_history_size(128);
@@ -414,14 +418,15 @@ int main( int argc_, char** argv_ ) {
 			continue;
 
 		} else if (input.compare(0, 6, ".merge") == 0) {
-			history_file = "replxx_history_alt.txt";
+			history_file_path = "replxx_history_alt.txt";
 
 			rx.history_add(input);
 			continue;
 
 		} else if (input.compare(0, 5, ".save") == 0) {
-			history_file = "replxx_history_alt.txt";
-			rx.history_save(history_file);
+			history_file_path = "replxx_history_alt.txt";
+			std::ofstream history_file( history_file_path.c_str() );
+			rx.history_save( history_file );
 			continue;
 
 		} else if (input.compare(0, 6, ".clear") == 0) {
@@ -446,7 +451,7 @@ int main( int argc_, char** argv_ ) {
 	}
 
 	// save the history
-	rx.history_sync(history_file);
+	rx.history_sync( history_file_path );
 
 	std::cout << "\nExiting Replxx\n";
 

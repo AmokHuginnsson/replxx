@@ -39,6 +39,7 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <iosfwd>
 
 #include "replxx.hxx"
 #include "history.hxx"
@@ -164,7 +165,9 @@ public:
 	void history_add( std::string const& line );
 	bool history_sync( std::string const& filename );
 	bool history_save( std::string const& filename );
+	void history_save( std::ostream& out );
 	bool history_load( std::string const& filename );
+	void history_load( std::istream& in );
 	void history_clear( void );
 	Replxx::HistoryScan::impl_t history_scan( void ) const;
 	int history_size( void ) const;

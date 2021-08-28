@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <memory>
 #include <fstream>
+#include <ostream>
+#include <istream>
 #include <cstring>
 
 #ifndef _WIN32
@@ -131,7 +133,12 @@ bool History::save( std::string const& filename, bool sync_ ) {
 		_entries = entries;
 		reset_iters();
 	}
-	do_load( filename );
+	/* scope for ifstream object auto-close */ {
+		ifstream histFile( filename );
+		if ( histFile ) {
+			do_load( histFile );
+		}
+	}
 	sort();
 	remove_duplicates();
 	trim_to_max_size();
@@ -143,6 +150,16 @@ bool History::save( std::string const& filename, bool sync_ ) {
 	umask( old_umask );
 	chmod( filename.c_str(), S_IRUSR | S_IWUSR );
 #endif
+	save( histFile );
+	if ( ! sync_ ) {
+		_entries = std::move( entries );
+		_locations = std::move( locations );
+	}
+	reset_iters();
+	return ( true );
+}
+
+void History::save( std::ostream& histFile ) {
 	Utf8String utf8;
 	UnicodeString us;
 	for ( Entry const& h : _entries ) {
@@ -153,12 +170,6 @@ bool History::save( std::string const& filename, bool sync_ ) {
 			histFile << "### " << h.timestamp() << "\n" << utf8.get() << endl;
 		}
 	}
-	if ( ! sync_ ) {
-		_entries = std::move( entries );
-		_locations = std::move( locations );
-	}
-	reset_iters();
-	return ( true );
 }
 
 namespace {
@@ -183,11 +194,7 @@ bool is_timestamp( std::string const& s ) {
 
 }
 
-bool History::do_load( std::string const& filename ) {
-	ifstream histFile( filename );
-	if ( ! histFile ) {
-		return ( false );
-	}
+void History::do_load( std::istream& histFile ) {
 	string line;
 	string when( "0000-00-00 00:00:00.000" );
 	UnicodeString us;
@@ -206,18 +213,26 @@ bool History::do_load( std::string const& filename ) {
 			_entries.emplace_back( when, us );
 		}
 	}
-	return ( true );
 }
 
 bool History::load( std::string const& filename ) {
+	ifstream histFile( filename );
+	if ( ! histFile ) {
+		clear();
+		return false;
+	}
+	load(histFile);
+	return true;
+}
+
+void History::load( std::istream& histFile ) {
 	clear();
-	bool success( do_load( filename ) );
+	do_load( histFile );
 	sort();
 	remove_duplicates();
 	trim_to_max_size();
 	_previous = _current = last();
 	_yankPos = _entries.end();
-	return ( success );
 }
 
 void History::sort( void ) {

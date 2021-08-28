@@ -162,8 +162,16 @@ bool Replxx::history_save( std::string const& filename ) {
 	return ( _impl->history_save( filename ) );
 }
 
+void Replxx::history_save( std::ostream& out ) {
+	_impl->history_save( out );
+}
+
 bool Replxx::history_load( std::string const& filename ) {
 	return ( _impl->history_load( filename ) );
+}
+
+void Replxx::history_load( std::istream& in ) {
+	_impl->history_load( in );
 }
 
 void Replxx::history_clear( void ) {
