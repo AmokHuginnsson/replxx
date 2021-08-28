@@ -35,6 +35,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <iosfwd>
 
 /*
  * For use in Windows DLLs:
@@ -518,12 +519,22 @@ public:
 	 */
 	bool history_save( std::string const& filename );
 
+	/*!
+	* \copydoc history_sync
+	*/
+	void history_save( std::ostream& out );
+
 	/*! \brief Load REPL's history from given file.
 	 *
 	 * \param filename - a path to the file which contains REPL's history that should be loaded.
 	 * \return True iff history file was successfully opened.
 	 */
 	bool history_load( std::string const& filename );
+
+	/*!
+	* \copydoc history_sync
+	*/
+	void history_load( std::istream& in );
 
 	/*! \brief Clear REPL's in-memory history.
 	 */

@@ -2106,12 +2106,20 @@ bool Replxx::ReplxxImpl::history_save( std::string const& filename ) {
 	return ( _history.save( filename, false ) );
 }
 
+void Replxx::ReplxxImpl::history_save( std::ostream& out ) {
+	_history.save( out );
+}
+
 bool Replxx::ReplxxImpl::history_sync( std::string const& filename ) {
 	return ( _history.save( filename, true ) );
 }
 
 bool Replxx::ReplxxImpl::history_load( std::string const& filename ) {
 	return ( _history.load( filename ) );
+}
+
+void Replxx::ReplxxImpl::history_load( std::istream& in ) {
+	_history.load( in );
 }
 
 void Replxx::ReplxxImpl::history_clear( void ) {
