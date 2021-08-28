@@ -137,6 +137,8 @@ private:
 	Replxx::hint_callback_t _hintCallback;
 	key_presses_t _keyPresses;
 	messages_t _messages;
+	std::string _updated_prompt;
+	bool _is_prompt_updated;
 	completions_t _completions;
 	int _completionContextLength;
 	int _completionSelection;
@@ -181,6 +183,7 @@ public:
 	void enable_bracketed_paste( void );
 	void disable_bracketed_paste( void );
 	void print( char const*, int );
+	void set_prompt( std::string prompt );
 	Replxx::ACTION_RESULT clear_screen( char32_t );
 	void emulate_key_press( char32_t );
 	Replxx::ACTION_RESULT invoke( Replxx::ACTION, char32_t );

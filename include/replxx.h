@@ -408,6 +408,12 @@ REPLXX_IMPEXP int replxx_print( Replxx*, char const* fmt, ... );
  */
 REPLXX_IMPEXP int replxx_write( Replxx*, char const* str, int length );
 
+/*! \brief Changes the prompt when input is being requested
+ *
+ * \param prompt - The prompt string to change to.
+ */
+REPLXX_IMPEXP void replxx_set_prompt( Replxx*, const char* prompt );
+
 /*! \brief Schedule an emulated key press event.
  *
  * \param code - key press code to be emulated.
