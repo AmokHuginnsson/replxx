@@ -8,15 +8,16 @@
 
 namespace replxx {
 
-class Prompt {           // a convenience struct for grouping prompt info
+class Prompt {              // a convenience struct for grouping prompt info
 public:
-	UnicodeString _text;   // our copy of the prompt text, edited
-	int _characterCount;   // visible characters in _text
-	int _extraLines;       // extra lines (beyond 1) occupied by prompt
-	int _lastLinePosition; // index into _text where last line begins
-	int _cursorRowOffset;  // where the cursor is relative to the start of the prompt
+	UnicodeString _text;      // our copy of the prompt text, edited
+	int _characterCount{0};   // visible characters in _text
+	int _extraLines{0};       // extra lines (beyond 1) occupied by prompt
+	int _lastLinePosition{0}; // index into _text where last line begins
+	int _cursorRowOffset{0};  // where the cursor is relative to the start of the prompt
+
 private:
-	int _screenColumns;    // width of screen in columns [cache]
+	int _screenColumns{0};    // width of screen in columns [cache]
 	Terminal& _terminal;
 public:
 	Prompt( Terminal& );

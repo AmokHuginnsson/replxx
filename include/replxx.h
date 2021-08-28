@@ -408,6 +408,14 @@ REPLXX_IMPEXP int replxx_print( Replxx*, char const* fmt, ... );
  */
 REPLXX_IMPEXP int replxx_write( Replxx*, char const* str, int length );
 
+/*! \brief Asynchronously change the prompt while replxx_input() call is in efect.
+ *
+ * Can be used to change the prompt from callbacks or other threads.
+ *
+ * \param prompt - The prompt string to change to.
+ */
+REPLXX_IMPEXP void replxx_set_prompt( Replxx*, const char* prompt );
+
 /*! \brief Schedule an emulated key press event.
  *
  * \param code - key press code to be emulated.

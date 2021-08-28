@@ -176,6 +176,8 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _hintCallback( nullptr )
 	, _keyPresses()
 	, _messages()
+	, _asyncPrompt()
+	, _updatePrompt( false )
 	, _completions()
 	, _completionContextLength( 0 )
 	, _completionSelection( -1 )
@@ -433,13 +435,23 @@ char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
 			refresh_line( HINT_ACTION::REPAINT );
 			continue;
 		}
+
 		std::lock_guard<std::mutex> l( _mutex );
 		clear_self_to_end_of_screen();
+
+		if ( _updatePrompt ) {
+			// Update the prompt after the screen has been cleared and before it is redrawn
+			_updatePrompt = false;
+			std::string const updated = std::move( _asyncPrompt );
+			_prompt.set_text( UnicodeString( updated ) );
+		}
+
 		while ( ! _messages.empty() ) {
 			string const& message( _messages.front() );
 			_terminal.write8( message.data(), static_cast<int>( message.length() ) );
 			_messages.pop_front();
 		}
+		_lastRefreshTime = 0;
 		repaint();
 	}
 	/* try scheduled key presses */ {
@@ -588,18 +600,24 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 		if ( ! tty::in ) { // input not from a terminal, we should work with piped input, i.e. redirected stdin
 			return ( read_from_stdin() );
 		}
-		if (!_errorMessage.empty()) {
-			printf("%s", _errorMessage.c_str());
-			fflush(stdout);
+		if ( !_errorMessage.empty() ) {
+			printf( "%s", _errorMessage.c_str() );
+			fflush( stdout );
 			_errorMessage.clear();
 		}
 		if ( isUnsupportedTerm() ) {
 			cout << prompt << flush;
-			fflush(stdout);
+			fflush( stdout );
 			return ( read_from_stdin() );
 		}
-		if (_terminal.enable_raw_mode() == -1) {
+		if ( _terminal.enable_raw_mode() == -1 ) {
 			return nullptr;
+		}
+
+		/* scope for mutex lock */ {
+			std::lock_guard<std::mutex> l( _mutex );
+			_asyncPrompt.clear();
+			_updatePrompt = false;
 		}
 		_prompt.set_text( UnicodeString( prompt ) );
 		_currentThread = std::this_thread::get_id();
@@ -658,6 +676,15 @@ void Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
 		_terminal.notify_event( Terminal::EVENT_TYPE::MESSAGE );
 	}
 	return;
+}
+
+void Replxx::ReplxxImpl::set_prompt( std::string prompt ) {
+	if ( ( _currentThread != std::thread::id() ) && ( _currentThread != std::this_thread::get_id() ) ) {
+		std::lock_guard<std::mutex> l( _mutex );
+		_asyncPrompt = std::move( prompt );
+		_updatePrompt = true;
+		_terminal.notify_event( Terminal::EVENT_TYPE::MESSAGE );
+	}
 }
 
 void Replxx::ReplxxImpl::preload_puffer(const char* preloadText) {

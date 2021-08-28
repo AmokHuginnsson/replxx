@@ -20,15 +20,21 @@ class Tick {
 	typedef std::vector<char32_t> keys_t;
 	std::thread _thread;
 	int _tick;
+	int _promptState;
 	bool _alive;
 	keys_t _keys;
+	bool _tickMessages;
+	bool _promptFan;
 	Replxx& _replxx;
 public:
-	Tick( Replxx& replxx_, std::string const& keys_ = {} )
+	Tick( Replxx& replxx_, std::string const& keys_, bool tickMessages_, bool promptFan_ )
 		: _thread()
 		, _tick( 0 )
+		, _promptState( 0 )
 		, _alive( false )
 		, _keys( keys_.begin(), keys_.end() )
+		, _tickMessages( tickMessages_ )
+		, _promptFan( promptFan_ )
 		, _replxx( replxx_ ) {
 	}
 	void start() {
@@ -41,16 +47,29 @@ public:
 	}
 	void run() {
 		std::string s;
+		static char const PROMPT_STATES[] = "-\\|/";
 		while ( _alive ) {
-			if ( _keys.empty() ) {
+			if ( _tickMessages ) {
 				_replxx.print( "%d\n", _tick );
-			} else if ( _tick < static_cast<int>( _keys.size() ) ) {
+			}
+			if ( _tick < static_cast<int>( _keys.size() ) ) {
 				_replxx.emulate_key_press( _keys[_tick] );
-			} else {
+			}
+			if ( ! _tickMessages && ! _promptFan && ( _tick >= _keys.size() ) ) {
 				break;
 			}
+			if ( _promptFan ) {
+				for ( int i( 0 ); i < 4; ++ i ) {
+					char prompt[] = "\x1b[1;32mreplxx\x1b[0m[ ]> ";
+					prompt[18] = PROMPT_STATES[_promptState % 4];
+					++ _promptState;
+					_replxx.set_prompt( prompt );
+					std::this_thread::sleep_for( std::chrono::milliseconds( 250 ) );
+				}
+			} else {
+				std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+			}
 			++ _tick;
-			std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 		}
 	}
 };
@@ -218,9 +237,22 @@ int main( int argc_, char** argv_ ) {
 		{"\'.*?\'", cl::BRIGHTGREEN}, // single quotes
 	};
 
+	bool tickMessages( false );
+	bool promptFan( false );
+	std::string keys;
+	while ( argc_ > 1 ) {
+		-- argc_;
+		++ argv_;
+		switch ( (*argv_)[0] ) {
+			case ( 'm' ): tickMessages = true; break;
+			case ( 'p' ): promptFan = true; break;
+			case ( 'k' ): keys = (*argv_) + 1; break;
+		}
+	}
+
 	// init the repl
 	Replxx rx;
-	Tick tick( rx, argc_ > 1 ? argv_[1] : "" );
+	Tick tick( rx, keys, tickMessages, promptFan );
 	rx.install_window_change_handler();
 
 	// the path to the history file
@@ -352,7 +384,7 @@ int main( int argc_, char** argv_ ) {
 	std::string prompt {"\x1b[1;32mreplxx\x1b[0m> "};
 
 	// main repl loop
-	if ( argc_ > 1 ) {
+	if ( ! keys.empty() || tickMessages || promptFan ) {
 		tick.start();
 	}
 	for (;;) {
@@ -446,7 +478,7 @@ int main( int argc_, char** argv_ ) {
 			continue;
 		}
 	}
-	if ( argc_ > 1 ) {
+	if ( ! keys.empty() || tickMessages || promptFan ) {
 		tick.stop();
 	}
 

@@ -454,6 +454,14 @@ public:
 	 */
 	void write( char const* str, int length );
 
+	/*! \brief Asynchronously change the prompt while replxx_input() call is in efect.
+	 *
+	 * Can be used to change the prompt from callbacks or other threads.
+	 *
+	 * \param prompt - The prompt string to change to.
+	 */
+	void set_prompt( std::string prompt );
+
 	/*! \brief Schedule an emulated key press event.
 	 *
 	 * \param code - key press code to be emulated.

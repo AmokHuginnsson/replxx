@@ -1691,7 +1691,7 @@ class ReplxxTests( unittest.TestCase ):
 				"<c9>abcd<rst><ceos><c13><c9>abcde<rst><ceos><c14><c9>abcdef<rst><ceos><c15><c9>abcdef<rst><ceos><c15>\r\n"
 				"abcdef\r\n",
 			],
-			command = [ ReplxxTests._cxxSample_, "" ],
+			command = [ ReplxxTests._cxxSample_, "m" ],
 			pause = 0.5
 		)
 		self_.check_scenario(
@@ -1784,7 +1784,7 @@ class ReplxxTests( unittest.TestCase ):
 				"wrapped: abcdef\r\n"
 			],
 			"a very long line of user input, wider then current terminal, the line is wrapped: \n",
-			command = [ ReplxxTests._cxxSample_, "" ],
+			command = [ ReplxxTests._cxxSample_, "m" ],
 			dimensions = ( 10, 40 ),
 			pause = 0.5
 		)
@@ -1808,7 +1808,7 @@ class ReplxxTests( unittest.TestCase ):
 				"<yellow>3<rst>ef<rst><ceos><c18><c9><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<rst><ceos><c18>\r\n"
 				"1ab2cd3ef\r\n"
 			],
-			command = [ ReplxxTests._cxxSample_, "123456" ],
+			command = [ ReplxxTests._cxxSample_, "k123456" ],
 			pause = 0.5
 		)
 	def test_special_keys( self_ ):
@@ -2284,6 +2284,180 @@ class ReplxxTests( unittest.TestCase ):
 			"some text\r\n"
 			"not on start color_b\r\n",
 			"some textnot on start color_b\n"
+		)
+	def test_async_prompt( self_ ):
+		self_.check_scenario(
+			[ "<up>", "r", "i", "g", "h", "t", "g<tab><cr><c-d>" ], [
+				"<c1><ceos><brightgreen>replxx<rst>[-]> <c12><ceos><c12><c12>long line "
+				"<green>color_green<rst> and color_b<rst><ceos>\r\n"
+				"                                     <gray>color_black<rst>\r\n"
+				"                                     <gray>color_brown<rst>\r\n"
+				"                                     "
+				"<gray>color_blue<rst><u3><c45><c1><ceos><brightgreen>replxx<rst>[\\]> "
+				"<c12>long line <green>color_green<rst> and color_b<rst><ceos>\r\n"
+				"                                     <gray>color_black<rst>\r\n"
+				"                                     <gray>color_brown<rst>\r\n"
+				"                                     "
+				"<gray>color_blue<rst><u3><c45><c1><ceos><brightgreen>replxx<rst>[|]> "
+				"<c12>long line <green>color_green<rst> and color_b<rst><ceos>\r\n"
+				"                                     <gray>color_black<rst>\r\n"
+				"                                     <gray>color_brown<rst>\r\n"
+				"                                     <gray>color_blue<rst><u3><c45><c12>long "
+				"line <green>color_green<rst> and color_br<rst><ceos>\r\n"
+				"                                     <gray>color_brown<rst>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     "
+				"<gray>color_brightgreen<rst><u3><c46><c1><ceos><brightgreen>replxx<rst>[/]> "
+				"<c12>long line <green>color_green<rst> and color_br<rst><ceos>\r\n"
+				"                                     <gray>color_brown<rst>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     "
+				"<gray>color_brightgreen<rst><u3><c46><c1><ceos><brightgreen>replxx<rst>[-]> "
+				"<c12>long line <green>color_green<rst> and color_br<rst><ceos>\r\n"
+				"                                     <gray>color_brown<rst>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     "
+				"<gray>color_brightgreen<rst><u3><c46><c1><ceos><brightgreen>replxx<rst>[\\]> "
+				"<c12>long line <green>color_green<rst> and color_br<rst><ceos>\r\n"
+				"                                     <gray>color_brown<rst>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     "
+				"<gray>color_brightgreen<rst><u3><c46><c12>long line <green>color_green<rst> "
+				"and color_bri<rst><ceos>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     <gray>color_brightgreen<rst>\r\n"
+				"                                     "
+				"<gray>color_brightblue<rst><u3><c47><c1><ceos><brightgreen>replxx<rst>[|]> "
+				"<c12>long line <green>color_green<rst> and color_bri<rst><ceos>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     <gray>color_brightgreen<rst>\r\n"
+				"                                     "
+				"<gray>color_brightblue<rst><u3><c47><c1><ceos><brightgreen>replxx<rst>[/]> "
+				"<c12>long line <green>color_green<rst> and color_bri<rst><ceos>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     <gray>color_brightgreen<rst>\r\n"
+				"                                     "
+				"<gray>color_brightblue<rst><u3><c47><c12>long line <green>color_green<rst> "
+				"and color_brig<rst><ceos>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     <gray>color_brightgreen<rst>\r\n"
+				"                                     "
+				"<gray>color_brightblue<rst><u3><c48><c1><ceos><brightgreen>replxx<rst>[-]> "
+				"<c12>long line <green>color_green<rst> and color_brig<rst><ceos>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     <gray>color_brightgreen<rst>\r\n"
+				"                                     "
+				"<gray>color_brightblue<rst><u3><c48><c1><ceos><brightgreen>replxx<rst>[\\]> "
+				"<c12>long line <green>color_green<rst> and color_brig<rst><ceos>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     <gray>color_brightgreen<rst>\r\n"
+				"                                     "
+				"<gray>color_brightblue<rst><u3><c48><c12>long line <green>color_green<rst> "
+				"and color_brigh<rst><ceos>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     <gray>color_brightgreen<rst>\r\n"
+				"                                     "
+				"<gray>color_brightblue<rst><u3><c49><c1><ceos><brightgreen>replxx<rst>[|]> "
+				"<c12>long line <green>color_green<rst> and color_brigh<rst><ceos>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     <gray>color_brightgreen<rst>\r\n"
+				"                                     "
+				"<gray>color_brightblue<rst><u3><c49><c1><ceos><brightgreen>replxx<rst>[/]> "
+				"<c12>long line <green>color_green<rst> and color_brigh<rst><ceos>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     <gray>color_brightgreen<rst>\r\n"
+				"                                     "
+				"<gray>color_brightblue<rst><u3><c49><c12>long line <green>color_green<rst> "
+				"and color_bright<rst><ceos>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     <gray>color_brightgreen<rst>\r\n"
+				"                                     "
+				"<gray>color_brightblue<rst><u3><c50><c1><ceos><brightgreen>replxx<rst>[-]> "
+				"<c12>long line <green>color_green<rst> and color_bright<rst><ceos>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     <gray>color_brightgreen<rst>\r\n"
+				"                                     "
+				"<gray>color_brightblue<rst><u3><c50><c1><ceos><brightgreen>replxx<rst>[\\]> "
+				"<c12>long line <green>color_green<rst> and color_bright<rst><ceos>\r\n"
+				"                                     <gray>color_brightred<rst>\r\n"
+				"                                     <gray>color_brightgreen<rst>\r\n"
+				"                                     "
+				"<gray>color_brightblue<rst><u3><c50><c12>long line <green>color_green<rst> "
+				"and "
+				"color_brightg<rst><ceos><green>reen<rst><c51><c1><ceos><brightgreen>replxx<rst>[|]> "
+				"<c12>long line <green>color_green<rst> and "
+				"color_brightg<rst><ceos><green>reen<rst><c51><c12>long line "
+				"<green>color_green<rst> and "
+				"<brightgreen>color_brightgreen<rst><ceos><c55><c12>long line "
+				"<green>color_green<rst> and "
+				"<brightgreen>color_brightgreen<rst><ceos><c55>\r\n"
+				"long line color_green and color_brightgreen\r\n"
+			],
+			"long line color_green and color_b\n",
+			command = [ ReplxxTests._cxxSample_, "p" ],
+			pause = 0.5
+		)
+		self_.check_scenario(
+			[ "a", "b", "c", "d", "e", "f", "g<tab><cr><c-d>" ], [
+				"<c1><ceos>0\r\n"
+				"<brightgreen>replxx<rst>[-]> "
+				"<c12><ceos><c12><c1><ceos><brightgreen>replxx<rst>[-]> "
+				"<c12><ceos><c12><c12>a<rst><ceos><c13><c1><ceos><brightgreen>replxx<rst>[\\]> "
+				"<c12>a<rst><ceos><c13><c1><ceos><brightgreen>replxx<rst>[|]> "
+				"<c12>a<rst><ceos><c13><c12>ab<rst><ceos><c14><c1><ceos><brightgreen>replxx<rst>[/]> "
+				"<c12>ab<rst><ceos><c14><c1><ceos>1\r\n"
+				"<brightgreen>replxx<rst>[-]> "
+				"<c12>ab<rst><ceos><c14><c1><ceos><brightgreen>replxx<rst>[-]> "
+				"<c12>ab<rst><ceos><c14><c1><ceos><brightgreen>replxx<rst>[\\]> "
+				"<c12>ab<rst><ceos><c14><c12>abc<rst><ceos><c15><c1><ceos><brightgreen>replxx<rst>[|]> "
+				"<c12>abc<rst><ceos><c15><c1><ceos><brightgreen>replxx<rst>[/]> "
+				"<c12>abc<rst><ceos><c15><c12>abcd<rst><ceos><c16><c1><ceos>2\r\n"
+				"<brightgreen>replxx<rst>[-]> "
+				"<c12>abcd<rst><ceos><c16><c1><ceos><brightgreen>replxx<rst>[-]> "
+				"<c12>abcd<rst><ceos><c16><c1><ceos><brightgreen>replxx<rst>[\\]> "
+				"<c12>abcd<rst><ceos><c16><c12>abcde<rst><ceos><c17><c1><ceos><brightgreen>replxx<rst>[|]> "
+				"<c12>abcde<rst><ceos><c17><c1><ceos><brightgreen>replxx<rst>[/]> "
+				"<c12>abcde<rst><ceos><c17><c12>abcdef<rst><ceos><c18><c1><ceos>3\r\n"
+				"<brightgreen>replxx<rst>[-]> "
+				"<c12>abcdef<rst><ceos><c18><c1><ceos><brightgreen>replxx<rst>[-]> "
+				"<c12>abcdef<rst><ceos><c18><c1><ceos><brightgreen>replxx<rst>[\\]> "
+				"<c12>abcdef<rst><ceos><c18><c12>abcdefg<rst><ceos><c19><c1><ceos><brightgreen>replxx<rst>[|]> "
+				"<c12>abcdefg<rst><ceos><c19><bell><c12>abcdefg<rst><ceos><c19>\r\n"
+				"abcdefg\r\n"
+			],
+			command = [ ReplxxTests._cxxSample_, "m", "p" ],
+			pause = 0.5
+		)
+		self_.check_scenario(
+			[ "a", "b", "c", "d", "e", "f", "g<tab><cr><c-d>" ], [
+				"<c1><ceos>0\r\n"
+				"<brightgreen>replxx<rst>[-]> "
+				"<c12><ceos><c12><c1><ceos><brightgreen>replxx<rst>[-]> "
+				"<c12><ceos><c13><c12><yellow>1<rst><ceos><c13><c12><yellow>1<rst>a<rst><ceos><c14><c1><ceos><brightgreen>replxx<rst>[\\]> "
+				"<c12><yellow>1<rst>a<rst><ceos><c14><c1><ceos><brightgreen>replxx<rst>[|]> "
+				"<c12><yellow>1<rst>a<rst><ceos><c14><c12><yellow>1<rst>ab<rst><ceos><c15><c1><ceos><brightgreen>replxx<rst>[/]> "
+				"<c12><yellow>1<rst>ab<rst><ceos><c15><c1><ceos>1\r\n"
+				"<brightgreen>replxx<rst>[-]> "
+				"<c12><yellow>1<rst>ab<rst><ceos><c15><c1><ceos><brightgreen>replxx<rst>[-]> "
+				"<c12><yellow>1<rst>ab<rst><ceos><c16><c12><yellow>1<rst>ab<yellow>2<rst><ceos><c16><c1><ceos><brightgreen>replxx<rst>[\\]> "
+				"<c12><yellow>1<rst>ab<yellow>2<rst><ceos><c16><c12><yellow>1<rst>ab<yellow>2<rst>c<rst><ceos><c17><c1><ceos><brightgreen>replxx<rst>[|]> "
+				"<c12><yellow>1<rst>ab<yellow>2<rst>c<rst><ceos><c17><c1><ceos><brightgreen>replxx<rst>[/]> "
+				"<c12><yellow>1<rst>ab<yellow>2<rst>c<rst><ceos><c17><c12><yellow>1<rst>ab<yellow>2<rst>cd<rst><ceos><c18><c1><ceos>2\r\n"
+				"<brightgreen>replxx<rst>[-]> "
+				"<c12><yellow>1<rst>ab<yellow>2<rst>cd<rst><ceos><c18><c1><ceos><brightgreen>replxx<rst>[-]> "
+				"<c12><yellow>1<rst>ab<yellow>2<rst>cd<rst><ceos><c19><c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst><ceos><c19><c1><ceos><brightgreen>replxx<rst>[\\]> "
+				"<c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst><ceos><c19><c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>e<rst><ceos><c20><c1><ceos><brightgreen>replxx<rst>[|]> "
+				"<c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>e<rst><ceos><c20><c1><ceos><brightgreen>replxx<rst>[/]> "
+				"<c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>e<rst><ceos><c20><c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<rst><ceos><c21><c1><ceos>3\r\n"
+				"<brightgreen>replxx<rst>[-]> "
+				"<c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<rst><ceos><c21><c1><ceos><brightgreen>replxx<rst>[-]> "
+				"<c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<rst><ceos><c22><c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<yellow>4<rst><ceos><c22><c1><ceos><brightgreen>replxx<rst>[\\]> "
+				"<c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<yellow>4<rst><ceos><c22><c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<yellow>4<rst>g<rst><ceos><c23><c1><ceos><brightgreen>replxx<rst>[|]> "
+				"<c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<yellow>4<rst>g<rst><ceos><c23><bell><c12><yellow>1<rst>ab<yellow>2<rst>cd<yellow>3<rst>ef<yellow>4<rst>g<rst><ceos><c23>\r\n"
+				"1ab2cd3ef4g\r\n"
+			],
+			command = [ ReplxxTests._cxxSample_, "m", "p", "k123456" ],
+			pause = 0.5
 		)
 
 def parseArgs( self, func, argv ):
