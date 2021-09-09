@@ -1674,6 +1674,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::commit_line( char32_t ) {
 
 int Replxx::ReplxxImpl::prev_newline_position( int pos_ ) {
 	assert( ( pos_ >= 0 ) && ( pos_ <= _data.length() ) );
+	if (pos_ == _data.length())
+		--pos_;
 	while ( pos_ >= 0 ) {
 		if ( _data[pos_] == '\n' ) {
 			break;
