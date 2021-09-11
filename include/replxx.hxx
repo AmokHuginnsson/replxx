@@ -97,7 +97,8 @@ public:
 		const char * custom_code = nullptr;
 		template <typename T> Color(T value_) : value(Colors(value_)) {}
 		Color(const char * custom_code_) : value(CUSTOM), custom_code(custom_code_) {}
-		bool operator==(const Color & rhs) const = default;
+		bool operator==(const Color & rhs) const { return value == rhs.value && custom_code == rhs.custom_code; }
+		bool operator!=(const Color & rhs) const { return !(*this == rhs); }
 	};
 	struct KEY {
 		static char32_t const BASE         = 0x0010ffff + 1;
