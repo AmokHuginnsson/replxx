@@ -618,9 +618,9 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 			std::lock_guard<std::mutex> l( _mutex );
 			_asyncPrompt.clear();
 			_updatePrompt = false;
+			_prompt.set_text( UnicodeString( prompt ) );
+			_currentThread = std::this_thread::get_id();
 		}
-		_prompt.set_text( UnicodeString( prompt ) );
-		_currentThread = std::this_thread::get_id();
 		clear();
 		if (!_preloadedBuffer.empty()) {
 			preload_puffer(_preloadedBuffer.c_str());
@@ -638,6 +638,7 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 }
 
 char const* Replxx::ReplxxImpl::finalize_input( char const* retVal_ ) {
+	std::lock_guard<std::mutex> l( _mutex );
 	_currentThread = std::thread::id();
 	_terminal.disable_raw_mode();
 	return ( retVal_ );
@@ -668,10 +669,11 @@ void Replxx::ReplxxImpl::disable_bracketed_paste( void ) {
 }
 
 void Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
+	std::unique_lock<std::mutex> l( _mutex );
 	if ( ( _currentThread == std::thread::id() ) || ( _currentThread == std::this_thread::get_id() ) ) {
+		l.unlock();
 		_terminal.write8( str_, size_ );
 	} else {
-		std::lock_guard<std::mutex> l( _mutex );
 		_messages.emplace_back( str_, size_ );
 		_terminal.notify_event( Terminal::EVENT_TYPE::MESSAGE );
 	}
@@ -679,8 +681,8 @@ void Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
 }
 
 void Replxx::ReplxxImpl::set_prompt( std::string prompt ) {
+	std::lock_guard<std::mutex> l( _mutex );
 	if ( ( _currentThread != std::thread::id() ) && ( _currentThread != std::this_thread::get_id() ) ) {
-		std::lock_guard<std::mutex> l( _mutex );
 		_asyncPrompt = std::move( prompt );
 		_updatePrompt = true;
 		_terminal.notify_event( Terminal::EVENT_TYPE::MESSAGE );
