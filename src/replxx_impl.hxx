@@ -31,6 +31,7 @@
 #ifndef HAVE_REPLXX_REPLXX_IMPL_HXX_INCLUDED
 #define HAVE_REPLXX_REPLXX_IMPL_HXX_INCLUDED 1
 
+#include <atomic>
 #include <vector>
 #include <deque>
 #include <memory>
@@ -130,7 +131,7 @@ private:
 	named_actions_t _namedActions;
 	key_press_handlers_t _keyPressHandlers;
 	Terminal _terminal;
-	std::thread::id _currentThread;
+	std::atomic<std::thread::id> _currentThread;
 	Prompt _prompt;
 	Replxx::modify_callback_t _modifyCallback;
 	Replxx::completion_callback_t _completionCallback;

@@ -577,7 +577,7 @@ char const* Replxx::ReplxxImpl::read_from_stdin( void ) {
 void Replxx::ReplxxImpl::emulate_key_press( char32_t keyCode_ ) {
 	std::lock_guard<std::mutex> l( _mutex );
 	_keyPresses.push_back( keyCode_ );
-	if ( ( _currentThread != std::thread::id() ) && ( _currentThread != std::this_thread::get_id() ) ) {
+	if ( _currentThread != std::this_thread::get_id() ) {
 		_terminal.notify_event( Terminal::EVENT_TYPE::KEY_PRESS );
 	}
 }
@@ -602,7 +602,13 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 			return nullptr;
 		}
 		_prompt.set_text( UnicodeString( prompt ) );
-		_currentThread = std::this_thread::get_id();
+
+		assert(((_currentThread.load(memory_order_relaxed) == std::thread::id{})
+		       || _currentThread.load(memory_order_relaxed) == std::this_thread::get_id())
+		       && "Replxx::input must always be called from the same thread!");
+
+		_currentThread.store(std::this_thread::get_id(), std::memory_order_release);
+
 		clear();
 		if (!_preloadedBuffer.empty()) {
 			preload_puffer(_preloadedBuffer.c_str());
@@ -620,7 +626,6 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 }
 
 char const* Replxx::ReplxxImpl::finalize_input( char const* retVal_ ) {
-	_currentThread = std::thread::id();
 	_terminal.disable_raw_mode();
 	return ( retVal_ );
 }
@@ -650,7 +655,7 @@ void Replxx::ReplxxImpl::disable_bracketed_paste( void ) {
 }
 
 void Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
-	if ( ( _currentThread == std::thread::id() ) || ( _currentThread == std::this_thread::get_id() ) ) {
+	if ( _currentThread.load(memory_order_acquire) == std::this_thread::get_id() ) {
 		_terminal.write8( str_, size_ );
 	} else {
 		std::lock_guard<std::mutex> l( _mutex );
