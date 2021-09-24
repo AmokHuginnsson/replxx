@@ -312,6 +312,12 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 }
 
 Replxx::ReplxxImpl::~ReplxxImpl( void ) {
+	while ( ! _messages.empty() ) {
+		string const& message( _messages.front() );
+		_terminal.write8( message.data(), static_cast<int>( message.length() ) );
+		_messages.pop_front();
+	}
+
 	disable_bracketed_paste();
 }
 
