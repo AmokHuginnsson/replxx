@@ -78,6 +78,7 @@ public:
 Replxx::completions_t hook_completion(std::string const& context, int& contextLen, std::vector<std::string> const& user_data);
 Replxx::hints_t hook_hint(std::string const& context, int& contextLen, Replxx::Color& color, std::vector<std::string> const& user_data);
 void hook_color(std::string const& str, Replxx::colors_t& colors, std::vector<std::pair<std::string, Replxx::Color>> const& user_data);
+void hook_modify( std::string& line, int& cursorPosition, Replxx* );
 
 Replxx::completions_t hook_completion(std::string const& context, int& contextLen, std::vector<std::string> const& examples) {
 	Replxx::completions_t completions;
@@ -157,6 +158,12 @@ void hook_color(std::string const& context, Replxx::colors_t& colors, std::vecto
 			str = match.suffix();
 		}
 	}
+}
+
+void hook_modify( std::string& currentInput_, int&, Replxx* rx ) {
+	char prompt[64];
+	snprintf( prompt, 64, "\x1b[1;32mreplxx\x1b[0m[%lu]> ", currentInput_.length() );
+	rx->set_prompt( prompt );
 }
 
 Replxx::ACTION_RESULT message( Replxx& replxx, std::string s, char32_t ) {
@@ -239,6 +246,7 @@ int main( int argc_, char** argv_ ) {
 
 	bool tickMessages( false );
 	bool promptFan( false );
+	bool promptInCallback( false );
 	std::string keys;
 	while ( argc_ > 1 ) {
 		-- argc_;
@@ -246,6 +254,7 @@ int main( int argc_, char** argv_ ) {
 		switch ( (*argv_)[0] ) {
 			case ( 'm' ): tickMessages = true; break;
 			case ( 'p' ): promptFan = true; break;
+			case ( 'P' ): promptInCallback = true; break;
 			case ( 'k' ): keys = (*argv_) + 1; break;
 		}
 	}
@@ -275,6 +284,9 @@ int main( int argc_, char** argv_ ) {
 	rx.set_completion_callback( std::bind( &hook_completion, _1, _2, cref( examples ) ) );
 	rx.set_highlighter_callback( std::bind( &hook_color, _1, _2, cref( regex_color ) ) );
 	rx.set_hint_callback( std::bind( &hook_hint, _1, _2, _3, cref( examples ) ) );
+	if ( promptInCallback ) {
+		rx.set_modify_callback( std::bind( &hook_modify, _1, _2, &rx ) );
+	}
 
 	// other api calls
 	rx.set_word_break_characters( " \n\t.,-%!;:=*~^'\"/?<>|[](){}" );
@@ -484,6 +496,9 @@ int main( int argc_, char** argv_ ) {
 
 	// save the history
 	rx.history_sync( history_file_path );
+	if ( promptInCallback ) {
+		std::cout << "\n" << prompt;
+	}
 
 	std::cout << "\nExiting Replxx\n";
 

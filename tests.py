@@ -2509,6 +2509,64 @@ class ReplxxTests( unittest.TestCase ):
 			command = [ ReplxxTests._cxxSample_, "m", "p", "k123456" ],
 			pause = 0.487
 		)
+	def test_prompt_from_callback( self_ ):
+		self_.check_scenario(
+			"<up>ri<tab>b<tab><cr><c-d>",
+			"<c9>some text color_b<rst><ceos>\r\n"
+			"                  <gray>color_black<rst>\r\n"
+			"                  <gray>color_brown<rst>\r\n"
+			"                  "
+			"<gray>color_blue<rst><u3><c26><c1><ceos><brightgreen>replxx<rst>[17]> "
+			"<c13>some text color_b<rst><ceos>\r\n"
+			"                      <gray>color_black<rst>\r\n"
+			"                      <gray>color_brown<rst>\r\n"
+			"                      "
+			"<gray>color_blue<rst><u3><c30><c1><ceos><brightgreen>replxx<rst>[18]> "
+			"<c13>some text color_b<rst><ceos>\r\n"
+			"                      <gray>color_black<rst>\r\n"
+			"                      <gray>color_brown<rst>\r\n"
+			"                      "
+			"<gray>color_blue<rst><u3><c31><c1><ceos><brightgreen>replxx<rst>[18]> "
+			"<c13>some text color_br<rst><ceos>\r\n"
+			"                      <gray>color_brown<rst>\r\n"
+			"                      <gray>color_brightred<rst>\r\n"
+			"                      "
+			"<gray>color_brightgreen<rst><u3><c31><c1><ceos><brightgreen>replxx<rst>[19]> "
+			"<c13>some text color_br<rst><ceos>\r\n"
+			"                      <gray>color_brown<rst>\r\n"
+			"                      <gray>color_brightred<rst>\r\n"
+			"                      "
+			"<gray>color_brightgreen<rst><u3><c32><c1><ceos><brightgreen>replxx<rst>[19]> "
+			"<c13>some text color_bri<rst><ceos>\r\n"
+			"                      <gray>color_brightred<rst>\r\n"
+			"                      <gray>color_brightgreen<rst>\r\n"
+			"                      <gray>color_brightblue<rst><u3><c32><c13>some text "
+			"color_bright<rst><ceos>\r\n"
+			"                      <gray>color_brightred<rst>\r\n"
+			"                      <gray>color_brightgreen<rst>\r\n"
+			"                      "
+			"<gray>color_brightblue<rst><u3><c35><c1><ceos><brightgreen>replxx<rst>[22]> "
+			"<c13>some text color_bright<rst><ceos>\r\n"
+			"                      <gray>color_brightred<rst>\r\n"
+			"                      <gray>color_brightgreen<rst>\r\n"
+			"                      "
+			"<gray>color_brightblue<rst><u3><c35><c1><ceos><brightgreen>replxx<rst>[23]> "
+			"<c13>some text color_bright<rst><ceos>\r\n"
+			"                      <gray>color_brightred<rst>\r\n"
+			"                      <gray>color_brightgreen<rst>\r\n"
+			"                      "
+			"<gray>color_brightblue<rst><u3><c36><c1><ceos><brightgreen>replxx<rst>[23]> "
+			"<c13>some text color_brightb<rst><ceos><green>lue<rst><c36><c13>some text "
+			"<brightblue>color_brightblue<rst><ceos><c39><c1><ceos><brightgreen>replxx<rst>[26]> "
+			"<c13>some text <brightblue>color_brightblue<rst><ceos><c39><c13>some text "
+			"<brightblue>color_brightblue<rst><ceos><c39><c1><ceos><brightgreen>replxx<rst>[26]> \r\n"
+			"some text color_brightblue\r\n"
+			"<brightgreen>replxx<rst>> "
+			"<c9><rst><ceos><c9><c1><ceos><brightgreen>replxx<rst>[0]> "
+			"<c12><rst><ceos><c12>\r\n",
+			"some text color_b\n",
+			command = [ ReplxxTests._cxxSample_, "P" ]
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity
