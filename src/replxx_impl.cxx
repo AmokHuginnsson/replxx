@@ -638,7 +638,14 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 }
 
 char const* Replxx::ReplxxImpl::finalize_input( char const* retVal_ ) {
-	std::lock_guard<std::mutex> l( _mutex );
+	std::unique_lock<std::mutex> l( _mutex );
+	while ( ! _messages.empty() ) {
+		string const& message( _messages.front() );
+		l.unlock();
+		_terminal.write8( message.data(), static_cast<int>( message.length() ) );
+		l.lock();
+		_messages.pop_front();
+	}
 	_currentThread = std::thread::id();
 	_terminal.disable_raw_mode();
 	return ( retVal_ );
