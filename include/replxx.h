@@ -81,7 +81,6 @@ typedef enum {
 	REPLXX_COLOR_BRIGHTMAGENTA = 13,
 	REPLXX_COLOR_BRIGHTCYAN    = 14,
 	REPLXX_COLOR_WHITE         = 15,
-	REPLXX_COLOR_NORMAL        = REPLXX_COLOR_LIGHTGRAY,
 	REPLXX_COLOR_DEFAULT       = -1,
 	REPLXX_COLOR_ERROR         = -2
 } ReplxxColor;
@@ -574,6 +573,11 @@ void replxx_debug_dump_print_codes(void);
 REPLXX_IMPEXP int replxx_install_window_change_handler( Replxx* );
 REPLXX_IMPEXP void replxx_enable_bracketed_paste( Replxx* );
 REPLXX_IMPEXP void replxx_disable_bracketed_paste( Replxx* );
+
+ReplxxColor replxx_color_combine( ReplxxColor, ReplxxColor );
+ReplxxColor replxx_color_bg( ReplxxColor );
+ReplxxColor replxx_color_grayscale( int );
+ReplxxColor replxx_color_rgb666( int, int, int );
 
 #ifdef __cplusplus
 }

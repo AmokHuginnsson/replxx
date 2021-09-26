@@ -1,6 +1,7 @@
-#include <regex>
-#include <string>
 #include <vector>
+#include <unordered_map>
+#include <string>
+#include <regex>
 #include <cerrno>
 #include <cctype>
 #include <cstdlib>
@@ -15,6 +16,7 @@
 #include "util.h"
 
 using Replxx = replxx::Replxx;
+using namespace replxx::color;
 
 class Tick {
 	typedef std::vector<char32_t> keys_t;
@@ -77,7 +79,9 @@ public:
 // prototypes
 Replxx::completions_t hook_completion(std::string const& context, int& contextLen, std::vector<std::string> const& user_data);
 Replxx::hints_t hook_hint(std::string const& context, int& contextLen, Replxx::Color& color, std::vector<std::string> const& user_data);
-void hook_color(std::string const& str, Replxx::colors_t& colors, std::vector<std::pair<std::string, Replxx::Color>> const& user_data);
+typedef std::vector<std::pair<std::string, Replxx::Color>> syntax_highlight_t;
+typedef std::unordered_map<std::string, Replxx::Color> keyword_highlight_t;
+void hook_color( std::string const& str, Replxx::colors_t& colors, syntax_highlight_t const&, keyword_highlight_t const& );
 void hook_modify( std::string& line, int& cursorPosition, Replxx* );
 
 Replxx::completions_t hook_completion(std::string const& context, int& contextLen, std::vector<std::string> const& examples) {
@@ -137,7 +141,11 @@ Replxx::hints_t hook_hint(std::string const& context, int& contextLen, Replxx::C
 	return hints;
 }
 
-void hook_color(std::string const& context, Replxx::colors_t& colors, std::vector<std::pair<std::string, Replxx::Color>> const& regex_color) {
+inline bool is_kw( char ch ) {
+	return isalnum( ch ) || ( ch == '_' );
+}
+
+void hook_color( std::string const& context, Replxx::colors_t& colors, syntax_highlight_t const& regex_color, keyword_highlight_t const& word_color ) {
 	// highlight matching regex sequences
 	for (auto const& e : regex_color) {
 		size_t pos {0};
@@ -157,6 +165,42 @@ void hook_color(std::string const& context, Replxx::colors_t& colors, std::vecto
 			pos += len;
 			str = match.suffix();
 		}
+	}
+	bool inWord( false );
+	int wordStart( 0 );
+	int wordEnd( 0 );
+	int colorOffset( 0 );
+	auto dohl = [&](int i) {
+		inWord = false;
+		std::string intermission( context.substr( wordEnd, wordStart - wordEnd ) );
+		colorOffset += utf8str_codepoint_len( intermission.c_str(), intermission.length() );
+		int wordLen( i - wordStart );
+		std::string keyword( context.substr( wordStart, wordLen ) );
+		keyword_highlight_t::const_iterator it( word_color.find( keyword ) );
+		if ( it != word_color.end() ) {
+			for ( int k( 0 ); k < wordLen; ++ k ) {
+				colors.at( colorOffset + k ) = it->second;
+			}
+		}
+		colorOffset += wordLen;
+		wordEnd = i;
+	};
+	for ( int i( 0 ); i < context.length(); ++ i ) {
+		if ( !inWord ) {
+			if ( is_kw( context[i] ) ) {
+				inWord = true;
+				wordStart = i;
+			}
+		} else if ( inWord && !is_kw( context[i] ) ) {
+			dohl(i);
+		}
+		if ( ( context[i] != '_' ) && ispunct( context[i] ) ) {
+			wordStart = i;
+			dohl( i + 1 );
+		}
+	}
+	if ( inWord ) {
+		dohl(context.length());
 	}
 }
 
@@ -181,31 +225,31 @@ int main( int argc_, char** argv_ ) {
 		"color_black", "color_red", "color_green", "color_brown", "color_blue",
 		"color_magenta", "color_cyan", "color_lightgray", "color_gray",
 		"color_brightred", "color_brightgreen", "color_yellow", "color_brightblue",
-		"color_brightmagenta", "color_brightcyan", "color_white", "color_normal",
+		"color_brightmagenta", "color_brightcyan", "color_white",
 	};
 
 	// highlight specific words
 	// a regex string, and a color
 	// the order matters, the last match will take precedence
 	using cl = Replxx::Color;
-	std::vector<std::pair<std::string, cl>> regex_color {
+	keyword_highlight_t word_color {
 		// single chars
-		{"\\`", cl::BRIGHTCYAN},
-		{"\\'", cl::BRIGHTBLUE},
-		{"\\\"", cl::BRIGHTBLUE},
-		{"\\-", cl::BRIGHTBLUE},
-		{"\\+", cl::BRIGHTBLUE},
-		{"\\=", cl::BRIGHTBLUE},
-		{"\\/", cl::BRIGHTBLUE},
-		{"\\*", cl::BRIGHTBLUE},
-		{"\\^", cl::BRIGHTBLUE},
-		{"\\.", cl::BRIGHTMAGENTA},
-		{"\\(", cl::BRIGHTMAGENTA},
-		{"\\)", cl::BRIGHTMAGENTA},
-		{"\\[", cl::BRIGHTMAGENTA},
-		{"\\]", cl::BRIGHTMAGENTA},
-		{"\\{", cl::BRIGHTMAGENTA},
-		{"\\}", cl::BRIGHTMAGENTA},
+		{"`", cl::BRIGHTCYAN},
+		{"'", cl::BRIGHTBLUE},
+		{"\"", cl::BRIGHTBLUE},
+		{"-", cl::BRIGHTBLUE},
+		{"+", cl::BRIGHTBLUE},
+		{"=", cl::BRIGHTBLUE},
+		{"/", cl::BRIGHTBLUE},
+		{"*", cl::BRIGHTBLUE},
+		{"^", cl::BRIGHTBLUE},
+		{".", cl::BRIGHTMAGENTA},
+		{"(", cl::BRIGHTMAGENTA},
+		{")", cl::BRIGHTMAGENTA},
+		{"[", cl::BRIGHTMAGENTA},
+		{"]", cl::BRIGHTMAGENTA},
+		{"{", cl::BRIGHTMAGENTA},
+		{"}", cl::BRIGHTMAGENTA},
 
 		// color keywords
 		{"color_black", cl::BLACK},
@@ -224,16 +268,16 @@ int main( int argc_, char** argv_ ) {
 		{"color_brightmagenta", cl::BRIGHTMAGENTA},
 		{"color_brightcyan", cl::BRIGHTCYAN},
 		{"color_white", cl::WHITE},
-		{"color_normal", cl::NORMAL},
 
 		// commands
-		{"\\.help", cl::BRIGHTMAGENTA},
-		{"\\.history", cl::BRIGHTMAGENTA},
-		{"\\.quit", cl::BRIGHTMAGENTA},
-		{"\\.exit", cl::BRIGHTMAGENTA},
-		{"\\.clear", cl::BRIGHTMAGENTA},
-		{"\\.prompt", cl::BRIGHTMAGENTA},
-
+		{"help", cl::BRIGHTMAGENTA},
+		{"history", cl::BRIGHTMAGENTA},
+		{"quit", cl::BRIGHTMAGENTA},
+		{"exit", cl::BRIGHTMAGENTA},
+		{"clear", cl::BRIGHTMAGENTA},
+		{"prompt", cl::BRIGHTMAGENTA},
+	};
+	syntax_highlight_t regex_color {
 		// numbers
 		{"[\\-|+]{0,1}[0-9]+", cl::YELLOW}, // integers
 		{"[\\-|+]{0,1}[0-9]*\\.[0-9]+", cl::YELLOW}, // decimals
@@ -243,6 +287,49 @@ int main( int argc_, char** argv_ ) {
 		{"\".*?\"", cl::BRIGHTGREEN}, // double quotes
 		{"\'.*?\'", cl::BRIGHTGREEN}, // single quotes
 	};
+	static int const MAX_LABEL_NAME( 32 );
+	char label[MAX_LABEL_NAME];
+	for ( int r( 0 ); r < 6; ++ r ) {
+		for ( int g( 0 ); g < 6; ++ g ) {
+			for ( int b( 0 ); b < 6; ++ b ) {
+				snprintf( label, MAX_LABEL_NAME, "rgb%d%d%d", r, g, b );
+				word_color.insert( std::make_pair( label, replxx::color::rgb666( r, g, b ) ) );
+				for ( int br( 0 ); br < 6; ++ br ) {
+					for ( int bg( 0 ); bg < 6; ++ bg ) {
+						for ( int bb( 0 ); bb < 6; ++ bb ) {
+							snprintf( label, MAX_LABEL_NAME, "fg%d%d%dbg%d%d%d", r, g, b, br, bg, bb );
+							word_color.insert(
+								std::make_pair(
+									label,
+									rgb666( r, g, b ) | replxx::color::bg( rgb666( br, bg, bb ) )
+								)
+							);
+						}
+					}
+				}
+			}
+		}
+	}
+	for ( int gs( 0 ); gs < 24; ++ gs ) {
+		snprintf( label, MAX_LABEL_NAME, "gs%d", gs );
+		word_color.insert( std::make_pair( label, grayscale( gs ) ) );
+		for ( int bgs( 0 ); bgs < 24; ++ bgs ) {
+			snprintf( label, MAX_LABEL_NAME, "gs%dgs%d", gs, bgs );
+			word_color.insert( std::make_pair( label, grayscale( gs ) | bg( grayscale( bgs ) ) ) );
+		}
+	}
+	Replxx::Color colorCodes[] = {
+		Replxx::Color::BLACK, Replxx::Color::RED, Replxx::Color::GREEN, Replxx::Color::BROWN, Replxx::Color::BLUE,
+		Replxx::Color::CYAN, Replxx::Color::MAGENTA, Replxx::Color::LIGHTGRAY, Replxx::Color::GRAY, Replxx::Color::BRIGHTRED,
+		Replxx::Color::BRIGHTGREEN, Replxx::Color::YELLOW, Replxx::Color::BRIGHTBLUE, Replxx::Color::BRIGHTCYAN,
+		Replxx::Color::BRIGHTMAGENTA, Replxx::Color::WHITE
+	};
+	for ( Replxx::Color bg : colorCodes ) {
+		for ( Replxx::Color fg : colorCodes ) {
+			snprintf( label, MAX_LABEL_NAME, "c_%d_%d", static_cast<int>( fg ), static_cast<int>( bg ) );
+			word_color.insert( std::make_pair( label, fg | replxx::color::bg( bg ) ) );
+		}
+	}
 
 	bool tickMessages( false );
 	bool promptFan( false );
@@ -282,7 +369,7 @@ int main( int argc_, char** argv_ ) {
 	// set the callbacks
 	using namespace std::placeholders;
 	rx.set_completion_callback( std::bind( &hook_completion, _1, _2, cref( examples ) ) );
-	rx.set_highlighter_callback( std::bind( &hook_color, _1, _2, cref( regex_color ) ) );
+	rx.set_highlighter_callback( std::bind( &hook_color, _1, _2, cref( regex_color ), cref( word_color ) ) );
 	rx.set_hint_callback( std::bind( &hook_hint, _1, _2, _3, cref( examples ) ) );
 	if ( promptInCallback ) {
 		rx.set_modify_callback( std::bind( &hook_modify, _1, _2, &rx ) );
@@ -496,7 +583,7 @@ int main( int argc_, char** argv_ ) {
 
 	// save the history
 	rx.history_sync( history_file_path );
-	if ( promptInCallback ) {
+	if ( promptInCallback || promptFan ) {
 		std::cout << "\n" << prompt;
 	}
 

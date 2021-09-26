@@ -293,6 +293,34 @@ void Replxx::write( char const* str, int length ) {
 void Replxx::set_prompt( std::string prompt ) {
 	return ( _impl->set_prompt( std::move( prompt ) ) );
 }
+
+namespace color {
+
+Replxx::Color operator | ( Replxx::Color color1_, Replxx::Color color2_ ) {
+	return static_cast<Replxx::Color>( static_cast<int unsigned>( color1_ ) | static_cast<int unsigned>( color2_ ) );
+}
+
+Replxx::Color bg( Replxx::Color color_ ) {
+	return static_cast<Replxx::Color>( static_cast<int unsigned>( color_ ) << 8 );
+}
+
+Replxx::Color grayscale( int level_ ) {
+	assert( ( level_ >= 0 ) && ( level_ < 24 ) );
+	return static_cast<Replxx::Color>( abs( level_ ) % 24 + static_cast<int unsigned>( color::GRAYSCALE ) );
+}
+
+Replxx::Color rgb666( int red_, int green_, int blue_ ) {
+	assert( ( red_ >= 0 ) && ( red_ < 6 ) && ( green_ >= 0 ) && ( green_ < 6 ) && ( blue_ >= 0 ) && ( blue_ < 6 ) );
+	return static_cast<Replxx::Color>(
+		( abs( red_ ) % 6 ) * 36
+		+ ( abs( green_ ) % 6 ) * 6
+		+ ( abs( blue_ ) % 6 )
+		+ static_cast<int unsigned>( color::RGB666 )
+	);
+}
+
+}
+
 }
 
 ::Replxx* replxx_init() {
@@ -660,5 +688,22 @@ void replxx_debug_dump_print_codes(void) {
 int replxx_install_window_change_handler( ::Replxx* replxx_ ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	return ( replxx->install_window_change_handler() );
+}
+
+using namespace replxx::color;
+ReplxxColor replxx_color_combine( ReplxxColor color1_, ReplxxColor color2_ ) {
+	return static_cast<ReplxxColor>( static_cast<replxx::Replxx::Color>( color1_ ) | static_cast<replxx::Replxx::Color>( color2_ ) );
+}
+
+ReplxxColor replxx_color_bg( ReplxxColor color_ ) {
+	return static_cast<ReplxxColor>( color::bg( static_cast<replxx::Replxx::Color>( color_ ) ) );
+}
+
+ReplxxColor replxx_color_grayscale( int level_ ) {
+	return static_cast<ReplxxColor>( color::grayscale( level_ ) );
+}
+
+ReplxxColor replxx_color_rgb666( int r_, int g_, int b_ ) {
+	return static_cast<ReplxxColor>( color::rgb666( r_, g_, b_ ) );
 }
 

@@ -116,7 +116,7 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 	return ( visibleCount );
 }
 
-char const* ansi_color( Replxx::Color color_ ) {
+char const* ansi_color_base( Replxx::Color color_ ) {
 	static char const reset[] = "\033[0m";
 	static char const black[] = "\033[0;22;30m";
 	static char const red[] = "\033[0;22;31m";
@@ -167,6 +167,36 @@ char const* ansi_color( Replxx::Color color_ ) {
 		case Replxx::Color::DEFAULT:       code = reset;         break;
 	}
 	return ( code );
+}
+
+char const* ansi_color( Replxx::Color color_ ) {
+	int data( static_cast<int>( color_ ) );
+	if ( data <= static_cast<int>( Replxx::Color::WHITE ) ) {
+		return ansi_color_base( color_ );
+	}
+	int unsigned code( static_cast<int unsigned>( data ) );
+	int unsigned fg( code & 0xff );
+	int unsigned bg( code >> 8 );
+	static int const MAX_COLOR_CODE_SIZE( 32 );
+	static char colorBuffer[MAX_COLOR_CODE_SIZE];
+	int pos( 0 );
+	if ( fg <= static_cast<int>( Replxx::Color::WHITE ) ) {
+		char const* fgAnsiCode( ansi_color( static_cast<Replxx::Color>( fg ) ) );
+		pos = std::min( static_cast<int>( strlen( fgAnsiCode ) ), MAX_COLOR_CODE_SIZE - 1 );
+		memcpy( colorBuffer, fgAnsiCode, pos );
+	} else {
+		pos = snprintf( colorBuffer, MAX_COLOR_CODE_SIZE, "\033[38;5;%dm", fg );
+	}
+	if ( bg <= static_cast<int>( Replxx::Color::WHITE ) ) {
+		if ( bg <= static_cast<int>( Replxx::Color::LIGHTGRAY ) ) {
+			snprintf( colorBuffer + pos, MAX_COLOR_CODE_SIZE - pos, "\033[4%dm", bg );
+		} else {
+			snprintf( colorBuffer + pos, MAX_COLOR_CODE_SIZE - pos, "\033[10%dm", bg - static_cast<int>( Replxx::Color::LIGHTGRAY ) );
+		}
+	} else {
+		snprintf( colorBuffer + pos, MAX_COLOR_CODE_SIZE - pos, "\033[48;5;%dm", bg );
+	}
+	return colorBuffer;
 }
 
 std::string now_ms_str( void ) {

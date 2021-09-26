@@ -70,7 +70,7 @@ namespace replxx {
 
 class REPLXX_IMPEXP Replxx {
 public:
-	enum class Color {
+	enum class Color : int {
 		BLACK         = 0,
 		RED           = 1,
 		GREEN         = 2,
@@ -87,7 +87,6 @@ public:
 		BRIGHTMAGENTA = 13,
 		BRIGHTCYAN    = 14,
 		WHITE         = 15,
-		NORMAL        = LIGHTGRAY,
 		DEFAULT       = -1,
 		ERROR         = -2
 	};
@@ -627,6 +626,15 @@ private:
 	Replxx( Replxx const& ) = delete;
 	Replxx& operator = ( Replxx const& ) = delete;
 };
+
+namespace color {
+
+Replxx::Color operator | ( Replxx::Color, Replxx::Color );
+Replxx::Color bg( Replxx::Color );
+Replxx::Color grayscale( int );
+Replxx::Color rgb666( int, int, int );
+
+}
 
 }
 
