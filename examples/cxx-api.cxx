@@ -57,7 +57,7 @@ public:
 			if ( _tick < static_cast<int>( _keys.size() ) ) {
 				_replxx.emulate_key_press( _keys[_tick] );
 			}
-			if ( ! _tickMessages && ! _promptFan && ( _tick >= _keys.size() ) ) {
+			if ( ! _tickMessages && ! _promptFan && ( _tick >= static_cast<int>( _keys.size() ) ) ) {
 				break;
 			}
 			if ( _promptFan ) {
@@ -185,7 +185,7 @@ void hook_color( std::string const& context, Replxx::colors_t& colors, syntax_hi
 		colorOffset += wordLen;
 		wordEnd = i;
 	};
-	for ( int i( 0 ); i < context.length(); ++ i ) {
+	for ( int i( 0 ); i < static_cast<int>( context.length() ); ++ i ) {
 		if ( !inWord ) {
 			if ( is_kw( context[i] ) ) {
 				inWord = true;

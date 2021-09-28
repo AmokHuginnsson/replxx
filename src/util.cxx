@@ -7,6 +7,8 @@
 #include "util.hxx"
 #include "terminal.hxx"
 
+#undef min
+
 namespace replxx {
 
 int mk_wcwidth( char32_t );
