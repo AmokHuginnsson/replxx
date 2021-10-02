@@ -627,12 +627,44 @@ private:
 	Replxx& operator = ( Replxx const& ) = delete;
 };
 
+/*! \brief Color definition related helper function.
+ *
+ * To be used to leverage 256 color terminal capabilities.
+ */
 namespace color {
 
-Replxx::Color operator | ( Replxx::Color, Replxx::Color );
-Replxx::Color bg( Replxx::Color );
-Replxx::Color grayscale( int );
-Replxx::Color rgb666( int, int, int );
+/*! \brief Combine two color definitions to get encompassing color definition.
+ *
+ * To be used only for combining foreground and background colors.
+ *
+ * \param color1 - first input color.
+ * \param color2 - second input color.
+ * \return A new color definition that represent combined input colors.
+ */
+Replxx::Color operator | ( Replxx::Color color1, Replxx::Color color2 );
+
+/*! \brief Transform foreground color definition into a background color definition.
+ *
+ * \param color - an input foreground color definition.
+ * \return A background color definition that is a transformed input \e color.
+ */
+Replxx::Color bg( Replxx::Color color );
+
+/*! \brief Create a new grayscale color of given brightness level.
+ *
+ * \param level - a brightness level for new color, must be between 0 (darkest) and 23 (brightest).
+ * \return A new grayscale color of a given brightest \e level.
+ */
+Replxx::Color grayscale( int level );
+
+/*! \brief Create a new color in 6×6×6 RGB color space from base component levels.
+ *
+ * \param red - a red (of RGB) component level, must be 0 and 5.
+ * \param green - a green (of RGB) component level, must be 0 and 5.
+ * \param blue - a blue (of RGB) component level, must be 0 and 5.
+ * \return A new color in 6×6×6 RGB color space.
+ */
+Replxx::Color rgb666( int red, int green, int blue );
 
 }
 

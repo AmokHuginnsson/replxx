@@ -574,10 +574,38 @@ REPLXX_IMPEXP int replxx_install_window_change_handler( Replxx* );
 REPLXX_IMPEXP void replxx_enable_bracketed_paste( Replxx* );
 REPLXX_IMPEXP void replxx_disable_bracketed_paste( Replxx* );
 
-ReplxxColor replxx_color_combine( ReplxxColor, ReplxxColor );
-ReplxxColor replxx_color_bg( ReplxxColor );
-ReplxxColor replxx_color_grayscale( int );
-ReplxxColor replxx_color_rgb666( int, int, int );
+/*! \brief Combine two color definitions to get encompassing color definition.
+ *
+ * To be used only for combining foreground and background colors.
+ *
+ * \param color1 - first input color.
+ * \param color2 - second input color.
+ * \return A new color definition that represent combined input colors.
+ */
+ReplxxColor replxx_color_combine( ReplxxColor color1, ReplxxColor color2 );
+
+/*! \brief Transform foreground color definition into a background color definition.
+ *
+ * \param color - an input foreground color definition.
+ * \return A background color definition that is a transformed input \e color.
+ */
+ReplxxColor replxx_color_bg( ReplxxColor color );
+
+/*! \brief Create a new grayscale color of given brightness level.
+ *
+ * \param level - a brightness level for new color, must be between 0 (darkest) and 23 (brightest).
+ * \return A new grayscale color of a given brightest \e level.
+ */
+ReplxxColor replxx_color_grayscale( int level );
+
+/*! \brief Create a new color in 6×6×6 RGB color space from base component levels.
+ *
+ * \param red - a red (of RGB) component level, must be 0 and 5.
+ * \param green - a green (of RGB) component level, must be 0 and 5.
+ * \param blue - a blue (of RGB) component level, must be 0 and 5.
+ * \return A new color in 6×6×6 RGB color space.
+ */
+ReplxxColor replxx_color_rgb666( int red, int green, int blue );
 
 #ifdef __cplusplus
 }
