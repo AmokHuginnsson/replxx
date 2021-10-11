@@ -127,11 +127,13 @@ void Terminal::write32( char32_t const* text32, int len32 ) {
 
 void Terminal::write8( char const* data_, int size_ ) {
 #ifdef _WIN32
+	bool temporarilyEnabled( false );
 	if ( ! _rawMode ) {
 		enable_out();
+		temporarilyEnabled = true;
 	}
 	int nWritten( win_write( _consoleOut, _autoEscape, data_, size_ ) );
-	if ( ! _rawMode ) {
+	if ( temporarilyEnabled ) {
 		disable_out();
 	}
 #else
@@ -181,6 +183,8 @@ inline int notty( void ) {
 void Terminal::enable_out( void ) {
 #ifdef _WIN32
 	SetConsoleOutputCP( 65001 );
+	_consoleOut = GetStdHandle( STD_OUTPUT_HANDLE );
+	GetConsoleMode( _consoleOut, &_origOutMode );
 	_autoEscape = SetConsoleMode( _consoleOut, _origOutMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING ) != 0;
 #endif
 }
@@ -210,9 +214,7 @@ int Terminal::enable_raw_mode( void ) {
 	}
 #ifdef _WIN32
 	_consoleIn = GetStdHandle( STD_INPUT_HANDLE );
-	_consoleOut = GetStdHandle( STD_OUTPUT_HANDLE );
 	GetConsoleMode( _consoleIn, &_origInMode );
-	GetConsoleMode( _consoleOut, &_origOutMode );
 #else
 
 	if ( ! tty::in ) {
@@ -462,6 +464,9 @@ char32_t Terminal::read_char( void ) {
 			highSurrogate = key - 0xD800;
 			continue;
 		} else {
+			if ( ( key == 13 ) && ( rec.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED ) ) {
+				key = 10;
+			}
 			// we got a real character, return it
 			if ( ( key >= 0xDC00 ) && ( key <= 0xDFFF ) ) {
 				key -= 0xDC00;
