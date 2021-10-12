@@ -301,7 +301,15 @@ Replxx::Color operator | ( Replxx::Color color1_, Replxx::Color color2_ ) {
 }
 
 Replxx::Color bg( Replxx::Color color_ ) {
-	return static_cast<Replxx::Color>( static_cast<int unsigned>( color_ ) << 8 );
+	return static_cast<Replxx::Color>( ( ( static_cast<int unsigned>( color_ ) & 0xFFu ) << 8 ) | color::BACKGROUND_COLOR_SET );
+}
+
+Replxx::Color bold( Replxx::Color color_ ) {
+	return static_cast<Replxx::Color>( static_cast<int unsigned>( color_ ) | color::BOLD );
+}
+
+Replxx::Color underline( Replxx::Color color_ ) {
+	return static_cast<Replxx::Color>( static_cast<int unsigned>( color_ ) | color::UNDERLINE );
 }
 
 Replxx::Color grayscale( int level_ ) {
@@ -697,6 +705,14 @@ ReplxxColor replxx_color_combine( ReplxxColor color1_, ReplxxColor color2_ ) {
 
 ReplxxColor replxx_color_bg( ReplxxColor color_ ) {
 	return static_cast<ReplxxColor>( color::bg( static_cast<replxx::Replxx::Color>( color_ ) ) );
+}
+
+ReplxxColor replxx_color_bold( ReplxxColor color_ ) {
+	return static_cast<ReplxxColor>( color::bold( static_cast<replxx::Replxx::Color>( color_ ) ) );
+}
+
+ReplxxColor replxx_color_underline( ReplxxColor color_ ) {
+	return static_cast<ReplxxColor>( color::underline( static_cast<replxx::Replxx::Color>( color_ ) ) );
 }
 
 ReplxxColor replxx_color_grayscale( int level_ ) {

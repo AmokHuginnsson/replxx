@@ -176,10 +176,27 @@ void hook_color( std::string const& context, Replxx::colors_t& colors, syntax_hi
 		colorOffset += utf8str_codepoint_len( intermission.c_str(), intermission.length() );
 		int wordLen( i - wordStart );
 		std::string keyword( context.substr( wordStart, wordLen ) );
+		bool bold( false );
+		if ( keyword.substr( 0, 5 ) == "bold_" ) {
+			keyword = keyword.substr( 5 );
+			bold = true;
+		}
+		bool underline( false );
+		if ( keyword.substr( 0, 10 ) == "underline_" ) {
+			keyword = keyword.substr( 10 );
+			underline = true;
+		}
 		keyword_highlight_t::const_iterator it( word_color.find( keyword ) );
 		if ( it != word_color.end() ) {
+			Replxx::Color color = it->second;
+			if ( bold ) {
+				color = replxx::color::bold( color );
+			}
+			if ( underline ) {
+				color = replxx::color::underline( color );
+			}
 			for ( int k( 0 ); k < wordLen; ++ k ) {
-				colors.at( colorOffset + k ) = it->second;
+				colors.at( colorOffset + k ) = color;
 			}
 		}
 		colorOffset += wordLen;

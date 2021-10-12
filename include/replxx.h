@@ -591,6 +591,20 @@ ReplxxColor replxx_color_combine( ReplxxColor color1, ReplxxColor color2 );
  */
 ReplxxColor replxx_color_bg( ReplxxColor color );
 
+/*! \brief Add `bold` attribute to color definition.
+ *
+ * \param color - an input color definition.
+ * \return A new color definition with bold attribute set.
+ */
+ReplxxColor replxx_color_bold( ReplxxColor color );
+
+/*! \brief Add `underline` attribute to color definition.
+ *
+ * \param color - an input color definition.
+ * \return A new color definition with underline attribute set.
+ */
+ReplxxColor replxx_color_underline( ReplxxColor color );
+
 /*! \brief Create a new grayscale color of given brightness level.
  *
  * \param level - a brightness level for new color, must be between 0 (darkest) and 23 (brightest).

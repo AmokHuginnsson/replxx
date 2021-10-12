@@ -6,8 +6,11 @@
 namespace replxx {
 
 namespace color {
-static int unsigned const RGB666 = 16;
-static int unsigned const GRAYSCALE = 232;
+static int unsigned const RGB666 = 16u;
+static int unsigned const GRAYSCALE = 232u;
+static int unsigned const BOLD = 1u << 16u;
+static int unsigned const UNDERLINE = 1u << 17u;
+static int unsigned const BACKGROUND_COLOR_SET = 1u << 18u;
 }
 
 inline bool is_control_code(char32_t testChar) {

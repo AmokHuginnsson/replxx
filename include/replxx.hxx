@@ -650,6 +650,20 @@ Replxx::Color operator | ( Replxx::Color color1, Replxx::Color color2 );
  */
 Replxx::Color bg( Replxx::Color color );
 
+/*! \brief Add `bold` attribute to color definition.
+ *
+ * \param color - an input color definition.
+ * \return A new color definition with bold attribute set.
+ */
+Replxx::Color bold( Replxx::Color color );
+
+/*! \brief Add `underline` attribute to color definition.
+ *
+ * \param color - an input color definition.
+ * \return A new color definition with underline attribute set.
+ */
+Replxx::Color underline( Replxx::Color color );
+
 /*! \brief Create a new grayscale color of given brightness level.
  *
  * \param level - a brightness level for new color, must be between 0 (darkest) and 23 (brightest).

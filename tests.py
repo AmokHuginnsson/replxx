@@ -149,6 +149,10 @@ termseq = {
 	"\x1b[0;1;35m": "<brightmagenta>",
 	"\x1b[0;1;36m": "<brightcyan>",
 	"\x1b[0;1;37m": "<white>",
+	"\x1b[0;22;31;1m": "<bold_red>",
+	"\x1b[0;22;31;4m": "<underline_red>",
+	"\x1b[0;1;31;1m": "<bold_brightred>",
+	"\x1b[0;22;31;4;1m": "<bold_underline_red>",
 	"\x1b[40m": "<bgblack>",
 	"\x1b[41m": "<bgred>",
 	"\x1b[42m": "<bggreen>",
@@ -2881,15 +2885,29 @@ class ReplxxTests( unittest.TestCase ):
 	def test_color_256( self_ ):
 		self_.check_scenario(
 			"<up><cr><c-d>",
-			"<c9>x <brown><bgcyan>c_3_6<rst> <color67><bgblack>rgb123<rst> "
-			"<color205><bgcolor78>fg513bg142<rst> <color253><bgblack>gs21<rst> "
-			"<color237><bgblack>gs5<rst> <color251><bgcolor237>gs19gs5<rst> "
+			"<c9>x <brown><bgcyan>c_3_6<rst> <color67>rgb123<rst> "
+			"<color205><bgcolor78>fg513bg142<rst> <color253>gs21<rst> "
+			"<color237>gs5<rst> <color251><bgcolor237>gs19gs5<rst> "
 			"x<rst><ceos><c53><c9>x <brown><bgcyan>c_3_6<rst> "
-			"<color67><bgblack>rgb123<rst> <color205><bgcolor78>fg513bg142<rst> "
-			"<color253><bgblack>gs21<rst> <color237><bgblack>gs5<rst> "
+			"<color67>rgb123<rst> <color205><bgcolor78>fg513bg142<rst> "
+			"<color253>gs21<rst> <color237>gs5<rst> "
 			"<color251><bgcolor237>gs19gs5<rst> x<rst><ceos><c53>\r\n"
 			"x c_3_6 rgb123 fg513bg142 gs21 gs5 gs19gs5 x\r\n",
 			"x c_3_6 rgb123 fg513bg142 gs21 gs5 gs19gs5 x\n"
+		)
+	def test_bold_and_underline_attributes( self_ ):
+		self_.check_scenario(
+			"<up><cr><c-d>",
+			"<c9><bold_brightred>bold_color_brightred<rst> "
+			"<brightred>color_brightred<rst> <bold_red>bold_color_red<rst> "
+			"<red>color_red<rst> <underline_red>underline_color_red<rst> "
+			"<bold_underline_red>bold_underline_color_red<rst><ceos><c35><u1><c9><bold_brightred>bold_color_brightred<rst> "
+			"<brightred>color_brightred<rst> <bold_red>bold_color_red<rst> "
+			"<red>color_red<rst> <underline_red>underline_color_red<rst> "
+			"<bold_underline_red>bold_underline_color_red<rst><ceos><c35>\r\n"
+			"bold_color_brightred color_brightred bold_color_red color_red "
+			"underline_color_red bold_underline_color_red\r\n",
+			"bold_color_brightred color_brightred bold_color_red color_red underline_color_red bold_underline_color_red\n"
 		)
 
 def parseArgs( self, func, argv ):
