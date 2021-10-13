@@ -36,6 +36,7 @@
 #include "replxx.hxx"
 
 using namespace std;
+using namespace replxx::color;
 
 namespace replxx {
 
@@ -756,8 +757,9 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 		_highlighterCallback( _utf8Buffer.get(), colors );
 	}
 	paren_info_t pi( matching_paren() );
+	Replxx::Color ERROR( Replxx::Color::RED | color::bg( Replxx::Color::BRIGHTRED ) );
 	if ( pi.index != -1 ) {
-		colors[pi.index] = pi.error ? Replxx::Color::ERROR : Replxx::Color::BRIGHTRED;
+		colors[pi.index] = pi.error ? ERROR : Replxx::Color::BRIGHTRED;
 	}
 	Replxx::Color c( Replxx::Color::DEFAULT );
 	for ( int i( 0 ); i < _data.length(); ++ i ) {

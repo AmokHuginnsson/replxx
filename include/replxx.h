@@ -81,8 +81,7 @@ typedef enum {
 	REPLXX_COLOR_BRIGHTMAGENTA = 13,
 	REPLXX_COLOR_BRIGHTCYAN    = 14,
 	REPLXX_COLOR_WHITE         = 15,
-	REPLXX_COLOR_DEFAULT       = -1,
-	REPLXX_COLOR_ERROR         = -2
+	REPLXX_COLOR_DEFAULT       = 1u << 16u
 } ReplxxColor;
 
 enum { REPLXX_KEY_BASE         = 0x0010ffff + 1 };

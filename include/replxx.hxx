@@ -87,8 +87,7 @@ public:
 		BRIGHTMAGENTA = 13,
 		BRIGHTCYAN    = 14,
 		WHITE         = 15,
-		DEFAULT       = -1,
-		ERROR         = -2
+		DEFAULT       = 1u << 16u
 	};
 	struct KEY {
 		static char32_t const BASE         = 0x0010ffff + 1;

@@ -119,8 +119,7 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 }
 
 char const* ansi_color( Replxx::Color color_ ) {
-	int data( static_cast<int>( color_ ) );
-	int unsigned code( static_cast<int unsigned>( data ) );
+	int unsigned code( static_cast<int unsigned>( color_ ) );
 	int unsigned fg( code & 0xFFu );
 	int unsigned bg( ( code >> 8 ) & 0xFFu );
 	char const* bold( ( code & color::BOLD ) != 0 ? ";1" : "" );
@@ -128,14 +127,11 @@ char const* ansi_color( Replxx::Color color_ ) {
 	static int const MAX_COLOR_CODE_SIZE( 32 );
 	static char colorBuffer[MAX_COLOR_CODE_SIZE];
 	int pos( 0 );
-	if ( data < static_cast<int>( Replxx::Color::BLACK ) ) {
-		static char const reset[] = "\033[0m";
-		static char const error[] = "\033[101;1;33m";
-		snprintf( colorBuffer, MAX_COLOR_CODE_SIZE, "%s",  data == static_cast<int>( Replxx::Color::ERROR ) ? error : reset );
-		return colorBuffer;
-	} else if ( fg <= static_cast<int>( Replxx::Color::LIGHTGRAY ) ) {
+	if ( ( code & static_cast<int unsigned>( Replxx::Color::DEFAULT ) ) != 0 ) {
+		pos = snprintf( colorBuffer, MAX_COLOR_CODE_SIZE, "\033[0%s%sm", underline, bold );
+	} else if ( fg <= static_cast<int unsigned>( Replxx::Color::LIGHTGRAY ) ) {
 		pos = snprintf( colorBuffer, MAX_COLOR_CODE_SIZE, "\033[0;22;3%d%s%sm", fg, underline, bold );
-	} else if ( fg <= static_cast<int>( Replxx::Color::WHITE ) ) {
+	} else if ( fg <= static_cast<int unsigned>( Replxx::Color::WHITE ) ) {
 #ifdef _WIN32
 		static bool const has256colorDefault( true );
 #else
@@ -144,18 +140,18 @@ char const* ansi_color( Replxx::Color color_ ) {
 		static char const* TERM( getenv( "TERM" ) );
 		static bool const has256color( TERM ? ( strstr( TERM, "256" ) != nullptr ) : has256colorDefault );
 		static char const* ansiEscapeCodeTemplate = has256color ? "\033[0;9%d%s%sm" : "\033[0;1;3%d%s%sm";
-		pos = snprintf( colorBuffer, MAX_COLOR_CODE_SIZE, ansiEscapeCodeTemplate, fg - 8, underline, bold );
+		pos = snprintf( colorBuffer, MAX_COLOR_CODE_SIZE, ansiEscapeCodeTemplate, fg - static_cast<int>( Replxx::Color::GRAY ), underline, bold );
 	} else {
-		pos = snprintf( colorBuffer, MAX_COLOR_CODE_SIZE, "\033[38;5;%d%s%sm", fg, underline, bold );
+		pos = snprintf( colorBuffer, MAX_COLOR_CODE_SIZE, "\033[0;38;5;%d%s%sm", fg, underline, bold );
 	}
 	if ( ( code & color::BACKGROUND_COLOR_SET ) == 0 ) {
 		return colorBuffer;
 	}
-	if ( bg <= static_cast<int>( Replxx::Color::WHITE ) ) {
-		if ( bg <= static_cast<int>( Replxx::Color::LIGHTGRAY ) ) {
+	if ( bg <= static_cast<int unsigned>( Replxx::Color::WHITE ) ) {
+		if ( bg <= static_cast<int unsigned>( Replxx::Color::LIGHTGRAY ) ) {
 			snprintf( colorBuffer + pos, MAX_COLOR_CODE_SIZE - pos, "\033[4%dm", bg );
 		} else {
-			snprintf( colorBuffer + pos, MAX_COLOR_CODE_SIZE - pos, "\033[10%dm", bg - static_cast<int>( Replxx::Color::LIGHTGRAY ) );
+			snprintf( colorBuffer + pos, MAX_COLOR_CODE_SIZE - pos, "\033[10%dm", bg - static_cast<int>( Replxx::Color::GRAY ) );
 		}
 	} else {
 		snprintf( colorBuffer + pos, MAX_COLOR_CODE_SIZE - pos, "\033[48;5;%dm", bg );

@@ -149,6 +149,9 @@ termseq = {
 	"\x1b[0;1;35m": "<brightmagenta>",
 	"\x1b[0;1;36m": "<brightcyan>",
 	"\x1b[0;1;37m": "<white>",
+	"\x1b[0;1m": "<bold>",
+	"\x1b[0;4m": "<underline>",
+	"\x1b[0;4;1m": "<bold_underline>",
 	"\x1b[0;22;31;1m": "<bold_red>",
 	"\x1b[0;22;31;4m": "<underline_red>",
 	"\x1b[0;1;31;1m": "<bold_brightred>",
@@ -170,7 +173,6 @@ termseq = {
 	"\x1b[106m": "<bgbrightcyan>",
 	"\x1b[107m": "<bgwhite>",
 	"\x1b[1;32m": "<brightgreen>",
-	"\x1b[101;1;33m": "<err>",
 	"\x07": "<bell>",
 	"\x1b[2~": "<ins-key>",
 	"\x1b[?2004h": "<paste-on>",
@@ -179,7 +181,7 @@ termseq = {
 colRe = re.compile( "\\x1b\\[(\\d+)G" )
 upRe = re.compile( "\\x1b\\[(\\d+)A" )
 downRe = re.compile( "\\x1b\\[(\\d+)B" )
-colorRe = re.compile( "\\x1b\\[38;5;(\\d+)m" )
+colorRe = re.compile( "\\x1b\\[0;38;5;(\\d+)m" )
 bgcolorRe = re.compile( "\\x1b\\[48;5;(\\d+)m" )
 
 def sym_to_raw( str_ ):
@@ -583,7 +585,7 @@ class ReplxxTests( unittest.TestCase ):
 	def test_paren_not_matched( self_ ):
 		self_.check_scenario(
 			"a(b[c)d<left><left><left><left><left><left><left><cr><c-d>",
-			"<c9>a<rst><ceos><c10><c9>a<brightmagenta>(<rst><ceos><c11><c9>a<brightmagenta>(<rst>b<rst><ceos><c12><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst><ceos><c13><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<rst><ceos><c14><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst><ceos><c15><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c16><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c15><c9>a<err>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c14><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c13><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c12><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c11><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<err>)<rst>d<rst><ceos><c10><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c9><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c16>\r\n"
+			"<c9>a<rst><ceos><c10><c9>a<brightmagenta>(<rst><ceos><c11><c9>a<brightmagenta>(<rst>b<rst><ceos><c12><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst><ceos><c13><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<rst><ceos><c14><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst><ceos><c15><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c16><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c15><c9>a<red><bgbrightred>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c14><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c13><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c12><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c11><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<red><bgbrightred>)<rst>d<rst><ceos><c10><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c9><c9>a<brightmagenta>(<rst>b<brightmagenta>[<rst>c<brightmagenta>)<rst>d<rst><ceos><c16>\r\n"
 			"a(b[c)d\r\n"
 		)
 	def test_tab_completion( self_ ):
@@ -2908,6 +2910,15 @@ class ReplxxTests( unittest.TestCase ):
 			"bold_color_brightred color_brightred bold_color_red color_red "
 			"underline_color_red bold_underline_color_red\r\n",
 			"bold_color_brightred color_brightred bold_color_red color_red underline_color_red bold_underline_color_red\n"
+		)
+		self_.check_scenario(
+			"<up><cr><c-d>",
+			"<c9>normal_text <bold>bold_text<rst> <underline>underline_text<rst> "
+			"<bold_underline>bold_underline_text<rst><ceos><c65><c9>normal_text "
+			"<bold>bold_text<rst> <underline>underline_text<rst> "
+			"<bold_underline>bold_underline_text<rst><ceos><c65>\r\n"
+			"normal_text bold_text underline_text bold_underline_text\r\n",
+			"normal_text bold_text underline_text bold_underline_text\n"
 		)
 
 def parseArgs( self, func, argv ):
