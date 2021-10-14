@@ -2251,6 +2251,24 @@ class ReplxxTests( unittest.TestCase ):
 			"x color_green zzz\r\n",
 			"color_red more textcolor_blue 123color_green zzz\n"
 		)
+		self_.check_scenario(
+			"<up><up><c-a><c-a><cr><c-d>",
+			"<c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><c20><u3><c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><u1><c20><c1><u2><c9><c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><c20>\r\n"
+			"first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code\r\n",
+			"first line of textsecond verse of a poemnext passage of a scripturelast line of a code\n"
+		)
 	def test_move_to_end_of_line_in_multiline( self_ ):
 		self_.check_scenario(
 			"<up><pgup>x <end>x<right><end>x<right><end>x<cr><c-d>",
@@ -2284,6 +2302,28 @@ class ReplxxTests( unittest.TestCase ):
 			"color_blue 123x\r\n"
 			"color_green zzzx\r\n",
 			"color_red more textcolor_blue 123color_green zzz\n"
+		)
+		self_.check_scenario(
+			"<up><pgup><down><c-e><c-e><cr><c-d>",
+			"<c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><c20><u3><c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><u3><c9><d1><c9><c23><u1><c9><ceos>first line of "
+			"text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><c20><u3><c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><c20>\r\n"
+			"first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code\r\n",
+			"first line of textsecond verse of a poemnext passage of a scripturelast line of a code\n"
 		)
 	def test_hints_in_multiline( self_ ):
 		self_.check_scenario(
@@ -2919,6 +2959,58 @@ class ReplxxTests( unittest.TestCase ):
 			"<bold_underline>bold_underline_text<rst><ceos><c65>\r\n"
 			"normal_text bold_text underline_text bold_underline_text\r\n",
 			"normal_text bold_text underline_text bold_underline_text\n"
+		)
+	def test_kill_to_begining_of_line_in_multiline( self_ ):
+		self_.check_scenario(
+			"<up><up><c-u><c-u><c-y><cr><c-d>",
+			"<c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><c20><u3><c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><u1><c20><u2><c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"cripture\r\n"
+			"last line of a code<rst><u1><c1><u2><c9><ceos>cripture\r\n"
+			"last line of a code<rst><u1><c9><c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><u1><c20><u2><c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><c20>\r\n"
+			"first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code\r\n",
+			"first line of textsecond verse of a poemnext passage of a scripturelast line of a code\n"
+		)
+	def test_kill_to_end_of_line_in_multiline( self_ ):
+		self_.check_scenario(
+			"<up><pgup><down><c-k><c-k><c-y><cr><c-d>",
+			"<c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><c20><u3><c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><u3><c9><d1><c9><u1><c9><ceos>first line of text\r\n"
+			"second v\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><u2><c9><u1><c9><ceos>first line of text\r\n"
+			"second v<rst><c9><u1><c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><c20><u3><c9><ceos>first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code<rst><c20>\r\n"
+			"first line of text\r\n"
+			"second verse of a poem\r\n"
+			"next passage of a scripture\r\n"
+			"last line of a code\r\n",
+			"first line of textsecond verse of a poemnext passage of a scripturelast line of a code\n"
 		)
 
 def parseArgs( self, func, argv ):

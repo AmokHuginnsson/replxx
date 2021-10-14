@@ -1423,23 +1423,22 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::new_line( char32_t ) {
 }
 
 // ctrl-A, HOME: move cursor to start of line
-Replxx::ACTION_RESULT Replxx::ReplxxImpl::go_to_begining_of_line( char32_t ) {
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::go_to_begining_of_line( char32_t char_ ) {
 	if ( _hasNewlines ) {
 		bool onNewline( ( _pos > 0 ) && ( _pos < _data.length() ) && ( _data[_pos] == '\n' ) );
 		int startPos( onNewline ? _pos - 1 : _pos );
-		_pos = prev_newline_position( startPos ) + 1;
+		int newPos( prev_newline_position( startPos ) + 1 );
+		_pos = ( newPos == _pos ) && ( char_ == Replxx::KEY::control( 'A' ) ) ? 0 : newPos;
 	} else {
 		_pos = 0;
 	}
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
 
-Replxx::ACTION_RESULT Replxx::ReplxxImpl::go_to_end_of_line( char32_t ) {
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::go_to_end_of_line( char32_t char_ ) {
 	if ( _hasNewlines ) {
-		_pos = next_newline_position( _pos );
-		if ( _pos < 0 ) {
-			_pos = _data.length();
-		}
+		int newPos( next_newline_position( _pos ) );
+		_pos = ( newPos < 0 ) || ( ( newPos == _pos ) && ( char_ == Replxx::KEY::control( 'E' ) ) ) ? _data.length() : newPos;
 	} else {
 		_pos = _data.length();
 	}
@@ -1545,19 +1544,37 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_to_whitespace_to_left( char32_t )
 
 // ctrl-K, kill from cursor to end of line
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_to_end_of_line( char32_t ) {
-	_killRing.kill( _data.get() + _pos, _data.length() - _pos, true );
-	_data.erase( _pos, _data.length() - _pos );
+	int to( _data.length() );
+	if ( _hasNewlines ) {
+		to = next_newline_position( _pos );
+		if ( ( to < 0 ) || ( to == _pos ) ) {
+			to = _data.length();
+		}
+	}
+
+	_killRing.kill( _data.get() + _pos, to - _pos, true );
+	_data.erase( _pos, to - _pos );
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
 
 // ctrl-U, kill all characters to the left of the cursor
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::kill_to_begining_of_line( char32_t ) {
-	if (_pos > 0) {
-		_killRing.kill( _data.get(), _pos, false );
-		_data.erase( 0, _pos );
-		_pos = 0;
-		refresh_line();
+	if (_pos <= 0) {
+		return ( Replxx::ACTION_RESULT::CONTINUE );
 	}
+	int newPos( 0 );
+	if ( _hasNewlines ) {
+		bool onNewline( ( _pos > 0 ) && ( _pos < _data.length() ) && ( _data[_pos] == '\n' ) );
+		int startPos( onNewline ? _pos - 1 : _pos );
+		newPos = prev_newline_position( startPos ) + 1;
+		if ( newPos == _pos ) {
+			newPos = 0;
+		}
+	}
+	_killRing.kill( _data.get() + newPos, _pos - newPos, false );
+	_data.erase( newPos, _pos - newPos );
+	_pos = newPos;
+	refresh_line();
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
 
