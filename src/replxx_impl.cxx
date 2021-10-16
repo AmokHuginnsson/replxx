@@ -725,7 +725,7 @@ void Replxx::ReplxxImpl::indent( void ) {
 	}
 }
 
-void Replxx::ReplxxImpl::render( char32_t ch, int& col, int indentation_, int screenColumns_ ) {
+void Replxx::ReplxxImpl::render( char32_t ch, int& col, int indentation_ ) {
 	int len( 0 );
 	if ( ch == Replxx::KEY::ESCAPE ) {
 		_display.push_back( '^' );
@@ -744,9 +744,6 @@ void Replxx::ReplxxImpl::render( char32_t ch, int& col, int indentation_, int sc
 		_hasNewlines = true;
 		indent();
 		col = indentation_;
-	} else if ( _indentMultiline && ( col >= screenColumns_ ) ) {
-		indent();
-		col = indentation_;
 	}
 	return;
 }
@@ -763,11 +760,10 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 	_hasNewlines = false;
 	_display.clear();
 	int indentation( _indentMultiline ? _prompt.indentation() : 0 );
-	int screenColumns( _prompt.screen_columns() );
 	int x( indentation );
 	if ( _noColor ) {
 		for ( char32_t ch : _data ) {
-			render( ch, x, indentation, screenColumns );
+			render( ch, x, indentation );
 		}
 		_displayInputLength = static_cast<int>( _display.size() );
 		_modifiedState = false;
@@ -790,7 +786,7 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 			c = colors[i];
 			set_color( c );
 		}
-		render( _data[i], x, indentation, screenColumns );
+		render( _data[i], x, indentation );
 	}
 	set_color( Replxx::Color::DEFAULT );
 	_displayInputLength = static_cast<int>( _display.size() );
@@ -952,6 +948,11 @@ Replxx::ReplxxImpl::paren_info_t Replxx::ReplxxImpl::matching_paren( void ) {
 	return ( paren_info_t{ highlightIdx, indicateError } );
 }
 
+int Replxx::ReplxxImpl::virtual_render( char32_t const* buffer_, int len_, int& xPos_, int& yPos_, Prompt const* prompt_ ) {
+	Prompt const& prompt( prompt_ ? *prompt_ : _prompt );
+	return ( replxx::virtual_render( buffer_, len_, xPos_, yPos_, prompt.screen_columns(), _indentMultiline ? prompt.indentation() : 0 ) );
+}
+
 /**
  * Refresh the user's input line: the prompt is already onscreen and is not
  * redrawn here screen position
@@ -970,12 +971,12 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	// calculate the desired position of the cursor
 	int xCursorPos( _prompt.indentation() );
 	int yCursorPos( 0 );
-	virtual_render( _data.get(), _pos, xCursorPos, yCursorPos, _prompt.screen_columns(), _indentMultiline ? _prompt.indentation() : 0 );
+	virtual_render( _data.get(), _pos, xCursorPos, yCursorPos );
 
 	// calculate the position of the end of the input line
 	int xEndOfInput( _prompt.indentation() );
 	int yEndOfInput( 0 );
-	virtual_render( _display.data(), static_cast<int>( _display.size() ), xEndOfInput, yEndOfInput, _prompt.screen_columns(), _indentMultiline ? _prompt.indentation() : 0 );
+	virtual_render( _display.data(), static_cast<int>( _display.size() ), xEndOfInput, yEndOfInput );
 
 	// position at the end of the prompt, clear to end of previous input
 	_terminal.set_cursor_visible( false );
@@ -1011,7 +1012,7 @@ void Replxx::ReplxxImpl::move_cursor( void ) {
 	// calculate the desired position of the cursor
 	int xCursorPos( _prompt.indentation() );
 	int yCursorPos( 0 );
-	virtual_render( _data.get(), _pos, xCursorPos, yCursorPos, _prompt.screen_columns(), _indentMultiline ? _prompt.indentation() : 0 );
+	virtual_render( _data.get(), _pos, xCursorPos, yCursorPos );
 	// position the cursor
 	_terminal.jump_cursor( xCursorPos, -( _prompt._cursorRowOffset - _prompt._extraLines - yCursorPos ) );
 	_prompt._cursorRowOffset = _prompt._extraLines + yCursorPos;
@@ -1422,8 +1423,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 	int indentation( _prompt.indentation() );
 	int xCursorPos( indentation );
 	int yCursorPos( 0 );
-	int screenColumns( _prompt.screen_columns() );
-	virtual_render( _data.get(), _data.length(), xCursorPos, yCursorPos, screenColumns, _indentMultiline ? _prompt.indentation() : 0 );
+	virtual_render( _data.get(), _data.length(), xCursorPos, yCursorPos );
 	if (
 		( _pos == _data.length() )
 		&& ! _modifiedState
@@ -1432,7 +1432,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 	) {
 		/* Avoid a full assign of the line in the
 		 * trivial case. */
-		render( c, xCursorPos, indentation, screenColumns );
+		render( c, xCursorPos, indentation );
 		_displayInputLength = static_cast<int>( _display.size() );
 		_terminal.write32( reinterpret_cast<char32_t*>( &c ), 1 );
 	} else {
@@ -2442,17 +2442,17 @@ void Replxx::ReplxxImpl::dynamic_refresh(Prompt& oldPrompt, Prompt& newPrompt, c
 	// calculate the position of the end of the prompt
 	int xEndOfPrompt( 0 );
 	int yEndOfPrompt( 0 );
-	virtual_render( newPrompt._text.get(), newPrompt._text.length(), xEndOfPrompt, yEndOfPrompt, newPrompt.screen_columns(), 0 );
+	replxx::virtual_render( newPrompt._text.get(), newPrompt._text.length(), xEndOfPrompt, yEndOfPrompt, newPrompt.screen_columns(), 0 );
 
 	// calculate the desired position of the cursor
 	int xCursorPos( xEndOfPrompt );
 	int yCursorPos( yEndOfPrompt );
-	virtual_render( buf32, pos, xCursorPos, yCursorPos, newPrompt.screen_columns(), _indentMultiline ? newPrompt.indentation() : 0 );
+	virtual_render( buf32, pos, xCursorPos, yCursorPos, &newPrompt );
 
 	// calculate the position of the end of the input line
 	int xEndOfInput( xCursorPos );
 	int yEndOfInput( yCursorPos );
-	virtual_render( buf32 + pos, len - pos, xEndOfInput, yEndOfInput, newPrompt.screen_columns(), _indentMultiline ? newPrompt.indentation() : 0 );
+	virtual_render( buf32 + pos, len - pos, xEndOfInput, yEndOfInput, &newPrompt );
 
 	// display the prompt
 	newPrompt.write();

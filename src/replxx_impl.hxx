@@ -269,7 +269,8 @@ private:
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
 	void move_cursor( void );
 	void indent( void );
-	void render( char32_t, int&, int, int );
+	int virtual_render( char32_t const*, int, int&, int&, Prompt const* = nullptr );
+	void render( char32_t, int&, int );
 	void render( HINT_ACTION );
 	void handle_hints( HINT_ACTION );
 	void set_color( Replxx::Color );

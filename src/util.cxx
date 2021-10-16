@@ -26,11 +26,11 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 		}
 	};
 	bool wrapped( false );
-	auto advance_cursor = [&x_, &y_, &screenColumns_, &promptLen_, &wrapped]( int by_ = 1 ) {
+	auto advance_cursor = [&x_, &y_, &screenColumns_, &wrapped]( int by_ = 1 ) {
 		wrapped = false;
 		x_ += by_;
 		if ( x_ >= screenColumns_ ) {
-			x_ = promptLen_;
+			x_ = 0;
 			++ y_;
 			wrapped = true;
 		}
@@ -51,7 +51,7 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 		if ( c == '\b' ) {
 			render( c, true );
 			-- x_;
-			if ( x_ < promptLen_ ) {
+			if ( x_ < 0 ) {
 				x_ = screenColumns_ - 1;
 				-- y_;
 			}
