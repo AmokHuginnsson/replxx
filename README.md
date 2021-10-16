@@ -1,8 +1,8 @@
 # Read Evaluate Print Loop ++
 
-![demo](https://drive.google.com/uc?export=download&id=0B53g2Y3z7rWNT2dCRGVVNldaRnc)
+![demo](https://codestation.org/download/replxx.gif)
 
-[![Build Status](https://travis-ci.org/AmokHuginnsson/replxx.svg?branch=master)](https://travis-ci.org/AmokHuginnsson/replxx)
+![Build Status](https://github.com/AmokHuginnsson/replxx/actions/workflows/ci.yml/badge.svg)
 
 A small, portable GNU readline replacement for Linux, Windows and
 MacOS which is capable of handling UTF-8 characters. Unlike GNU
