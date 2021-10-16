@@ -613,6 +613,12 @@ public:
 	 */
 	void set_no_color( bool val );
 
+	/*! \brief Enable/disable (prompt width) indent for multiline entry.
+	 *
+	 * \param val - if set to true then multiline indent will be enabled.
+	 */
+	void set_indent_multiline( bool val );
+
 	/*! \brief Set maximum number of entries in history list.
 	 */
 	void set_max_history_size( int len );

@@ -13,7 +13,7 @@ namespace replxx {
 
 int mk_wcwidth( char32_t );
 
-int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int screenColumns_, char32_t* rendered_, int* renderedSize_ ) {
+int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int screenColumns_, int promptLen_, char32_t* rendered_, int* renderedSize_ ) {
 	char32_t* out( rendered_ );
 	int visibleCount( 0 );
 	auto render = [&rendered_, &renderedSize_, &out, &visibleCount]( char32_t c_, bool visible_, bool renderAttributes_ = true ) {
@@ -26,11 +26,11 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 		}
 	};
 	bool wrapped( false );
-	auto advance_cursor = [&x_, &y_, &screenColumns_, &wrapped]( int by_ = 1 ) {
+	auto advance_cursor = [&x_, &y_, &screenColumns_, &promptLen_, &wrapped]( int by_ = 1 ) {
 		wrapped = false;
 		x_ += by_;
 		if ( x_ >= screenColumns_ ) {
-			x_ = 0;
+			x_ = promptLen_;
 			++ y_;
 			wrapped = true;
 		}
@@ -44,14 +44,14 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 			if ( ( c == '\n' ) && ! wrapped ) {
 				++ y_;
 			}
-			x_ = 0;
+			x_ = promptLen_;
 			++ pos;
 			continue;
 		}
 		if ( c == '\b' ) {
 			render( c, true );
 			-- x_;
-			if ( x_ < 0 ) {
+			if ( x_ < promptLen_ ) {
 				x_ = screenColumns_ - 1;
 				-- y_;
 			}

@@ -167,6 +167,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _immediateCompletion( true )
 	, _bracketedPaste( false )
 	, _noColor( false )
+	, _indentMultiline( true )
 	, _namedActions()
 	, _keyPressHandlers()
 	, _terminal()
@@ -715,18 +716,37 @@ void Replxx::ReplxxImpl::set_color( Replxx::Color color_ ) {
 	}
 }
 
-void Replxx::ReplxxImpl::render( char32_t ch ) {
-	if ( ch == '\n' ) {
-		_hasNewlines = true;
+void Replxx::ReplxxImpl::indent( void ) {
+	if ( ! _indentMultiline ) {
+		return;
 	}
+	for ( int i( 0 ); i < _prompt.indentation(); ++ i ) {
+		_display.push_back( ' ' );
+	}
+}
+
+void Replxx::ReplxxImpl::render( char32_t ch, int& col, int indentation_, int screenColumns_ ) {
+	int len( 0 );
 	if ( ch == Replxx::KEY::ESCAPE ) {
 		_display.push_back( '^' );
 		_display.push_back( '[' );
+		len = 2;
 	} else if ( is_control_code( ch ) && ( ch != '\n' ) ) {
 		_display.push_back( '^' );
 		_display.push_back( control_to_human( ch ) );
+		len = 2;
 	} else {
 		_display.push_back( ch );
+		len = 1;
+	}
+	col += len;
+	if ( ch == '\n' ) {
+		_hasNewlines = true;
+		indent();
+		col = indentation_;
+	} else if ( _indentMultiline && ( col >= screenColumns_ ) ) {
+		indent();
+		col = indentation_;
 	}
 	return;
 }
@@ -742,9 +762,12 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 	}
 	_hasNewlines = false;
 	_display.clear();
+	int indentation( _indentMultiline ? _prompt.indentation() : 0 );
+	int screenColumns( _prompt.screen_columns() );
+	int x( indentation );
 	if ( _noColor ) {
 		for ( char32_t ch : _data ) {
-			render( ch );
+			render( ch, x, indentation, screenColumns );
 		}
 		_displayInputLength = static_cast<int>( _display.size() );
 		_modifiedState = false;
@@ -767,7 +790,7 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 			c = colors[i];
 			set_color( c );
 		}
-		render( _data[i] );
+		render( _data[i], x, indentation, screenColumns );
 	}
 	set_color( Replxx::Color::DEFAULT );
 	_displayInputLength = static_cast<int>( _display.size() );
@@ -817,7 +840,7 @@ void Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 		}
 	} else if ( ( _maxHintRows > 0 ) && ( hintCount > 0 ) ) {
 		int posInLine( pos_in_line() );
-		int startCol( ( posInLine == _pos ? _prompt.indentation() : 0 ) + posInLine );
+		int startCol( ( _indentMultiline || ( posInLine == _pos ) ? _prompt.indentation() : 0 ) + posInLine );
 		int maxCol( _prompt.screen_columns() );
 #ifdef _WIN32
 		-- maxCol;
@@ -947,12 +970,12 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	// calculate the desired position of the cursor
 	int xCursorPos( _prompt.indentation() );
 	int yCursorPos( 0 );
-	virtual_render( _data.get(), _pos, xCursorPos, yCursorPos, _prompt.screen_columns() );
+	virtual_render( _data.get(), _pos, xCursorPos, yCursorPos, _prompt.screen_columns(), _indentMultiline ? _prompt.indentation() : 0 );
 
 	// calculate the position of the end of the input line
 	int xEndOfInput( _prompt.indentation() );
 	int yEndOfInput( 0 );
-	virtual_render( _display.data(), static_cast<int>( _display.size() ), xEndOfInput, yEndOfInput, _prompt.screen_columns() );
+	virtual_render( _display.data(), static_cast<int>( _display.size() ), xEndOfInput, yEndOfInput, _prompt.screen_columns(), _indentMultiline ? _prompt.indentation() : 0 );
 
 	// position at the end of the prompt, clear to end of previous input
 	_terminal.set_cursor_visible( false );
@@ -988,7 +1011,7 @@ void Replxx::ReplxxImpl::move_cursor( void ) {
 	// calculate the desired position of the cursor
 	int xCursorPos( _prompt.indentation() );
 	int yCursorPos( 0 );
-	virtual_render( _data.get(), _pos, xCursorPos, yCursorPos, _prompt.screen_columns() );
+	virtual_render( _data.get(), _pos, xCursorPos, yCursorPos, _prompt.screen_columns(), _indentMultiline ? _prompt.indentation() : 0 );
 	// position the cursor
 	_terminal.jump_cursor( xCursorPos, -( _prompt._cursorRowOffset - _prompt._extraLines - yCursorPos ) );
 	_prompt._cursorRowOffset = _prompt._extraLines + yCursorPos;
@@ -1396,9 +1419,11 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 		_refreshSkipped = true;
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	}
-	int xCursorPos( _prompt.indentation() );
+	int indentation( _prompt.indentation() );
+	int xCursorPos( indentation );
 	int yCursorPos( 0 );
-	virtual_render( _data.get(), _data.length(), xCursorPos, yCursorPos, _prompt.screen_columns() );
+	int screenColumns( _prompt.screen_columns() );
+	virtual_render( _data.get(), _data.length(), xCursorPos, yCursorPos, screenColumns, _indentMultiline ? _prompt.indentation() : 0 );
 	if (
 		( _pos == _data.length() )
 		&& ! _modifiedState
@@ -1407,7 +1432,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 	) {
 		/* Avoid a full assign of the line in the
 		 * trivial case. */
-		render( c );
+		render( c, xCursorPos, indentation, screenColumns );
 		_displayInputLength = static_cast<int>( _display.size() );
 		_terminal.write32( reinterpret_cast<char32_t*>( &c ), 1 );
 	} else {
@@ -1819,7 +1844,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_previous( char32_t ) {
 		int posInLine( _pos - prevNewlinePosition - 1 );
 		int prevLineStart( prevNewlinePosition > 0 ? prev_newline_position( prevNewlinePosition - 1 ) + 1 : 0 );
 		int prevLineLength( max( prevNewlinePosition - prevLineStart, 0 ) );
-		int shift( prevLineStart == 0 ? _prompt.indentation() : 0 );
+		int shift( ! _indentMultiline && ( prevLineStart == 0 ) ? _prompt.indentation() : 0 );
 		posInLine = max( min( posInLine, prevLineLength + shift ) - shift, 0 );
 		_pos = prevLineStart + posInLine;
 		assert( ( _pos >= 0 ) && ( _pos <= _data.length() ) );
@@ -1851,7 +1876,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_next( char32_t ) {
 		}
 		int lineStartPosition( prevNewlinePosition + 1 );
 		int posInLine( _pos - lineStartPosition );
-		int shift( lineStartPosition == 0 ? _prompt.indentation() : 0 );
+		int shift( ! _indentMultiline && ( lineStartPosition == 0 ) ? _prompt.indentation() : 0 );
 		posInLine = max( min( posInLine + shift, nextLineLength ), 0 );
 		_pos = nextLineStart + posInLine;
 		assert( ( _pos >= 0 ) && ( _pos <= _data.length() ) );
@@ -2399,6 +2424,10 @@ void Replxx::ReplxxImpl::set_no_color( bool val ) {
 	_noColor = val;
 }
 
+void Replxx::ReplxxImpl::set_indent_multiline( bool val ) {
+	_indentMultiline = val;
+}
+
 /**
  * Display the dynamic incremental search prompt and the current user input
  * line.
@@ -2413,17 +2442,17 @@ void Replxx::ReplxxImpl::dynamic_refresh(Prompt& oldPrompt, Prompt& newPrompt, c
 	// calculate the position of the end of the prompt
 	int xEndOfPrompt( 0 );
 	int yEndOfPrompt( 0 );
-	virtual_render( newPrompt._text.get(), newPrompt._text.length(), xEndOfPrompt, yEndOfPrompt, newPrompt.screen_columns() );
+	virtual_render( newPrompt._text.get(), newPrompt._text.length(), xEndOfPrompt, yEndOfPrompt, newPrompt.screen_columns(), 0 );
 
 	// calculate the desired position of the cursor
 	int xCursorPos( xEndOfPrompt );
 	int yCursorPos( yEndOfPrompt );
-	virtual_render( buf32, pos, xCursorPos, yCursorPos, newPrompt.screen_columns() );
+	virtual_render( buf32, pos, xCursorPos, yCursorPos, newPrompt.screen_columns(), _indentMultiline ? newPrompt.indentation() : 0 );
 
 	// calculate the position of the end of the input line
 	int xEndOfInput( xCursorPos );
 	int yEndOfInput( yCursorPos );
-	virtual_render( buf32 + pos, len - pos, xEndOfInput, yEndOfInput, newPrompt.screen_columns() );
+	virtual_render( buf32 + pos, len - pos, xEndOfInput, yEndOfInput, newPrompt.screen_columns(), _indentMultiline ? newPrompt.indentation() : 0 );
 
 	// display the prompt
 	newPrompt.write();

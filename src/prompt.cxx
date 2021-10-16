@@ -54,7 +54,7 @@ void Prompt::update_state() {
 
 	int x = 0;
 	int renderedSize( 0 );
-	_characterCount = virtual_render( _text.get(), _text.length(), x, _extraLines, _screenColumns, _text.get(), &renderedSize );
+	_characterCount = virtual_render( _text.get(), _text.length(), x, _extraLines, _screenColumns, 0, _text.get(), &renderedSize );
 	_lastLinePosition = _characterCount - x;
 	_text.erase( renderedSize, _text.length() - renderedSize );
 

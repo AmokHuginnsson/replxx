@@ -2141,6 +2141,19 @@ class ReplxxTests( unittest.TestCase ):
 			"some other\ncolor_bluecolor_red\n"
 		)
 		self_.check_scenario(
+			"<up><up> <cr><c-d>",
+			"<c9><ceos><brightblue>color_brightblue<rst>\r\n"
+			"        "
+			"<red>color_red<rst><c18><u1><c9><ceos><brightblue>color_brightblue<rst>\r\n"
+			"        <red>color_red<rst><u1><c18><c9><ceos>color_bri ghtblue\r\n"
+			"        <red>color_red<rst><u1><c19><c9><ceos>color_bri ghtblue\r\n"
+			"        <red>color_red<rst><c18>\r\n"
+			"color_bri ghtblue\r\n"
+			"color_red\r\n",
+			"some other\ncolor_brightbluecolor_red\n",
+			command = [ ReplxxTests._cxxSample_, "I" ]
+		)
+		self_.check_scenario(
 			"<up><up><up><up>x<up><cr><c-d>",
 			"<c9><ceos>bbbbbbbbbbbbbbbb\r\n"
 			"bbbbbbbbbbbbbbbbbbbb\r\n"
@@ -2155,6 +2168,24 @@ class ReplxxTests( unittest.TestCase ):
 			"aaaaaaaaaaaaaaaaaaaa\r\n",
 			"aaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n"
 		)
+		self_.check_scenario(
+			"<up><up><up><up>x<up><cr><c-d>",
+			"<c9><ceos>bbbbbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbbbbb<rst><c25><u3><c9><ceos>bbbbbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbb\r\n"
+			"        "
+			"bbbbbbbbbbbbbbbb<rst><u1><c22><u1><c22><u1><c22><c9><ceos>bbbbbbbbbbbbbxbbb\r\n"
+			"        bbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbb\r\n"
+			"        "
+			"bbbbbbbbbbbbbbbb<rst><u3><c23><c9>aaaaaaaaaaaaaaaaaaaa<rst><ceos><c29><c9>aaaaaaaaaaaaaaaaaaaa<rst><ceos><c29>\r\n"
+			"aaaaaaaaaaaaaaaaaaaa\r\n",
+			"aaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n",
+			command = [ ReplxxTests._cxxSample_, "I" ]
+		)
 	def test_move_down_in_multiline( self_ ):
 		self_.check_scenario(
 			"<pgup><down><pgup><down> <cr><c-d>",
@@ -2166,6 +2197,19 @@ class ReplxxTests( unittest.TestCase ):
 			"color_red\r\n"
 			"color_bl ue\r\n",
 			"some other\ncolor_redcolor_blue\n"
+		)
+		self_.check_scenario(
+			"<pgup><down><pgup><down> <cr><c-d>",
+			"<c9>some other<rst><ceos><c19><c9><ceos><red>color_red<rst>\r\n"
+			"        <blue>color_blue<rst><c19><u1><c9><ceos><red>color_red<rst>\r\n"
+			"        "
+			"<blue>color_blue<rst><u1><c9><d1><c9><u1><c9><ceos><red>color_red<rst>\r\n"
+			"         <blue>color_blue<rst><c10><u1><c9><ceos><red>color_red<rst>\r\n"
+			"         <blue>color_blue<rst><c20>\r\n"
+			"color_red\r\n"
+			" color_blue\r\n",
+			"some other\ncolor_redcolor_blue\n",
+			command = [ ReplxxTests._cxxSample_, "I" ]
 		)
 		self_.check_scenario(
 			"<pgup><pgup><down><down><down>x<down><cr><c-d>",
@@ -2181,6 +2225,24 @@ class ReplxxTests( unittest.TestCase ):
 			"bbbbbbbbxbbbbbbbb<rst><c10><u3><c9>aaaaaaaaaaaaaaaaaaaa<rst><ceos><c29><c9>aaaaaaaaaaaaaaaaaaaa<rst><ceos><c29>\r\n"
 			"aaaaaaaaaaaaaaaaaaaa\r\n",
 			"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\naaaaaaaaaaaaaaaaaaaa\n"
+		)
+		self_.check_scenario(
+			"<pgup><pgup><down><down><down>x<down><cr><c-d>",
+			"<c9><ceos>bbbbbbbbbbbbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbbbbb<rst><c25><u3><c9><ceos>bbbbbbbbbbbbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbbbbbbbbb\r\n"
+			"        "
+			"bbbbbbbbbbbbbbbb<rst><u3><c9><d1><c9><d1><c9><d1><c9><u3><c9><ceos>bbbbbbbbbbbbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbbbbbbbbb\r\n"
+			"        bbbbbbbbbbbbbbbbbbbb\r\n"
+			"        "
+			"xbbbbbbbbbbbbbbbb<rst><c10><u3><c9>aaaaaaaaaaaaaaaaaaaa<rst><ceos><c29><c9>aaaaaaaaaaaaaaaaaaaa<rst><ceos><c29>\r\n"
+			"aaaaaaaaaaaaaaaaaaaa\r\n",
+			"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\naaaaaaaaaaaaaaaaaaaa\n",
+			command = [ ReplxxTests._cxxSample_, "I" ]
 		)
 	def test_go_to_beginning_of_multiline_entry( self_ ):
 		self_.check_scenario(
@@ -2344,6 +2406,23 @@ class ReplxxTests( unittest.TestCase ):
 		)
 		self_.check_scenario(
 			"<up><c-down><cr><c-d>",
+			"<c9><ceos>some long text\r\n"
+			"        color_br<rst>\r\n"
+			"        <gray>color_brown<rst>\r\n"
+			"        <gray>color_brightred<rst>\r\n"
+			"        <gray>color_brightgreen<rst><u3><c17><u1><c9><ceos>some long text\r\n"
+			"        color_br<rst><gray>own<rst>\r\n"
+			"        <gray>color_brightred<rst>\r\n"
+			"        <gray>color_brightgreen<rst>\r\n"
+			"        <gray>color_brightblue<rst><u3><c17><u1><c9><ceos>some long text\r\n"
+			"        color_br<rst><c17>\r\n"
+			"some long text\r\n"
+			"color_br\r\n",
+			"some long textcolor_br\n",
+			command = [ ReplxxTests._cxxSample_, "I" ]
+		)
+		self_.check_scenario(
+			"<up><c-down><cr><c-d>",
 			"<c9><ceos>some text\r\n"
 			"not on start color_b<rst>\r\n"
 			"             <gray>color_black<rst>\r\n"
@@ -2357,6 +2436,25 @@ class ReplxxTests( unittest.TestCase ):
 			"some text\r\n"
 			"not on start color_b\r\n",
 			"some textnot on start color_b\n"
+		)
+		self_.check_scenario(
+			"<up><c-down><cr><c-d>",
+			"<c9><ceos>some text\r\n"
+			"        not on start color_br<rst>\r\n"
+			"                     <gray>color_brown<rst>\r\n"
+			"                     <gray>color_brightred<rst>\r\n"
+			"                     <gray>color_brightgreen<rst><u3><c30><u1><c9><ceos>some "
+			"text\r\n"
+			"        not on start color_br<rst><gray>own<rst>\r\n"
+			"                     <gray>color_brightred<rst>\r\n"
+			"                     <gray>color_brightgreen<rst>\r\n"
+			"                     <gray>color_brightblue<rst><u3><c30><u1><c9><ceos>some "
+			"text\r\n"
+			"        not on start color_br<rst><c30>\r\n"
+			"some text\r\n"
+			"not on start color_br\r\n",
+			"some textnot on start color_br\n",
+			command = [ ReplxxTests._cxxSample_, "I" ]
 		)
 	def test_async_prompt( self_ ):
 		self_.check_scenario(

@@ -355,6 +355,7 @@ int main( int argc_, char** argv_ ) {
 	bool tickMessages( false );
 	bool promptFan( false );
 	bool promptInCallback( false );
+	bool indentMultiline( false );
 	std::string keys;
 	while ( argc_ > 1 ) {
 		-- argc_;
@@ -363,6 +364,7 @@ int main( int argc_, char** argv_ ) {
 			case ( 'm' ): tickMessages = true; break;
 			case ( 'p' ): promptFan = true; break;
 			case ( 'P' ): promptInCallback = true; break;
+			case ( 'I' ): indentMultiline = true; break;
 			case ( 'k' ): keys = (*argv_) + 1; break;
 		}
 	}
@@ -403,6 +405,7 @@ int main( int argc_, char** argv_ ) {
 	rx.set_complete_on_empty( true );
 	rx.set_beep_on_ambiguous_completion( false );
 	rx.set_no_color( false );
+	rx.set_indent_multiline( indentMultiline );
 
 	// showcase key bindings
 	rx.bind_key_internal( Replxx::KEY::BACKSPACE,                      "delete_character_left_of_cursor" );

@@ -519,6 +519,12 @@ REPLXX_IMPEXP void replxx_set_unique_history( Replxx*, int val );
  */
 REPLXX_IMPEXP void replxx_set_no_color( Replxx*, int val );
 
+/*! \brief Enable/disable (prompt width) indent for multiline entry.
+ *
+ * \param val - if set to non-zero then multiline indent will be enabled.
+ */
+REPLXX_IMPEXP void replxx_set_indent_multiline( Replxx*, int val );
+
 /*! \brief Set maximum number of entries in history list.
  */
 REPLXX_IMPEXP void replxx_set_max_history_size( Replxx*, int len );

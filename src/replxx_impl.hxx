@@ -128,6 +128,7 @@ private:
 	bool _immediateCompletion;
 	bool _bracketedPaste;
 	bool _noColor;
+	bool _indentMultiline;
 	named_actions_t _namedActions;
 	key_press_handlers_t _keyPressHandlers;
 	Terminal _terminal;
@@ -184,6 +185,7 @@ public:
 	void set_immediate_completion( bool val );
 	void set_unique_history( bool );
 	void set_no_color( bool val );
+	void set_indent_multiline( bool val );
 	void set_max_history_size( int len );
 	void set_completion_count_cutoff( int len );
 	int install_window_change_handler( void );
@@ -266,7 +268,8 @@ private:
 	hints_t call_hinter( std::string const& input, int&, Replxx::Color& color ) const;
 	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
 	void move_cursor( void );
-	void render( char32_t );
+	void indent( void );
+	void render( char32_t, int&, int, int );
 	void render( HINT_ACTION );
 	void handle_hints( HINT_ACTION );
 	void set_color( Replxx::Color );

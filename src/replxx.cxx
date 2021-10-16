@@ -230,6 +230,10 @@ void Replxx::set_no_color( bool val ) {
 	_impl->set_no_color( val );
 }
 
+void Replxx::set_indent_multiline( bool val ) {
+	_impl->set_indent_multiline( val );
+}
+
 void Replxx::set_max_history_size( int len ) {
 	_impl->set_max_history_size( len );
 }
@@ -577,6 +581,11 @@ void replxx_set_complete_on_empty( ::Replxx* replxx_, int val ) {
 void replxx_set_no_color( ::Replxx* replxx_, int val ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->set_no_color( val ? true : false );
+}
+
+void replxx_set_indent_multiline( ::Replxx* replxx_, int val ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->set_indent_multiline( val ? true : false );
 }
 
 void replxx_set_beep_on_ambiguous_completion( ::Replxx* replxx_, int val ) {
