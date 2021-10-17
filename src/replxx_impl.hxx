@@ -270,7 +270,7 @@ private:
 	void move_cursor( void );
 	void indent( void );
 	int virtual_render( char32_t const*, int, int&, int&, Prompt const* = nullptr );
-	void render( char32_t, int&, int );
+	void render( char32_t );
 	void render( HINT_ACTION );
 	void handle_hints( HINT_ACTION );
 	void set_color( Replxx::Color );

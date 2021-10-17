@@ -255,11 +255,13 @@ class ReplxxTests( unittest.TestCase ):
 		command = _cxxSample_,
 		dimensions = ( 25, 80 ),
 		prompt = _prompt_,
-		end = _prompt_ + _end_,
+		end = None,
 		encoding = "utf-8",
 		pause = 0.25,
 		intraKeyDelay = 0.002
 	):
+		if end is None:
+			end = prompt + ReplxxTests._end_
 		with open( "replxx_history.txt", "wb" ) as f:
 			f.write( history.encode( encoding ) )
 			f.close()
@@ -2670,7 +2672,7 @@ class ReplxxTests( unittest.TestCase ):
 				"<brightgreen>replxx<rst>> \r\n"
 			],
 			"long line color_green and color_b\n",
-			command = [ ReplxxTests._cxxSample_, "p" ],
+			command = [ ReplxxTests._cxxSample_, "F" ],
 			pause = 0.5
 		)
 		self_.check_scenario(
@@ -2778,7 +2780,7 @@ class ReplxxTests( unittest.TestCase ):
 				"abcdefg\r\n"
 				"<brightgreen>replxx<rst>> \r\n"
 			],
-			command = [ ReplxxTests._cxxSample_, "m", "p" ],
+			command = [ ReplxxTests._cxxSample_, "m", "F" ],
 			pause = 0.5
 		)
 		self_.check_scenario(
@@ -2961,7 +2963,7 @@ class ReplxxTests( unittest.TestCase ):
 				"<brightgreen>replxx<rst>> <c1><ceos><brightgreen>replxx<rst>[|]> "
 				"<c12><ceos><c12>\r\n"
 			],
-			command = [ ReplxxTests._cxxSample_, "m", "p", "k123456" ],
+			command = [ ReplxxTests._cxxSample_, "m", "F", "k123456" ],
 			pause = 0.487
 		)
 	def test_prompt_from_callback( self_ ):
@@ -3109,6 +3111,21 @@ class ReplxxTests( unittest.TestCase ):
 			"next passage of a scripture\r\n"
 			"last line of a code\r\n",
 			"first line of textsecond verse of a poemnext passage of a scripturelast line of a code\n"
+		)
+	def test_long_prompt_multiline_enabled_hints( self_ ):
+		prompt = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa> "
+		self_.check_scenario(
+			"<up><cr><c-d>",
+			"<c40>co<rst><ceos>\r\n"
+			"                                       <gray>color_black<rst>\r\n"
+			"                                       <gray>color_red<rst>\r\n"
+			"                                       "
+			"<gray>color_green<rst><u3><c42><c40>co<rst><ceos><c42>\r\n"
+			"co\r\n",
+			"co\n",
+			command = [ ReplxxTests._cxxSample_, "I", "p" + prompt ],
+			dimensions = ( 24, 64 ),
+			prompt = prompt
 		)
 
 def parseArgs( self, func, argv ):

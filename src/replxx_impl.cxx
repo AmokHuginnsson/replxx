@@ -725,25 +725,19 @@ void Replxx::ReplxxImpl::indent( void ) {
 	}
 }
 
-void Replxx::ReplxxImpl::render( char32_t ch, int& col, int indentation_ ) {
-	int len( 0 );
+void Replxx::ReplxxImpl::render( char32_t ch ) {
 	if ( ch == Replxx::KEY::ESCAPE ) {
 		_display.push_back( '^' );
 		_display.push_back( '[' );
-		len = 2;
 	} else if ( is_control_code( ch ) && ( ch != '\n' ) ) {
 		_display.push_back( '^' );
 		_display.push_back( control_to_human( ch ) );
-		len = 2;
 	} else {
 		_display.push_back( ch );
-		len = 1;
 	}
-	col += len;
 	if ( ch == '\n' ) {
 		_hasNewlines = true;
 		indent();
-		col = indentation_;
 	}
 	return;
 }
@@ -759,11 +753,9 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 	}
 	_hasNewlines = false;
 	_display.clear();
-	int indentation( _indentMultiline ? _prompt.indentation() : 0 );
-	int x( indentation );
 	if ( _noColor ) {
 		for ( char32_t ch : _data ) {
-			render( ch, x, indentation );
+			render( ch );
 		}
 		_displayInputLength = static_cast<int>( _display.size() );
 		_modifiedState = false;
@@ -786,7 +778,7 @@ void Replxx::ReplxxImpl::render( HINT_ACTION hintAction_ ) {
 			c = colors[i];
 			set_color( c );
 		}
-		render( _data[i], x, indentation );
+		render( _data[i] );
 	}
 	set_color( Replxx::Color::DEFAULT );
 	_displayInputLength = static_cast<int>( _display.size() );
@@ -976,7 +968,11 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 	// calculate the position of the end of the input line
 	int xEndOfInput( _prompt.indentation() );
 	int yEndOfInput( 0 );
-	virtual_render( _display.data(), static_cast<int>( _display.size() ), xEndOfInput, yEndOfInput );
+	// _data part of _display already contains the indent,
+	// also newlines belonging to hints part of display shall be ignored
+	// with respect to extra indent for multiline inputs
+	// in other words _display should not be re-indented
+	replxx::virtual_render( _display.data(), static_cast<int>( _display.size() ), xEndOfInput, yEndOfInput, _prompt.screen_columns(), 0 );
 
 	// position at the end of the prompt, clear to end of previous input
 	_terminal.set_cursor_visible( false );
@@ -1420,8 +1416,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 		_refreshSkipped = true;
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	}
-	int indentation( _prompt.indentation() );
-	int xCursorPos( indentation );
+	int xCursorPos( _prompt.indentation() );
 	int yCursorPos( 0 );
 	virtual_render( _data.get(), _data.length(), xCursorPos, yCursorPos );
 	if (
@@ -1432,7 +1427,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 	) {
 		/* Avoid a full assign of the line in the
 		 * trivial case. */
-		render( c, xCursorPos, indentation );
+		render( c );
 		_displayInputLength = static_cast<int>( _display.size() );
 		_terminal.write32( reinterpret_cast<char32_t*>( &c ), 1 );
 	} else {

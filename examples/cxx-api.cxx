@@ -357,15 +357,20 @@ int main( int argc_, char** argv_ ) {
 	bool promptInCallback( false );
 	bool indentMultiline( false );
 	std::string keys;
+	std::string prompt;
+	int hintDelay( 0 );
 	while ( argc_ > 1 ) {
 		-- argc_;
 		++ argv_;
 		switch ( (*argv_)[0] ) {
 			case ( 'm' ): tickMessages = true; break;
-			case ( 'p' ): promptFan = true; break;
+			case ( 'F' ): promptFan = true; break;
 			case ( 'P' ): promptInCallback = true; break;
 			case ( 'I' ): indentMultiline = true; break;
 			case ( 'k' ): keys = (*argv_) + 1; break;
+			case ( 'd' ): hintDelay = std::stoi( (*argv_) + 1 ); break;
+			case ( 'h' ): examples.push_back( (*argv_) + 1 ); break;
+			case ( 'p' ): prompt = (*argv_) + 1; break;
 		}
 	}
 
@@ -401,6 +406,7 @@ int main( int argc_, char** argv_ ) {
 	// other api calls
 	rx.set_word_break_characters( " \n\t.,-%!;:=*~^'\"/?<>|[](){}" );
 	rx.set_completion_count_cutoff( 128 );
+	rx.set_hint_delay( hintDelay );
 	rx.set_double_tab_completion( false );
 	rx.set_complete_on_empty( true );
 	rx.set_beep_on_ambiguous_completion( false );
@@ -504,7 +510,9 @@ int main( int argc_, char** argv_ ) {
 		<< "Type '.quit' or '.exit' to exit\n\n";
 
 	// set the repl prompt
-	std::string prompt {"\x1b[1;32mreplxx\x1b[0m> "};
+	if ( prompt.empty() ) {
+		prompt = "\x1b[1;32mreplxx\x1b[0m> ";
+	}
 
 	// main repl loop
 	if ( ! keys.empty() || tickMessages || promptFan ) {
