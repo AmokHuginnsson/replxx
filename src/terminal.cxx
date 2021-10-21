@@ -263,7 +263,7 @@ int Terminal::reset_raw_mode( void ) {
 #ifdef _WIN32
 	SetConsoleMode(
 		_consoleIn,
-		_origInMode & ~( ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT )
+		( _origInMode & ~( ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT ) ) | ENABLE_QUICK_EDIT_MODE 
 	);
 	SetConsoleCP( 65001 );
 	enable_out();
@@ -411,7 +411,10 @@ char32_t Terminal::read_char( void ) {
 		}
 		int key( rec.Event.KeyEvent.uChar.UnicodeChar );
 		if ( key == 0 ) {
-			switch (rec.Event.KeyEvent.wVirtualKeyCode) {
+			if ( rec.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED ) {
+				modifierKeys |= Replxx::KEY::BASE_SHIFT;
+			}
+			switch ( rec.Event.KeyEvent.wVirtualKeyCode ) {
 				case VK_LEFT:
 					return modifierKeys | Replxx::KEY::LEFT;
 				case VK_RIGHT:
@@ -559,7 +562,7 @@ char32_t Terminal::read_char( void ) {
 
 Terminal::EVENT_TYPE Terminal::wait_for_input( int long timeout_ ) {
 #ifdef _WIN32
-	std::array<HANDLE,2> handles = { _consoleIn, _interrupt };
+	std::array<HANDLE, 2> handles = { _consoleIn, _interrupt };
 	while ( true ) {
 		DWORD event( WaitForMultipleObjects( static_cast<DWORD>( handles.size() ), handles.data(), false, timeout_ > 0 ? timeout_ : INFINITE ) );
 		switch ( event ) {
@@ -576,22 +579,34 @@ Terminal::EVENT_TYPE Terminal::wait_for_input( int long timeout_ ) {
 					// read the event to unsignal the handle
 					ReadConsoleInputW( _consoleIn, &rec, 1, &count );
 					continue;
-				} else if (rec.EventType == KEY_EVENT) {
-					int key(rec.Event.KeyEvent.uChar.UnicodeChar);
-					if (key == 0) {
-						switch (rec.Event.KeyEvent.wVirtualKeyCode) {
-						case VK_LEFT:
-						case VK_RIGHT:
-						case VK_UP:
-						case VK_DOWN:
-						case VK_DELETE:
-						case VK_HOME:
-						case VK_END:
-						case VK_PRIOR:
-						case VK_NEXT:
+				} else if ( rec.EventType == KEY_EVENT ) {
+					int key( rec.Event.KeyEvent.uChar.UnicodeChar );
+					if ( key == 0 ) {
+						switch ( rec.Event.KeyEvent.wVirtualKeyCode ) {
+							case VK_LEFT:
+							case VK_RIGHT:
+							case VK_UP:
+							case VK_DOWN:
+							case VK_DELETE:
+							case VK_HOME:
+							case VK_END:
+							case VK_PRIOR:
+							case VK_NEXT:
+							case VK_F1:
+							case VK_F2:
+							case VK_F3:
+							case VK_F4:
+							case VK_F5:
+							case VK_F6:
+							case VK_F7:
+							case VK_F8:
+							case VK_F9:
+							case VK_F10:
+							case VK_F11:
+							case VK_F12:
 							break;
-						default:
-							ReadConsoleInputW(_consoleIn, &rec, 1, &count);
+							default:
+								ReadConsoleInputW( _consoleIn, &rec, 1, &count );
 							continue; // in raw mode, ReadConsoleInput shows shift, ctrl - ignore them
 						}
 					}
