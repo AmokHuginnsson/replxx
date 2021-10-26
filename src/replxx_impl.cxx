@@ -4,6 +4,7 @@
 #include <iostream>
 #include <chrono>
 #include <cassert>
+#include <set>
 
 #ifdef _WIN32
 
@@ -194,6 +195,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _hasNewlines( false )
 	, _oldPos( 0 )
 	, _moveCursor( false )
+	, _ignoreCaseSearch( false )
 	, _mutex() {
 	using namespace std::placeholders;
 	_namedActions[action_names::INSERT_CHARACTER]                = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::INSERT_CHARACTER,                _1 );
@@ -402,6 +404,10 @@ void Replxx::ReplxxImpl::set_state( Replxx::State const& state_ ) {
 		_pos = min( state_.cursor_position(), _data.length() );
 	}
 	_modifiedState = true;
+}
+
+void Replxx::ReplxxImpl::set_ignore_case_search( bool val ) {
+	_ignoreCaseSearch = val;
 }
 
 char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
@@ -1043,7 +1049,9 @@ void Replxx::ReplxxImpl::clear_self_to_end_of_screen( Prompt const* prompt_ ) {
 }
 
 namespace {
-int longest_common_prefix( Replxx::ReplxxImpl::completions_t const& completions ) {
+
+template <bool ignoreCase>
+int longest_common_prefix( Replxx::ReplxxImpl::completions_t const& completions) {
 	int completionsCount( static_cast<int>( completions.size() ) );
 	if ( completionsCount < 1 ) {
 		return ( 0 );
@@ -1061,8 +1069,15 @@ int longest_common_prefix( Replxx::ReplxxImpl::completions_t const& completions 
 				return ( longestCommonPrefix );
 			}
 			char32_t cc( candidate[longestCommonPrefix] );
-			if ( cc != sc ) {
-				return ( longestCommonPrefix );
+			if ( ignoreCase ) {
+				if (!case_insensitive_equal(cc, sc)) {
+					return (longestCommonPrefix);
+				}
+			}
+			else {
+				if ( cc != sc ) {
+					return (longestCommonPrefix);
+				}
 			}
 		}
 		++ longestCommonPrefix;
@@ -1113,7 +1128,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 	if ( completionsCount == 1 ) {
 		longestCommonPrefix = static_cast<int>( _completions[selectedCompletion].text().length() );
 	} else {
-		longestCommonPrefix = longest_common_prefix( _completions );
+		longestCommonPrefix = _ignoreCaseSearch ? longest_common_prefix<true>( _completions ) : longest_common_prefix<false>( _completions );
 	}
 	if ( _beepOnAmbiguousCompletion && ( completionsCount != 1 ) ) { // beep if ambiguous
 		beep();
@@ -1121,13 +1136,36 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 
 	// if we can extend the item, extend it and return to main loop
 	if ( ( longestCommonPrefix > _completionContextLength ) || ( completionsCount == 1 ) ) {
-		_pos -= _completionContextLength;
-		_data.erase( _pos, _completionContextLength );
-		_data.insert( _pos, _completions[selectedCompletion].text(), 0, longestCommonPrefix );
-		_pos = _pos + longestCommonPrefix;
-		_completionContextLength = longestCommonPrefix;
-		refresh_line();
-		return 0;
+		if ( ! _ignoreCaseSearch ) {
+			_pos -= _completionContextLength;
+			_data.erase(_pos, _completionContextLength);
+			_data.insert(_pos, _completions[selectedCompletion].text(), 0, longestCommonPrefix);
+			_pos = _pos + longestCommonPrefix;
+			_completionContextLength = longestCommonPrefix;
+			refresh_line();
+			return 0;
+		}
+		std::set<UnicodeString> candidates;
+		for ( int i( 0 ); i < completionsCount; ++ i ) {
+			candidates.emplace(_completions[i].text().get(), longestCommonPrefix);
+		}
+		const UnicodeString* cand = nullptr;
+		// If there is a candidate with all lowercase characters, it will be the last one in the map.
+		const auto & maybe_cand = *candidates.rbegin();
+		if ( candidates.size() == 1
+			 || std::none_of(maybe_cand.begin(), maybe_cand.end(), [&](char32_t c) { return c >= 'A' && c <= 'Z'; }) ) {
+			cand = &maybe_cand;
+		}
+		// Only extend the item when there is only one candidate prefix or one of the candidate prefix has no uppercase characters
+		if ( cand ) {
+			_pos -= _completionContextLength;
+			_data.erase( _pos, _completionContextLength );
+			_data.insert( _pos, *cand, 0, longestCommonPrefix );
+			_pos = _pos + longestCommonPrefix;
+			_completionContextLength = longestCommonPrefix;
+			refresh_line();
+			return 0;
+		}
 	}
 
 	if ( ! showCompletions_ ) {
@@ -1261,7 +1299,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 						if (!_noColor) {
 							_terminal.write32(col.get(), col.length());
 						}
-						_terminal.write32(&_data[_pos - _completionContextLength], longestCommonPrefix);
+						_terminal.write32(c.text().get(), longestCommonPrefix);
 						if (!_noColor) {
 							_terminal.write32(res.get(), res.length());
 						}
@@ -2056,7 +2094,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete_previous( char32_t ) {
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::common_prefix_search( char32_t startChar ) {
 	if (
 		_history.common_prefix_search(
-			_data, _prefix, ( startChar == ( Replxx::KEY::meta( 'p' ) ) ) || ( startChar == ( Replxx::KEY::meta( 'P' ) ) )
+			_data, _prefix, ( startChar == ( Replxx::KEY::meta( 'p' ) ) ) || ( startChar == ( Replxx::KEY::meta( 'P' ) ) ), _ignoreCaseSearch
 		)
 	) {
 		_data.assign( _history.current() );
@@ -2233,7 +2271,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 					if (
 						( lineSearchPos >= 0 )
 						&& ( ( lineSearchPos + dp._searchText.length() ) <= activeHistoryLine.length() )
-						&& std::equal( dp._searchText.begin(), dp._searchText.end(), activeHistoryLine.begin() + lineSearchPos )
+						&& std::equal( dp._searchText.begin(), dp._searchText.end(), activeHistoryLine.begin() + lineSearchPos,
+								_ignoreCaseSearch ?  case_insensitive_equal : case_sensitive_equal )
 					) {
 						found = true;
 						break;

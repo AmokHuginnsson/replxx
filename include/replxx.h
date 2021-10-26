@@ -387,6 +387,12 @@ REPLXX_IMPEXP void replxx_get_state( Replxx*, ReplxxState* state );
  */
 REPLXX_IMPEXP void replxx_set_state( Replxx*, ReplxxState* state );
 
+/*! \brief Enable/disable case insensitive history search and completion.
+ *
+ * \param val - if set to non-zero then history search and completion will be case insensitive.
+ */
+REPLXX_IMPEXP void replxx_set_ignore_case_search( Replxx*, int val );
+
 /*! \brief Print formatted string to standard output.
  *
  * This function ensures proper handling of ANSI escape sequences

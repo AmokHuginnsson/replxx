@@ -433,6 +433,12 @@ public:
 	 */
 	void set_state( State const& state );
 
+	/*! \brief Enable/disable case insensitive history search and completion.
+	 *
+	 * \param val - if set to non-zero then history search and completion will be case insensitive.
+	 */
+	void set_ignore_case_search( bool val );
+
 	/*! \brief Print formatted string to standard output.
 	 *
 	 * This function ensures proper handling of ANSI escape sequences

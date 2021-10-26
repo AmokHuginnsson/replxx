@@ -103,7 +103,7 @@ public:
 		return ( _yankPos->text() );
 	}
 	void jump( bool, bool = true );
-	bool common_prefix_search( UnicodeString const&, int, bool );
+	bool common_prefix_search( UnicodeString const&, int, bool, bool );
 	int size( void ) const {
 		return ( static_cast<int>( _entries.size() ) );
 	}

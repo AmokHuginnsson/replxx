@@ -303,11 +303,11 @@ void History::restore_pos( void ) {
 	_current = _previous;
 }
 
-bool History::common_prefix_search( UnicodeString const& prefix_, int prefixSize_, bool back_ ) {
+bool History::common_prefix_search( UnicodeString const& prefix_, int prefixSize_, bool back_, bool ignoreCase ) {
 	int step( back_ ? -1 : 1 );
 	entries_t::const_iterator it( moved( _current, step, true ) );
 	while ( it != _current ) {
-		if ( it->text().starts_with( prefix_.begin(), prefix_.begin() + prefixSize_ ) ) {
+		if ( it->text().starts_with( prefix_.begin(), prefix_.begin() + prefixSize_, ignoreCase ? case_insensitive_equal : case_sensitive_equal ) ) {
 			_current = it;
 			commit_index();
 			return ( true );

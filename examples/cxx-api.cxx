@@ -357,6 +357,7 @@ int main( int argc_, char** argv_ ) {
 	bool promptInCallback( false );
 	bool indentMultiline( false );
 	bool bracketedPaste( false );
+	bool ignoreCaseSearch( false );
 	std::string keys;
 	std::string prompt;
 	int hintDelay( 0 );
@@ -368,6 +369,7 @@ int main( int argc_, char** argv_ ) {
 			case ( 'F' ): promptFan = true; break;
 			case ( 'P' ): promptInCallback = true; break;
 			case ( 'I' ): indentMultiline = true; break;
+			case ( 'i' ): ignoreCaseSearch = true; break;
 			case ( 'k' ): keys = (*argv_) + 1; break;
 			case ( 'd' ): hintDelay = std::stoi( (*argv_) + 1 ); break;
 			case ( 'h' ): examples.push_back( (*argv_) + 1 ); break;
@@ -417,6 +419,7 @@ int main( int argc_, char** argv_ ) {
 	if ( bracketedPaste ) {
 		rx.enable_bracketed_paste();
 	}
+	rx.set_ignore_case_search( ignoreCaseSearch );
 
 	// showcase key bindings
 	rx.bind_key_internal( Replxx::KEY::BACKSPACE,                      "delete_character_left_of_cursor" );

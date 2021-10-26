@@ -156,6 +156,7 @@ private:
 	bool _hasNewlines;
 	int _oldPos;
 	bool _moveCursor;
+	bool _ignoreCaseSearch;
 	mutable std::mutex _mutex;
 public:
 	ReplxxImpl( FILE*, FILE*, FILE* );
@@ -200,6 +201,7 @@ public:
 	void bind_key_internal( char32_t, char const* );
 	Replxx::State get_state( void ) const;
 	void set_state( Replxx::State const& );
+	void set_ignore_case_search( bool val );
 private:
 	ReplxxImpl( ReplxxImpl const& ) = delete;
 	ReplxxImpl& operator = ( ReplxxImpl const& ) = delete;
