@@ -77,14 +77,28 @@ public:
 };
 
 // prototypes
-Replxx::completions_t hook_completion(std::string const& context, int& contextLen, std::vector<std::string> const& user_data);
-Replxx::hints_t hook_hint(std::string const& context, int& contextLen, Replxx::Color& color, std::vector<std::string> const& user_data);
+Replxx::completions_t hook_completion(std::string const& context, int& contextLen, std::vector<std::string> const& user_data, bool);
+Replxx::hints_t hook_hint(std::string const& context, int& contextLen, Replxx::Color& color, std::vector<std::string> const& user_data, bool);
 typedef std::vector<std::pair<std::string, Replxx::Color>> syntax_highlight_t;
 typedef std::unordered_map<std::string, Replxx::Color> keyword_highlight_t;
 void hook_color( std::string const& str, Replxx::colors_t& colors, syntax_highlight_t const&, keyword_highlight_t const& );
 void hook_modify( std::string& line, int& cursorPosition, Replxx* );
 
-Replxx::completions_t hook_completion(std::string const& context, int& contextLen, std::vector<std::string> const& examples) {
+bool eq( std::string const& l, std::string const& r, int s, bool ic ) {
+	if ( l.length() < s ) {
+		return false;
+	}
+	if ( r.length() < s ) {
+		return false;
+	}
+	bool same( true );
+	for ( int i( 0 ); same && ( i < s ); ++ i ) {
+		same = ( ic && ( towlower( l[i] ) == towlower( r[i] ) ) ) || ( l[i] == r[i] );
+	}
+	return same;
+}
+
+Replxx::completions_t hook_completion(std::string const& context, int& contextLen, std::vector<std::string> const& examples, bool ignoreCase) {
 	Replxx::completions_t completions;
 	int utf8ContextLen( context_len( context.c_str() ) );
 	int prefixLen( static_cast<int>( context.length() ) - utf8ContextLen );
@@ -99,7 +113,8 @@ Replxx::completions_t hook_completion(std::string const& context, int& contextLe
 		completions.push_back( "π" );
 	} else {
 		for (auto const& e : examples) {
-			if (e.compare(0, prefix.size(), prefix) == 0) {
+			bool lowerCasePrefix( std::none_of( prefix.begin(), prefix.end(), iswupper ) );
+			if ( eq( e, prefix, static_cast<int>( prefix.size() ), ignoreCase && lowerCasePrefix ) ) {
 				Replxx::Color c( Replxx::Color::DEFAULT );
 				if ( e.find( "brightred" ) != std::string::npos ) {
 					c = Replxx::Color::BRIGHTRED;
@@ -114,7 +129,7 @@ Replxx::completions_t hook_completion(std::string const& context, int& contextLe
 	return completions;
 }
 
-Replxx::hints_t hook_hint(std::string const& context, int& contextLen, Replxx::Color& color, std::vector<std::string> const& examples) {
+Replxx::hints_t hook_hint(std::string const& context, int& contextLen, Replxx::Color& color, std::vector<std::string> const& examples, bool ignoreCase) {
 	Replxx::hints_t hints;
 
 	// only show hint if prefix is at least 'n' chars long
@@ -126,8 +141,9 @@ Replxx::hints_t hook_hint(std::string const& context, int& contextLen, Replxx::C
 	std::string prefix { context.substr(prefixLen) };
 
 	if (prefix.size() >= 2 || (! prefix.empty() && prefix.at(0) == '.')) {
+		bool lowerCasePrefix( std::none_of( prefix.begin(), prefix.end(), iswupper ) );
 		for (auto const& e : examples) {
-			if (e.compare(0, prefix.size(), prefix) == 0) {
+			if ( eq( e, prefix, prefix.size(), ignoreCase && lowerCasePrefix ) ) {
 				hints.emplace_back(e.c_str());
 			}
 		}
@@ -247,6 +263,8 @@ int main( int argc_, char** argv_ ) {
 		"color_magenta", "color_cyan", "color_lightgray", "color_gray",
 		"color_brightred", "color_brightgreen", "color_yellow", "color_brightblue",
 		"color_brightmagenta", "color_brightcyan", "color_white",
+		"determinANT", "determiNATION", "deterMINE", "deteRMINISM", "detERMINISTIC", "deTERMINED",
+		"star", "star_galaxy_cluser_supercluster_observable_universe",
 	};
 
 	// highlight specific words
@@ -357,6 +375,7 @@ int main( int argc_, char** argv_ ) {
 	bool promptInCallback( false );
 	bool indentMultiline( false );
 	bool bracketedPaste( false );
+	bool ignoreCase( false );
 	std::string keys;
 	std::string prompt;
 	int hintDelay( 0 );
@@ -368,6 +387,7 @@ int main( int argc_, char** argv_ ) {
 			case ( 'F' ): promptFan = true; break;
 			case ( 'P' ): promptInCallback = true; break;
 			case ( 'I' ): indentMultiline = true; break;
+			case ( 'i' ): ignoreCase = true; break;
 			case ( 'k' ): keys = (*argv_) + 1; break;
 			case ( 'd' ): hintDelay = std::stoi( (*argv_) + 1 ); break;
 			case ( 'h' ): examples.push_back( (*argv_) + 1 ); break;
@@ -398,9 +418,9 @@ int main( int argc_, char** argv_ ) {
 
 	// set the callbacks
 	using namespace std::placeholders;
-	rx.set_completion_callback( std::bind( &hook_completion, _1, _2, cref( examples ) ) );
+	rx.set_completion_callback( std::bind( &hook_completion, _1, _2, cref( examples ), ignoreCase ) );
 	rx.set_highlighter_callback( std::bind( &hook_color, _1, _2, cref( regex_color ), cref( word_color ) ) );
-	rx.set_hint_callback( std::bind( &hook_hint, _1, _2, _3, cref( examples ) ) );
+	rx.set_hint_callback( std::bind( &hook_hint, _1, _2, _3, cref( examples ), ignoreCase ) );
 	if ( promptInCallback ) {
 		rx.set_modify_callback( std::bind( &hook_modify, _1, _2, &rx ) );
 	}
@@ -417,6 +437,7 @@ int main( int argc_, char** argv_ ) {
 	if ( bracketedPaste ) {
 		rx.enable_bracketed_paste();
 	}
+	rx.set_ignore_case( ignoreCase );
 
 	// showcase key bindings
 	rx.bind_key_internal( Replxx::KEY::BACKSPACE,                      "delete_character_left_of_cursor" );

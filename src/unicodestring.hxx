@@ -3,11 +3,20 @@
 
 #include <vector>
 #include <cstring>
+#include <cwctype>
 #include <cassert>
 
 #include "conversion.hxx"
 
 namespace replxx {
+
+inline bool case_sensitive_equal( char32_t l, char32_t r ) {
+	return l == r;
+}
+
+inline bool case_insensitive_equal( char32_t l, char32_t r ) {
+	return towlower(l) == towlower(r);
+}
 
 class UnicodeString {
 public:
@@ -97,6 +106,10 @@ public:
 		return ( _data != other_._data );
 	}
 
+	bool operator < ( UnicodeString const& other_ ) const {
+		return std::lexicographical_compare(begin(), end(), other_.begin(), other_.end());
+	}
+
 	UnicodeString& append( UnicodeString const& other ) {
 		_data.insert( _data.end(), other._data.begin(), other._data.end() );
 		return *this;
@@ -161,6 +174,14 @@ public:
 		return (
 			( std::distance( first_, last_ ) <= length() )
 			&& ( std::equal( first_, last_, _data.begin() ) )
+		);
+	}
+
+	template <class BinaryPredicate>
+	bool starts_with( data_buffer_t::const_iterator first_, data_buffer_t::const_iterator last_, BinaryPredicate&& pred ) const {
+		return (
+			( std::distance( first_, last_ ) <= length() )
+			&& ( std::equal( first_, last_, _data.begin(), std::forward<BinaryPredicate>( pred ) ) )
 		);
 	}
 

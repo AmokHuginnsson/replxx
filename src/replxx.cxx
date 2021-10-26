@@ -266,6 +266,10 @@ void Replxx::set_state( Replxx::State const& state_ ) {
 	_impl->set_state( state_ );
 }
 
+void Replxx::set_ignore_case( bool val ) {
+	_impl->set_ignore_case( val );
+}
+
 int Replxx::install_window_change_handler( void ) {
 	return ( _impl->install_window_change_handler() );
 }
@@ -388,6 +392,11 @@ void replxx_get_state( ::Replxx* replxx_, ReplxxState* state ) {
 void replxx_set_state( ::Replxx* replxx_, ReplxxState* state ) {
 	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
 	replxx->set_state( replxx::Replxx::State( state->text, state->cursorPosition ) );
+}
+
+void replxx_set_ignore_case( ::Replxx* replxx_, int val ) {
+	replxx::Replxx::ReplxxImpl* replxx( reinterpret_cast<replxx::Replxx::ReplxxImpl*>( replxx_ ) );
+	replxx->set_ignore_case( val );
 }
 
 /**

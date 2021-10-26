@@ -194,6 +194,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _hasNewlines( false )
 	, _oldPos( 0 )
 	, _moveCursor( false )
+	, _ignoreCase( false )
 	, _mutex() {
 	using namespace std::placeholders;
 	_namedActions[action_names::INSERT_CHARACTER]                = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::INSERT_CHARACTER,                _1 );
@@ -402,6 +403,10 @@ void Replxx::ReplxxImpl::set_state( Replxx::State const& state_ ) {
 		_pos = min( state_.cursor_position(), _data.length() );
 	}
 	_modifiedState = true;
+}
+
+void Replxx::ReplxxImpl::set_ignore_case( bool val ) {
+	_ignoreCase = val;
 }
 
 char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
@@ -860,17 +865,17 @@ void Replxx::ReplxxImpl::handle_hints( HINT_ACTION hintAction_ ) {
 				_display.push_back( ' ' );
 			}
 			set_color( _hintColor );
-			for ( int i( _pos - _hintContextLenght ); ( i < _pos ) && ( col < maxCol ); ++ i, ++ col ) {
-				_display.push_back( _data[i] );
-			}
 			int hintNo( hintRow + _hintSelection + 1 );
 			if ( hintNo == hintCount ) {
+				for ( int i( _pos - _hintContextLenght ); ( i < _pos ) && ( col < maxCol ); ++ i, ++ col ) {
+					_display.push_back( _data[i] );
+				}
 				continue;
 			} else if ( hintNo > hintCount ) {
 				-- hintNo;
 			}
 			UnicodeString const& h( _hintsCache[hintNo % hintCount] );
-			for ( int i( _hintContextLenght ); ( i < h.length() ) && ( col < maxCol ); ++ i, ++ col ) {
+			for ( int i( 0 ); ( i < h.length() ) && ( col < maxCol ); ++ i, ++ col ) {
 				_display.push_back( h[i] );
 			}
 			set_color( Replxx::Color::DEFAULT );
@@ -1043,7 +1048,8 @@ void Replxx::ReplxxImpl::clear_self_to_end_of_screen( Prompt const* prompt_ ) {
 }
 
 namespace {
-int longest_common_prefix( Replxx::ReplxxImpl::completions_t const& completions ) {
+
+int longest_common_prefix( Replxx::ReplxxImpl::completions_t const& completions, bool ignoreCase ) {
 	int completionsCount( static_cast<int>( completions.size() ) );
 	if ( completionsCount < 1 ) {
 		return ( 0 );
@@ -1061,13 +1067,18 @@ int longest_common_prefix( Replxx::ReplxxImpl::completions_t const& completions 
 				return ( longestCommonPrefix );
 			}
 			char32_t cc( candidate[longestCommonPrefix] );
-			if ( cc != sc ) {
-				return ( longestCommonPrefix );
+			if ( ignoreCase ) {
+				if ( !case_insensitive_equal( cc, sc ) ) {
+					return longestCommonPrefix;
+				}
+			} else if ( cc != sc ) {
+				return longestCommonPrefix;
 			}
 		}
 		++ longestCommonPrefix;
 	}
 }
+
 }
 
 /**
@@ -1106,14 +1117,15 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 	int longestCommonPrefix = 0;
 	int completionsCount( static_cast<int>( _completions.size() ) );
 	int selectedCompletion( 0 );
-	if ( _hintSelection != -1 ) {
+	if ( ( completionsCount > 1 ) && ( _hintSelection != -1 ) ) {
 		selectedCompletion = _hintSelection;
 		completionsCount = 1;
 	}
 	if ( completionsCount == 1 ) {
 		longestCommonPrefix = static_cast<int>( _completions[selectedCompletion].text().length() );
 	} else {
-		longestCommonPrefix = longest_common_prefix( _completions );
+		bool lowerCaseContext( std::none_of( _data.end() - _completionContextLength, _data.end(), iswupper ) );
+		longestCommonPrefix = longest_common_prefix( _completions, _ignoreCase && lowerCaseContext );
 	}
 	if ( _beepOnAmbiguousCompletion && ( completionsCount != 1 ) ) { // beep if ambiguous
 		beep();
@@ -1121,11 +1133,24 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 
 	// if we can extend the item, extend it and return to main loop
 	if ( ( longestCommonPrefix > _completionContextLength ) || ( completionsCount == 1 ) ) {
+		UnicodeString const* cand( &_completions[selectedCompletion].text() );
+		if ( _ignoreCase && ( _hintSelection == -1 ) ) {
+			for ( int i( 0 ); i < completionsCount; ++ i ) {
+				if ( _completions[i].text() < *cand ) {
+					cand = &_completions[i].text();
+				}
+			}
+		}
 		_pos -= _completionContextLength;
 		_data.erase( _pos, _completionContextLength );
-		_data.insert( _pos, _completions[selectedCompletion].text(), 0, longestCommonPrefix );
-		_pos = _pos + longestCommonPrefix;
+		_data.insert( _pos, *cand, 0, longestCommonPrefix );
 		_completionContextLength = longestCommonPrefix;
+		if ( _ignoreCase && ( completionsCount > 1 ) ) {
+			for ( int i( 0 ); i < longestCommonPrefix; ++ i ) {
+				_data[_pos + i] = towlower( _data[_pos + i] );
+			}
+		}
+		_pos += _completionContextLength;
 		refresh_line();
 		return 0;
 	}
@@ -1261,7 +1286,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 						if (!_noColor) {
 							_terminal.write32(col.get(), col.length());
 						}
-						_terminal.write32(&_data[_pos - _completionContextLength], longestCommonPrefix);
+						_terminal.write32(c.text().get(), longestCommonPrefix);
 						if (!_noColor) {
 							_terminal.write32(res.get(), res.length());
 						}
@@ -2056,7 +2081,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::complete_previous( char32_t ) {
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::common_prefix_search( char32_t startChar ) {
 	if (
 		_history.common_prefix_search(
-			_data, _prefix, ( startChar == ( Replxx::KEY::meta( 'p' ) ) ) || ( startChar == ( Replxx::KEY::meta( 'P' ) ) )
+			_data, _prefix, ( startChar == ( Replxx::KEY::meta( 'p' ) ) ) || ( startChar == ( Replxx::KEY::meta( 'P' ) ) ), _ignoreCase
 		)
 	) {
 		_data.assign( _history.current() );
@@ -2224,6 +2249,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 				lineSearchPos += dp._direction;
 			}
 			searchAgain = false;
+			bool lowerCaseContext( std::none_of( dp._searchText.begin(), dp._searchText.end(), iswupper ) );
 			while ( true ) {
 				while (
 					dp._direction < 0
@@ -2233,7 +2259,10 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 					if (
 						( lineSearchPos >= 0 )
 						&& ( ( lineSearchPos + dp._searchText.length() ) <= activeHistoryLine.length() )
-						&& std::equal( dp._searchText.begin(), dp._searchText.end(), activeHistoryLine.begin() + lineSearchPos )
+						&& std::equal(
+							dp._searchText.begin(), dp._searchText.end(), activeHistoryLine.begin() + lineSearchPos,
+							_ignoreCase && lowerCaseContext ? case_insensitive_equal : case_sensitive_equal
+						)
 					) {
 						found = true;
 						break;
