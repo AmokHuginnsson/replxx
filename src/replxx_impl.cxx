@@ -84,6 +84,8 @@ char const HISTORY_NEXT[]                    = "history_next";
 char const HISTORY_PREVIOUS[]                = "history_previous";
 char const HISTORY_LAST[]                    = "history_last";
 char const HISTORY_FIRST[]                   = "history_first";
+char const HISTORY_RESTORE[]                 = "history_restore";
+char const HISTORY_RESTORE_CURRENT[]         = "history_restore_current";
 char const HINT_PREVIOUS[]                   = "hint_previous";
 char const HINT_NEXT[]                       = "hint_next";
 char const VERBATIM_INSERT[]                 = "verbatim_insert";
@@ -237,6 +239,8 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	_namedActions[action_names::HISTORY_PREVIOUS]                = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_PREVIOUS,                _1 );
 	_namedActions[action_names::HISTORY_LAST]                    = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_LAST,                    _1 );
 	_namedActions[action_names::HISTORY_FIRST]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_FIRST,                   _1 );
+	_namedActions[action_names::HISTORY_RESTORE]                 = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_RESTORE,                 _1 );
+	_namedActions[action_names::HISTORY_RESTORE_CURRENT]         = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_RESTORE_CURRENT,         _1 );
 	_namedActions[action_names::HINT_PREVIOUS]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HINT_PREVIOUS,                   _1 );
 	_namedActions[action_names::HINT_NEXT]                       = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HINT_NEXT,                       _1 );
 #ifndef _WIN32
@@ -300,6 +304,8 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	bind_key( Replxx::KEY::PAGE_UP + 0,                    _namedActions.at( action_names::HISTORY_FIRST ) );
 	bind_key( Replxx::KEY::meta( '>' ),                    _namedActions.at( action_names::HISTORY_LAST ) );
 	bind_key( Replxx::KEY::PAGE_DOWN + 0,                  _namedActions.at( action_names::HISTORY_LAST ) );
+	bind_key( Replxx::KEY::control( 'G' ),                 _namedActions.at( action_names::HISTORY_RESTORE_CURRENT ) );
+	bind_key( Replxx::KEY::meta( 'g' ),                    _namedActions.at( action_names::HISTORY_RESTORE ) );
 	bind_key( Replxx::KEY::control( Replxx::KEY::UP ),     _namedActions.at( action_names::HINT_PREVIOUS ) );
 	bind_key( Replxx::KEY::control( Replxx::KEY::DOWN ),   _namedActions.at( action_names::HINT_NEXT ) );
 #ifndef _WIN32
@@ -348,6 +354,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32
 		case ( Replxx::ACTION::HISTORY_PREVIOUS ):                return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_previous, code ) );
 		case ( Replxx::ACTION::HISTORY_FIRST ):                   return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_first, code ) );
 		case ( Replxx::ACTION::HISTORY_LAST ):                    return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_last, code ) );
+		case ( Replxx::ACTION::HISTORY_RESTORE_CURRENT ):         return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_restore_current, code ) );
+		case ( Replxx::ACTION::HISTORY_RESTORE ):                 return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_restore, code ) );
 		case ( Replxx::ACTION::HISTORY_INCREMENTAL_SEARCH ):      return ( action( NOOP, &Replxx::ReplxxImpl::incremental_history_search, code ) );
 		case ( Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH ):    return ( action( RESET_KILL_ACTION | DONT_RESET_PREFIX, &Replxx::ReplxxImpl::common_prefix_search, code ) );
 		case ( Replxx::ACTION::HINT_NEXT ):                       return ( action( NOOP, &Replxx::ReplxxImpl::hint_next, code ) );
@@ -1914,6 +1922,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_move( bool previous_ ) {
 	if ( _history.is_empty() ) {
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	}
+	_history.set_current_scratch( _data );
 	if ( ! _history.move( previous_ ) ) {
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	}
@@ -1955,6 +1964,30 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_last( char32_t ) {
 	return ( history_jump( false ) );
 }
 
+// CTRL-g, restore current history entry
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_restore_current( char32_t ) {
+	// if not already recalling, there is nothing to restore.
+	if ( ! _history.is_last() ) {
+		_history.reset_current_scratch();
+		_data.assign( _history.current() );
+		_pos = _data.length();
+		refresh_line();
+	}
+	return ( Replxx::ACTION_RESULT::CONTINUE );
+}
+
+// meta-g restore all history entries
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_restore( char32_t ) {
+	_history.reset_scratches();
+	// if not already recalling, there is nothing to restore.
+	if ( ! _history.is_last() ) {
+		_data.assign( _history.current() );
+		_pos = _data.length();
+		refresh_line();
+	}
+	return ( Replxx::ACTION_RESULT::CONTINUE );
+}
+
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_jump( bool back_ ) {
 	// if not already recalling, add the current line to the history list so
 	// we don't
@@ -1963,6 +1996,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_jump( bool back_ ) {
 		_history.update_last( _data );
 	}
 	if ( ! _history.is_empty() ) {
+		_history.set_current_scratch( _data );
 		_history.jump( back_ );
 		_data.assign( _history.current() );
 		_pos = _data.length();

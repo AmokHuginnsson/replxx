@@ -162,7 +162,8 @@ bool History::save( std::string const& filename, bool sync_ ) {
 void History::save( std::ostream& histFile ) {
 	Utf8String utf8;
 	UnicodeString us;
-	for ( Entry const& h : _entries ) {
+	for ( Entry& h : _entries ) {
+		h.reset_scratch();
 		if ( ! h.text().is_empty() ) {
 			us.assign( h.text() );
 			std::replace( us.begin(), us.end(), char32_t( '\n' ), char32_t( ETB ) );
@@ -305,7 +306,7 @@ void History::restore_pos( void ) {
 
 bool History::common_prefix_search( UnicodeString const& prefix_, int prefixSize_, bool back_, bool ignoreCase ) {
 	int step( back_ ? -1 : 1 );
-	entries_t::const_iterator it( moved( _current, step, true ) );
+	entries_t::iterator it( moved( _current, step, true ) );
 	bool lowerCaseContext( std::none_of( prefix_.begin(), prefix_.end(), iswupper ) );
 	while ( it != _current ) {
 		if ( it->text().starts_with( prefix_.begin(), prefix_.begin() + prefixSize_, ignoreCase && lowerCaseContext ? case_insensitive_equal : case_sensitive_equal ) ) {
@@ -318,7 +319,7 @@ bool History::common_prefix_search( UnicodeString const& prefix_, int prefixSize
 	return ( false );
 }
 
-bool History::move( entries_t::const_iterator& it_, int by_, bool wrapped_ ) const {
+bool History::move( entries_t::iterator& it_, int by_, bool wrapped_ ) {
 	if ( by_ > 0 ) {
 		for ( int i( 0 ); i < by_; ++ i ) {
 			++ it_;
@@ -344,12 +345,12 @@ bool History::move( entries_t::const_iterator& it_, int by_, bool wrapped_ ) con
 	return ( true );
 }
 
-History::entries_t::const_iterator History::moved( entries_t::const_iterator it_, int by_, bool wrapped_ ) const {
+History::entries_t::iterator History::moved( entries_t::iterator it_, int by_, bool wrapped_ ) {
 	move( it_, by_, wrapped_ );
 	return ( it_ );
 }
 
-void History::erase( entries_t::const_iterator it_ ) {
+void History::erase( entries_t::iterator it_ ) {
 	bool invalidated( it_ == _current );
 	_locations.erase( it_->text() );
 	it_ = _entries.erase( it_ );
@@ -387,6 +388,7 @@ void History::remove_duplicates( void ) {
 	_locations.clear();
 	typedef std::pair<locations_t::iterator, bool> locations_insertion_result_t;
 	for ( entries_t::iterator it( _entries.begin() ), end( _entries.end() ); it != end; ++ it ) {
+		it->reset_scratch();
 		locations_insertion_result_t locationsInsertionResult( _locations.insert( make_pair( it->text(), it ) ) );
 		if ( ! locationsInsertionResult.second ) {
 			_entries.erase( locationsInsertionResult.first->second );
@@ -405,14 +407,15 @@ void History::update_last( UnicodeString const& line_ ) {
 }
 
 void History::drop_last( void ) {
+	reset_current_scratch();
 	erase( last() );
 }
 
-bool History::is_last( void ) const {
+bool History::is_last( void ) {
 	return ( _current == last() );
 }
 
-History::entries_t::const_iterator History::last( void ) const {
+History::entries_t::iterator History::last( void ) {
 	return ( moved( _entries.end(), -1 ) );
 }
 

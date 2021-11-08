@@ -246,6 +246,8 @@ private:
 	Replxx::ACTION_RESULT history_move( bool );
 	Replxx::ACTION_RESULT history_first( char32_t );
 	Replxx::ACTION_RESULT history_last( char32_t );
+	Replxx::ACTION_RESULT history_restore( char32_t );
+	Replxx::ACTION_RESULT history_restore_current( char32_t );
 	Replxx::ACTION_RESULT history_jump( bool );
 	Replxx::ACTION_RESULT hint_next( char32_t );
 	Replxx::ACTION_RESULT hint_previous( char32_t );

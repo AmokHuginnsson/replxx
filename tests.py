@@ -56,6 +56,7 @@ keytab = {
 	"<c-d>": "",
 	"<c-e>": "",
 	"<c-f>": "",
+	"<c-g>": "",
 	"<c-k>": "",
 	"<c-l>": "",
 	"<c-n>": "",
@@ -76,6 +77,7 @@ keytab = {
 	"<m-D>": "\033D",
 	"<m-f>": "\033f",
 	"<m-F>": "\033F",
+	"<m-g>": "\033g",
 	"<m-l>": "\033l",
 	"<m-L>": "\033L",
 	"<m-n>": "\033n",
@@ -3192,6 +3194,46 @@ class ReplxxTests( unittest.TestCase ):
 			"thanks for the input: deteRMINISM\r\n",
 			"deTERMINED\ndetERMINISTIC\ndeteRMINISM\ndeterMINE\ndetermiNATION\ndeterminANT\n",
 			command = [ ReplxxTests._cSample_, "i1" ]
+		)
+	def test_history_scratch( self_ ):
+		self_.check_scenario(
+			"<up>x<up>y<up>z<down><up>Z<pgdown><up><pgup><cr><c-d>",
+			"<c9>three<rst><ceos><c14><c9>threex<rst><ceos><c15>"
+			"<c9>two<rst><ceos><c12><c9>twoy<rst><ceos><c13>"
+			"<c9>one<rst><ceos><c12><c9>onez<rst><ceos><c13>"
+			"<c9>twoy<rst><ceos><c13><c9>onez<rst><ceos><c13>"
+			"<c9>onezZ<rst><ceos><c14><c9><rst><ceos><c9>"
+			"<c9>threex<rst><ceos><c15><c9>onezZ<rst><ceos><c14>"
+			"<c9>onezZ<rst><ceos><c14>\r\n"
+			"onezZ\r\n",
+			"one\ntwo\nthree\n"
+		)
+		with open( "replxx_history.txt", "rb" ) as f:
+			data = f.read().decode()
+			origHist = "### 0000-00-00 00:00:00.000\none\n### 0000-00-00 00:00:00.000\ntwo\n### 0000-00-00 00:00:00.000\nthree\n";
+			self_.assertSequenceEqual( data[:len(origHist)], origHist )
+			self_.assertSequenceEqual( data[-6:], "onezZ\n" )
+		self_.check_scenario(
+			"<up>x<up>y<up>z<down><c-g><up><down><cr><c-d>",
+			"<c9>three<rst><ceos><c14><c9>threex<rst><ceos><c15>"
+			"<c9>two<rst><ceos><c12><c9>twoy<rst><ceos><c13>"
+			"<c9>one<rst><ceos><c12><c9>onez<rst><ceos><c13>"
+			"<c9>twoy<rst><ceos><c13><c9>two<rst><ceos><c12>"
+			"<c9>onez<rst><ceos><c13><c9>two<rst><ceos><c12>"
+			"<c9>two<rst><ceos><c12>\r\n"
+			"two\r\n",
+			"one\ntwo\nthree\n"
+		)
+		self_.check_scenario(
+			"<up>x<up>y<up>z<down><m-g><up><down><down><cr><c-d>",
+			"<c9>three<rst><ceos><c14><c9>threex<rst><ceos><c15>"
+			"<c9>two<rst><ceos><c12><c9>twoy<rst><ceos><c13>"
+			"<c9>one<rst><ceos><c12><c9>onez<rst><ceos><c13>"
+			"<c9>twoy<rst><ceos><c13><c9>two<rst><ceos><c12>"
+			"<c9>one<rst><ceos><c12><c9>two<rst><ceos><c12>"
+			"<c9>three<rst><ceos><c14><c9>three<rst><ceos><c14>\r\n"
+			"three\r\n",
+			"one\ntwo\nthree\n"
 		)
 
 def parseArgs( self, func, argv ):
