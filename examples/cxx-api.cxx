@@ -356,6 +356,7 @@ int main( int argc_, char** argv_ ) {
 	bool promptFan( false );
 	bool promptInCallback( false );
 	bool indentMultiline( false );
+	bool bracketedPaste( false );
 	std::string keys;
 	std::string prompt;
 	int hintDelay( 0 );
@@ -371,6 +372,7 @@ int main( int argc_, char** argv_ ) {
 			case ( 'd' ): hintDelay = std::stoi( (*argv_) + 1 ); break;
 			case ( 'h' ): examples.push_back( (*argv_) + 1 ); break;
 			case ( 'p' ): prompt = (*argv_) + 1; break;
+			case ( 'B' ): bracketedPaste = true; break;
 		}
 	}
 
@@ -412,6 +414,9 @@ int main( int argc_, char** argv_ ) {
 	rx.set_beep_on_ambiguous_completion( false );
 	rx.set_no_color( false );
 	rx.set_indent_multiline( indentMultiline );
+	if ( bracketedPaste ) {
+		rx.enable_bracketed_paste();
+	}
 
 	// showcase key bindings
 	rx.bind_key_internal( Replxx::KEY::BACKSPACE,                      "delete_character_left_of_cursor" );
@@ -615,7 +620,10 @@ int main( int argc_, char** argv_ ) {
 
 	// save the history
 	rx.history_sync( history_file_path );
-	if ( promptInCallback || promptFan ) {
+	if ( bracketedPaste ) {
+		rx.disable_bracketed_paste();
+	}
+	if ( bracketedPaste || promptInCallback || promptFan ) {
 		std::cout << "\n" << prompt;
 	}
 

@@ -2302,6 +2302,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::bracketed_paste( char32_t ) {
 		}
 		if ( ( c == '\r' ) || ( c == KEY::control( 'M' ) ) ) {
 			c = '\n';
+		} else if ( c == KEY::control( 'I' ) ) {
+			c = '\t';
 		}
 		buf.push_back( c );
 	}

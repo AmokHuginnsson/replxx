@@ -2118,6 +2118,11 @@ class ReplxxTests( unittest.TestCase ):
 			"x\r\n",
 			command = [ ReplxxTests._cSample_, "q1" ]
 		)
+		self_.check_scenario(
+			"<paste-pfx>aaa\n\tbbb<paste-sfx><backspace><backspace><backspace><backspace><backspace><backspace><backspace><backspace><cr><c-d>",
+			"<c9><ceos><c18><paste-off>\r\n",
+			command = [ ReplxxTests._cxxSample_, "B" ]
+		)
 	def test_embedded_newline( self_ ):
 		self_.check_scenario(
 			"<up><c-left><s-cr><cr><c-d>",
