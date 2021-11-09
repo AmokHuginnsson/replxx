@@ -966,13 +966,19 @@ int Replxx::ReplxxImpl::virtual_render( char32_t const* buffer_, int len_, int& 
  * Refresh the user's input line: the prompt is already onscreen and is not
  * redrawn here screen position
  */
-void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
+void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_, bool refreshPrompt_ ) {
 	int long long now( now_us() );
 	int long long duration( now - _lastRefreshTime );
 	if ( duration < RAPID_REFRESH_US ) {
 		_lastRefreshTime = now;
 		_refreshSkipped = true;
 		return;
+	}
+	if ( refreshPrompt_ )
+	{
+		_terminal.jump_cursor( 0, 0 );
+		_prompt.write();
+		_prompt._cursorRowOffset = _prompt._extraLines;
 	}
 	_refreshSkipped = false;
 	render( hintAction_ );
@@ -1934,7 +1940,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_move( bool previous_ ) {
 	}
 	_data.assign( _history.current() );
 	_pos = _data.length();
-	refresh_line();
+	refresh_line( HINT_ACTION::REGENERATE, true /* refreshPrompt */ );
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
 
@@ -2006,7 +2012,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_jump( bool back_ ) {
 		_history.jump( back_ );
 		_data.assign( _history.current() );
 		_pos = _data.length();
-		refresh_line();
+		refresh_line( HINT_ACTION::REGENERATE, true /* refreshPrompt */ );
 	}
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
