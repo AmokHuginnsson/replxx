@@ -1700,14 +1700,14 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::capitalize_word( char32_t ) {
 			++_pos;
 		}
 		if (_pos < _data.length() && !is_word_break_character<subword>( _data[_pos] ) ) {
-			if ( _data[_pos] >= 'a' && _data[_pos] <= 'z' ) {
-				_data[_pos] += 'A' - 'a';
+			if ( iswlower( _data[_pos] ) ) {
+				_data[_pos] = towupper( _data[_pos] );
 			}
 			++_pos;
 		}
 		while (_pos < _data.length() && !is_word_break_character<subword>( _data[_pos] ) ) {
-			if ( _data[_pos] >= 'A' && _data[_pos] <= 'Z' ) {
-				_data[_pos] += 'a' - 'A';
+			if ( iswupper( _data[_pos] ) ) {
+				_data[_pos] = towlower( _data[_pos] );
 			}
 			++_pos;
 		}
@@ -1724,8 +1724,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::lowercase_word( char32_t ) {
 			++ _pos;
 		}
 		while (_pos < _data.length() && !is_word_break_character<subword>( _data[_pos] ) ) {
-			if ( _data[_pos] >= 'A' && _data[_pos] <= 'Z' ) {
-				_data[_pos] += 'a' - 'A';
+			if ( iswupper( _data[_pos] ) ) {
+				_data[_pos] = towlower( _data[_pos] );
 			}
 			++ _pos;
 		}
@@ -1742,8 +1742,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::uppercase_word( char32_t ) {
 			++ _pos;
 		}
 		while ( _pos < _data.length() && !is_word_break_character<subword>( _data[_pos] ) ) {
-			if ( _data[_pos] >= 'a' && _data[_pos] <= 'z') {
-				_data[_pos] += 'A' - 'a';
+			if ( iswlower( _data[_pos] ) ) {
+				_data[_pos] = towupper( _data[_pos] );
 			}
 			++ _pos;
 		}
