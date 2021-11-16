@@ -453,6 +453,7 @@ char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
 		}
 
 		std::lock_guard<std::mutex> l( _mutex );
+		_terminal.set_cursor_visible( false );
 		clear_self_to_end_of_screen();
 
 		if ( _updatePrompt ) {
@@ -622,7 +623,7 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 			_errorMessage.clear();
 		}
 		if ( isUnsupportedTerm() ) {
-			cout << prompt << flush;
+			fprintf( stdout, "%s", prompt.c_str() );
 			fflush( stdout );
 			return ( read_from_stdin() );
 		}

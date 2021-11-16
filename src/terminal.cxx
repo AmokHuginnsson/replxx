@@ -128,7 +128,7 @@ void Terminal::write32( char32_t const* text32, int len32 ) {
 void Terminal::write8( char const* data_, int size_ ) {
 #ifdef _WIN32
 	bool temporarilyEnabled( false );
-	if ( ! _rawMode ) {
+	if ( _consoleOut == INVALID_HANDLE_VALUE ) {
 		enable_out();
 		temporarilyEnabled = true;
 	}
