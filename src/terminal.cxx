@@ -127,15 +127,14 @@ void Terminal::write32( char32_t const* text32, int len32 ) {
 
 void Terminal::write8( char const* data_, int size_ ) {
 #ifdef _WIN32
-	bool temporarilyEnabled( false );
+  int nWritten( 0 );
 	if ( ! _rawMode ) {
 		enable_out();
-		temporarilyEnabled = true;
-	}
-	int nWritten( win_write( _consoleOut, _autoEscape, data_, size_ ) );
-	if ( temporarilyEnabled ) {
+    nWritten = win_write( _consoleOut, _autoEscape, data_, size_ );
 		disable_out();
-	}
+	} else {
+    nWritten = write( 1, data_, size_ );
+  }
 #else
 	int nWritten( write( 1, data_, size_ ) );
 #endif

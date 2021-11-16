@@ -622,7 +622,7 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 			_errorMessage.clear();
 		}
 		if ( isUnsupportedTerm() ) {
-			cout << prompt << flush;
+			printf( "%s", prompt.c_str() );
 			fflush( stdout );
 			return ( read_from_stdin() );
 		}
