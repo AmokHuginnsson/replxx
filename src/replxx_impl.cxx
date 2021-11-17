@@ -453,6 +453,9 @@ char32_t Replxx::ReplxxImpl::read_char( HINT_ACTION hintAction_ ) {
 		}
 
 		std::lock_guard<std::mutex> l( _mutex );
+		if ( _updatePrompt ) {
+			_terminal.set_cursor_visible( false );
+		}
 		clear_self_to_end_of_screen();
 
 		if ( _updatePrompt ) {
