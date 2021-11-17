@@ -1133,7 +1133,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 	if ( completionsCount == 1 ) {
 		longestCommonPrefix = static_cast<int>( _completions[selectedCompletion].text().length() );
 	} else {
-		bool lowerCaseContext( std::none_of( _data.end() - _completionContextLength, _data.end(), iswupper ) );
+		bool lowerCaseContext( std::none_of( _data.end() - _completionContextLength, _data.end(), []( char32_t x ) { return iswupper( static_cast<wint_t>( x ) ); } ) );
 		longestCommonPrefix = longest_common_prefix( _completions, _ignoreCase && lowerCaseContext );
 	}
 	if ( _beepOnAmbiguousCompletion && ( completionsCount != 1 ) ) { // beep if ambiguous
@@ -1156,7 +1156,7 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 		_completionContextLength = longestCommonPrefix;
 		if ( _ignoreCase && ( completionsCount > 1 ) ) {
 			for ( int i( 0 ); i < longestCommonPrefix; ++ i ) {
-				_data[_pos + i] = towlower( _data[_pos + i] );
+				_data[_pos + i] = static_cast<char32_t>( towlower( static_cast<wint_t>( _data[_pos + i] ) ) );
 			}
 		}
 		_pos += _completionContextLength;
@@ -1701,14 +1701,14 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::capitalize_word( char32_t ) {
 			++_pos;
 		}
 		if (_pos < _data.length() && !is_word_break_character<subword>( _data[_pos] ) ) {
-			if ( iswlower( _data[_pos] ) ) {
-				_data[_pos] = towupper( _data[_pos] );
+			if ( iswlower( static_cast<wint_t>( _data[_pos] ) ) ) {
+				_data[_pos] = static_cast<char32_t>( towupper( static_cast<wint_t>( _data[_pos] ) ) );
 			}
 			++_pos;
 		}
 		while (_pos < _data.length() && !is_word_break_character<subword>( _data[_pos] ) ) {
-			if ( iswupper( _data[_pos] ) ) {
-				_data[_pos] = towlower( _data[_pos] );
+			if ( iswupper( static_cast<wint_t>( _data[_pos] ) ) ) {
+				_data[_pos] = static_cast<char32_t>( towlower( static_cast<wint_t>( _data[_pos] ) ) );
 			}
 			++_pos;
 		}
@@ -1725,8 +1725,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::lowercase_word( char32_t ) {
 			++ _pos;
 		}
 		while (_pos < _data.length() && !is_word_break_character<subword>( _data[_pos] ) ) {
-			if ( iswupper( _data[_pos] ) ) {
-				_data[_pos] = towlower( _data[_pos] );
+			if ( iswupper( static_cast<wint_t>( _data[_pos] ) ) ) {
+				_data[_pos] = static_cast<char32_t>( towlower( static_cast<wint_t>( _data[_pos] ) ) );
 			}
 			++ _pos;
 		}
@@ -1743,8 +1743,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::uppercase_word( char32_t ) {
 			++ _pos;
 		}
 		while ( _pos < _data.length() && !is_word_break_character<subword>( _data[_pos] ) ) {
-			if ( iswlower( _data[_pos] ) ) {
-				_data[_pos] = towupper( _data[_pos] );
+			if ( iswlower( static_cast<wint_t>( _data[_pos] ) ) ) {
+				_data[_pos] = static_cast<char32_t>( towupper( static_cast<wint_t>( _data[_pos] ) ) );
 			}
 			++ _pos;
 		}
@@ -2284,7 +2284,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 				lineSearchPos += dp._direction;
 			}
 			searchAgain = false;
-			bool lowerCaseContext( std::none_of( dp._searchText.begin(), dp._searchText.end(), iswupper ) );
+			bool lowerCaseContext( std::none_of( dp._searchText.begin(), dp._searchText.end(), []( char32_t x ) { return iswupper( static_cast<wint_t>( x ) ); } ) );
 			while ( true ) {
 				while (
 					dp._direction < 0

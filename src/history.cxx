@@ -307,7 +307,7 @@ void History::restore_pos( void ) {
 bool History::common_prefix_search( UnicodeString const& prefix_, int prefixSize_, bool back_, bool ignoreCase ) {
 	int step( back_ ? -1 : 1 );
 	entries_t::iterator it( moved( _current, step, true ) );
-	bool lowerCaseContext( std::none_of( prefix_.begin(), prefix_.end(), iswupper ) );
+	bool lowerCaseContext( std::none_of( prefix_.begin(), prefix_.end(), []( char32_t x ) { return iswupper( static_cast<wint_t>( x ) ); } ) );
 	while ( it != _current ) {
 		if ( it->text().starts_with( prefix_.begin(), prefix_.begin() + prefixSize_, ignoreCase && lowerCaseContext ? case_insensitive_equal : case_sensitive_equal ) ) {
 			_current = it;

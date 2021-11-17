@@ -85,10 +85,10 @@ void hook_color( std::string const& str, Replxx::colors_t& colors, syntax_highli
 void hook_modify( std::string& line, int& cursorPosition, Replxx* );
 
 bool eq( std::string const& l, std::string const& r, int s, bool ic ) {
-	if ( l.length() < s ) {
+	if ( static_cast<int>( l.length() ) < s ) {
 		return false;
 	}
-	if ( r.length() < s ) {
+	if ( static_cast<int>( r.length() ) < s ) {
 		return false;
 	}
 	bool same( true );

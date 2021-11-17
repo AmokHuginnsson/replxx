@@ -15,7 +15,7 @@ inline bool case_sensitive_equal( char32_t l, char32_t r ) {
 }
 
 inline bool case_insensitive_equal( char32_t l, char32_t r ) {
-	return towlower(l) == towlower(r);
+	return towlower( static_cast<wint_t>( l ) ) == towlower( static_cast<wint_t>( r ) );
 }
 
 class UnicodeString {
