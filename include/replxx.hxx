@@ -60,6 +60,11 @@ enum { ERROR_BB1CA97EC761FC37101737BA0AA2E7C5 = ERROR };
 #undef ERROR
 enum { ERROR = ERROR_BB1CA97EC761FC37101737BA0AA2E7C5 };
 #endif
+#ifdef ABORT
+enum { ABORT_8D12A2CA7E5A64036D7251A3EDA51A38 = ABORT };
+#undef ABORT
+enum { ABORT = ABORT_8D12A2CA7E5A64036D7251A3EDA51A38 };
+#endif
 #ifdef DELETE
 enum { DELETE_32F68A60CEF40FAEDBC6AF20298C1A1E = DELETE };
 #undef DELETE
@@ -144,6 +149,7 @@ public:
 		static char32_t const BACKSPACE    = 'H' | BASE_CONTROL;
 		static char32_t const TAB          = 'I' | BASE_CONTROL;
 		static char32_t const ENTER        = 'M' | BASE_CONTROL;
+		static char32_t const ABORT        = 'C' | BASE_CONTROL | BASE_META;
 	};
 	/*! \brief List of built-in actions that act upon user input.
 	 */

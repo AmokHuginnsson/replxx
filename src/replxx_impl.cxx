@@ -288,6 +288,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	bind_key( Replxx::KEY::meta( 'U' ),                    _namedActions.at( action_names::UPPERCASE_SUBWORD ) );
 	bind_key( Replxx::KEY::control( 'T' ),                 _namedActions.at( action_names::TRANSPOSE_CHARACTERS ) );
 	bind_key( Replxx::KEY::control( 'C' ),                 _namedActions.at( action_names::ABORT_LINE ) );
+	bind_key( Replxx::KEY::ABORT,                          _namedActions.at( action_names::ABORT_LINE ) );
 	bind_key( Replxx::KEY::control( 'D' ),                 _namedActions.at( action_names::SEND_EOF ) );
 	bind_key( Replxx::KEY::INSERT + 0,                     _namedActions.at( action_names::TOGGLE_OVERWRITE_MODE ) );
 	bind_key( 127,                                         _namedActions.at( action_names::DELETE_CHARACTER_UNDER_CURSOR ) );
@@ -1772,7 +1773,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::transpose_characters( char32_t ) {
 }
 
 // ctrl-C, abort this line
-Replxx::ACTION_RESULT Replxx::ReplxxImpl::abort_line( char32_t ) {
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::abort_line( char32_t keyCode_ ) {
 	errno = EAGAIN;
 	_history.drop_last();
 	// we need one last refresh with the cursor at the end of the line
@@ -1780,7 +1781,9 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::abort_line( char32_t ) {
 	_pos = _data.length(); // pass _data.length() as _pos for EOL
 	_lastRefreshTime = 0;
 	refresh_line( _refreshSkipped ? HINT_ACTION::REGENERATE : HINT_ACTION::TRIM );
-	_terminal.write8( "^C\r\n", 4 );
+	if ( keyCode_ == Replxx::KEY::control( 'C' ) ) {
+		_terminal.write8( "^C\r\n", 4 );
+	}
 	return ( Replxx::ACTION_RESULT::BAIL );
 }
 

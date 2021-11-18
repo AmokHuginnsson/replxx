@@ -134,6 +134,7 @@ enum { REPLXX_KEY_PASTE_FINISH = REPLXX_KEY_PASTE_START + 1 };
 enum { REPLXX_KEY_BACKSPACE    = REPLXX_KEY_CONTROL( 'H' ) };
 enum { REPLXX_KEY_TAB          = REPLXX_KEY_CONTROL( 'I' ) };
 enum { REPLXX_KEY_ENTER        = REPLXX_KEY_CONTROL( 'M' ) };
+enum { REPLXX_KEY_ABORT        = REPLXX_KEY_META( REPLXX_KEY_CONTROL( 'M' ) ) };
 
 /*! \brief List of built-in actions that act upon user input.
  */
