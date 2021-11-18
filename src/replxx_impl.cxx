@@ -618,7 +618,7 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 		if ( ! tty::in ) { // input not from a terminal, we should work with piped input, i.e. redirected stdin
 			return ( read_from_stdin() );
 		}
-		if ( !_errorMessage.empty() ) {
+		if ( ! _errorMessage.empty() ) {
 			printf( "%s", _errorMessage.c_str() );
 			fflush( stdout );
 			_errorMessage.clear();
@@ -628,20 +628,19 @@ char const* Replxx::ReplxxImpl::input( std::string const& prompt ) {
 			fflush( stdout );
 			return ( read_from_stdin() );
 		}
+		std::unique_lock<std::mutex> l( _mutex );
 		if ( _terminal.enable_raw_mode() == -1 ) {
 			return nullptr;
 		}
 
-		/* scope for mutex lock */ {
-			std::lock_guard<std::mutex> l( _mutex );
-			_asyncPrompt.clear();
-			_updatePrompt = false;
-			_prompt.set_text( UnicodeString( prompt ) );
-			_currentThread = std::this_thread::get_id();
-		}
+		_asyncPrompt.clear();
+		_updatePrompt = false;
+		_prompt.set_text( UnicodeString( prompt ) );
+		_currentThread = std::this_thread::get_id();
+		l.unlock();
 		clear();
-		if (!_preloadedBuffer.empty()) {
-			preload_puffer(_preloadedBuffer.c_str());
+		if ( !_preloadedBuffer.empty() ) {
+			preload_puffer( _preloadedBuffer.c_str() );
 			_preloadedBuffer.clear();
 		}
 		if ( get_input_line() == -1 ) {
