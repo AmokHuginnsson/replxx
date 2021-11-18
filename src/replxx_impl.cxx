@@ -695,7 +695,9 @@ void Replxx::ReplxxImpl::disable_bracketed_paste( void ) {
 void Replxx::ReplxxImpl::print( char const* str_, int size_ ) {
 	std::unique_lock<std::mutex> l( _mutex );
 	if ( ( _currentThread == std::thread::id() ) || ( _currentThread == std::this_thread::get_id() ) ) {
+#ifndef _WIN32
 		l.unlock();
+#endif
 		_terminal.write8( str_, size_ );
 	} else {
 		_messages.emplace_back( str_, size_ );
