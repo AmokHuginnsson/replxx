@@ -446,6 +446,8 @@ int main( int argc_, char** argv_ ) {
 	rx.bind_key_internal( Replxx::KEY::RIGHT,                          "move_cursor_right" );
 	rx.bind_key_internal( Replxx::KEY::UP,                             "history_previous" );
 	rx.bind_key_internal( Replxx::KEY::DOWN,                           "history_next" );
+	rx.bind_key_internal( Replxx::KEY::meta( Replxx::KEY::UP ),        "history_move_previous" );
+	rx.bind_key_internal( Replxx::KEY::meta( Replxx::KEY::DOWN ),      "history_move_next" );
 	rx.bind_key_internal( Replxx::KEY::PAGE_UP,                        "history_first" );
 	rx.bind_key_internal( Replxx::KEY::PAGE_DOWN,                      "history_last" );
 	rx.bind_key_internal( Replxx::KEY::HOME,                           "move_cursor_to_begining_of_line" );
