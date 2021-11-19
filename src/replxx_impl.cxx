@@ -82,6 +82,8 @@ char const COMPLETE_NEXT[]                   = "complete_next";
 char const COMPLETE_PREVIOUS[]               = "complete_previous";
 char const HISTORY_NEXT[]                    = "history_next";
 char const HISTORY_PREVIOUS[]                = "history_previous";
+char const LINE_NEXT[]                       = "line_next";
+char const LINE_PREVIOUS[]                   = "line_previous";
 char const HISTORY_LAST[]                    = "history_last";
 char const HISTORY_FIRST[]                   = "history_first";
 char const HISTORY_RESTORE[]                 = "history_restore";
@@ -235,8 +237,10 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	_namedActions[action_names::CLEAR_SCREEN]                    = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::CLEAR_SCREEN,                    _1 );
 	_namedActions[action_names::COMPLETE_NEXT]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMPLETE_NEXT,                   _1 );
 	_namedActions[action_names::COMPLETE_PREVIOUS]               = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMPLETE_PREVIOUS,               _1 );
-	_namedActions[action_names::HISTORY_NEXT]                    = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_NEXT,                    _1 );
-	_namedActions[action_names::HISTORY_PREVIOUS]                = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_PREVIOUS,                _1 );
+	_namedActions[action_names::LINE_NEXT]                       = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::LINE_NEXT,                       _1 );
+	_namedActions[action_names::LINE_PREVIOUS]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::LINE_PREVIOUS,                   _1 );
+	_namedActions[action_names::HISTORY_NEXT]                    = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_NEXT,               _1 );
+	_namedActions[action_names::HISTORY_PREVIOUS]                = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_PREVIOUS,           _1 );
 	_namedActions[action_names::HISTORY_LAST]                    = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_LAST,                    _1 );
 	_namedActions[action_names::HISTORY_FIRST]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_FIRST,                   _1 );
 	_namedActions[action_names::HISTORY_RESTORE]                 = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_RESTORE,                 _1 );
@@ -300,8 +304,10 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	bind_key( Replxx::KEY::control( 'L' ),                 _namedActions.at( action_names::CLEAR_SCREEN ) );
 	bind_key( Replxx::KEY::control( 'N' ),                 _namedActions.at( action_names::COMPLETE_NEXT ) );
 	bind_key( Replxx::KEY::control( 'P' ),                 _namedActions.at( action_names::COMPLETE_PREVIOUS ) );
-	bind_key( Replxx::KEY::DOWN + 0,                       _namedActions.at( action_names::HISTORY_NEXT ) );
-	bind_key( Replxx::KEY::UP + 0,                         _namedActions.at( action_names::HISTORY_PREVIOUS ) );
+	bind_key( Replxx::KEY::DOWN + 0,                       _namedActions.at( action_names::LINE_NEXT ) );
+	bind_key( Replxx::KEY::UP + 0,                         _namedActions.at( action_names::LINE_PREVIOUS ) );
+	bind_key( Replxx::KEY::meta( Replxx::KEY::DOWN ),      _namedActions.at( action_names::HISTORY_NEXT ) );
+	bind_key( Replxx::KEY::meta( Replxx::KEY::UP ),        _namedActions.at( action_names::HISTORY_PREVIOUS ) );
 	bind_key( Replxx::KEY::meta( '<' ),                    _namedActions.at( action_names::HISTORY_FIRST ) );
 	bind_key( Replxx::KEY::PAGE_UP + 0,                    _namedActions.at( action_names::HISTORY_FIRST ) );
 	bind_key( Replxx::KEY::meta( '>' ),                    _namedActions.at( action_names::HISTORY_LAST ) );
@@ -352,6 +358,8 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32
 		case ( Replxx::ACTION::MOVE_CURSOR_ONE_SUBWORD_RIGHT ):   return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_word_right<true>, code ) );
 		case ( Replxx::ACTION::MOVE_CURSOR_LEFT ):                return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_char_left, code ) );
 		case ( Replxx::ACTION::MOVE_CURSOR_RIGHT ):               return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_char_right, code ) );
+		case ( Replxx::ACTION::LINE_NEXT ):                       return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::line_next, code ) );
+		case ( Replxx::ACTION::LINE_PREVIOUS ):                   return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::line_previous, code ) );
 		case ( Replxx::ACTION::HISTORY_NEXT ):                    return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_next, code ) );
 		case ( Replxx::ACTION::HISTORY_PREVIOUS ):                return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_previous, code ) );
 		case ( Replxx::ACTION::HISTORY_FIRST ):                   return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_first, code ) );
@@ -1862,7 +1870,7 @@ int Replxx::ReplxxImpl::pos_in_line( void ) const {
 }
 
 // Up, recall previous line in history
-Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_previous( char32_t ) {
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::line_previous( char32_t ) {
 	assert( ( _pos >= 0 ) && ( _pos <= _data.length() ) );
 	do {
 		if ( ! _hasNewlines ) {
@@ -1888,7 +1896,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_previous( char32_t ) {
 }
 
 // Down, recall next line in history
-Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_next( char32_t ) {
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::line_next( char32_t ) {
 	assert( ( _pos >= 0 ) && ( _pos <= _data.length() ) );
 	do {
 		if ( ! _hasNewlines ) {
@@ -1917,6 +1925,14 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_next( char32_t ) {
 		return ( Replxx::ACTION_RESULT::CONTINUE );
 	} while ( false );
 	return ( history_move( false ) );
+}
+
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_next( char32_t ) {
+	return ( history_move( false ) );
+}
+
+Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_previous( char32_t ) {
+	return ( history_move( true ) );
 }
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_move( bool previous_ ) {

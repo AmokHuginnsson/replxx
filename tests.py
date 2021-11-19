@@ -3235,6 +3235,29 @@ class ReplxxTests( unittest.TestCase ):
 			"three\r\n",
 			"one\ntwo\nthree\n"
 		)
+	def test_move_up_over_multiline( self_ ):
+		self_.check_scenario(
+			"<m-up><m-up><m-up><cr><c-d>",
+			"<c9>ZZZ<rst><ceos><c12><c9><ceos>bbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbbbbb<rst><c24><u3><c9><yellow>123<rst><ceos><c12><c9><yellow>123<rst><ceos><c12>\r\n"
+			"123\r\n",
+			"123\nbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\nZZZ\n"
+		)
+	def test_move_down_over_multiline( self_ ):
+		self_.check_scenario(
+			"<pgup><m-down><pgup><m-down><m-down>x<cr><c-d>",
+			"<c9><yellow>123<rst><ceos><c12><c9><ceos>bbbbbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbb<rst><c17><u3><c9><ceos>bbbbbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbbbbbb\r\n"
+			"bbbbbbbbbbbbbbbb<rst><u3><c9><c9>ZZZ<rst><ceos><c12><c9><rst><ceos><c9><c9>x<rst><ceos><c10><c9>x<rst><ceos><c10>\r\n"
+			"x\r\n",
+			"123\nbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\nZZZ\n"
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity

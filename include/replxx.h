@@ -161,8 +161,10 @@ typedef enum {
 	REPLXX_ACTION_MOVE_CURSOR_ONE_SUBWORD_RIGHT,
 	REPLXX_ACTION_MOVE_CURSOR_LEFT,
 	REPLXX_ACTION_MOVE_CURSOR_RIGHT,
-	REPLXX_ACTION_HISTORY_NEXT,
-	REPLXX_ACTION_HISTORY_PREVIOUS,
+	REPLXX_ACTION_LINE_NEXT,
+	REPLXX_ACTION_LINE_PREVIOUS,
+	REPLXX_ACTION_HISTORY_MOVE_NEXT,
+	REPLXX_ACTION_HISTORY_MOVE_PREVIOUS,
 	REPLXX_ACTION_HISTORY_FIRST,
 	REPLXX_ACTION_HISTORY_LAST,
 	REPLXX_ACTION_HISTORY_RESTORE,
@@ -451,8 +453,8 @@ REPLXX_IMPEXP void replxx_bind_key( Replxx*, int code, key_press_handler_t handl
  *
  * Action names are the same as unique part of names of ReplxxAction enumerations
  * but in lower case, e.g.: an action for recalling previous history line
- * is \e REPLXX_ACTION_HISTORY_PREVIOUS so action name to be used in this
- * interface for the same effect is "history_previous".
+ * is \e REPLXX_ACTION_LINE_PREVIOUS so action name to be used in this
+ * interface for the same effect is "line_previous".
  *
  * \param code - handle this key-press event with following handler.
  * \param actionName - name of internal action to be invoked on key press.

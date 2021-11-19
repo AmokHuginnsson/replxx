@@ -241,6 +241,8 @@ private:
 	Replxx::ACTION_RESULT delete_character( char32_t );
 	Replxx::ACTION_RESULT backspace_character( char32_t );
 	Replxx::ACTION_RESULT commit_line( char32_t );
+	Replxx::ACTION_RESULT line_next( char32_t );
+	Replxx::ACTION_RESULT line_previous( char32_t );
 	Replxx::ACTION_RESULT history_next( char32_t );
 	Replxx::ACTION_RESULT history_previous( char32_t );
 	Replxx::ACTION_RESULT history_move( bool );
