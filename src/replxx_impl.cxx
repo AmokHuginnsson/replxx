@@ -1452,6 +1452,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::insert_character( char32_t c ) {
 	} else {
 		_data[_pos] = c;
 	}
+	_oldPos = _pos;
 	++ _pos;
 	call_modify_callback();
 	int long long now( now_us() );

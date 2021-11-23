@@ -3258,6 +3258,12 @@ class ReplxxTests( unittest.TestCase ):
 			"x\r\n",
 			"123\nbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\nZZZ\n"
 		)
+	def test_position_tracking_no_color( self_ ):
+		self_.check_scenario(
+			"abcdef<home><cr><c-d>",
+			"abcdef<c9><c9>abcdef<ceos><c15>\r\nthanks for the input: abcdef\r\n",
+			command = [ ReplxxTests._cSample_, "m", "N", "S", "C", "M0" ]
+		)
 
 def parseArgs( self, func, argv ):
 	global verbosity
