@@ -44,57 +44,58 @@ namespace {
 
 namespace action_names {
 
-char const INSERT_CHARACTER[]                = "insert_character";
-char const NEW_LINE[]                        = "new_line";
-char const MOVE_CURSOR_TO_BEGINING_OF_LINE[] = "move_cursor_to_begining_of_line";
-char const MOVE_CURSOR_TO_END_OF_LINE[]      = "move_cursor_to_end_of_line";
-char const MOVE_CURSOR_LEFT[]                = "move_cursor_left";
-char const MOVE_CURSOR_RIGHT[]               = "move_cursor_right";
-char const MOVE_CURSOR_ONE_WORD_LEFT[]       = "move_cursor_one_word_left";
-char const MOVE_CURSOR_ONE_WORD_RIGHT[]      = "move_cursor_one_word_right";
-char const MOVE_CURSOR_ONE_SUBWORD_LEFT[]    = "move_cursor_one_subword_left";
-char const MOVE_CURSOR_ONE_SUBWORD_RIGHT[]   = "move_cursor_one_subword_right";
-char const KILL_TO_WHITESPACE_ON_LEFT[]      = "kill_to_whitespace_on_left";
-char const KILL_TO_END_OF_WORD[]             = "kill_to_end_of_word";
-char const KILL_TO_END_OF_SUBWORD[]          = "kill_to_end_of_subword";
-char const KILL_TO_BEGINING_OF_WORD[]        = "kill_to_begining_of_word";
-char const KILL_TO_BEGINING_OF_SUBWORD[]     = "kill_to_begining_of_subword";
-char const KILL_TO_BEGINING_OF_LINE[]        = "kill_to_begining_of_line";
-char const KILL_TO_END_OF_LINE[]             = "kill_to_end_of_line";
-char const YANK[]                            = "yank";
-char const YANK_CYCLE[]                      = "yank_cycle";
-char const YANK_LAST_ARG[]                   = "yank_last_arg";
-char const CAPITALIZE_WORD[]                 = "capitalize_word";
-char const LOWERCASE_WORD[]                  = "lowercase_word";
-char const UPPERCASE_WORD[]                  = "uppercase_word";
-char const CAPITALIZE_SUBWORD[]              = "capitalize_subword";
-char const LOWERCASE_SUBWORD[]               = "lowercase_subword";
-char const UPPERCASE_SUBWORD[]               = "uppercase_subword";
-char const TRANSPOSE_CHARACTERS[]            = "transpose_characters";
-char const ABORT_LINE[]                      = "abort_line";
-char const SEND_EOF[]                        = "send_eof";
-char const TOGGLE_OVERWRITE_MODE[]           = "toggle_overwrite_mode";
-char const DELETE_CHARACTER_UNDER_CURSOR[]   = "delete_character_under_cursor";
-char const DELETE_CHARACTER_LEFT_OF_CURSOR[] = "delete_character_left_of_cursor";
-char const COMMIT_LINE[]                     = "commit_line";
-char const CLEAR_SCREEN[]                    = "clear_screen";
-char const COMPLETE_NEXT[]                   = "complete_next";
-char const COMPLETE_PREVIOUS[]               = "complete_previous";
-char const HISTORY_NEXT[]                    = "history_next";
-char const HISTORY_PREVIOUS[]                = "history_previous";
-char const LINE_NEXT[]                       = "line_next";
-char const LINE_PREVIOUS[]                   = "line_previous";
-char const HISTORY_LAST[]                    = "history_last";
-char const HISTORY_FIRST[]                   = "history_first";
-char const HISTORY_RESTORE[]                 = "history_restore";
-char const HISTORY_RESTORE_CURRENT[]         = "history_restore_current";
-char const HINT_PREVIOUS[]                   = "hint_previous";
-char const HINT_NEXT[]                       = "hint_next";
-char const VERBATIM_INSERT[]                 = "verbatim_insert";
-char const SUSPEND[]                         = "suspend";
-char const COMPLETE_LINE[]                   = "complete_line";
-char const HISTORY_INCREMENTAL_SEARCH[]      = "history_incremental_search";
-char const HISTORY_COMMON_PREFIX_SEARCH[]    = "history_common_prefix_search";
+char const INSERT_CHARACTER[]                  = "insert_character";
+char const NEW_LINE[]                          = "new_line";
+char const MOVE_CURSOR_TO_BEGINING_OF_LINE[]   = "move_cursor_to_begining_of_line";
+char const MOVE_CURSOR_TO_END_OF_LINE[]        = "move_cursor_to_end_of_line";
+char const MOVE_CURSOR_LEFT[]                  = "move_cursor_left";
+char const MOVE_CURSOR_RIGHT[]                 = "move_cursor_right";
+char const MOVE_CURSOR_ONE_WORD_LEFT[]         = "move_cursor_one_word_left";
+char const MOVE_CURSOR_ONE_WORD_RIGHT[]        = "move_cursor_one_word_right";
+char const MOVE_CURSOR_ONE_SUBWORD_LEFT[]      = "move_cursor_one_subword_left";
+char const MOVE_CURSOR_ONE_SUBWORD_RIGHT[]     = "move_cursor_one_subword_right";
+char const KILL_TO_WHITESPACE_ON_LEFT[]        = "kill_to_whitespace_on_left";
+char const KILL_TO_END_OF_WORD[]               = "kill_to_end_of_word";
+char const KILL_TO_END_OF_SUBWORD[]            = "kill_to_end_of_subword";
+char const KILL_TO_BEGINING_OF_WORD[]          = "kill_to_begining_of_word";
+char const KILL_TO_BEGINING_OF_SUBWORD[]       = "kill_to_begining_of_subword";
+char const KILL_TO_BEGINING_OF_LINE[]          = "kill_to_begining_of_line";
+char const KILL_TO_END_OF_LINE[]               = "kill_to_end_of_line";
+char const YANK[]                              = "yank";
+char const YANK_CYCLE[]                        = "yank_cycle";
+char const YANK_LAST_ARG[]                     = "yank_last_arg";
+char const CAPITALIZE_WORD[]                   = "capitalize_word";
+char const LOWERCASE_WORD[]                    = "lowercase_word";
+char const UPPERCASE_WORD[]                    = "uppercase_word";
+char const CAPITALIZE_SUBWORD[]                = "capitalize_subword";
+char const LOWERCASE_SUBWORD[]                 = "lowercase_subword";
+char const UPPERCASE_SUBWORD[]                 = "uppercase_subword";
+char const TRANSPOSE_CHARACTERS[]              = "transpose_characters";
+char const ABORT_LINE[]                        = "abort_line";
+char const SEND_EOF[]                          = "send_eof";
+char const TOGGLE_OVERWRITE_MODE[]             = "toggle_overwrite_mode";
+char const DELETE_CHARACTER_UNDER_CURSOR[]     = "delete_character_under_cursor";
+char const DELETE_CHARACTER_LEFT_OF_CURSOR[]   = "delete_character_left_of_cursor";
+char const COMMIT_LINE[]                       = "commit_line";
+char const CLEAR_SCREEN[]                      = "clear_screen";
+char const COMPLETE_NEXT[]                     = "complete_next";
+char const COMPLETE_PREVIOUS[]                 = "complete_previous";
+char const HISTORY_NEXT[]                      = "history_next";
+char const HISTORY_PREVIOUS[]                  = "history_previous";
+char const LINE_NEXT[]                         = "line_next";
+char const LINE_PREVIOUS[]                     = "line_previous";
+char const HISTORY_LAST[]                      = "history_last";
+char const HISTORY_FIRST[]                     = "history_first";
+char const HISTORY_RESTORE[]                   = "history_restore";
+char const HISTORY_RESTORE_CURRENT[]           = "history_restore_current";
+char const HINT_PREVIOUS[]                     = "hint_previous";
+char const HINT_NEXT[]                         = "hint_next";
+char const VERBATIM_INSERT[]                   = "verbatim_insert";
+char const SUSPEND[]                           = "suspend";
+char const COMPLETE_LINE[]                     = "complete_line";
+char const HISTORY_INCREMENTAL_SEARCH[]        = "history_incremental_search";
+char const HISTORY_SEEDED_INCREMENTAL_SEARCH[] = "history_seeded_incremental_search";
+char const HISTORY_COMMON_PREFIX_SEARCH[]      = "history_common_prefix_search";
 }
 
 static int const REPLXX_MAX_HINT_ROWS( 4 );
@@ -201,61 +202,62 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	, _ignoreCase( false )
 	, _mutex() {
 	using namespace std::placeholders;
-	_namedActions[action_names::INSERT_CHARACTER]                = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::INSERT_CHARACTER,                _1 );
-	_namedActions[action_names::NEW_LINE]                        = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::NEW_LINE,                        _1 );
-	_namedActions[action_names::MOVE_CURSOR_TO_BEGINING_OF_LINE] = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_TO_BEGINING_OF_LINE, _1 );
-	_namedActions[action_names::MOVE_CURSOR_TO_END_OF_LINE]      = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_TO_END_OF_LINE,      _1 );
-	_namedActions[action_names::MOVE_CURSOR_LEFT]                = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_LEFT,                _1 );
-	_namedActions[action_names::MOVE_CURSOR_RIGHT]               = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_RIGHT,               _1 );
-	_namedActions[action_names::MOVE_CURSOR_ONE_WORD_LEFT]       = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_ONE_WORD_LEFT,       _1 );
-	_namedActions[action_names::MOVE_CURSOR_ONE_WORD_RIGHT]      = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_ONE_WORD_RIGHT,      _1 );
-	_namedActions[action_names::MOVE_CURSOR_ONE_SUBWORD_LEFT]    = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_ONE_SUBWORD_LEFT,    _1 );
-	_namedActions[action_names::MOVE_CURSOR_ONE_SUBWORD_RIGHT]   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_ONE_SUBWORD_RIGHT,   _1 );
-	_namedActions[action_names::KILL_TO_WHITESPACE_ON_LEFT]      = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_WHITESPACE_ON_LEFT,      _1 );
-	_namedActions[action_names::KILL_TO_END_OF_WORD]             = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_END_OF_WORD,             _1 );
-	_namedActions[action_names::KILL_TO_BEGINING_OF_WORD]        = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_BEGINING_OF_WORD,        _1 );
-	_namedActions[action_names::KILL_TO_END_OF_SUBWORD]          = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_END_OF_SUBWORD,          _1 );
-	_namedActions[action_names::KILL_TO_BEGINING_OF_SUBWORD]     = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_BEGINING_OF_SUBWORD,     _1 );
-	_namedActions[action_names::KILL_TO_BEGINING_OF_LINE]        = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_BEGINING_OF_LINE,        _1 );
-	_namedActions[action_names::KILL_TO_END_OF_LINE]             = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_END_OF_LINE,             _1 );
-	_namedActions[action_names::YANK]                            = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::YANK,                            _1 );
-	_namedActions[action_names::YANK_CYCLE]                      = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::YANK_CYCLE,                      _1 );
-	_namedActions[action_names::YANK_LAST_ARG]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::YANK_LAST_ARG,                   _1 );
-	_namedActions[action_names::CAPITALIZE_WORD]                 = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::CAPITALIZE_WORD,                 _1 );
-	_namedActions[action_names::LOWERCASE_WORD]                  = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::LOWERCASE_WORD,                  _1 );
-	_namedActions[action_names::UPPERCASE_WORD]                  = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::UPPERCASE_WORD,                  _1 );
-	_namedActions[action_names::CAPITALIZE_SUBWORD]              = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::CAPITALIZE_SUBWORD,              _1 );
-	_namedActions[action_names::LOWERCASE_SUBWORD]               = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::LOWERCASE_SUBWORD,               _1 );
-	_namedActions[action_names::UPPERCASE_SUBWORD]               = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::UPPERCASE_SUBWORD,               _1 );
-	_namedActions[action_names::TRANSPOSE_CHARACTERS]            = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::TRANSPOSE_CHARACTERS,            _1 );
-	_namedActions[action_names::ABORT_LINE]                      = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::ABORT_LINE,                      _1 );
-	_namedActions[action_names::SEND_EOF]                        = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::SEND_EOF,                        _1 );
-	_namedActions[action_names::TOGGLE_OVERWRITE_MODE]           = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::TOGGLE_OVERWRITE_MODE,           _1 );
-	_namedActions[action_names::DELETE_CHARACTER_UNDER_CURSOR]   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::DELETE_CHARACTER_UNDER_CURSOR,   _1 );
-	_namedActions[action_names::DELETE_CHARACTER_LEFT_OF_CURSOR] = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::DELETE_CHARACTER_LEFT_OF_CURSOR, _1 );
-	_namedActions[action_names::COMMIT_LINE]                     = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMMIT_LINE,                     _1 );
-	_namedActions[action_names::CLEAR_SCREEN]                    = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::CLEAR_SCREEN,                    _1 );
-	_namedActions[action_names::COMPLETE_NEXT]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMPLETE_NEXT,                   _1 );
-	_namedActions[action_names::COMPLETE_PREVIOUS]               = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMPLETE_PREVIOUS,               _1 );
-	_namedActions[action_names::LINE_NEXT]                       = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::LINE_NEXT,                       _1 );
-	_namedActions[action_names::LINE_PREVIOUS]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::LINE_PREVIOUS,                   _1 );
-	_namedActions[action_names::HISTORY_NEXT]                    = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_NEXT,               _1 );
-	_namedActions[action_names::HISTORY_PREVIOUS]                = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_PREVIOUS,           _1 );
-	_namedActions[action_names::HISTORY_LAST]                    = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_LAST,                    _1 );
-	_namedActions[action_names::HISTORY_FIRST]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_FIRST,                   _1 );
-	_namedActions[action_names::HISTORY_RESTORE]                 = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_RESTORE,                 _1 );
-	_namedActions[action_names::HISTORY_RESTORE_CURRENT]         = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_RESTORE_CURRENT,         _1 );
-	_namedActions[action_names::HINT_PREVIOUS]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HINT_PREVIOUS,                   _1 );
-	_namedActions[action_names::HINT_NEXT]                       = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HINT_NEXT,                       _1 );
+	_namedActions[action_names::INSERT_CHARACTER]                  = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::INSERT_CHARACTER,                  _1 );
+	_namedActions[action_names::NEW_LINE]                          = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::NEW_LINE,                          _1 );
+	_namedActions[action_names::MOVE_CURSOR_TO_BEGINING_OF_LINE]   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_TO_BEGINING_OF_LINE,   _1 );
+	_namedActions[action_names::MOVE_CURSOR_TO_END_OF_LINE]        = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_TO_END_OF_LINE,        _1 );
+	_namedActions[action_names::MOVE_CURSOR_LEFT]                  = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_LEFT,                  _1 );
+	_namedActions[action_names::MOVE_CURSOR_RIGHT]                 = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_RIGHT,                 _1 );
+	_namedActions[action_names::MOVE_CURSOR_ONE_WORD_LEFT]         = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_ONE_WORD_LEFT,         _1 );
+	_namedActions[action_names::MOVE_CURSOR_ONE_WORD_RIGHT]        = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_ONE_WORD_RIGHT,        _1 );
+	_namedActions[action_names::MOVE_CURSOR_ONE_SUBWORD_LEFT]      = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_ONE_SUBWORD_LEFT,      _1 );
+	_namedActions[action_names::MOVE_CURSOR_ONE_SUBWORD_RIGHT]     = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::MOVE_CURSOR_ONE_SUBWORD_RIGHT,     _1 );
+	_namedActions[action_names::KILL_TO_WHITESPACE_ON_LEFT]        = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_WHITESPACE_ON_LEFT,        _1 );
+	_namedActions[action_names::KILL_TO_END_OF_WORD]               = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_END_OF_WORD,               _1 );
+	_namedActions[action_names::KILL_TO_BEGINING_OF_WORD]          = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_BEGINING_OF_WORD,          _1 );
+	_namedActions[action_names::KILL_TO_END_OF_SUBWORD]            = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_END_OF_SUBWORD,            _1 );
+	_namedActions[action_names::KILL_TO_BEGINING_OF_SUBWORD]       = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_BEGINING_OF_SUBWORD,       _1 );
+	_namedActions[action_names::KILL_TO_BEGINING_OF_LINE]          = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_BEGINING_OF_LINE,          _1 );
+	_namedActions[action_names::KILL_TO_END_OF_LINE]               = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::KILL_TO_END_OF_LINE,               _1 );
+	_namedActions[action_names::YANK]                              = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::YANK,                              _1 );
+	_namedActions[action_names::YANK_CYCLE]                        = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::YANK_CYCLE,                        _1 );
+	_namedActions[action_names::YANK_LAST_ARG]                     = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::YANK_LAST_ARG,                     _1 );
+	_namedActions[action_names::CAPITALIZE_WORD]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::CAPITALIZE_WORD,                   _1 );
+	_namedActions[action_names::LOWERCASE_WORD]                    = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::LOWERCASE_WORD,                    _1 );
+	_namedActions[action_names::UPPERCASE_WORD]                    = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::UPPERCASE_WORD,                    _1 );
+	_namedActions[action_names::CAPITALIZE_SUBWORD]                = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::CAPITALIZE_SUBWORD,                _1 );
+	_namedActions[action_names::LOWERCASE_SUBWORD]                 = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::LOWERCASE_SUBWORD,                 _1 );
+	_namedActions[action_names::UPPERCASE_SUBWORD]                 = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::UPPERCASE_SUBWORD,                 _1 );
+	_namedActions[action_names::TRANSPOSE_CHARACTERS]              = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::TRANSPOSE_CHARACTERS,              _1 );
+	_namedActions[action_names::ABORT_LINE]                        = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::ABORT_LINE,                        _1 );
+	_namedActions[action_names::SEND_EOF]                          = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::SEND_EOF,                          _1 );
+	_namedActions[action_names::TOGGLE_OVERWRITE_MODE]             = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::TOGGLE_OVERWRITE_MODE,             _1 );
+	_namedActions[action_names::DELETE_CHARACTER_UNDER_CURSOR]     = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::DELETE_CHARACTER_UNDER_CURSOR,     _1 );
+	_namedActions[action_names::DELETE_CHARACTER_LEFT_OF_CURSOR]   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::DELETE_CHARACTER_LEFT_OF_CURSOR,   _1 );
+	_namedActions[action_names::COMMIT_LINE]                       = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMMIT_LINE,                       _1 );
+	_namedActions[action_names::CLEAR_SCREEN]                      = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::CLEAR_SCREEN,                      _1 );
+	_namedActions[action_names::COMPLETE_NEXT]                     = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMPLETE_NEXT,                     _1 );
+	_namedActions[action_names::COMPLETE_PREVIOUS]                 = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMPLETE_PREVIOUS,                 _1 );
+	_namedActions[action_names::LINE_NEXT]                         = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::LINE_NEXT,                         _1 );
+	_namedActions[action_names::LINE_PREVIOUS]                     = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::LINE_PREVIOUS,                     _1 );
+	_namedActions[action_names::HISTORY_NEXT]                      = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_NEXT,                      _1 );
+	_namedActions[action_names::HISTORY_PREVIOUS]                  = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_PREVIOUS,                  _1 );
+	_namedActions[action_names::HISTORY_LAST]                      = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_LAST,                      _1 );
+	_namedActions[action_names::HISTORY_FIRST]                     = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_FIRST,                     _1 );
+	_namedActions[action_names::HISTORY_RESTORE]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_RESTORE,                   _1 );
+	_namedActions[action_names::HISTORY_RESTORE_CURRENT]           = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_RESTORE_CURRENT,           _1 );
+	_namedActions[action_names::HINT_PREVIOUS]                     = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HINT_PREVIOUS,                     _1 );
+	_namedActions[action_names::HINT_NEXT]                         = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HINT_NEXT,                         _1 );
 #ifndef _WIN32
-	_namedActions[action_names::VERBATIM_INSERT]                 = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::VERBATIM_INSERT,                 _1 );
-	_namedActions[action_names::SUSPEND]                         = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::SUSPEND,                         _1 );
+	_namedActions[action_names::VERBATIM_INSERT]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::VERBATIM_INSERT,                   _1 );
+	_namedActions[action_names::SUSPEND]                           = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::SUSPEND,                           _1 );
 #else
 	_namedActions[action_names::VERBATIM_INSERT] = _namedActions[action_names::SUSPEND] = Replxx::key_press_handler_t();
 #endif
-	_namedActions[action_names::COMPLETE_LINE]                   = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMPLETE_LINE,                   _1 );
-	_namedActions[action_names::HISTORY_INCREMENTAL_SEARCH]      = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_INCREMENTAL_SEARCH,      _1 );
-	_namedActions[action_names::HISTORY_COMMON_PREFIX_SEARCH]    = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH,    _1 );
+	_namedActions[action_names::COMPLETE_LINE]                     = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::COMPLETE_LINE,                     _1 );
+	_namedActions[action_names::HISTORY_INCREMENTAL_SEARCH]        = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_INCREMENTAL_SEARCH,        _1 );
+	_namedActions[action_names::HISTORY_SEEDED_INCREMENTAL_SEARCH] = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_SEEDED_INCREMENTAL_SEARCH, _1 );
+	_namedActions[action_names::HISTORY_COMMON_PREFIX_SEARCH]      = std::bind( &ReplxxImpl::invoke, this, Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH,      _1 );
 
 	bind_key( Replxx::KEY::control( 'A' ),                 _namedActions.at( action_names::MOVE_CURSOR_TO_BEGINING_OF_LINE ) );
 	bind_key( Replxx::KEY::HOME + 0,                       _namedActions.at( action_names::MOVE_CURSOR_TO_BEGINING_OF_LINE ) );
@@ -323,6 +325,7 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 	bind_key( Replxx::KEY::TAB + 0,                        _namedActions.at( action_names::COMPLETE_LINE ) );
 	bind_key( Replxx::KEY::control( 'R' ),                 _namedActions.at( action_names::HISTORY_INCREMENTAL_SEARCH ) );
 	bind_key( Replxx::KEY::control( 'S' ),                 _namedActions.at( action_names::HISTORY_INCREMENTAL_SEARCH ) );
+	bind_key( Replxx::KEY::meta( 'r' ),                    _namedActions.at( action_names::HISTORY_SEEDED_INCREMENTAL_SEARCH ) );
 	bind_key( Replxx::KEY::meta( 'p' ),                    _namedActions.at( action_names::HISTORY_COMMON_PREFIX_SEARCH ) );
 	bind_key( Replxx::KEY::meta( 'P' ),                    _namedActions.at( action_names::HISTORY_COMMON_PREFIX_SEARCH ) );
 	bind_key( Replxx::KEY::meta( 'n' ),                    _namedActions.at( action_names::HISTORY_COMMON_PREFIX_SEARCH ) );
@@ -336,62 +339,63 @@ Replxx::ReplxxImpl::~ReplxxImpl( void ) {
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32_t code ) {
 	switch ( action_ ) {
-		case ( Replxx::ACTION::INSERT_CHARACTER ):                return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::insert_character, code ) );
-		case ( Replxx::ACTION::NEW_LINE ):                        return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::new_line, code ) );
-		case ( Replxx::ACTION::DELETE_CHARACTER_UNDER_CURSOR ):   return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::delete_character, code ) );
-		case ( Replxx::ACTION::DELETE_CHARACTER_LEFT_OF_CURSOR ): return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::backspace_character, code ) );
-		case ( Replxx::ACTION::KILL_TO_END_OF_LINE ):             return ( action( WANT_REFRESH | SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_to_end_of_line, code ) );
-		case ( Replxx::ACTION::KILL_TO_BEGINING_OF_LINE ):        return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_to_begining_of_line, code ) );
-		case ( Replxx::ACTION::KILL_TO_END_OF_WORD ):             return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_word_to_right<false>, code ) );
-		case ( Replxx::ACTION::KILL_TO_BEGINING_OF_WORD ):        return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_word_to_left<false>, code ) );
-		case ( Replxx::ACTION::KILL_TO_END_OF_SUBWORD ):          return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_word_to_right<true>, code ) );
-		case ( Replxx::ACTION::KILL_TO_BEGINING_OF_SUBWORD ):     return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_word_to_left<true>, code ) );
-		case ( Replxx::ACTION::KILL_TO_WHITESPACE_ON_LEFT ):      return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_to_whitespace_to_left, code ) );
-		case ( Replxx::ACTION::YANK ):                            return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::yank, code ) );
-		case ( Replxx::ACTION::YANK_CYCLE ):                      return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::yank_cycle, code ) );
-		case ( Replxx::ACTION::YANK_LAST_ARG ):                   return ( action( HISTORY_RECALL_MOST_RECENT | DONT_RESET_HIST_YANK_INDEX, &Replxx::ReplxxImpl::yank_last_arg, code ) );
-		case ( Replxx::ACTION::MOVE_CURSOR_TO_BEGINING_OF_LINE ): return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::go_to_begining_of_line, code ) );
-		case ( Replxx::ACTION::MOVE_CURSOR_TO_END_OF_LINE ):      return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::go_to_end_of_line, code ) );
-		case ( Replxx::ACTION::MOVE_CURSOR_ONE_WORD_LEFT ):       return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_word_left<false>, code ) );
-		case ( Replxx::ACTION::MOVE_CURSOR_ONE_WORD_RIGHT ):      return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_word_right<false>, code ) );
-		case ( Replxx::ACTION::MOVE_CURSOR_ONE_SUBWORD_LEFT ):    return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_word_left<true>, code ) );
-		case ( Replxx::ACTION::MOVE_CURSOR_ONE_SUBWORD_RIGHT ):   return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_word_right<true>, code ) );
-		case ( Replxx::ACTION::MOVE_CURSOR_LEFT ):                return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_char_left, code ) );
-		case ( Replxx::ACTION::MOVE_CURSOR_RIGHT ):               return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_char_right, code ) );
-		case ( Replxx::ACTION::LINE_NEXT ):                       return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::line_next, code ) );
-		case ( Replxx::ACTION::LINE_PREVIOUS ):                   return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::line_previous, code ) );
-		case ( Replxx::ACTION::HISTORY_NEXT ):                    return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_next, code ) );
-		case ( Replxx::ACTION::HISTORY_PREVIOUS ):                return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_previous, code ) );
-		case ( Replxx::ACTION::HISTORY_FIRST ):                   return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_first, code ) );
-		case ( Replxx::ACTION::HISTORY_LAST ):                    return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_last, code ) );
-		case ( Replxx::ACTION::HISTORY_RESTORE_CURRENT ):         return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_restore_current, code ) );
-		case ( Replxx::ACTION::HISTORY_RESTORE ):                 return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_restore, code ) );
-		case ( Replxx::ACTION::HISTORY_INCREMENTAL_SEARCH ):      return ( action( NOOP, &Replxx::ReplxxImpl::incremental_history_search, code ) );
-		case ( Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH ):    return ( action( RESET_KILL_ACTION | DONT_RESET_PREFIX, &Replxx::ReplxxImpl::common_prefix_search, code ) );
-		case ( Replxx::ACTION::HINT_NEXT ):                       return ( action( NOOP, &Replxx::ReplxxImpl::hint_next, code ) );
-		case ( Replxx::ACTION::HINT_PREVIOUS ):                   return ( action( NOOP, &Replxx::ReplxxImpl::hint_previous, code ) );
-		case ( Replxx::ACTION::CAPITALIZE_WORD ):                 return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::capitalize_word<false>, code ) );
-		case ( Replxx::ACTION::LOWERCASE_WORD ):                  return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::lowercase_word<false>, code ) );
-		case ( Replxx::ACTION::UPPERCASE_WORD ):                  return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::uppercase_word<false>, code ) );
-		case ( Replxx::ACTION::CAPITALIZE_SUBWORD ):              return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::capitalize_word<true>, code ) );
-		case ( Replxx::ACTION::LOWERCASE_SUBWORD ):               return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::lowercase_word<true>, code ) );
-		case ( Replxx::ACTION::UPPERCASE_SUBWORD ):               return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::uppercase_word<true>, code ) );
-		case ( Replxx::ACTION::TRANSPOSE_CHARACTERS ):            return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::transpose_characters, code ) );
-		case ( Replxx::ACTION::TOGGLE_OVERWRITE_MODE ):           return ( action( NOOP, &Replxx::ReplxxImpl::toggle_overwrite_mode, code ) );
+		case ( Replxx::ACTION::INSERT_CHARACTER ):                  return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::insert_character, code ) );
+		case ( Replxx::ACTION::NEW_LINE ):                          return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::new_line, code ) );
+		case ( Replxx::ACTION::DELETE_CHARACTER_UNDER_CURSOR ):     return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::delete_character, code ) );
+		case ( Replxx::ACTION::DELETE_CHARACTER_LEFT_OF_CURSOR ):   return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::backspace_character, code ) );
+		case ( Replxx::ACTION::KILL_TO_END_OF_LINE ):               return ( action( WANT_REFRESH | SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_to_end_of_line, code ) );
+		case ( Replxx::ACTION::KILL_TO_BEGINING_OF_LINE ):          return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_to_begining_of_line, code ) );
+		case ( Replxx::ACTION::KILL_TO_END_OF_WORD ):               return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_word_to_right<false>, code ) );
+		case ( Replxx::ACTION::KILL_TO_BEGINING_OF_WORD ):          return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_word_to_left<false>, code ) );
+		case ( Replxx::ACTION::KILL_TO_END_OF_SUBWORD ):            return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_word_to_right<true>, code ) );
+		case ( Replxx::ACTION::KILL_TO_BEGINING_OF_SUBWORD ):       return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_word_to_left<true>, code ) );
+		case ( Replxx::ACTION::KILL_TO_WHITESPACE_ON_LEFT ):        return ( action( SET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::kill_to_whitespace_to_left, code ) );
+		case ( Replxx::ACTION::YANK ):                              return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::yank, code ) );
+		case ( Replxx::ACTION::YANK_CYCLE ):                        return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::yank_cycle, code ) );
+		case ( Replxx::ACTION::YANK_LAST_ARG ):                     return ( action( HISTORY_RECALL_MOST_RECENT | DONT_RESET_HIST_YANK_INDEX, &Replxx::ReplxxImpl::yank_last_arg, code ) );
+		case ( Replxx::ACTION::MOVE_CURSOR_TO_BEGINING_OF_LINE ):   return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::go_to_begining_of_line, code ) );
+		case ( Replxx::ACTION::MOVE_CURSOR_TO_END_OF_LINE ):        return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::go_to_end_of_line, code ) );
+		case ( Replxx::ACTION::MOVE_CURSOR_ONE_WORD_LEFT ):         return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_word_left<false>, code ) );
+		case ( Replxx::ACTION::MOVE_CURSOR_ONE_WORD_RIGHT ):        return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_word_right<false>, code ) );
+		case ( Replxx::ACTION::MOVE_CURSOR_ONE_SUBWORD_LEFT ):      return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_word_left<true>, code ) );
+		case ( Replxx::ACTION::MOVE_CURSOR_ONE_SUBWORD_RIGHT ):     return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_word_right<true>, code ) );
+		case ( Replxx::ACTION::MOVE_CURSOR_LEFT ):                  return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_char_left, code ) );
+		case ( Replxx::ACTION::MOVE_CURSOR_RIGHT ):                 return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::move_one_char_right, code ) );
+		case ( Replxx::ACTION::LINE_NEXT ):                         return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::line_next, code ) );
+		case ( Replxx::ACTION::LINE_PREVIOUS ):                     return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::line_previous, code ) );
+		case ( Replxx::ACTION::HISTORY_NEXT ):                      return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_next, code ) );
+		case ( Replxx::ACTION::HISTORY_PREVIOUS ):                  return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_previous, code ) );
+		case ( Replxx::ACTION::HISTORY_FIRST ):                     return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_first, code ) );
+		case ( Replxx::ACTION::HISTORY_LAST ):                      return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_last, code ) );
+		case ( Replxx::ACTION::HISTORY_RESTORE_CURRENT ):           return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_restore_current, code ) );
+		case ( Replxx::ACTION::HISTORY_RESTORE ):                   return ( action( MOVE_CURSOR | RESET_KILL_ACTION, &Replxx::ReplxxImpl::history_restore, code ) );
+		case ( Replxx::ACTION::HISTORY_INCREMENTAL_SEARCH ):        return ( action( NOOP, &Replxx::ReplxxImpl::incremental_history_search, code ) );
+		case ( Replxx::ACTION::HISTORY_SEEDED_INCREMENTAL_SEARCH ): return ( action( NOOP, &Replxx::ReplxxImpl::incremental_history_search, code ) );
+		case ( Replxx::ACTION::HISTORY_COMMON_PREFIX_SEARCH ):      return ( action( RESET_KILL_ACTION | DONT_RESET_PREFIX, &Replxx::ReplxxImpl::common_prefix_search, code ) );
+		case ( Replxx::ACTION::HINT_NEXT ):                         return ( action( NOOP, &Replxx::ReplxxImpl::hint_next, code ) );
+		case ( Replxx::ACTION::HINT_PREVIOUS ):                     return ( action( NOOP, &Replxx::ReplxxImpl::hint_previous, code ) );
+		case ( Replxx::ACTION::CAPITALIZE_WORD ):                   return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::capitalize_word<false>, code ) );
+		case ( Replxx::ACTION::LOWERCASE_WORD ):                    return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::lowercase_word<false>, code ) );
+		case ( Replxx::ACTION::UPPERCASE_WORD ):                    return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::uppercase_word<false>, code ) );
+		case ( Replxx::ACTION::CAPITALIZE_SUBWORD ):                return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::capitalize_word<true>, code ) );
+		case ( Replxx::ACTION::LOWERCASE_SUBWORD ):                 return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::lowercase_word<true>, code ) );
+		case ( Replxx::ACTION::UPPERCASE_SUBWORD ):                 return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::uppercase_word<true>, code ) );
+		case ( Replxx::ACTION::TRANSPOSE_CHARACTERS ):              return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::transpose_characters, code ) );
+		case ( Replxx::ACTION::TOGGLE_OVERWRITE_MODE ):             return ( action( NOOP, &Replxx::ReplxxImpl::toggle_overwrite_mode, code ) );
 #ifndef _WIN32
-		case ( Replxx::ACTION::VERBATIM_INSERT ):                 return ( action( WANT_REFRESH | RESET_KILL_ACTION, &Replxx::ReplxxImpl::verbatim_insert, code ) );
-		case ( Replxx::ACTION::SUSPEND ):                         return ( action( WANT_REFRESH, &Replxx::ReplxxImpl::suspend, code ) );
+		case ( Replxx::ACTION::VERBATIM_INSERT ):                   return ( action( WANT_REFRESH | RESET_KILL_ACTION, &Replxx::ReplxxImpl::verbatim_insert, code ) );
+		case ( Replxx::ACTION::SUSPEND ):                           return ( action( WANT_REFRESH, &Replxx::ReplxxImpl::suspend, code ) );
 #endif
-		case ( Replxx::ACTION::CLEAR_SCREEN ):                    return ( action( NOOP, &Replxx::ReplxxImpl::clear_screen, code ) );
+		case ( Replxx::ACTION::CLEAR_SCREEN ):                      return ( action( NOOP, &Replxx::ReplxxImpl::clear_screen, code ) );
 		case ( Replxx::ACTION::CLEAR_SELF ): clear_self_to_end_of_screen(); return ( Replxx::ACTION_RESULT::CONTINUE );
-		case ( Replxx::ACTION::REPAINT ):    repaint();           return ( Replxx::ACTION_RESULT::CONTINUE );
-		case ( Replxx::ACTION::COMPLETE_LINE ):                   return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::complete_line, code ) );
-		case ( Replxx::ACTION::COMPLETE_NEXT ):                   return ( action( RESET_KILL_ACTION | DONT_RESET_COMPLETIONS | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::complete_next, code ) );
-		case ( Replxx::ACTION::COMPLETE_PREVIOUS ):               return ( action( RESET_KILL_ACTION | DONT_RESET_COMPLETIONS | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::complete_previous, code ) );
-		case ( Replxx::ACTION::COMMIT_LINE ):                     return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::commit_line, code ) );
-		case ( Replxx::ACTION::ABORT_LINE ):                      return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::abort_line, code ) );
-		case ( Replxx::ACTION::SEND_EOF ):                        return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::send_eof, code ) );
-		case ( Replxx::ACTION::BRACKETED_PASTE ):                 return ( action( WANT_REFRESH | RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::bracketed_paste, code ) );
+		case ( Replxx::ACTION::REPAINT ):    repaint();             return ( Replxx::ACTION_RESULT::CONTINUE );
+		case ( Replxx::ACTION::COMPLETE_LINE ):                     return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::complete_line, code ) );
+		case ( Replxx::ACTION::COMPLETE_NEXT ):                     return ( action( RESET_KILL_ACTION | DONT_RESET_COMPLETIONS | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::complete_next, code ) );
+		case ( Replxx::ACTION::COMPLETE_PREVIOUS ):                 return ( action( RESET_KILL_ACTION | DONT_RESET_COMPLETIONS | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::complete_previous, code ) );
+		case ( Replxx::ACTION::COMMIT_LINE ):                       return ( action( RESET_KILL_ACTION, &Replxx::ReplxxImpl::commit_line, code ) );
+		case ( Replxx::ACTION::ABORT_LINE ):                        return ( action( RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::abort_line, code ) );
+		case ( Replxx::ACTION::SEND_EOF ):                          return ( action( HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::send_eof, code ) );
+		case ( Replxx::ACTION::BRACKETED_PASTE ):                   return ( action( WANT_REFRESH | RESET_KILL_ACTION | HISTORY_RECALL_MOST_RECENT, &Replxx::ReplxxImpl::bracketed_paste, code ) );
 	}
 	return ( Replxx::ACTION_RESULT::BAIL );
 }
@@ -1144,8 +1148,8 @@ char32_t Replxx::ReplxxImpl::do_complete_line( bool showCompletions_ ) {
 	if ( completionsCount == 1 ) {
 		longestCommonPrefix = static_cast<int>( _completions[selectedCompletion].text().length() );
 	} else {
-		bool lowerCaseContext( std::none_of( _data.end() - _completionContextLength, _data.end(), []( char32_t x ) { return iswupper( static_cast<wint_t>( x ) ); } ) );
-		longestCommonPrefix = longest_common_prefix( _completions, _ignoreCase && lowerCaseContext );
+		bool ignoreCase( _ignoreCase && std::none_of( _data.end() - _completionContextLength, _data.end(), []( char32_t x ) { return iswupper( static_cast<wint_t>( x ) ); } ) );
+		longestCommonPrefix = longest_common_prefix( _completions, ignoreCase );
 	}
 	if ( _beepOnAmbiguousCompletion && ( completionsCount != 1 ) ) { // beep if ambiguous
 		beep();
@@ -2166,11 +2170,15 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 	_history.save_pos();
 	int historyLinePosition( _pos );
 	clear_self_to_end_of_screen();
-
-	DynamicPrompt dp( _terminal, (startChar == Replxx::KEY::control('R')) ? -1 : 1 );
+	bool seeded( startChar == Replxx::KEY::meta( 'r' ) );
+	DynamicPrompt dp( _terminal, ( startChar == Replxx::KEY::control( 'R' ) ) || seeded ? -1 : 1 );
+	if ( seeded ) {
+		dp._searchText.assign( _data );
+		dp.updateSearchPrompt();
+	}
 
 	// draw user's text with our prompt
-	dynamic_refresh(_prompt, dp, _data.get(), _data.length(), historyLinePosition);
+	dynamic_refresh( _prompt, dp, _data.get(), _data.length(), historyLinePosition );
 
 	// loop until we get an exit character
 	char32_t c( 0 );
@@ -2179,9 +2187,12 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 	bool searchAgain = false;
 	UnicodeString activeHistoryLine;
 	while ( keepLooping ) {
-		c = read_char();
+		if ( ! seeded ) {
+			c = read_char();
+		}
 
-		switch (c) {
+		switch ( c ) {
+			case 0: break;
 			// these characters keep the selected text but do not execute it
 			case Replxx::KEY::control('A'): // ctrl-A, move cursor to start of line
 			case Replxx::KEY::HOME:
@@ -2236,15 +2247,15 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 			} break;
 
 			// these characters stay in search mode and assign the display
-			case Replxx::KEY::control('S'):
-			case Replxx::KEY::control('R'): {
-				if ( dp._searchText.length() == 0 ) { // if no current search text, recall previous text
-					if ( _previousSearchText.length() > 0 ) {
-						dp._searchText = _previousSearchText;
-					}
+			case Replxx::KEY::control( 'S' ):
+			case Replxx::KEY::control( 'R' ):
+			case Replxx::KEY::meta( 'r' ): {
+				if ( ( dp._searchText.length() == 0 ) && ( _previousSearchText.length() > 0 ) ) {
+					// if no current search text, recall previous text
+					dp._searchText = _previousSearchText;
 				}
 				if (
-					( ( dp._direction == 1 ) && ( c == Replxx::KEY::control( 'R' ) ) )
+					( ( dp._direction == 1 ) && ( ( c == Replxx::KEY::control( 'R' ) ) || ( c == Replxx::KEY::meta( 'r' ) ) ) )
 					|| ( ( dp._direction == -1 ) && ( c == Replxx::KEY::control( 'S' ) ) )
 				) {
 					dp._direction = 0 - dp._direction; // reverse direction
@@ -2306,7 +2317,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 				lineSearchPos += dp._direction;
 			}
 			searchAgain = false;
-			bool lowerCaseContext( std::none_of( dp._searchText.begin(), dp._searchText.end(), []( char32_t x ) { return iswupper( static_cast<wint_t>( x ) ); } ) );
+			bool ignoreCase( _ignoreCase && std::none_of( dp._searchText.begin(), dp._searchText.end(), []( char32_t x ) { return iswupper( static_cast<wint_t>( x ) ); } ) );
 			while ( true ) {
 				while (
 					dp._direction < 0
@@ -2318,11 +2329,15 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 						&& ( ( lineSearchPos + dp._searchText.length() ) <= activeHistoryLine.length() )
 						&& std::equal(
 							dp._searchText.begin(), dp._searchText.end(), activeHistoryLine.begin() + lineSearchPos,
-							_ignoreCase && lowerCaseContext ? case_insensitive_equal : case_sensitive_equal
+							ignoreCase ? case_insensitive_equal : case_sensitive_equal
 						)
 					) {
-						found = true;
-						break;
+						if ( ! seeded ) {
+							found = true;
+							break;
+						} else {
+							seeded = false;
+						}
 					}
 					lineSearchPos += dp._direction;
 				}
@@ -2347,6 +2362,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::incremental_history_search( char32_t s
 		}
 		activeHistoryLine.assign( _history.current() );
 		dynamic_refresh( dp, dp, activeHistoryLine.get(), activeHistoryLine.length(), historyLinePosition ); // draw user's text with our prompt
+		seeded = false;
 	} // while
 
 	// leaving history search, restore previous prompt, maybe make searched line

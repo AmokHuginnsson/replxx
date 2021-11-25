@@ -82,6 +82,7 @@ keytab = {
 	"<m-L>": "\033L",
 	"<m-n>": "\033n",
 	"<m-p>": "\033p",
+	"<m-r>": "\033r",
 	"<m-u>": "\033u",
 	"<m-U>": "\033U",
 	"<m-w>": "\033w",
@@ -3263,6 +3264,17 @@ class ReplxxTests( unittest.TestCase ):
 			"abcdef<home><cr><c-d>",
 			"abcdef<c9><c9>abcdef<ceos><c15>\r\nthanks for the input: abcdef\r\n",
 			command = [ ReplxxTests._cSample_, "m", "N", "S", "C", "M0" ]
+		)
+	def test_seeded_incremental_history_search( self_ ):
+		self_.check_scenario(
+			"for<m-r><m-r><cr><c-d>",
+			"<c9>f<rst><ceos><c10><c9>fo<rst><ceos><c11><c9>for<rst><ceos><c12><c1><ceos><c1><ceos>(reverse-i-search)`for': "
+			"for<c29><c1><ceos>(reverse-i-search)`for': "
+			"forth<c26><c1><ceos>(reverse-i-search)`for': "
+			"fortran<c26><c1><ceos><brightgreen>replxx<rst>> "
+			"fortran<c9><c9>fortran<rst><ceos><c9><c9>fortran<rst><ceos><c16>\r\n"
+			"fortran\r\n",
+			"\n".join( _words_[::-1] ) + "\n"
 		)
 
 def parseArgs( self, func, argv ):
