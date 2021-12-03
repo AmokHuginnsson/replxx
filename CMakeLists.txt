@@ -75,10 +75,9 @@ target_include_directories(
 )
 target_compile_definitions(
 	replxx
-	PUBLIC
-		$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:REPLXX_STATIC>
-		$<$<BOOL:${BUILD_SHARED_LIBS}>:REPLXX_BUILDING_DLL>
 	PRIVATE
+		$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:REPLXX_STATIC>
+		$<$<BOOL:${BUILD_SHARED_LIBS}>:REPLXX_BUILDING_DLL>	
 		$<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS=1 /ignore:4503>
 )
 target_compile_options(
