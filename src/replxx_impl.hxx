@@ -272,7 +272,7 @@ private:
 	void call_modify_callback( void );
 	completions_t call_completer( std::string const& input, int& ) const;
 	hints_t call_hinter( std::string const& input, int&, Replxx::Color& color ) const;
-	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE );
+	void refresh_line( HINT_ACTION = HINT_ACTION::REGENERATE, bool refreshPrompt_ = false );
 	void move_cursor( void );
 	void indent( void );
 	int virtual_render( char32_t const*, int, int&, int&, Prompt const* = nullptr );
