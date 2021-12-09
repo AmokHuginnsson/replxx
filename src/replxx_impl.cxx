@@ -966,7 +966,7 @@ int Replxx::ReplxxImpl::virtual_render( char32_t const* buffer_, int len_, int& 
  * Refresh the user's input line: the prompt is already onscreen and is not
  * redrawn here screen position
  */
-void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
+void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_, bool refreshPrompt_ ) {
 	int long long now( now_us() );
 	int long long duration( now - _lastRefreshTime );
 	if ( duration < RAPID_REFRESH_US ) {
@@ -993,10 +993,22 @@ void Replxx::ReplxxImpl::refresh_line( HINT_ACTION hintAction_ ) {
 
 	// position at the end of the prompt, clear to end of previous input
 	_terminal.set_cursor_visible( false );
-	_terminal.jump_cursor(
-		_prompt.indentation(), // 0-based on Win32
-		-( _prompt._cursorRowOffset - _prompt._extraLines )
-	);
+	if ( refreshPrompt_ )
+	{
+		_terminal.jump_cursor(
+			0,
+			-_prompt._cursorRowOffset
+		);
+		_prompt.write();
+		_prompt._cursorRowOffset = _prompt._extraLines;
+	}
+	else
+	{
+		_terminal.jump_cursor(
+			_prompt.indentation(), // 0-based on Win32
+			-( _prompt._cursorRowOffset - _prompt._extraLines )
+		);
+	}
 	// display the input line
 	if ( _hasNewlines ) {
 		_terminal.clear_screen( Terminal::CLEAR_SCREEN::TO_END );
@@ -1934,7 +1946,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_move( bool previous_ ) {
 	}
 	_data.assign( _history.current() );
 	_pos = _data.length();
-	refresh_line();
+	refresh_line( HINT_ACTION::REGENERATE, true /* refreshPrompt */ );
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
 
@@ -2006,7 +2018,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::history_jump( bool back_ ) {
 		_history.jump( back_ );
 		_data.assign( _history.current() );
 		_pos = _data.length();
-		refresh_line();
+		refresh_line( HINT_ACTION::REGENERATE, true /* refreshPrompt */ );
 	}
 	return ( Replxx::ACTION_RESULT::CONTINUE );
 }
