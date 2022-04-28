@@ -54,15 +54,19 @@ set(compiler-id-clang-or-gnu $<OR:${is-clang},${is-gnu}>)
 
 set(coverage-config $<AND:$<CONFIG:Coverage>,$<OR:${is-gnu},${is-clang}>>)
 
-set(replxx-source-patterns "src/*.cpp" "src/*.cxx")
-
-if (CMAKE_VERSION VERSION_GREATER 3.11)
-	list(INSERT replxx-source-patterns 0 CONFIGURE_DEPENDS)
-endif()
-
-file(GLOB replxx-sources ${replxx-source-patterns})
-
-add_library(replxx ${replxx-sources})
+add_library(replxx
+	src/conversion.cxx
+	src/ConvertUTF.cpp
+	src/escape.cxx
+	src/history.cxx
+	src/prompt.cxx
+	src/replxx.cxx
+	src/replxx_impl.cxx
+	src/terminal.cxx
+	src/util.cxx
+	src/wcwidth.cpp
+	src/windows.cxx
+)
 add_library(replxx::replxx ALIAS replxx)
 
 target_include_directories(
