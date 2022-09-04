@@ -334,7 +334,12 @@ Replxx::ReplxxImpl::ReplxxImpl( FILE*, FILE*, FILE* )
 }
 
 Replxx::ReplxxImpl::~ReplxxImpl( void ) {
-	disable_bracketed_paste();
+	try {
+		disable_bracketed_paste();
+	} catch ( std::runtime_error const& ) {
+		// suppress "write failed" errors (see Terminal::write8()).
+		// in case of i.e. broken pipe.
+	}
 }
 
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::invoke( Replxx::ACTION action_, char32_t code ) {
