@@ -153,7 +153,7 @@ int Terminal::get_screen_columns( void ) {
 	cols = inf.dwSize.X;
 #else
 	struct winsize ws;
-	cols = ( ioctl( 1, TIOCGWINSZ, &ws ) == -1 ) ? 80 : ws.ws_col;
+	cols = ( ioctl( STDIN_FILENO, TIOCGWINSZ, &ws ) == -1 ) ? 80 : ws.ws_col;
 #endif
 	// cols is 0 in certain circumstances like inside debugger, which creates
 	// further issues
@@ -168,7 +168,7 @@ int Terminal::get_screen_rows( void ) {
 	rows = 1 + inf.srWindow.Bottom - inf.srWindow.Top;
 #else
 	struct winsize ws;
-	rows = (ioctl(1, TIOCGWINSZ, &ws) == -1) ? 24 : ws.ws_row;
+	rows = ( ioctl( STDIN_FILENO, TIOCGWINSZ, &ws) == -1) ? 24 : ws.ws_row;
 #endif
 	return (rows > 0) ? rows : 24;
 }
