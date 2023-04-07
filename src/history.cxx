@@ -237,12 +237,8 @@ void History::load( std::istream& histFile ) {
 }
 
 void History::sort( void ) {
-	typedef std::vector<Entry> sortable_entries_t;
 	_locations.clear();
-	sortable_entries_t sortableEntries( _entries.begin(), _entries.end() );
-	std::stable_sort( sortableEntries.begin(), sortableEntries.end() );
-	_entries.clear();
-	_entries.insert( _entries.begin(), sortableEntries.begin(), sortableEntries.end() );
+	_entries.sort();
 }
 
 void History::clear( void ) {
