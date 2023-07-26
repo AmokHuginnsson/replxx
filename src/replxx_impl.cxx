@@ -1883,7 +1883,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::line_previous( char32_t ) {
 		}
 		int prevNewlinePosition( prev_newline_position( _pos ) );
 		if ( prevNewlinePosition == _pos ) {
-			prevNewlinePosition = prev_newline_position( _pos - 1 );
+			prevNewlinePosition = _pos > 0 ? prev_newline_position( _pos - 1 ) : -1;
 		}
 		if ( prevNewlinePosition < 0 ) {
 			break;
