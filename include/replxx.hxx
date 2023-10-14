@@ -663,35 +663,35 @@ namespace color {
  * \param color2 - second input color.
  * \return A new color definition that represent combined input colors.
  */
-Replxx::Color operator | ( Replxx::Color color1, Replxx::Color color2 );
+REPLXX_IMPEXP Replxx::Color operator | ( Replxx::Color color1, Replxx::Color color2 );
 
 /*! \brief Transform foreground color definition into a background color definition.
  *
  * \param color - an input foreground color definition.
  * \return A background color definition that is a transformed input \e color.
  */
-Replxx::Color bg( Replxx::Color color );
+REPLXX_IMPEXP Replxx::Color bg( Replxx::Color color );
 
 /*! \brief Add `bold` attribute to color definition.
  *
  * \param color - an input color definition.
  * \return A new color definition with bold attribute set.
  */
-Replxx::Color bold( Replxx::Color color );
+REPLXX_IMPEXP Replxx::Color bold( Replxx::Color color );
 
 /*! \brief Add `underline` attribute to color definition.
  *
  * \param color - an input color definition.
  * \return A new color definition with underline attribute set.
  */
-Replxx::Color underline( Replxx::Color color );
+REPLXX_IMPEXP Replxx::Color underline( Replxx::Color color );
 
 /*! \brief Create a new grayscale color of given brightness level.
  *
  * \param level - a brightness level for new color, must be between 0 (darkest) and 23 (brightest).
  * \return A new grayscale color of a given brightest \e level.
  */
-Replxx::Color grayscale( int level );
+REPLXX_IMPEXP Replxx::Color grayscale( int level );
 
 /*! \brief Create a new color in 6×6×6 RGB color space from base component levels.
  *
@@ -700,7 +700,7 @@ Replxx::Color grayscale( int level );
  * \param blue - a blue (of RGB) component level, must be 0 and 5.
  * \return A new color in 6×6×6 RGB color space.
  */
-Replxx::Color rgb666( int red, int green, int blue );
+REPLXX_IMPEXP Replxx::Color rgb666( int red, int green, int blue );
 
 }
 
