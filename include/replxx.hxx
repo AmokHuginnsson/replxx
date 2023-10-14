@@ -260,7 +260,7 @@ public:
 		}
 	};
 	class HistoryScanImpl;
-	class HistoryScan {
+	class REPLXX_IMPEXP HistoryScan {
 	public:
 		typedef std::unique_ptr<HistoryScanImpl, void (*)( HistoryScanImpl* )> impl_t;
 	private:
