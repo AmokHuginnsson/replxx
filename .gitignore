@@ -13,3 +13,5 @@ replxx_history_alt.txt
 *.o
 *~
 .vs
+build*/
+*.user
