@@ -352,6 +352,7 @@ History::entries_t::iterator History::moved( entries_t::iterator it_, int by_, b
 
 void History::erase( entries_t::iterator it_ ) {
 	bool invalidated( it_ == _current );
+	it_->reset_scratch();
 	_locations.erase( it_->text() );
 	it_ = _entries.erase( it_ );
 	if ( invalidated ) {
