@@ -7,6 +7,7 @@ import os
 import subprocess
 import signal
 import time
+import tempfile
 
 keytab = {
 	"<home>": "\033[1~",
@@ -1691,6 +1692,42 @@ class ReplxxTests( unittest.TestCase ):
 			"aaaaaaaaaaaaaaaaaaaaa\r\n",
 			"aaaaaaaaaaaaaaaaaaaaa\n"
 		)
+	def test_c_quit_commands( self_ ):
+		executable = os.path.abspath( ReplxxTests._cSample_ )
+		for command in ("/quit", "/exit"):
+			with self_.subTest( command = command ), tempfile.TemporaryDirectory() as directory:
+				res = subprocess.run( [ executable, "q1" ],
+					input = "hello\n" + command + "\nnot reached\n",
+					text = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE,
+					cwd = directory, timeout = 5 )
+				self_.assertEqual( res.returncode, 0 )
+				self_.assertEqual( res.stdout, "starting...\nhello\n\nExiting Replxx\n" )
+				with open( os.path.join( directory, "replxx_history.txt" ) ) as history:
+					self_.assertIn( command, history.read() )
+	def test_c_quit_requires_exact_command( self_ ):
+		executable = os.path.abspath( ReplxxTests._cSample_ )
+		with tempfile.TemporaryDirectory() as directory:
+			res = subprocess.run( [ executable, "q1" ],
+				input = "/quitter\n/exitnow\n", text = True,
+				stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = directory, timeout = 5 )
+			self_.assertEqual( res.returncode, 0 )
+			self_.assertIn( "/quitter\n/exitnow\n", res.stdout )
+	def test_c_quit_from_terminal( self_ ):
+		executable = os.path.abspath( ReplxxTests._cSample_ )
+		for command in ("/quit", "/exit"):
+			with self_.subTest( command = command ), tempfile.TemporaryDirectory() as directory:
+				env = dict( os.environ, TERM = "xterm" )
+				child = pexpect.spawn( executable, args = [ "q1", "N", "S", "C", "p> " ],
+					cwd = directory, env = env, encoding = "utf-8", timeout = 5 )
+				try:
+					child.expect_exact( "> " )
+					child.send( command + "\r" )
+					child.expect_exact( "Exiting Replxx" )
+					child.expect( pexpect.EOF )
+					child.close()
+					self_.assertEqual( child.exitstatus, 0 )
+				finally:
+					child.close( force = True )
 	def test_no_terminal( self_ ):
 		res = subprocess.run( [ ReplxxTests._cSample_, "q1" ], input = b"replxx FTW!\n", stdout = subprocess.PIPE, stderr = subprocess.PIPE )
 		self_.assertSequenceEqual( res.stdout, b"starting...\nreplxx FTW!\n\nExiting Replxx\n" )

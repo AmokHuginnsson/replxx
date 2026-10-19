@@ -210,6 +210,10 @@ int main( int argc, char** argv ) {
 		if (result == NULL) {
 			printf("\n");
 			break;
+		} else if (!strcmp(result, "/quit") || !strcmp(result, "/exit")) {
+			replxx_history_add( replxx, result );
+			printf("\n");
+			break;
 		} else if (!strncmp(result, "/history", 9)) {
 			/* Display the current history. */
 			int index = 0;

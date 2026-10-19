@@ -30,6 +30,10 @@ programs.
 * UTF8 aware
 * support for Linux, MacOS and Windows
 
+The C API example (`replxx-example-c-api`) accepts `/quit` or `/exit` to
+leave the prompt, save history, and clean up the editor. The C++ example
+uses `.quit` or `.exit`.
+
 ## Requirements
 
 To build this library, you will need a C++11-enabled compiler and
